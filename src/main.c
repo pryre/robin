@@ -23,6 +23,7 @@
 
 #include "breezystm32.h"
 #include "params.h"
+#include "mavlink_receive.h"
 
 serialPort_t * Serial1;
 extern void SetSysClock(bool overclock);
@@ -121,13 +122,18 @@ void loop(void)
 
 	//Check Sensors
 
+	//Check Serial
+	communication_receive();
+
+	//Timeout Checks
+
 	//Update Estimator
 
 	//Send Motor Commands
 
-	//Check Serial
-
 	//==-- Remaining Time
+
+	//Send Serial
 
 	//Parameter Handilng
 
