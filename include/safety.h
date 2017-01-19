@@ -8,7 +8,7 @@ void init_safety(void);
 
 //Used to initialize all of the structs and timeouts
 void check_safety_monitor(void);
-
+//TODO: Check MAV_MODE_FLAG
 
 typedef struct {
 	bool status;
