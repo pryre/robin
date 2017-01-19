@@ -1,0 +1,12 @@
+PROJECT_NAME = rtob
+
+# Contains your setup() and loop()
+PROJECT_SRC_FILES = ./src/main.c \
+					./src/flash.c \
+					./src/params.c \
+					./src/sensors.c
+
+# Drivers, etc.
+PROJECT_BREEZY_FILES = $(F1_DIR)/i2c_stm32f10x.c \
+					   $(F1_DIR)/drivers/mpu.c
+
