@@ -25,8 +25,51 @@
 #include "params.h"
 
 serialPort_t * Serial1;
-
 extern void SetSysClock(bool overclock);
+uint32_t DEBUG_PARAM_COUNTER = 0;
+
+#ifndef EXTERNAL_DEBUG
+void debug(const char * fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+
+    char buf[1000];
+
+    vsprintf(buf, fmt, ap);
+
+    for (char * p = buf; *p; p++)
+        serialWrite(Serial1, *p);
+
+    va_end(ap);
+
+    while (!isSerialTransmitBufferEmpty(Serial1));
+}
+
+void sendNextParam() {
+	if( DEBUG_PARAM_COUNTER >= PARAMS_COUNT ) {
+		DEBUG_PARAM_COUNTER = 0;
+	}
+
+	char str[80];
+	debug( "\n\r" );
+	debug(get_param_name(DEBUG_PARAM_COUNTER));
+	debug(": ");
+
+	if(get_param_type(DEBUG_PARAM_COUNTER) == PARAM_TYPE_FLOAT) {
+		sprintf(str, "%f", get_param_float(DEBUG_PARAM_COUNTER));
+	}
+	else {
+		sprintf(str, "%i", get_param_int(DEBUG_PARAM_COUNTER));
+	}
+
+	debug( str );
+	debug( "\n\r" );
+
+	DEBUG_PARAM_COUNTER++;
+}
+#endif
 
 int main(void)
 {
@@ -46,6 +89,9 @@ int main(void)
             uint8_t c = serialRead(Serial1);
             if (c == 'R')
                 systemResetToBootloader();
+
+			if (c == 'n')
+				sendNextParam();
          }
 #endif
 
@@ -115,24 +161,3 @@ void loop(void)
 	debug(".");
 	LED0_TOGGLE;
 }
-
-
-#ifndef EXTERNAL_DEBUG
-void debug(const char * fmt, ...)
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-
-    char buf[1000];
-
-    vsprintf(buf, fmt, ap);
-
-    for (char * p = buf; *p; p++)
-        serialWrite(Serial1, *p);
-
-    va_end(ap);
-
-    while (!isSerialTransmitBufferEmpty(Serial1));
-}
-#endif
