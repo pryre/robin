@@ -42,7 +42,6 @@ typedef struct {
 	bool arm_status;
 	mavlink_status mavlink;
 	sensor_status_t sensors
-	uint32_t
 } system_t;
 
 extern system_t _system_status;

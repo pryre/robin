@@ -1,14 +1,14 @@
 #include "mavlink_receive.h"
-#include "mavlink/common/mavlink.h"
+#include "mavlink_system.h"
 #include "breezystm32.h"
 
-void communication_receive(void)
-{
+void communication_receive(void) {
 	mavlink_message_t msg;
 	mavlink_status_t status;
 
 	while( serialTotalRxBytesWaiting( Serial1 ) ) {
 		uint8_t c = serialRead(Serial1);
+
 		// Try to get a new message
 		if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
 			// Handle message
@@ -31,7 +31,7 @@ void communication_receive(void)
 								case 1:
 									systemReset();
 									break;
-								case 2:
+								case 3:
 									systemResetToBootloader();
 									break;
 								default:

@@ -23,10 +23,13 @@
 
 #include "breezystm32.h"
 #include "params.h"
+#include "sensors.h"
 #include "mavlink_receive.h"
+#include "mavlink_transmit.h"
 
 serialPort_t * Serial1;
 extern void SetSysClock(bool overclock);
+sensor_readings_time_t sensor_time;
 
 int main(void)
 {
@@ -45,26 +48,26 @@ int main(void)
 
 void setup(void)
 {
+	init_params();
+
 	delay(500);
 
     i2cInit(I2CDEV);
-	/*
-    delay(500);
-    i2cInit(I2CDEV_2);
-    mpu6050_register_interrupt_cb(&interruptCallback, BOARD_REV);
 
-    uint16_t acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);
-    accel_scale = 9.80665f / acc1G;
-	*/
-	init_params();
+	init_sensors();
+
+	communications_init();
 }
 
 void loop(void)
 {
+	//==-- Timing setup get loop time
+	sensor_time.start = micros();
+
 	//==-- Critical
 
 	//Check Sensors
-
+	update_sensors(micros());
 	//Check Serial
 	communication_receive();
 
@@ -77,6 +80,7 @@ void loop(void)
 	//==-- Remaining Time
 
 	//Send Serial
+	communication_transmit(micros());
 
 	//Parameter Handilng
 
@@ -105,7 +109,15 @@ void loop(void)
                     temp_data);
         }
         count++;
+
     }*/
-	delay(1); //TODO: Remove this
-	LED0_TOGGLE;
+
+
+    // loop time calculation
+    sensor_time.end = micros();
+    sensor_time.dt = sensor_time.end - sensor_time.start;
+    sensor_time.average_time += sensor_time.dt;
+    sensor_time.counter++;
+    sensor_time.max = (sensor_time.dt > sensor_time.max) ? sensor_time.dt : sensor_time.max;
+    sensor_time.min = (sensor_time.dt < sensor_time.min) ? sensor_time.dt : sensor_time.min;
 }

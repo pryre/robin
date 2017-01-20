@@ -136,7 +136,8 @@ CFLAGS	 = $(ARCH_FLAGS) \
 		   -fdata-sections \
 		   $(DEVICE_FLAGS) \
 		   -DUSE_STDPERIPH_DRIVER \
-		   -D$(TARGET)
+		   -D$(TARGET) \
+		   -Wno-unused-parameter
 
 ASFLAGS		 = $(ARCH_FLAGS) \
 		   -x assembler-with-cpp \
