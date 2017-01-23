@@ -21,7 +21,7 @@ static int16_t temp_data;
 static uint8_t accel_status = 0;
 static uint8_t gyro_status = 0;
 static uint8_t temp_status = 0;
-static volatile bool imu_new_reading_status = false;
+extern volatile bool imu_interrupt;
 
 sensor_readings_imu_t _sensor_imu;
 sensor_readings_barometer_t _sensor_baro;
@@ -56,7 +56,7 @@ static void sonar_init(void) {
 }*/
 
 static void sensors_imu_poll(void) {
-		imu_new_reading_status = true;
+		imu_interrupt = true;
 		mpu6050_request_async_accel_read(_sensor_imu.accel_raw, &accel_status);
 		mpu6050_request_async_gyro_read(_sensor_imu.gyro_raw, &gyro_status);
 		mpu6050_request_async_temp_read(&(_sensor_imu.temp_raw), &temp_status);
@@ -67,7 +67,7 @@ void init_sensors(void) {
 
 	//==-- IMU-MPU6050
 	//TODO: Set IMU to be calibrated if not already
-    mpu6050_register_interrupt_cb(&sensors_imu_poll, BOARD_REV);
+    mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_int(PARAM_BAUD_RATE));
 	acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);
 	_sensor_imu.accel_scale = fix16_sdiv(fix16_from_float(9.80665f), fix16_from_int(acc1G));
 	_sensor_imu.accel_scale = fix16_from_float(MPU_GYRO_SCALE);
@@ -80,8 +80,8 @@ bool sensors_read(void) {
 	bool imu_job_complete = false;
 
 	//Check IMU status
-	if(imu_new_reading_status && accel_status == I2C_JOB_COMPLETE && gyro_status == I2C_JOB_COMPLETE && temp_status == I2C_JOB_COMPLETE) {
-		imu_new_reading_status = false; //TODO: Maybe not actually needed as I2C_JOB_COMPLETE might be enough
+	if(accel_status == I2C_JOB_COMPLETE && gyro_status == I2C_JOB_COMPLETE && temp_status == I2C_JOB_COMPLETE) {
+		imu_interrupt = false;	//TODO: There might be a better place to have this
 		imu_job_complete = true;
 		accel_status = I2C_JOB_DEFAULT;
 		gyro_status = I2C_JOB_DEFAULT;

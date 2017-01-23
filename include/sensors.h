@@ -6,7 +6,7 @@
 #include "fixvector3d.h"
 
 //TODO: Common header file for defines like this
-#define BOARD_REV 2
+//#define BOARD_REV 2
 
 // global variable declarations
 //extern vector_t _accel;

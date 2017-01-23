@@ -30,10 +30,12 @@
 serialPort_t * Serial1;
 extern void SetSysClock(bool overclock);
 sensor_readings_time_t _sensor_time;
+volatile bool imu_interrupt;
 
 int main(void)
 {
     SetSysClock(false);
+	imu_interrupt = false;
 
     systemInit();
 
@@ -57,6 +59,9 @@ void setup(void)
 	init_sensors();
 
 	communications_init();
+
+	//Wait here for the first imu message (probably not really neaded)
+	while(!imu_interrupt);
 }
 
 void loop(void)
@@ -73,7 +78,7 @@ void loop(void)
 	//Non-critical functions should be here, but we should also
 	//do this loop multiple times, so it shouldn't lock the
 	//thread for a long time
-	while(!sensors_read()) { //TODO: HERE! THIS DOESN"T WORK FOR SOME REASON
+	while(!sensors_read()) { //XXX: With no load, it takes ~557us to complete sensor_read()
 		//TODO: More things should be here if possible
 		//TODO: Metrics!
 
@@ -93,8 +98,11 @@ void loop(void)
 		//Debug Information
 	}
 
+	//mavlink_msg_named_value_float_send(MAVLINK_COMM_0, micros(), "loop_ping", 0.0f);
+
+
 	//Update Sensor Data
-	sensors_update(micros());
+	sensors_update(micros());	//XXX: This takes ~230us with just IMU
 
 	//Timeout Checks
 
@@ -103,6 +111,7 @@ void loop(void)
 	//Send Motor Commands
 
     // loop time calculation
+
 	//TODO: Move this elsewhere
     _sensor_time.end = micros();
     _sensor_time.dt = _sensor_time.end - _sensor_time.start;
@@ -110,4 +119,6 @@ void loop(void)
     _sensor_time.counter++;
     _sensor_time.max = (_sensor_time.dt > _sensor_time.max) ? _sensor_time.dt : _sensor_time.max;
     _sensor_time.min = (_sensor_time.dt < _sensor_time.min) ? _sensor_time.dt : _sensor_time.min;
+
+	while(!imu_interrupt);
 }

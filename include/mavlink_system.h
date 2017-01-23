@@ -43,6 +43,7 @@ static inline void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 
 static inline void mavlink_stream_heartbeat(void) {
 	mavlink_msg_heartbeat_send(MAVLINK_COMM_0, MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_GENERIC, 0, 0, MAV_STATE_STANDBY);
+	LED1_TOGGLE;
 }
 
 static inline void mavlink_stream_sys_status(void) {
