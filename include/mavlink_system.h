@@ -60,12 +60,12 @@ static inline void mavlink_stream_sys_status(void) {
 	uint16_t errors_count3 = 0;
 	uint16_t errors_count4 = 0;
 
-	load = sensor_time.average_time/sensor_time.counter;
+	load = _sensor_time.average_time/_sensor_time.counter;
 
-	sensor_time.counter = 0;
-	sensor_time.average_time = 0;
-	sensor_time.max = 0;
-	sensor_time.min = 1000;
+	_sensor_time.counter = 0;
+	_sensor_time.average_time = 0;
+	_sensor_time.max = 0;
+	_sensor_time.min = 1000;
 
 
 
@@ -102,6 +102,22 @@ static inline void mavlink_stream_sys_status(void) {
 								errors_count3,
 								errors_count4);
 }
+
+/*
+static inline void mavlink_stream_scaled_imu(void) {
+
+
+mavlink_msg_scaled_imu_send(MAVLINK_COMM_0,
+	time_us,
+	(uint16_t)(accel_data[0]*accel_scale*1000.0f),
+	(uint16_t)(accel_data[1]*accel_scale*1000.0f),
+	(uint16_t)(accel_data[2]*accel_scale*1000.0f),
+	(uint16_t)(gyro_data[0]*MPU_GYRO_SCALE*1000.0f),
+	(uint16_t)(gyro_data[1]*MPU_GYRO_SCALE*1000.0f),
+	(uint16_t)(gyro_data[2]*MPU_GYRO_SCALE*1000.0f),
+	0, 0, 0);
+}
+*/
 
 //==-- List of supported mavlink messages
 	//x Ignored

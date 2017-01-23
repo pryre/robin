@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "fixvector3d.h"
+
+//TODO: Common header file for defines like this
 #define BOARD_REV 2
 
 // global variable declarations
@@ -24,21 +27,57 @@
 //extern int16_t _sonar_range;
 //extern uint32_t _sonar_time;
 
+//TODO: Sensors should have a "ready" state for when the are calculated and ready to use
+
 typedef struct {
-	uint32_t dt;
-	uint32_t counter;
-	uint32_t start;
-	uint32_t end;
-	uint32_t average_time;
-	uint32_t max;
-	uint32_t min;
+	bool present;
+	uint32_t start;			//Loop start time
+	uint32_t end;			//Loop end time
+	uint32_t dt;			//Time sepent this loop
+
+	uint32_t counter;		//Times the data from this sensor has been collated
+	uint32_t average_time;	//Sum of dt
+	uint32_t max;			//Maximum dt so far
+	uint32_t min;			//Minimum dt so far
 } sensor_readings_time_t;
 
-extern sensor_readings_time_t sensor_time;
+typedef struct {
+	bool present;
+    int16_t accel_raw[3];
+    int16_t gyro_raw[3];
+    int16_t temp_raw;
+
+	v3d accel;		//Vector of accel data
+	v3d gyro;		//Vector of gyro data
+	fix16_t temperature;	//Sensor temperature reading
+
+	uint32_t time;		//Time measured
+	fix16_t accel_scale;	//Scale to correct raw accel data
+	fix16_t gyro_scale;	//Scale to correct raw gyro data
+} sensor_readings_imu_t;
+
+typedef struct {
+	bool present;
+	int16_t pressure;		//Barometer reading
+	int16_t temperature;	//Sensor temperature reading
+} sensor_readings_barometer_t;
+
+typedef struct {
+	bool present;
+	int16_t range;	//Measured range
+	uint32_t time;	//Ping taken time
+} sensor_readings_sonar_t;
+
+extern sensor_readings_time_t _sensor_time;
+extern sensor_readings_imu_t _sensor_imu;
+extern sensor_readings_barometer_t _sensor_baro;
+extern sensor_readings_sonar_t _sensor_sonar;
 
 // function declarations
 void init_sensors(void);
-bool update_sensors(uint32_t time_us);
+bool sensors_read(void);
+//void sensors_poll(void);
+bool sensors_update(uint32_t time_us);
 
 //bool calibrate_acc(void);
 //bool calibrate_gyro(void);

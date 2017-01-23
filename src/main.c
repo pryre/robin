@@ -29,7 +29,7 @@
 
 serialPort_t * Serial1;
 extern void SetSysClock(bool overclock);
-sensor_readings_time_t sensor_time;
+sensor_readings_time_t _sensor_time;
 
 int main(void)
 {
@@ -62,14 +62,39 @@ void setup(void)
 void loop(void)
 {
 	//==-- Timing setup get loop time
-	sensor_time.start = micros();
+	_sensor_time.start = micros();
 
 	//==-- Critical
 
-	//Check Sensors
-	update_sensors(micros());
-	//Check Serial
-	communication_receive();
+	//Async Sensor Poll
+	//sensors_poll(); //TODO: This is done via the interrupt
+
+	//Keep busy until the sensor data is ready
+	//Non-critical functions should be here, but we should also
+	//do this loop multiple times, so it shouldn't lock the
+	//thread for a long time
+	while(!sensors_read()) { //TODO: HERE! THIS DOESN"T WORK FOR SOME REASON
+		//TODO: More things should be here if possible
+		//TODO: Metrics!
+
+		//Check Serial
+		communication_receive();
+
+		//Send Serial
+		//This might be ideal to do after all processing is done,
+		//but that puts it above everything else from the previous loop
+		//so no loss, especially if we have to wait anyway
+		communication_transmit(micros());
+
+		//==-- Remaining Time
+
+		//Parameter Handilng
+
+		//Debug Information
+	}
+
+	//Update Sensor Data
+	sensors_update(micros());
 
 	//Timeout Checks
 
@@ -77,47 +102,12 @@ void loop(void)
 
 	//Send Motor Commands
 
-	//==-- Remaining Time
-
-	//Send Serial
-	communication_transmit(micros());
-
-	//Parameter Handilng
-
-	//Debug Information
-
-
-	/*
-    if (accel_status == I2C_JOB_COMPLETE
-        && gyro_status == I2C_JOB_COMPLETE
-        && temp_status == I2C_JOB_COMPLETE)
-    {
-        static int32_t count = 0;
-
-        // Throttle printing
-        if(count > 10000)
-        {
-
-            count = 0;
-            debug("%d\t %d\t %d\t %d\t %d\t %d\t %d\t \n",
-                   (int32_t)(accel_data[0]*accel_scale*1000.0f),
-                    (int32_t)(accel_data[1]*accel_scale*1000.0f),
-                    (int32_t)(accel_data[2]*accel_scale*1000.0f),
-                    (int32_t)(gyro_data[0]*MPU_GYRO_SCALE*1000.0f),
-                    (int32_t)(gyro_data[1]*MPU_GYRO_SCALE*1000.0f),
-                    (int32_t)(gyro_data[2]*MPU_GYRO_SCALE*1000.0f),
-                    temp_data);
-        }
-        count++;
-
-    }*/
-
-
     // loop time calculation
-    sensor_time.end = micros();
-    sensor_time.dt = sensor_time.end - sensor_time.start;
-    sensor_time.average_time += sensor_time.dt;
-    sensor_time.counter++;
-    sensor_time.max = (sensor_time.dt > sensor_time.max) ? sensor_time.dt : sensor_time.max;
-    sensor_time.min = (sensor_time.dt < sensor_time.min) ? sensor_time.dt : sensor_time.min;
+	//TODO: Move this elsewhere
+    _sensor_time.end = micros();
+    _sensor_time.dt = _sensor_time.end - _sensor_time.start;
+    _sensor_time.average_time += _sensor_time.dt;
+    _sensor_time.counter++;
+    _sensor_time.max = (_sensor_time.dt > _sensor_time.max) ? _sensor_time.dt : _sensor_time.max;
+    _sensor_time.min = (_sensor_time.dt < _sensor_time.min) ? _sensor_time.dt : _sensor_time.min;
 }

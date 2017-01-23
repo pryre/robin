@@ -4,3 +4,12 @@
 [submodule "lib/mavlink"]
 	path = lib/mavlink
 	url = https://github.com/mavlink/c_library_v1
+[submodule "lib/TurboTrig"]
+	path = lib/TurboTrig
+	url = https://github.com/ibilux/TurboTrig
+[submodule "lib/libfixmath"]
+	path = lib/libfixmath
+	url = https://github.com/PetteriAimonen/libfixmath
+[submodule "lib/libfixmatrix"]
+	path = lib/libfixmatrix
+	url = https://github.com/PetteriAimonen/libfixmatrix
