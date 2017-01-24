@@ -179,25 +179,29 @@ static inline void mavlink_stream_autopilot_version(void) {
 //==-- Sends the requested parameter
 static inline void mavlink_stream_param_value(uint32_t index) {
 	char param_name[16];
-	float param_value = 0;
 	uint8_t param_type = 0;
+
+	union {
+		float f;
+		uint32_t i;
+	} u;	//The bytes are translated to the right unit on receiving, but need to be sent as a "float"
 
 	if(_params.types[index] == PARAM_TYPE_INT32) {
 		param_type = MAV_PARAM_TYPE_UINT32;
 
-		param_value = (float)get_param_int(index);
+		u.i = get_param_int(index);
 
 	} else if (_params.types[index] == PARAM_TYPE_FIX16) {
 		param_type = MAV_PARAM_TYPE_REAL32;
 
-		param_value = fix16_to_float(get_param_fix16(index));
+		u.f = fix16_to_float(get_param_fix16(index));
 	}
 
 	memcpy(param_name, _params.names[index], MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
 
 	mavlink_msg_param_value_send(MAVLINK_COMM_0,
 									param_name,		//String of name
-									param_value,	//Value (always as float)
+									u.f,			//Value (always as float)
 									param_type,		//From MAV_PARAM_TYPE
 									PARAMS_COUNT,	//Total number of parameters
 									index);

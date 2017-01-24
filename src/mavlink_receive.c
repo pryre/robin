@@ -30,6 +30,24 @@ void communication_receive(void) {
 					} //Else this message is for someone else
 
 					break;
+				case MAVLINK_MSG_ID_PARAM_REQUEST_READ:
+					if((mavlink_msg_param_request_read_get_target_system(&msg) == mavlink_system.sysid) &&
+						(mavlink_msg_param_request_read_get_target_component(&msg) == mavlink_system.compid)) {
+
+						int16_t index = mavlink_msg_param_request_read_get_param_index(&msg);
+
+						if((index != -1) && (index < PARAMS_COUNT)) {
+							//Set the new request flag to true
+							param_to_send = index;
+						} else {
+							char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1];
+							mavlink_msg_param_request_read_get_param_id(&msg, param_id);
+							param_to_send = lookup_param_id(param_id); //TODO: UNTESTED
+						}
+
+					} //Else this message is for someone else
+
+					break;
 				case MAVLINK_MSG_ID_COMMAND_LONG:
 					//mavlink_command_long_t command_long;
 					//mavlink_msg_command_long_decode(&msg, &command_long);
@@ -38,7 +56,7 @@ void communication_receive(void) {
 
 					switch(mavlink_msg_command_long_get_command(&msg)) {
 						case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES:
-							mavlink_stream_autopilot_version();
+							mavlink_stream_autopilot_version(); //TODO: NOT HERE!
 
 							break;
 						case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
