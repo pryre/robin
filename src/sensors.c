@@ -11,6 +11,8 @@
 #include "fixvector3d.h"
 
 //==-- Local Variables
+
+static const fix16_t GRAVITY_CONST = 0x0009CE80; //Is equal to 9.80665 (Positive!) in Q16.16
 //static int32_t last_check_imu = 0;
 /*static float accel_scale; // converts to units of m/s^2
 
@@ -23,25 +25,23 @@ static uint8_t gyro_status = 0;
 static uint8_t temp_status = 0;
 extern volatile bool imu_interrupt;
 
-sensor_readings_imu_t _sensor_imu;
-sensor_readings_barometer_t _sensor_baro;
-sensor_readings_sonar_t _sensor_sonar;
+sensor_readings_t _sensors;
 
 
 //==-- Functions
 static void time_init(void) {
-	_sensor_time.present = true;
-	_sensor_time.dt = 0;
-	_sensor_time.counter = 0;
-	_sensor_time.start = 0;
-	_sensor_time.end = 0;
-	_sensor_time.max = 0;
-	_sensor_time.min = 1000;
+	_sensors.time.present = true;
+	_sensors.time.dt = 0;
+	_sensors.time.counter = 0;
+	_sensors.time.start = 0;
+	_sensors.time.end = 0;
+	_sensors.time.max = 0;
+	_sensors.time.min = 1000;
 }
 /*
 static void imu_init(void) {
-	_sensor_imu.present = true;
-	_sensor_imu.temperature = 0;
+	_sensors.imu.present = true;
+	_sensors.imu.temperature = 0;
 	uint32_t time;		//Time measured
 	float accel_scale;	//Scale to correct raw accel data
 	float gyro_scale;	//Scale to correct raw gyro data
@@ -57,9 +57,9 @@ static void sonar_init(void) {
 
 static void sensors_imu_poll(void) {
 		imu_interrupt = true;
-		mpu6050_request_async_accel_read(_sensor_imu.accel_raw, &accel_status);
-		mpu6050_request_async_gyro_read(_sensor_imu.gyro_raw, &gyro_status);
-		mpu6050_request_async_temp_read(&(_sensor_imu.temp_raw), &temp_status);
+		mpu6050_request_async_accel_read(_sensors.imu.accel_raw, &accel_status);
+		mpu6050_request_async_gyro_read(_sensors.imu.gyro_raw, &gyro_status);
+		mpu6050_request_async_temp_read(&(_sensors.imu.temp_raw), &temp_status);
 }
 
 void init_sensors(void) {
@@ -69,8 +69,8 @@ void init_sensors(void) {
 	//TODO: Set IMU to be calibrated if not already
     mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_int(PARAM_BAUD_RATE));
 	acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);
-	_sensor_imu.accel_scale = fix16_sdiv(fix16_from_float(9.80665f), fix16_from_int(acc1G));
-	_sensor_imu.accel_scale = fix16_from_float(MPU_GYRO_SCALE);
+	_sensors.imu.accel_scale = fix16_sdiv(GRAVITY_CONST, fix16_from_int(acc1G));
+	_sensors.imu.accel_scale = fix16_from_float(MPU_GYRO_SCALE);
 
 	//==-- Timer
 	time_init();
@@ -107,34 +107,22 @@ bool sensors_update(uint32_t time_us) {
     // convert temperature SI units (degC, m/s^2, rad/s)
     // convert to NED (first of braces)
 	//Correct for biases and temperature (second braces)
-	//TODO: Fix get_param_float to be of the right type so the extra conversion here is not needed
 	//TODO: Calibration has to be done without biases and temp factored in
-	_sensor_imu.time = time_us;
+	//TODO: Perhaps X is being calculated in revearse
+	_sensors.imu.time = time_us;
 
-	_sensor_imu.temperature = fix16_sadd(fix16_sdiv(fix16_from_int(_sensor_imu.temp_raw), fix16_from_float(340.0f)), fix16_from_float(36.53f));
+	_sensors.imu.temperature = fix16_sadd(fix16_sdiv(fix16_from_int(_sensors.imu.temp_raw), fix16_from_float(340.0f)), fix16_from_float(36.53f));
 
-    _sensor_imu.accel.x = fix16_ssub(fix16_smul(fix16_from_int(_sensor_imu.accel_raw[0]), _sensor_imu.accel_scale), fix16_sadd(fix16_smul(fix16_from_float(get_param_float(PARAM_ACC_X_TEMP_COMP)), _sensor_imu.temperature), fix16_from_float(get_param_float(PARAM_ACC_X_BIAS))));
-    _sensor_imu.accel.y = fix16_ssub(fix16_smul(fix16_from_int(-_sensor_imu.accel_raw[1]), _sensor_imu.accel_scale), fix16_sadd(fix16_smul(fix16_from_float(get_param_float(PARAM_ACC_Y_TEMP_COMP)), _sensor_imu.temperature), fix16_from_float(get_param_float(PARAM_ACC_Y_BIAS))));
-    _sensor_imu.accel.z = fix16_ssub(fix16_smul(fix16_from_int(-_sensor_imu.accel_raw[2]), _sensor_imu.accel_scale), fix16_sadd(fix16_smul(fix16_from_float(get_param_float(PARAM_ACC_Z_TEMP_COMP)), _sensor_imu.temperature), fix16_from_float(get_param_float(PARAM_ACC_Z_BIAS))));
+    _sensors.imu.accel.x = fix16_ssub(fix16_smul(fix16_from_int(_sensors.imu.accel_raw[0]), _sensors.imu.accel_scale), fix16_sadd(fix16_smul(get_param_fix16(PARAM_ACC_X_TEMP_COMP), _sensors.imu.temperature), get_param_fix16(PARAM_ACC_X_BIAS)));
+    _sensors.imu.accel.y = fix16_ssub(fix16_smul(fix16_from_int(-_sensors.imu.accel_raw[1]), _sensors.imu.accel_scale), fix16_sadd(fix16_smul(get_param_fix16(PARAM_ACC_Y_TEMP_COMP), _sensors.imu.temperature), get_param_fix16(PARAM_ACC_Y_BIAS)));
+    _sensors.imu.accel.z = fix16_ssub(fix16_smul(fix16_from_int(-_sensors.imu.accel_raw[2]), _sensors.imu.accel_scale), fix16_sadd(fix16_smul(get_param_fix16(PARAM_ACC_Z_TEMP_COMP), _sensors.imu.temperature), get_param_fix16(PARAM_ACC_Z_BIAS)));
 
-	_sensor_imu.gyro.x = fix16_ssub(fix16_smul(fix16_from_int(_sensor_imu.gyro_raw[0]), _sensor_imu.gyro_scale), fix16_from_float(get_param_float(PARAM_GYRO_X_BIAS)));
-	_sensor_imu.gyro.y = fix16_ssub(fix16_smul(fix16_from_int(-_sensor_imu.gyro_raw[1]), _sensor_imu.gyro_scale), fix16_from_float(get_param_float(PARAM_GYRO_Y_BIAS)));
-	_sensor_imu.gyro.z = fix16_ssub(fix16_smul(fix16_from_int(-_sensor_imu.gyro_raw[2]), _sensor_imu.gyro_scale), fix16_from_float(get_param_float(PARAM_GYRO_Z_BIAS)));
+	_sensors.imu.gyro.x = fix16_ssub(fix16_smul(fix16_from_int(_sensors.imu.gyro_raw[0]), _sensors.imu.gyro_scale), get_param_fix16(PARAM_GYRO_X_BIAS));
+	_sensors.imu.gyro.y = fix16_ssub(fix16_smul(fix16_from_int(-_sensors.imu.gyro_raw[1]), _sensors.imu.gyro_scale), get_param_fix16(PARAM_GYRO_Y_BIAS));
+	_sensors.imu.gyro.z = fix16_ssub(fix16_smul(fix16_from_int(-_sensors.imu.gyro_raw[2]), _sensors.imu.gyro_scale), get_param_fix16(PARAM_GYRO_Z_BIAS));
 
 	//Send mavlink HIGHRES_IMU message
 	//[timestamp, x_acc, y_acc, z_acc, x_gyro, y_gyro, z_gyro, x_mag, y_mag, z_mag, abs_pressure, diff_pressure, pressure_alt, temperature, updated_bitmask]
-	mavlink_msg_highres_imu_send(MAVLINK_COMM_0,
-		_sensor_imu.time,
-		fix16_to_float(_sensor_imu.accel.x),
-		fix16_to_float(_sensor_imu.accel.y),
-		fix16_to_float(_sensor_imu.accel.z),
-		fix16_to_float(_sensor_imu.gyro.x),
-		fix16_to_float(_sensor_imu.gyro.y),
-		fix16_to_float(_sensor_imu.gyro.z),
-		0, 0, 0,
-		0, 0, 0,
-		0,
-		((1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5)) );
 
 	/*
 	//if( time_us - last_check_imu > 100) {

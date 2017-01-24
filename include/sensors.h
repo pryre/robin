@@ -68,10 +68,15 @@ typedef struct {
 	uint32_t time;	//Ping taken time
 } sensor_readings_sonar_t;
 
-extern sensor_readings_time_t _sensor_time;
-extern sensor_readings_imu_t _sensor_imu;
-extern sensor_readings_barometer_t _sensor_baro;
-extern sensor_readings_sonar_t _sensor_sonar;
+
+typedef struct {
+	sensor_readings_time_t time;
+	sensor_readings_imu_t imu;
+	sensor_readings_barometer_t baro;
+	sensor_readings_sonar_t sonar;
+} sensor_readings_t;
+
+extern sensor_readings_t _sensors;
 
 // function declarations
 void init_sensors(void);

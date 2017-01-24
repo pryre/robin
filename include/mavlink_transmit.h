@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mavlink_system.h"
+#include "mavlink/mavlink_types.h"
 
 //This will contain functions to build and transmit mavlink messages
 //as well as a listing of utility functions to send each supported message type
@@ -19,6 +20,7 @@ typedef struct {
 typedef enum {
 	MAVLINK_STREAM_ID_HEARTBEAT,
 	MAVLINK_STREAM_ID_SYS_STATUS,
+	MAVLINK_STREAM_ID_HIGHRES_IMU,
 	MAVLINK_STREAM_COUNT
 } mavlink_stream_id_t;
 

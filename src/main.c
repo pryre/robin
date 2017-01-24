@@ -24,24 +24,32 @@
 #include "breezystm32.h"
 #include "params.h"
 #include "sensors.h"
+#include "mavlink/mavlink_types.h"
 #include "mavlink_receive.h"
 #include "mavlink_transmit.h"
 
 serialPort_t * Serial1;
 extern void SetSysClock(bool overclock);
-sensor_readings_time_t _sensor_time;
+sensor_readings_t _sensors;
+system_t _system_status;
 volatile bool imu_interrupt;
 
 int main(void)
 {
+	_system_status.state = MAV_STATE_UNINIT;
+
     SetSysClock(false);
 	imu_interrupt = false;
 
     systemInit();
 
+	_system_status.state = MAV_STATE_BOOT;
+
     setup();
 
     Serial1 = uartOpen(USART1, NULL, get_param_int(PARAM_BAUD_RATE), MODE_RXTX, SERIAL_NOT_INVERTED);
+
+	_system_status.state = MAV_STATE_STANDBY;
 
     while (true) {
         loop();
@@ -67,58 +75,58 @@ void setup(void)
 void loop(void)
 {
 	//==-- Timing setup get loop time
-	_sensor_time.start = micros();
+	_sensors.time.start = micros();
 
-	//==-- Critical
+	//==-- Read Sensors
 
-	//Async Sensor Poll
-	//sensors_poll(); //TODO: This is done via the interrupt
+	//Sensor Poll
+	//Take a poll of any sensors (that aren't the IMU) that need to be updated
+	//sensors_poll();	//TODO: Good time to check other sensors for more raw data
+						//TODO: This should alert sensors_read() somhow to let it know there's more data to wait for
 
 	//Keep busy until the sensor data is ready
 	//Non-critical functions should be here, but we should also
 	//do this loop multiple times, so it shouldn't lock the
 	//thread for a long time
 	while(!sensors_read()) { //XXX: With no load, it takes ~557us to complete sensor_read()
-		//TODO: More things should be here if possible
-		//TODO: Metrics!
 
-		//Check Serial
+		//==-- Check Serial
 		communication_receive();
 
-		//Send Serial
+		//==-- Send Serial
 		//This might be ideal to do after all processing is done,
 		//but that puts it above everything else from the previous loop
 		//so no loss, especially if we have to wait anyway
 		communication_transmit(micros());
 
-		//==-- Remaining Time
+		//==-- Parameter Handilng
 
-		//Parameter Handilng
-
-		//Debug Information
+		//==-- Debug Information
+		//mavlink_msg_named_value_float_send(MAVLINK_COMM_0, micros(), "loop_ping", 0.0f);
 	}
 
-	//mavlink_msg_named_value_float_send(MAVLINK_COMM_0, micros(), "loop_ping", 0.0f);
 
 
 	//Update Sensor Data
 	sensors_update(micros());	//XXX: This takes ~230us with just IMU
 
-	//Timeout Checks
+	//==-- Timeout Checks
+	//TODO: Set MAV_STATE in this function
 
-	//Update Estimator
+	//==-- Update Estimator
 
-	//Send Motor Commands
+	//==-- Send Motor Commands
 
-    // loop time calculation
+    //==-- loop time calculation
 
 	//TODO: Move this elsewhere
-    _sensor_time.end = micros();
-    _sensor_time.dt = _sensor_time.end - _sensor_time.start;
-    _sensor_time.average_time += _sensor_time.dt;
-    _sensor_time.counter++;
-    _sensor_time.max = (_sensor_time.dt > _sensor_time.max) ? _sensor_time.dt : _sensor_time.max;
-    _sensor_time.min = (_sensor_time.dt < _sensor_time.min) ? _sensor_time.dt : _sensor_time.min;
+    _sensors.time.end = micros();
+    _sensors.time.dt = _sensors.time.end - _sensors.time.start;
+    _sensors.time.average_time += _sensors.time.dt;
+    _sensors.time.counter++;
+    _sensors.time.max = (_sensors.time.dt > _sensors.time.max) ? _sensors.time.dt : _sensors.time.max;
+    _sensors.time.min = (_sensors.time.dt < _sensors.time.min) ? _sensors.time.dt : _sensors.time.min;
 
+	//==-- Waste remaining time
 	while(!imu_interrupt);
 }

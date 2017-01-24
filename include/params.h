@@ -3,18 +3,24 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "fix16.h"
+
 //#include "mavlink.h"
 
-//TODO: #define PARAMS_NAME_LENGTH MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN
-#define PARAMS_NAME_LENGTH 32
+//This needs to be 1 less, as we need to allow space for '\n'
+//MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1
+#define PARAMS_NAME_LENGTH 17
 
 typedef enum {
 	//==-- System
 	PARAM_BOARD_REVISION,
+	PARAM_VERSION_FIRMWARE,
+	PARAM_VERSION_SOFTWARE,
 	PARAM_BAUD_RATE,
 
 	//==-- Mavlink
 	PARAM_SYSTEM_ID,
+	PARAM_COMPONENT_ID,
 	PARAM_STREAM_HEARTBEAT_RATE,
 
 	PARAM_STREAM_ATTITUDE_RATE,
@@ -75,7 +81,7 @@ typedef enum {
 
 	//==-- Output
 	PARAM_MOTOR_PWM_SEND_RATE,
-	PARAM_MOTOR_IDLE_PWM,
+	PARAM_MOTOR_PWM_IDLE,
 	PARAM_SPIN_MOTORS_WHEN_ARMED,
 	PARAM_MIXER,
 
@@ -85,7 +91,7 @@ typedef enum {
 
 typedef enum {
 	PARAM_TYPE_INT32,
-	PARAM_TYPE_FLOAT,
+	PARAM_TYPE_FIX16,
 	PARAM_TYPE_INVALID
 } param_type_t;
 
@@ -151,11 +157,11 @@ param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]);
 int get_param_int(param_id_t id);
 
 /**
- * @brief Get the value of a floating point parameter by id
+ * @brief Get the value of a fixed point parameter by id
  * @param id The ID of the parameter
  * @return The value of the parameter
  */
-float get_param_float(param_id_t id);
+fix16_t get_param_fix16(param_id_t id);
 
 /**
  * @brief Get the name of a parameter
@@ -180,12 +186,12 @@ param_type_t get_param_type(param_id_t id);
 bool set_param_int(param_id_t id, int32_t value);
 
 /**
- * @brief Sets the value of a floating point parameter by ID and calls the parameter callback
+ * @brief Sets the value of a fixed point parameter by ID and calls the parameter callback
  * @param id The ID of the parameter
  * @param value The new value
  * @return  True if a parameter was changed, false otherwise
  */
-bool set_param_float(param_id_t id, float value);
+bool set_param_fix16(param_id_t id, fix16_t value);
 
 /**
  * @brief Sets the value of a parameter by name and calls the parameter change callback
@@ -196,9 +202,9 @@ bool set_param_float(param_id_t id, float value);
 bool set_param_by_name_int(const char name[PARAMS_NAME_LENGTH], int32_t value);
 
 /**
- * @brief Sets the value of a floating point parameter by name and calls the parameter change callback
+ * @brief Sets the value of a fixed point parameter by name and calls the parameter change callback
  * @param name The name of the parameter
  * @param value The new value
  * @return True if a parameter value was changed, false otherwise
  */
-bool set_param_by_name_float(const char name[PARAMS_NAME_LENGTH], float value);
+bool set_param_by_name_fix16(const char name[PARAMS_NAME_LENGTH], fix16_t value);

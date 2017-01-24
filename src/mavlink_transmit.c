@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "params.h"
+
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
 //This will contain functions to build and transmit mavlink messages
@@ -150,9 +152,14 @@ static void mavlink_send_low_priority(void)
 }*/
 
 // local variable definitions
+bool request_all_params;
+int32_t param_to_send;
+
+//TODO: Should IMU be sending this fast?
 static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 	{ .period_us = 1000000, .last_time_us = 0, .send_function = mavlink_stream_heartbeat },
 	{ .period_us = 5000000, .last_time_us = 0, .send_function = mavlink_stream_sys_status },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_highres_imu }	//Set at 900, not 1000 as we want it to do it as fast as possible, but not multiple times per loop
 	/*
 	{ .period_us = 200000,  .last_time_us = 0, .send_function = mavlink_send_attitude },
 
@@ -166,16 +173,42 @@ static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 	{ .period_us = 10000,   .last_time_us = 0, .send_function = mavlink_send_low_priority }*/
 };
 
-// function definitions
-void communication_transmit(uint32_t time_us) {
+static void mavlink_send_stream(uint32_t time_us) {
 	for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
-		if (mavlink_streams[i].period_us && time_us - mavlink_streams[i].last_time_us >= mavlink_streams[i].period_us) {
+		if (mavlink_streams[i].period_us && (time_us >= mavlink_streams[i].last_time_us + mavlink_streams[i].period_us)) {
 			// if we took too long, set the last_time_us to be where it should have been
-			mavlink_streams[i].last_time_us += mavlink_streams[i].period_us;
+			//mavlink_streams[i].last_time_us += mavlink_streams[i].period_us;
+			mavlink_streams[i].last_time_us = time_us;
 			mavlink_streams[i].send_function();
 		}
 	}
 }
+
+//This function will send out 1 packet of requested data at a time
+//This is for data that isn't time-sensitive or may need a lot of processing per packet
+static void mavlink_transmit_low_priority(uint32_t time_us) {
+	//bool sent_something = false; //TODO: Flag to set so only one message gets sent per loop
+
+	//Params
+	if(param_to_send != -1) {
+		mavlink_stream_param_value(param_to_send);
+
+		if(request_all_params) {
+			param_to_send++;
+		}
+
+		if(!request_all_params || (param_to_send >= PARAMS_COUNT))
+			param_to_send = -1;
+	}
+}
+
+// function definitions
+void communication_transmit(uint32_t time_us) {
+	mavlink_send_stream(time_us);
+
+	mavlink_transmit_low_priority(time_us);
+}
+
 /*
 void mavlink_stream_set_rate(mavlink_stream_id_t stream_id, uint32_t rate)
 {
