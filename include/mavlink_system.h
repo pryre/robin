@@ -219,6 +219,8 @@ static inline void mavlink_stream_param_value(uint32_t index) {
 	//- manual_setpoint.h
 	//- message_interval.h
 	//- param_set.h
+	//+ param_request_list.h
+	//+ param_request_read.h
 	//- ping.h
 	//- raw_imu.h
 	//- raw_pressure.h
@@ -240,9 +242,7 @@ static inline void mavlink_stream_param_value(uint32_t index) {
 	//+ heartbeat.h
 	//- named_value_float.h
 	//- named_value_int.h
-	//- param_request_list.h
-	//- param_request_read.h
-	//- param_value.h
+	//+ param_value.h
 	//- ping.h
 	//- scaled_imu.h
 	//- scaled_pressure.h
