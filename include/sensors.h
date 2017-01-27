@@ -68,13 +68,24 @@ typedef struct {
 	uint32_t time;	//Ping taken time
 } sensor_readings_sonar_t;
 
-
 typedef struct {
 	sensor_readings_time_t time;
 	sensor_readings_imu_t imu;
 	sensor_readings_barometer_t baro;
 	sensor_readings_sonar_t sonar;
 } sensor_readings_t;
+
+typedef enum {
+	SENSOR_CAL_NONE = 0,
+	SENSOR_CAL_GYRO = 1,
+	SENSOR_CAL_MAG = 2,
+	SENSOR_CAL_BARO = 4,
+	SENSOR_CAL_ACCEL = 8,
+	SENSOR_CAL_MOTOR = 16,	//TODO: Should this calibrate ESCs instead?
+	SENSOR_CAL_ALL = 128
+} sensor_calibration_request_t;
+
+extern uint8_t _sensor_calibration;
 
 extern sensor_readings_t _sensors;
 

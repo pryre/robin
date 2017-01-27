@@ -47,6 +47,11 @@ int main(void)
 
     setup();
 
+	//We really need to consider how the baud affects Comms
+	//A baud rate of 921600 will get us a data rate of 115200 bytes/sec
+	//This is assuming we don't use stop bits
+	//This means we can send ~115 bytes per loop without any risk of a buffer overflow
+	//As mavlink can have max messages of 250+ bytes, we want to send as little as possible each loop to allow catchup
     Serial1 = uartOpen(USART1, NULL, get_param_int(PARAM_BAUD_RATE), MODE_RXTX, SERIAL_NOT_INVERTED);
 
 	_system_status.state = MAV_STATE_STANDBY;
@@ -74,6 +79,8 @@ void setup(void)
 
 void loop(void)
 {
+	bool message_transmitted = false;
+
 	//==-- Timing setup get loop time
 	_sensors.time.start = micros();
 
@@ -94,10 +101,10 @@ void loop(void)
 		communication_receive();
 
 		//==-- Send Serial
-		//This might be ideal to do after all processing is done,
-		//but that puts it above everything else from the previous loop
-		//so no loss, especially if we have to wait anyway
-		communication_transmit(micros());
+		//Check to see if a message has been sent this loop, then see if a message should be sent
+		//Only allow this once per loop due to buffer risks (see serial define above)
+		if(!message_transmitted)
+			message_transmitted = communication_transmit(micros());
 
 		//==-- Parameter Handilng
 

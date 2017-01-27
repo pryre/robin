@@ -2,8 +2,8 @@
 #include "mavlink_system.h"
 #include "breezystm32.h"
 
-bool request_all_params;
-int32_t param_to_send;	//TODO: This limits params to int32, need to check against params.h
+int32_t _request_all_params;
+mavlink_queue_t _low_priority_queue;
 
 void communication_receive(void) {
 	mavlink_message_t msg;
@@ -16,71 +16,99 @@ void communication_receive(void) {
 		if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
 			// Handle message
 			switch(msg.msgid) {
-				case MAVLINK_MSG_ID_HEARTBEAT:
+				case MAVLINK_MSG_ID_HEARTBEAT: {
 					//LED0_TOGGLE;
 					// E.g. read GCS heartbeat and go into
 					// comm lost mode if timer times out
 					break;
-				case MAVLINK_MSG_ID_PARAM_REQUEST_LIST:
+				}
+				case MAVLINK_MSG_ID_PARAM_REQUEST_LIST: {
 					if((mavlink_msg_param_request_list_get_target_system(&msg) == mavlink_system.sysid) &&
 						(mavlink_msg_param_request_list_get_target_component(&msg) == mavlink_system.compid)) {
 						//Set the new request flag to true
-						param_to_send = 0;
-						request_all_params = true;
+						_request_all_params = 0;
 					} //Else this message is for someone else
 
 					break;
-				case MAVLINK_MSG_ID_PARAM_REQUEST_READ:
+				}
+				case MAVLINK_MSG_ID_PARAM_REQUEST_READ: {
 					if((mavlink_msg_param_request_read_get_target_system(&msg) == mavlink_system.sysid) &&
 						(mavlink_msg_param_request_read_get_target_component(&msg) == mavlink_system.compid)) {
 
 						int16_t index = mavlink_msg_param_request_read_get_param_index(&msg);
 
-						if((index != -1) && (index < PARAMS_COUNT)) {
-							//Set the new request flag to true
-							param_to_send = index;
-						} else {
-							char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1];
-							mavlink_msg_param_request_read_get_param_id(&msg, param_id);
-							param_to_send = lookup_param_id(param_id); //TODO: UNTESTED
-						}
+						if(index < PARAMS_COUNT) {
+							if(index == -1) {	//Parameter is specified with name
+								char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1];
+								mavlink_msg_param_request_read_get_param_id(&msg, param_id);
+								index = lookup_param_id(param_id); //TODO: UNTESTED
+							}
 
+							if(check_lpq_space_free()) {
+								uint8_t i = get_lpq_next_slot();
+								_low_priority_queue.buffer_len[i] = mavlink_prepare_param_value(_low_priority_queue.buffer[i], index);
+								_low_priority_queue.queued_message_count++;
+							}
+						}
 					} //Else this message is for someone else
 
 					break;
-				case MAVLINK_MSG_ID_COMMAND_LONG:
-					//mavlink_command_long_t command_long;
-					//mavlink_msg_command_long_decode(&msg, &command_long);
-					//switch command_long.command
-						//switch command_long.param1
+				}
+				case MAVLINK_MSG_ID_COMMAND_LONG: {
+					//A command should always have an acknowledge
+					bool need_ack = false;
+					uint16_t command = mavlink_msg_command_long_get_command(&msg);
+					uint8_t command_result = MAV_RESULT_FAILED;
 
-					switch(mavlink_msg_command_long_get_command(&msg)) {
-						case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES:
-							mavlink_stream_autopilot_version(); //TODO: NOT HERE!
+					switch(command) {
+						case MAV_CMD_PREFLIGHT_CALIBRATION:	//TODO: This should be done without locking the thread
+							//TODO: Need to actually start calibration
+							need_ack = true;
+							command_result = MAV_RESULT_ACCEPTED;
 
 							break;
+						case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES:
+							if(check_lpq_space_free()) {
+								uint8_t i = get_lpq_next_slot();
+								_low_priority_queue.buffer_len[i] = mavlink_prepare_autopilot_version(_low_priority_queue.buffer[i]);
+								_low_priority_queue.queued_message_count++;
+							}
+							break;
 						case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
+							need_ack = true;
 							//TODO: Make sure mav is in preflight mode
 							switch((int)mavlink_msg_command_long_get_param1(&msg)) {
 								case 1:
-									systemReset();
+									systemReset();	//Should be in the main, check for system flags or something
+									command_result = MAV_RESULT_ACCEPTED;
 									break;
 								case 3:
 									systemResetToBootloader();
+									command_result = MAV_RESULT_ACCEPTED;
 									break;
 								default:
-									//TODO: Error?
+									command_result = MAV_RESULT_UNSUPPORTED;
 									break;
 							}
 
 							break;
 							//TODO: Handle other cases?
 						default:
-							//TODO: Error?
+							need_ack = true;
+							command_result = MAV_RESULT_UNSUPPORTED;
 							break;
 					}
 
+					if(need_ack) {
+						if(check_lpq_space_free()) {
+							uint8_t i = get_lpq_next_slot();
+							_low_priority_queue.buffer_len[i] = mavlink_prepare_command_ack(_low_priority_queue.buffer[i], command, command_result);
+							_low_priority_queue.queued_message_count++;
+						}
+					}
+
 					break;
+				}
 				default:
 					//TODO: Error?
 					//Do nothing

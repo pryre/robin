@@ -152,26 +152,35 @@ static void mavlink_send_low_priority(void)
 }*/
 
 // local variable definitions
-bool request_all_params;
-int32_t param_to_send;
+int32_t _request_all_params;
+mavlink_queue_t _low_priority_queue;
 
 static void mavlink_transmit_low_priority() {
-	//bool sent_something = false; //TODO: Flag to set so only one message gets sent per loop
+	if(_request_all_params >= 0) {
+		if(check_lpq_space_free()) {	//Don't flood the buffer
+			//Insert the new message
+			uint8_t i = get_lpq_next_slot();
+			_low_priority_queue.buffer_len[i] = mavlink_prepare_param_value(_low_priority_queue.buffer[i], _request_all_params);
+			_low_priority_queue.queued_message_count++;
 
-	//Params
-	if(param_to_send >= 0) {
-		mavlink_stream_param_value(param_to_send);
+			//
+			_request_all_params++;
 
-		if(request_all_params) {
-			param_to_send++;
-
-			if(param_to_send >= PARAMS_COUNT) {	//Kind of doubles up, but is faster if only 1 is requested
-				request_all_params = false;
-				param_to_send = -1;
+			if(_request_all_params >= PARAMS_COUNT) {
+				_request_all_params = -1;
 			}
-		} else {
-			param_to_send = -1;
 		}
+	}
+
+	//If there are messages in the queue
+	if(_low_priority_queue.queued_message_count > 0) {
+		//Transmit the message
+		uint16_t i;
+		for (i = 0; i < _low_priority_queue.buffer_len[_low_priority_queue.queue_position]; i++)
+			comm_send_ch(MAVLINK_COMM_0, _low_priority_queue.buffer[_low_priority_queue.queue_position][i]);
+
+		//Move the queue along
+		remove_current_lpq_message();
 	}
 }
 
@@ -179,7 +188,7 @@ static void mavlink_transmit_low_priority() {
 static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 	{ .period_us = 1000000, .last_time_us = 0, .send_function = mavlink_stream_heartbeat },
 	{ .period_us = 5000000, .last_time_us = 0, .send_function = mavlink_stream_sys_status },
-	{ .period_us = 900, .last_time_us = 0, .send_function = mavlink_stream_highres_imu },	//Set at 900, not 1000 as we want it to do it as fast as possible, but not multiple times per loop
+	{ .period_us = 1900, .last_time_us = 0, .send_function = mavlink_stream_highres_imu },	//Set at 900, not 1000 as we want it to do it as fast as possible, but not multiple times per loop
 	/*
 	{ .period_us = 200000,  .last_time_us = 0, .send_function = mavlink_send_attitude },
 
@@ -201,13 +210,22 @@ static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 //This is for data that isn't time-sensitive or may need a lot of processing per packet
 
 // function definitions
-void communication_transmit(uint32_t time_us) {
+bool communication_transmit(uint32_t time_us) {
+	bool message_sent = false;
+
 	for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
 		if (mavlink_streams[i].period_us && (time_us >= mavlink_streams[i].last_time_us + mavlink_streams[i].period_us)) {
 			mavlink_streams[i].last_time_us = time_us;
 			mavlink_streams[i].send_function();
+
+			//We only want to send 1 message each loop, otherwise we risk overloading the serial buffer
+			//This will also offset the message streams so they are all staggered
+			message_sent = true;
+			break;
 		}
 	}
+
+	return message_sent;
 }
 
 /*

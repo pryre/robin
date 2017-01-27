@@ -1,6 +1,7 @@
 #pragma once
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
+#define LOW_PRIORITY_QUEUE_SIZE 50
 
 #include "mavlink/mavlink_types.h"
 #include "breezystm32.h"
@@ -8,6 +9,7 @@
 #include "params.h"
 #include "safety.h"
 #include "fix16.h"
+
 
 /* Struct that stores the communication settings of this system.
    you can also define / alter these settings elsewhere, as long
@@ -20,8 +22,7 @@
    Lines also in your main.c, e.g. by reading these parameter from EEPROM.
  */
 
-extern bool request_all_params;
-extern int32_t param_to_send;
+extern int32_t _request_all_params;
 
 mavlink_system_t mavlink_system;
 system_t _system_status;
@@ -42,8 +43,7 @@ static inline void communications_init(void) {
 	mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID); // System ID, 1-255
 	mavlink_system.compid = get_param_int(PARAM_COMPONENT_ID); // Component/Subsystem ID, 1-255
 
-	request_all_params = false;
-	param_to_send = -1;
+	_request_all_params = -1;
 }
 
 static inline void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
@@ -55,6 +55,46 @@ static inline void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 }
 
 #include "mavlink/common/mavlink.h"
+
+//==-- Low priority message queue
+
+typedef struct {
+	uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE][MAVLINK_MAX_PACKET_LEN];
+	uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE];
+	uint16_t queue_position;
+	uint16_t queued_message_count;
+} mavlink_queue_t;
+
+extern mavlink_queue_t _low_priority_queue;
+
+static inline uint16_t get_lpq_next_slot(void) {
+	uint16_t next_slot = 0;
+
+	next_slot = _low_priority_queue.queue_position + _low_priority_queue.queued_message_count;
+
+	//See if the queue needs to wrap around the circular buffer
+	if (next_slot >= LOW_PRIORITY_QUEUE_SIZE)
+		next_slot = next_slot - LOW_PRIORITY_QUEUE_SIZE;
+
+	return next_slot;
+}
+
+
+static inline bool check_lpq_space_free(void) {
+	//If the count is at the queue size limit, return false
+	//TODO: Have an error check here to alert if this overflows
+	return (_low_priority_queue.queued_message_count < LOW_PRIORITY_QUEUE_SIZE);
+}
+
+static inline void remove_current_lpq_message(void) {
+	_low_priority_queue.queue_position++;
+
+	if(_low_priority_queue.queue_position >= LOW_PRIORITY_QUEUE_SIZE)
+		_low_priority_queue.queue_position = 0;
+
+	if(_low_priority_queue.queued_message_count > 0)
+		_low_priority_queue.queued_message_count--;
+}
 
 //==-- Sends
 static inline void mavlink_stream_heartbeat(void) {
@@ -88,8 +128,8 @@ static inline void mavlink_stream_sys_status(void) {
 	uint8_t battery_remaining = 0;
 	uint16_t drop_rate_comm = 0;
 	uint16_t errors_comm = 0;
-	uint16_t errors_count1 = 0;
-	uint16_t errors_count2 = 0;
+	uint16_t errors_count1 = _low_priority_queue.queued_message_count;
+	uint16_t errors_count2 = _low_priority_queue.queue_position;
 	uint16_t errors_count3 = 0;
 	uint16_t errors_count4 = 0;
 
@@ -153,8 +193,10 @@ static inline void mavlink_stream_highres_imu(void) {
 									((1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5)) );
 }
 
+//==-- Low Priority Messages
+
 //==-- Sends the autopilot version details
-static inline void mavlink_stream_autopilot_version(void) {
+static inline uint16_t mavlink_prepare_autopilot_version(uint8_t *buffer) {
 	const uint64_t capabilities = MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT +
 									MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET +
 									MAV_PROTOCOL_CAPABILITY_SET_ACTUATOR_TARGET +
@@ -162,24 +204,43 @@ static inline void mavlink_stream_autopilot_version(void) {
 
 	const uint8_t blank_array[8] = {0,0,0,0,0,0,0,0};
 
-	mavlink_msg_autopilot_version_send(MAVLINK_COMM_0,
-									capabilities,
-									get_param_int(PARAM_VERSION_SOFTWARE),
-									0,
-									get_param_int(PARAM_VERSION_FIRMWARE),
-									get_param_int(PARAM_BOARD_REVISION),
-									blank_array,	//TODO: This should probably be a commit as well
-									blank_array,
-									FW_HASH,
-									0x10c4,	//TODO: This is the serial vendor and product ID, should be dynamic?
-									0xea60,
-									U_ID_0);
+	mavlink_message_t msg;
+
+	mavlink_msg_autopilot_version_pack(mavlink_system.sysid,
+										mavlink_system.compid,
+										&msg,
+										capabilities,
+										get_param_int(PARAM_VERSION_SOFTWARE),
+										0,
+										get_param_int(PARAM_VERSION_FIRMWARE),
+										get_param_int(PARAM_BOARD_REVISION),
+										blank_array,	//TODO: This should probably be a commit as well
+										blank_array,
+										FW_HASH,
+										0x10c4,	//TODO: This is the serial vendor and product ID, should be dynamic?
+										0xea60,
+										U_ID_0);
+
+	return mavlink_msg_to_send_buffer(buffer, &msg);
+}
+
+//==-- Sends the autopilot version details
+static inline uint16_t mavlink_prepare_command_ack(uint8_t *buffer, uint16_t command, uint8_t result) {
+	mavlink_message_t msg;
+	mavlink_msg_command_ack_pack(mavlink_system.sysid,
+										mavlink_system.compid,
+										&msg,
+										command,
+										result);
+
+	return mavlink_msg_to_send_buffer(buffer, &msg);
 }
 
 //==-- Sends the requested parameter
-static inline void mavlink_stream_param_value(uint32_t index) {
+static inline uint16_t mavlink_prepare_param_value(uint8_t *buffer, uint32_t index) {
 	char param_name[16];
 	uint8_t param_type = 0;
+	mavlink_message_t msg;
 
 	union {
 		float f;
@@ -199,12 +260,16 @@ static inline void mavlink_stream_param_value(uint32_t index) {
 
 	memcpy(param_name, _params.names[index], MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
 
-	mavlink_msg_param_value_send(MAVLINK_COMM_0,
-									param_name,		//String of name
-									u.f,			//Value (always as float)
-									param_type,		//From MAV_PARAM_TYPE
-									PARAMS_COUNT,	//Total number of parameters
-									index);
+	mavlink_msg_param_value_pack(mavlink_system.sysid,
+										mavlink_system.compid,
+										&msg,
+										param_name,		//String of name
+										u.f,			//Value (always as float)
+										param_type,		//From MAV_PARAM_TYPE
+										PARAMS_COUNT,	//Total number of parameters
+										index);
+
+	return mavlink_msg_to_send_buffer(buffer, &msg);
 }
 
 //==-- List of supported mavlink messages
@@ -231,27 +296,31 @@ static inline void mavlink_stream_param_value(uint32_t index) {
 	//o radio_status.h
 
 	//Transmit
-	//- attitude_quaternion.h
-	//- attitude_target.h
-	//- autopilot_version.h
-	//- battery_status.h
-	//- command_ack.h
-	//- debug.h
-	//- debug_vect.h
-	//- distance_sensor.h
-	//+ heartbeat.h
-	//- named_value_float.h
-	//- named_value_int.h
-	//+ param_value.h
-	//- ping.h
-	//- scaled_imu.h
-	//- scaled_pressure.h
-	//- statustext.h
-	//+ sys_status.h
-	//- servo_output_raw.h
-	//- timesync.h
-	//o attitude.h
-	//o attitude_quaternion_cov.h
-	//o highres_imu.h
-	//o optical_flow.h
-	//o optical_flow_rad.h
+		//Stream
+			//- attitude_target.h
+			//- attitude_quaternion_cov.h
+			//o battery_status.h
+			//- distance_sensor.h
+			//+ heartbeat.h
+			//+ highres_imu.h
+			//- scaled_pressure.h
+			//- servo_output_raw.h
+			//+ sys_status.h
+			//o attitude.h
+			//o attitude_quaternion.h
+			//o optical_flow.h
+			//o optical_flow_rad.h
+
+		//High Priority
+			//- ping.h
+			//- timesync.h
+
+		//Low Priority
+			//- debug.h					--	3 params	--	9 bytes
+			//- debug_vect.h			--	14 params	--	30 bytes
+			//+ autopilot_version.h		--	16 params	--	60 bytes
+			//- command_ack.h			--	2 params	--	3 bytes
+			//- named_value_float.h		--	12 params	--	18 bytes
+			//- named_value_int.h		--	12 params	--	18 bytes
+			//+ param_value.h			--	20 params	--	25 bytes
+

@@ -26,7 +26,7 @@ typedef enum {
 } mavlink_stream_id_t;
 
 // function declarations
-void communication_transmit(uint32_t time_us);
+bool communication_transmit(uint32_t time_us);
 //void mavlink_stream_set_rate(mavlink_stream_id_t stream_id, uint32_t rate);
 //void mavlink_stream_set_period(mavlink_stream_id_t stream_id, uint32_t period_us);
 //void mavlink_send_heartbeat(void);
