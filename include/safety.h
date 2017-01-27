@@ -32,6 +32,7 @@ typedef struct {
 	timeout_status_t sonar;
 } sensor_status_t;
 
+
 //TODO: Integrate this properly in main()
 typedef enum {
 	SYSTEM_MODE_BOOT,		//Set as an initial value until boot completes
@@ -54,4 +55,11 @@ typedef struct {
 	sensor_status_t sensors;
 } system_t;
 
+typedef enum {
+	SYSTEM_OPERATION_RUN,
+	SYSTEM_OPERATION_REBOOT,
+	SYSTEM_OPERATION_REBOOT_BOOTLOADER
+} system_operation_t;
+
 extern system_t _system_status;
+extern uint8_t _system_operation_control;

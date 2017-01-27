@@ -101,14 +101,14 @@ static inline void mavlink_stream_heartbeat(void) {
 	uint8_t mav_base_mode = 0;
 
 	if(_system_status.arm_status)
-		mav_base_mode += MAV_MODE_FLAG_SAFETY_ARMED;
+		mav_base_mode |= MAV_MODE_FLAG_SAFETY_ARMED;
 
 	//TODO: Document mode meanings
 	if(_system_status.mode == SYSTEM_MODE_OFFBOARD) { //This is the "main" mode
-			mav_base_mode += MAV_MODE_FLAG_GUIDED_ENABLED;
+			mav_base_mode |= MAV_MODE_FLAG_GUIDED_ENABLED;
 	} else if((_system_status.mode == SYSTEM_MODE_STANDBY) ||
 				(_system_status.mode == SYSTEM_MODE_FAILSAFE)) {
-			mav_base_mode += MAV_MODE_FLAG_STABILIZE_ENABLED;
+			mav_base_mode |= MAV_MODE_FLAG_STABILIZE_ENABLED;
 	} //Other modes will show as 0, and should be cause for alarm if they are seen anyway, and thus unique
 
 	//We don't use custom_mode
@@ -143,17 +143,17 @@ static inline void mavlink_stream_sys_status(void) {
 
 
 	//TODO: This should be dynamic, probably in safety.h or sensors.h
-	onboard_control_sensors_present = MAV_SYS_STATUS_SENSOR_3D_GYRO &
-										MAV_SYS_STATUS_SENSOR_3D_ACCEL &
-										MAV_SYS_STATUS_SENSOR_3D_MAG &
+	onboard_control_sensors_present = MAV_SYS_STATUS_SENSOR_3D_GYRO |
+										MAV_SYS_STATUS_SENSOR_3D_ACCEL |
+										MAV_SYS_STATUS_SENSOR_3D_MAG |
 										MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
-	onboard_control_sensors_enabled = MAV_SYS_STATUS_SENSOR_3D_GYRO &
-										MAV_SYS_STATUS_SENSOR_3D_ACCEL &
-										MAV_SYS_STATUS_SENSOR_3D_MAG &
+	onboard_control_sensors_enabled = MAV_SYS_STATUS_SENSOR_3D_GYRO |
+										MAV_SYS_STATUS_SENSOR_3D_ACCEL |
+										MAV_SYS_STATUS_SENSOR_3D_MAG |
 										MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
-	onboard_control_sensors_health = MAV_SYS_STATUS_SENSOR_3D_GYRO &
-										MAV_SYS_STATUS_SENSOR_3D_ACCEL &
-										MAV_SYS_STATUS_SENSOR_3D_MAG &
+	onboard_control_sensors_health = MAV_SYS_STATUS_SENSOR_3D_GYRO |
+										MAV_SYS_STATUS_SENSOR_3D_ACCEL |
+										MAV_SYS_STATUS_SENSOR_3D_MAG |
 										MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
 
 
@@ -178,6 +178,7 @@ static inline void mavlink_stream_sys_status(void) {
 
 //==-- Sends the latest IMU reading
 //TODO: neaten, and make a proper define for the updated_data field
+//TODO: GYRO DOES NOT WORK!!
 static inline void mavlink_stream_highres_imu(void) {
 	mavlink_msg_highres_imu_send(MAVLINK_COMM_0,
 									_sensors.imu.time,
@@ -314,12 +315,12 @@ static inline uint16_t mavlink_prepare_param_value(uint8_t *buffer, uint32_t ind
 		//High Priority
 			//- ping.h
 			//- timesync.h
+			//- command_ack.h
 
 		//Low Priority
 			//- debug.h					--	3 params	--	9 bytes
 			//- debug_vect.h			--	14 params	--	30 bytes
 			//+ autopilot_version.h		--	16 params	--	60 bytes
-			//- command_ack.h			--	2 params	--	3 bytes
 			//- named_value_float.h		--	12 params	--	18 bytes
 			//- named_value_int.h		--	12 params	--	18 bytes
 			//+ param_value.h			--	20 params	--	25 bytes

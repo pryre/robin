@@ -135,9 +135,10 @@ bool write_params(void) {
 	return writeEEPROM(true);
 }
 
-/* TODO:
+
 void param_change_callback(param_id_t id)
 {
+	/* //TODO: Live update parameters
   switch (id)
   {
   case PARAM_SYSTEM_ID:
@@ -174,8 +175,9 @@ void param_change_callback(param_id_t id)
     // no action needed for this parameter
     break;
   }
-}
 */
+}
+
 param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]) {
 	for (uint16_t id = 0; id < PARAMS_COUNT; id++) {
 		bool match = true;
@@ -227,7 +229,7 @@ bool set_param_int(param_id_t id, int32_t value) {
 	if (id < PARAMS_COUNT && value != _params.values[id]) {
 		_params.values[id] = value;
 		param_change_callback(id);
-		//TODO: mavlink_send_param(id);
+
 		return true;
 	}
 	return false;

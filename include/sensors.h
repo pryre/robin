@@ -80,20 +80,43 @@ typedef enum {
 	SENSOR_CAL_GYRO = 1,
 	SENSOR_CAL_MAG = 2,
 	SENSOR_CAL_BARO = 4,
-	SENSOR_CAL_ACCEL = 8,
-	SENSOR_CAL_MOTOR = 16,	//TODO: Should this calibrate ESCs instead?
+	SENSOR_CAL_RC = 8,		//Calibrate ESCs?
+	SENSOR_CAL_ACCEL = 16,
+	SENSOR_CAL_INTER = 32,	//TODO: Implement this
 	SENSOR_CAL_ALL = 128
 } sensor_calibration_request_t;
 
-extern uint8_t _sensor_calibration;
+typedef struct {
+	uint16_t count;
+	fix16_t sum_x;
+	fix16_t sum_y;
+	fix16_t sum_z;
+} sensor_calibration_gyro_data_t;
 
+typedef struct {
+	uint16_t count;
+	fix16_t sum_x;
+	fix16_t sum_y;
+	fix16_t sum_z;
+	fix16_t sum_t;
+} sensor_calibration_accel_data_t;
+
+typedef struct {
+	sensor_calibration_gyro_data_t gyro;
+	sensor_calibration_accel_data_t accel;
+} sensor_calibration_data_t;
+
+extern volatile bool imu_interrupt;
+extern uint8_t _sensor_calibration;
 extern sensor_readings_t _sensors;
+extern sensor_calibration_data_t _sensor_cal_data;
 
 // function declarations
 void init_sensors(void);
 bool sensors_read(void);
 //void sensors_poll(void);
 bool sensors_update(uint32_t time_us);
+void sensors_calibrate(void);
 
 //bool calibrate_acc(void);
 //bool calibrate_gyro(void);

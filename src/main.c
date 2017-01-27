@@ -32,6 +32,7 @@ serialPort_t * Serial1;
 extern void SetSysClock(bool overclock);
 sensor_readings_t _sensors;
 system_t _system_status;
+uint8_t _system_operation_control;
 volatile bool imu_interrupt;
 
 int main(void)
@@ -114,8 +115,12 @@ void loop(void)
 
 
 
-	//Update Sensor Data
-	sensors_update(micros());	//XXX: This takes ~230us with just IMU
+	//==-- Update Sensor Data
+	sensors_update(micros());	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
+
+	//==-- Calibrations
+	if(_sensor_calibration != SENSOR_CAL_NONE)
+		sensors_calibrate();
 
 	//==-- Timeout Checks
 	//TODO: Set MAV_STATE in this function
@@ -123,6 +128,14 @@ void loop(void)
 	//==-- Update Estimator
 
 	//==-- Send Motor Commands
+
+	//==-- Boot Control
+	if(_system_operation_control != SYSTEM_OPERATION_RUN) {
+		if(_system_operation_control == SYSTEM_OPERATION_REBOOT_BOOTLOADER)
+			systemResetToBootloader();
+		//Could be potentially more options here but just leave this as an error fallback
+		systemReset();
+	}
 
     //==-- loop time calculation
 

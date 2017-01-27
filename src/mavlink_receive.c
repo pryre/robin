@@ -1,8 +1,12 @@
 #include "mavlink_receive.h"
 #include "mavlink_system.h"
+#include "safety.h"
+#include "sensors.h"
 #include "breezystm32.h"
 
 int32_t _request_all_params;
+uint8_t _system_operation_control;
+uint8_t _sensor_calibration;
 mavlink_queue_t _low_priority_queue;
 
 void communication_receive(void) {
@@ -25,7 +29,7 @@ void communication_receive(void) {
 				case MAVLINK_MSG_ID_PARAM_REQUEST_LIST: {
 					if((mavlink_msg_param_request_list_get_target_system(&msg) == mavlink_system.sysid) &&
 						(mavlink_msg_param_request_list_get_target_component(&msg) == mavlink_system.compid)) {
-						//Set the new request flag to true
+						//Set the new request flag
 						_request_all_params = 0;
 					} //Else this message is for someone else
 
@@ -61,10 +65,32 @@ void communication_receive(void) {
 					uint8_t command_result = MAV_RESULT_FAILED;
 
 					switch(command) {
-						case MAV_CMD_PREFLIGHT_CALIBRATION:	//TODO: This should be done without locking the thread
-							//TODO: Need to actually start calibration
+						case MAV_CMD_PREFLIGHT_CALIBRATION:
+							if(_system_status.state == MAV_STATE_STANDBY) {
+								if((int)mavlink_msg_command_long_get_param1(&msg))
+									_sensor_calibration |= SENSOR_CAL_GYRO;
+
+								if((int)mavlink_msg_command_long_get_param2(&msg))
+									_sensor_calibration |= SENSOR_CAL_MAG;
+
+								if((int)mavlink_msg_command_long_get_param3(&msg))
+									_sensor_calibration |= SENSOR_CAL_BARO;
+
+								if((int)mavlink_msg_command_long_get_param4(&msg))
+									_sensor_calibration |= SENSOR_CAL_RC;
+
+								if((int)mavlink_msg_command_long_get_param5(&msg))
+									_sensor_calibration |= SENSOR_CAL_ACCEL;
+
+								if((int)mavlink_msg_command_long_get_param6(&msg))
+									_sensor_calibration |= SENSOR_CAL_INTER;
+
+								command_result = MAV_RESULT_ACCEPTED;
+							} else {
+								command_result = MAV_RESULT_DENIED;
+							}
+
 							need_ack = true;
-							command_result = MAV_RESULT_ACCEPTED;
 
 							break;
 						case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES:
@@ -79,11 +105,11 @@ void communication_receive(void) {
 							//TODO: Make sure mav is in preflight mode
 							switch((int)mavlink_msg_command_long_get_param1(&msg)) {
 								case 1:
-									systemReset();	//Should be in the main, check for system flags or something
+									_system_operation_control = SYSTEM_OPERATION_REBOOT;
 									command_result = MAV_RESULT_ACCEPTED;
 									break;
 								case 3:
-									systemResetToBootloader();
+									_system_operation_control = SYSTEM_OPERATION_REBOOT_BOOTLOADER;
 									command_result = MAV_RESULT_ACCEPTED;
 									break;
 								default:
