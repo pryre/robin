@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "sensors.h"
 #include "params.h"
@@ -67,14 +68,28 @@ static void sensors_imu_poll(void) {
 }
 
 void init_sensors(void) {
-	uint16_t acc1G;
-
 	//==-- IMU-MPU6050
 	//TODO: Set IMU to be calibrated if not already
     mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_int(PARAM_BAUD_RATE));
-	acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);
-	_sensors.imu.accel_scale = fix16_sdiv(GRAVITY_CONST, fix16_from_int(acc1G));
-	_sensors.imu.accel_scale = fix16_from_float(MPU_GYRO_SCALE);
+	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
+	//TODO: Note that this is just an estimate (?) in the docs
+//	acc1G = 4096;
+	_sensors.imu.accel_scale = fix16_sdiv(GRAVITY_CONST, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
+	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
+
+	_sensor_cal_data.accel.temp_scale = fix16_from_float(340.0f);
+	_sensor_cal_data.accel.temp_shift = fix16_from_float(36.53f);
+
+	_sensor_cal_data.gyro.count = 0;
+	_sensor_cal_data.gyro.sum_x = 0;
+	_sensor_cal_data.gyro.sum_y = 0;
+	_sensor_cal_data.gyro.sum_z = 0;
+
+	_sensor_cal_data.accel.count = 0;
+	_sensor_cal_data.accel.sum_x = 0;
+	_sensor_cal_data.accel.sum_y = 0;
+	_sensor_cal_data.accel.sum_z = 0;
+	_sensor_cal_data.accel.sum_t = 0;
 
 	//==-- Timer
 	time_init();
@@ -96,7 +111,7 @@ bool sensors_read(void) {
 
 	//TODO: Check other status
 
-	//TODO: May need to offset these so they don't all check at once
+	//TODO: May need to offset these so they don't all check at once(?)
 
 	//Return the results
 	return imu_job_complete;
@@ -117,15 +132,22 @@ bool sensors_update(uint32_t time_us) {
 	//TODO:Something about the frame of reference (NED/ENU) isn't quite right
 	_sensors.imu.time = time_us;
 
-	_sensors.imu.temperature = fix16_sadd(fix16_sdiv(fix16_from_int(_sensors.imu.temp_raw), fix16_from_float(340.0f)), fix16_from_float(36.53f));
+	//==-- Temperature in degC
+	//value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
+	_sensors.imu.temperature = fix16_sadd(fix16_sdiv(fix16_from_int(_sensors.imu.temp_raw), _sensor_cal_data.accel.temp_scale), _sensor_cal_data.accel.temp_shift);
 
-    _sensors.imu.accel.x = fix16_ssub(fix16_smul(fix16_from_int(_sensors.imu.accel_raw[0]), _sensors.imu.accel_scale), fix16_sadd(fix16_smul(get_param_fix16(PARAM_ACC_X_TEMP_COMP), _sensors.imu.temperature), get_param_fix16(PARAM_ACC_X_BIAS)));
-    _sensors.imu.accel.y = fix16_ssub(fix16_smul(fix16_from_int(-_sensors.imu.accel_raw[1]), _sensors.imu.accel_scale), fix16_sadd(fix16_smul(get_param_fix16(PARAM_ACC_Y_TEMP_COMP), _sensors.imu.temperature), get_param_fix16(PARAM_ACC_Y_BIAS)));
-    _sensors.imu.accel.z = fix16_ssub(fix16_smul(fix16_from_int(-_sensors.imu.accel_raw[2]), _sensors.imu.accel_scale), fix16_sadd(fix16_smul(get_param_fix16(PARAM_ACC_Z_TEMP_COMP), _sensors.imu.temperature), get_param_fix16(PARAM_ACC_Z_BIAS)));
+	//==-- Accel in NED
+	//TODO: value = (raw - BIAS - (EMP_COMP * TEMP)) * scale
+	// value = (raw - BIAS) * scale
+	_sensors.imu.accel.x = fix16_smul(fix16_from_int(-(_sensors.imu.accel_raw[0] - get_param_int(PARAM_ACC_X_BIAS))), _sensors.imu.accel_scale);
+	_sensors.imu.accel.y = fix16_smul(fix16_from_int(_sensors.imu.accel_raw[1] - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
+	_sensors.imu.accel.z = fix16_smul(fix16_from_int(_sensors.imu.accel_raw[2] - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
 
-	_sensors.imu.gyro.x = fix16_ssub(fix16_smul(fix16_from_int(_sensors.imu.gyro_raw[0]), _sensors.imu.gyro_scale), get_param_fix16(PARAM_GYRO_X_BIAS));
-	_sensors.imu.gyro.y = fix16_ssub(fix16_smul(fix16_from_int(-_sensors.imu.gyro_raw[1]), _sensors.imu.gyro_scale), get_param_fix16(PARAM_GYRO_Y_BIAS));
-	_sensors.imu.gyro.z = fix16_ssub(fix16_smul(fix16_from_int(-_sensors.imu.gyro_raw[2]), _sensors.imu.gyro_scale), get_param_fix16(PARAM_GYRO_Z_BIAS));
+	//==-- Gyro in NED
+	// value = (raw - BIAS) * scale
+	_sensors.imu.gyro.x = fix16_smul(fix16_from_int(_sensors.imu.gyro_raw[0] - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
+	_sensors.imu.gyro.y = fix16_smul(fix16_from_int(-(_sensors.imu.gyro_raw[1] - get_param_int(PARAM_GYRO_Y_BIAS))), _sensors.imu.gyro_scale);
+	_sensors.imu.gyro.z = fix16_smul(fix16_from_int(-(_sensors.imu.gyro_raw[2] - get_param_int(PARAM_GYRO_Z_BIAS))), _sensors.imu.gyro_scale);
 
 	//TODO: This should be aware of failures
 	return true;
@@ -134,23 +156,16 @@ bool sensors_update(uint32_t time_us) {
 //TODO: This calibration method is very basic, doesn't take into acount very much...mabye?
 void sensors_calibrate(void) {
 	if(_sensor_calibration & SENSOR_CAL_GYRO) {
-		_sensor_cal_data.gyro.sum_x = fix16_sadd(_sensor_cal_data.gyro.sum_x, _sensors.imu.gyro.x);
-		_sensor_cal_data.gyro.sum_y = fix16_sadd(_sensor_cal_data.gyro.sum_y, _sensors.imu.gyro.y);
-		_sensor_cal_data.gyro.sum_z = fix16_sadd(_sensor_cal_data.gyro.sum_z, _sensors.imu.gyro.z);
-		_sensor_cal_data.gyro.count++;
+		_sensor_cal_data.gyro.sum_x += _sensors.imu.gyro_raw[0];
+		_sensor_cal_data.gyro.sum_y += _sensors.imu.gyro_raw[1];
+		_sensor_cal_data.gyro.sum_z += _sensors.imu.gyro_raw[2];
 
-		if (_sensor_cal_data.gyro.count > SENSOR_CAL_IMU_PASSES) {
-			//==-- bias = (sum - (temp_comp*temp_sum)) / count
-			set_param_fix16(PARAM_GYRO_X_BIAS,
-							fix16_sdiv(_sensor_cal_data.gyro.sum_x,
-							fix16_from_int(_sensor_cal_data.gyro.count)));
-			set_param_fix16(PARAM_GYRO_Y_BIAS,
-							fix16_sdiv(_sensor_cal_data.gyro.sum_y,
-							fix16_from_int(_sensor_cal_data.gyro.count)));
-			set_param_fix16(PARAM_GYRO_Z_BIAS,
-							fix16_sdiv(_sensor_cal_data.gyro.sum_z,
-							fix16_from_int(_sensor_cal_data.gyro.count)));
+	_sensor_cal_data.gyro.count++;
 
+		if (_sensor_cal_data.gyro.count >= SENSOR_CAL_IMU_PASSES) {
+			set_param_int(PARAM_GYRO_X_BIAS, (_sensor_cal_data.gyro.sum_x / _sensor_cal_data.gyro.count));
+			set_param_int(PARAM_GYRO_Y_BIAS, (_sensor_cal_data.gyro.sum_y / _sensor_cal_data.gyro.count));
+			set_param_int(PARAM_GYRO_Z_BIAS, (_sensor_cal_data.gyro.sum_z / _sensor_cal_data.gyro.count));
 
 			_sensor_cal_data.gyro.count = 0;
 			_sensor_cal_data.gyro.sum_x = 0;
@@ -163,32 +178,21 @@ void sensors_calibrate(void) {
 	}
 
 	if(_sensor_calibration & SENSOR_CAL_ACCEL) {
-		_sensor_cal_data.accel.sum_x = fix16_sadd(_sensor_cal_data.accel.sum_x, _sensors.imu.accel.x);
-		_sensor_cal_data.accel.sum_y = fix16_sadd(_sensor_cal_data.accel.sum_y, _sensors.imu.accel.y);
-		_sensor_cal_data.accel.sum_z = fix16_sadd(_sensor_cal_data.accel.sum_x, fix16_sadd(GRAVITY_CONST, _sensors.imu.accel.x));
-		_sensor_cal_data.accel.sum_t = fix16_sadd(_sensor_cal_data.accel.sum_t, _sensors.imu.temperature);
+		//Compensate for the gravity in Z axis, that way bias can be relative to 0
+		_sensor_cal_data.accel.sum_x += _sensors.imu.accel_raw[0];
+		_sensor_cal_data.accel.sum_y += _sensors.imu.accel_raw[1];
+		_sensor_cal_data.accel.sum_z += _sensors.imu.accel_raw[2] - _sensor_cal_data.accel.acc1G;
+		_sensor_cal_data.accel.sum_t += _sensors.imu.temp_raw;
 
 		_sensor_cal_data.accel.count++;
 
-		if (_sensor_cal_data.accel.count > SENSOR_CAL_IMU_PASSES) {
-			//We have to do the calculation, and undo the biases that have already been added in
-			//Minor inconvinence, but it ends up being neater in source
-			//==-- bias = (sum - (temp_comp*temp_sum)) / count
-			set_param_fix16(PARAM_ACC_X_BIAS,
-							fix16_sdiv(fix16_ssub(_sensor_cal_data.accel.sum_x,
-							fix16_smul(get_param_fix16(PARAM_ACC_X_TEMP_COMP),
-							_sensor_cal_data.accel.sum_t)),
-							fix16_from_int(_sensor_cal_data.accel.count)));
-			set_param_fix16(PARAM_ACC_Y_BIAS,
-							fix16_sdiv(fix16_ssub(_sensor_cal_data.accel.sum_y,
-							fix16_smul(get_param_fix16(PARAM_ACC_Y_TEMP_COMP),
-							_sensor_cal_data.accel.sum_t)),
-							fix16_from_int(_sensor_cal_data.accel.count)));
-			set_param_fix16(PARAM_ACC_Z_BIAS,
-							fix16_sdiv(fix16_ssub(_sensor_cal_data.accel.sum_z,
-							fix16_smul(get_param_fix16(PARAM_ACC_Z_TEMP_COMP),
-							_sensor_cal_data.accel.sum_t)),
-							fix16_from_int(_sensor_cal_data.accel.count)));
+		if (_sensor_cal_data.accel.count >= SENSOR_CAL_IMU_PASSES) {
+			//==-- bias = sum / count
+			//==-- //TODO: bias = (sum - (temp_comp*temp_sum)) / count
+
+			set_param_int(PARAM_ACC_X_BIAS, (_sensor_cal_data.accel.sum_x / _sensor_cal_data.accel.count));
+			set_param_int(PARAM_ACC_Y_BIAS, (_sensor_cal_data.accel.sum_y / _sensor_cal_data.accel.count));
+			set_param_int(PARAM_ACC_Z_BIAS, (_sensor_cal_data.accel.sum_z / _sensor_cal_data.accel.count));
 
 			_sensor_cal_data.accel.count = 0;
 			_sensor_cal_data.accel.sum_x = 0;
@@ -198,6 +202,16 @@ void sensors_calibrate(void) {
 
 			_sensor_calibration ^= SENSOR_CAL_ACCEL;	//Turn off SENSOR_CAL_ACCEL bit
 			//TODO: "we could do some sanity checking here if we wanted to."
+		}
+	}
+
+	//If there are no longer any sensors to calibrate
+	if(_sensor_calibration == SENSOR_CAL_NONE) {
+		//Inform the GCS that it has been completed
+		if(check_lpq_space_free()) {
+			uint8_t i = get_lpq_next_slot();
+			_low_priority_queue.buffer_len[i] = mavlink_prepare_command_ack(_low_priority_queue.buffer[i], MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_ACCEPTED);
+			_low_priority_queue.queued_message_count++;
 		}
 	}
 }

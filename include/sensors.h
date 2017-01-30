@@ -95,10 +95,26 @@ typedef struct {
 
 typedef struct {
 	uint16_t count;
-	fix16_t sum_x;
-	fix16_t sum_y;
-	fix16_t sum_z;
-	fix16_t sum_t;
+	int32_t z_up_sum;
+	int32_t z_down_sum;
+	int16_t z_up_av;
+	int16_t z_down_av;
+} sensor_calibration_gravity_data_t;
+
+typedef struct {
+	uint16_t count;
+	int32_t sum_x;
+	int32_t sum_y;
+	int32_t sum_z;
+	int32_t sum_t;
+
+	uint16_t acc1G;
+	fix16_t temp_scale;
+	fix16_t temp_shift;
+//	fix16_t sum_x;
+//	fix16_t sum_y;
+//	fix16_t sum_z;
+//	fix16_t sum_t;
 } sensor_calibration_accel_data_t;
 
 typedef struct {

@@ -83,15 +83,15 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_GYRO_ALPHA, "GYRO_LPF_ALPHA", fix16_from_float(0.6f));
 	init_param_fix16(PARAM_ACC_ALPHA, "ACC_LPF_ALPHA", fix16_from_float(0.6f));
 	init_param_int(PARAM_STREAM_ADJUSTED_GYRO, "STRM_ADJST_GYRO", 0);
-	init_param_fix16(PARAM_GYRO_X_BIAS, "GYRO_X_BIAS", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_GYRO_Y_BIAS, "GYRO_Y_BIAS", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_GYRO_Z_BIAS, "GYRO_Z_BIAS", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_ACC_X_BIAS,  "ACC_X_BIAS", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_ACC_Y_BIAS,  "ACC_Y_BIAS", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_ACC_Z_BIAS,  "ACC_Z_BIAS", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_ACC_X_TEMP_COMP,  "ACC_X_TEMP_COMP", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_ACC_Y_TEMP_COMP,  "ACC_Y_TEMP_COMP", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_ACC_Z_TEMP_COMP,  "ACC_Z_TEMP_COMP", fix16_from_float(0.0f));
+	init_param_int(PARAM_GYRO_X_BIAS, "GYRO_X_BIAS", 0);
+	init_param_int(PARAM_GYRO_Y_BIAS, "GYRO_Y_BIAS", 0);
+	init_param_int(PARAM_GYRO_Z_BIAS, "GYRO_Z_BIAS", 0);
+	init_param_int(PARAM_ACC_X_BIAS, "ACC_X_BIAS", 0);
+	init_param_int(PARAM_ACC_Y_BIAS, "ACC_Y_BIAS", 0);
+	init_param_int(PARAM_ACC_Z_BIAS, "ACC_Z_BIAS", 0);
+	init_param_fix16(PARAM_ACC_X_TEMP_COMP, "ACC_X_TEMP_COMP", fix16_from_float(0.0f));
+	init_param_fix16(PARAM_ACC_Y_TEMP_COMP, "ACC_Y_TEMP_COMP", fix16_from_float(0.0f));
+	init_param_fix16(PARAM_ACC_Z_TEMP_COMP, "ACC_Z_TEMP_COMP", fix16_from_float(0.0f));
 
 	//==-- Control
 	init_param_fix16(PARAM_PID_ROLL_RATE_P, "PID_ROLL_RATE_P", fix16_from_float(0.070f));
@@ -139,42 +139,42 @@ bool write_params(void) {
 void param_change_callback(param_id_t id)
 {
 	/* //TODO: Live update parameters
-  switch (id)
-  {
-  case PARAM_SYSTEM_ID:
-    mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID);
-    break;
-  case PARAM_STREAM_HEARTBEAT_RATE:
-    mavlink_stream_set_rate(MAVLINK_STREAM_ID_HEARTBEAT, get_param_int(PARAM_STREAM_HEARTBEAT_RATE));
-    break;
+ switch (id)
+ {
+ case PARAM_SYSTEM_ID:
+  mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID);
+  break;
+ case PARAM_STREAM_HEARTBEAT_RATE:
+  mavlink_stream_set_rate(MAVLINK_STREAM_ID_HEARTBEAT, get_param_int(PARAM_STREAM_HEARTBEAT_RATE));
+  break;
 
-  case PARAM_STREAM_ATTITUDE_RATE:
-    mavlink_stream_set_rate(MAVLINK_STREAM_ID_ATTITUDE, get_param_int(PARAM_STREAM_ATTITUDE_RATE));
-    break;
+ case PARAM_STREAM_ATTITUDE_RATE:
+  mavlink_stream_set_rate(MAVLINK_STREAM_ID_ATTITUDE, get_param_int(PARAM_STREAM_ATTITUDE_RATE));
+  break;
 
-  case PARAM_STREAM_IMU_RATE:
-    mavlink_stream_set_rate(MAVLINK_STREAM_ID_IMU, get_param_int(PARAM_STREAM_IMU_RATE));
-    break;
-  case PARAM_STREAM_AIRSPEED_RATE:
-    mavlink_stream_set_rate(MAVLINK_STREAM_ID_DIFF_PRESSURE, get_param_int(PARAM_STREAM_AIRSPEED_RATE));
-    break;
-  case PARAM_STREAM_SONAR_RATE:
-    mavlink_stream_set_rate(MAVLINK_STREAM_ID_SONAR, get_param_int(PARAM_STREAM_SONAR_RATE));
-    break;
-  case  PARAM_STREAM_BARO_RATE:
-    mavlink_stream_set_rate(MAVLINK_STREAM_ID_BARO, get_param_int(PARAM_STREAM_BARO_RATE));
-    break;
+ case PARAM_STREAM_IMU_RATE:
+  mavlink_stream_set_rate(MAVLINK_STREAM_ID_IMU, get_param_int(PARAM_STREAM_IMU_RATE));
+  break;
+ case PARAM_STREAM_AIRSPEED_RATE:
+  mavlink_stream_set_rate(MAVLINK_STREAM_ID_DIFF_PRESSURE, get_param_int(PARAM_STREAM_AIRSPEED_RATE));
+  break;
+ case PARAM_STREAM_SONAR_RATE:
+  mavlink_stream_set_rate(MAVLINK_STREAM_ID_SONAR, get_param_int(PARAM_STREAM_SONAR_RATE));
+  break;
+ case PARAM_STREAM_BARO_RATE:
+  mavlink_stream_set_rate(MAVLINK_STREAM_ID_BARO, get_param_int(PARAM_STREAM_BARO_RATE));
+  break;
 
-  case PARAM_STREAM_SERVO_OUTPUT_RAW_RATE:
-    mavlink_stream_set_rate(MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW, get_param_int(PARAM_STREAM_SERVO_OUTPUT_RAW_RATE));
-    break;
-  case PARAM_STREAM_RC_RAW_RATE:
-    mavlink_stream_set_rate(MAVLINK_STREAM_ID_RC_RAW, get_param_int(PARAM_STREAM_RC_RAW_RATE));
-    break;
-  default:
-    // no action needed for this parameter
-    break;
-  }
+ case PARAM_STREAM_SERVO_OUTPUT_RAW_RATE:
+  mavlink_stream_set_rate(MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW, get_param_int(PARAM_STREAM_SERVO_OUTPUT_RAW_RATE));
+  break;
+ case PARAM_STREAM_RC_RAW_RATE:
+  mavlink_stream_set_rate(MAVLINK_STREAM_ID_RC_RAW, get_param_int(PARAM_STREAM_RC_RAW_RATE));
+  break;
+ default:
+  // no action needed for this parameter
+  break;
+ }
 */
 }
 
@@ -202,7 +202,7 @@ param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]) {
 	return PARAMS_COUNT;
 }
 
-int get_param_int(param_id_t id) {
+int32_t get_param_int(param_id_t id) {
 	return _params.values[id];
 }
 
@@ -243,7 +243,7 @@ bool set_param_fix16(param_id_t id, fix16_t value) {
 
 	u.f = value;
 
-  return set_param_int(id, u.i);
+ return set_param_int(id, u.i);
 }
 
 bool set_param_by_name_int(const char name[PARAMS_NAME_LENGTH], int32_t value) {

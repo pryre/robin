@@ -154,7 +154,7 @@ param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]);
  * @param id The ID of the parameter
  * @return The value of the parameter
  */
-int get_param_int(param_id_t id);
+int32_t get_param_int(param_id_t id);
 
 /**
  * @brief Get the value of a fixed point parameter by id

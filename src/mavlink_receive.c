@@ -84,13 +84,11 @@ void communication_receive(void) {
 
 								if((int)mavlink_msg_command_long_get_param6(&msg))
 									_sensor_calibration |= SENSOR_CAL_INTER;
-
-								command_result = MAV_RESULT_ACCEPTED;
-							} else {
+							} else {	//We send the denied immidiately if we can't do it now
 								command_result = MAV_RESULT_DENIED;
+								need_ack = true;
 							}
 
-							need_ack = true;
 
 							break;
 						case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES:
