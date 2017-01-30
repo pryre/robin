@@ -5,6 +5,7 @@ PROJECT_SRC_FILES = ./src/main.c \
 					./src/flash.c \
 					./src/params.c \
 					./src/sensors.c \
+					./src/estimator.c \
 					./src/mavlink_receive.c \
 					./src/mavlink_transmit.c
 

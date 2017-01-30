@@ -128,7 +128,7 @@ extern sensor_readings_t _sensors;
 extern sensor_calibration_data_t _sensor_cal_data;
 
 // function declarations
-void init_sensors(void);
+void sensors_init(void);
 bool sensors_read(void);
 //void sensors_poll(void);
 bool sensors_update(uint32_t time_us);

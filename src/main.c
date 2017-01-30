@@ -1,29 +1,10 @@
-/*
-   main.c : entry routine for for STM32
-
-   Adapted from https://github.com/multiwii/baseflight/blob/master/src/main.c
-
-   This file is part of BreezySTM32.
-
-   BreezySTM32 is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-
-   BreezySTM32 is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with BreezySTM32.  If not, see <http://www.gnu.org/licenses/>.
- */
 #include <stdio.h>
 #include <stdarg.h>
 
 #include "breezystm32.h"
 #include "params.h"
 #include "sensors.h"
+#include "estimator.h"
 #include "mavlink/mavlink_types.h"
 #include "mavlink_receive.h"
 #include "mavlink_transmit.h"
@@ -70,9 +51,11 @@ void setup(void)
 
     i2cInit(I2CDEV);
 
-	init_sensors();
+	sensors_init();
 
 	communications_init();
+
+	estimator_init(false, false, true);
 
 	//Wait here for the first imu message (probably not really neaded)
 	while(!imu_interrupt);
@@ -126,6 +109,7 @@ void loop(void)
 	//TODO: Set MAV_STATE in this function
 
 	//==-- Update Estimator
+    estimator_update(micros()); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
 	//==-- Send Motor Commands
 

@@ -67,7 +67,7 @@ static void sensors_imu_poll(void) {
 		mpu6050_request_async_temp_read(&(_sensors.imu.temp_raw), &temp_status);
 }
 
-void init_sensors(void) {
+void sensors_init(void) {
 	//==-- IMU-MPU6050
 	//TODO: Set IMU to be calibrated if not already
     mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_int(PARAM_BAUD_RATE));
