@@ -16,7 +16,6 @@
 
 //==-- Local Variables
 
-static const fix16_t GRAVITY_CONST = 0x0009CE80; //Is equal to 9.80665 (Positive!) in Q16.16
 //static int32_t last_check_imu = 0;
 /*static float accel_scale; // converts to units of m/s^2
 
@@ -74,7 +73,7 @@ void sensors_init(void) {
 	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
 	//TODO: Note that this is just an estimate (?) in the docs
 //	acc1G = 4096;
-	_sensors.imu.accel_scale = fix16_sdiv(GRAVITY_CONST, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
+	_sensors.imu.accel_scale = fix16_sdiv(CONST_GRAVITY, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
 	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 
 	_sensor_cal_data.accel.temp_scale = fix16_from_float(340.0f);

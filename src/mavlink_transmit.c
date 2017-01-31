@@ -214,7 +214,7 @@ bool communication_transmit(uint32_t time_us) {
 	bool message_sent = false;
 
 	for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
-		if (mavlink_streams[i].period_us && (time_us >= mavlink_streams[i].last_time_us + mavlink_streams[i].period_us)) {
+		if ((mavlink_streams[i].period_us > 0) && (time_us >= mavlink_streams[i].last_time_us + mavlink_streams[i].period_us)) {
 			mavlink_streams[i].last_time_us = time_us;
 			mavlink_streams[i].send_function();
 

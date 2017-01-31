@@ -96,6 +96,29 @@ static inline void remove_current_lpq_message(void) {
 		_low_priority_queue.queued_message_count--;
 }
 
+
+//TODO: Move this lower
+//==-- Sends a debug parameter through the lpq
+static inline uint16_t mavlink_prepare_debug(uint8_t *buffer, uint32_t stamp, uint8_t index, uint32_t value) {
+	mavlink_message_t msg;
+
+	union {
+		float f;
+		uint32_t i;
+	} u;	//The bytes are translated to the right unit on receiving, but need to be sent as a "float"
+
+	u.i = value;
+
+	mavlink_msg_debug_pack(mavlink_system.sysid,
+							mavlink_system.compid,
+							&msg,
+							stamp,	//Timestamo
+							index,	//Variable index
+							u.f);	//Value (always as float)
+
+	return mavlink_msg_to_send_buffer(buffer, &msg);
+}
+
 //==-- Sends
 static inline void mavlink_stream_heartbeat(void) {
 	uint8_t mav_base_mode = 0;
@@ -115,6 +138,15 @@ static inline void mavlink_stream_heartbeat(void) {
 	//TODO: MAV_TYPE should be dynamically set
 	mavlink_msg_heartbeat_send(MAVLINK_COMM_0, MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_GENERIC, mav_base_mode, 0, _system_status.state);
 	LED1_TOGGLE;
+
+	/*	//XXX: Quick hack to send out a value once a second
+	if(check_lpq_space_free()) {	//Don't flood the buffer
+		//Insert the new message
+		uint8_t i = get_lpq_next_slot();
+		_low_priority_queue.buffer_len[i] = mavlink_prepare_debug(_low_priority_queue.buffer[i], micros(), 0, fix16_from_int(-2));
+		_low_priority_queue.queued_message_count++;
+	}
+	*/
 }
 
 //TODO: Quite a lot here
@@ -318,7 +350,7 @@ static inline uint16_t mavlink_prepare_param_value(uint8_t *buffer, uint32_t ind
 			//- command_ack.h
 
 		//Low Priority
-			//- debug.h					--	3 params	--	9 bytes
+			//+ debug.h					--	3 params	--	9 bytes
 			//- debug_vect.h			--	14 params	--	30 bytes
 			//+ autopilot_version.h		--	16 params	--	60 bytes
 			//- named_value_float.h		--	12 params	--	18 bytes

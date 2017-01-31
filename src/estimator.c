@@ -10,79 +10,76 @@ extern "C" {
 #include "sensors.h"
 #include "params.h"
 #include "estimator.h"
+
+#include "fix16.h"
+#include "fixvector3d.h"
+#include "fixquat.h"	//TODO: Make a note about quaternion a,b,c,d
 //#include <turbotrig/turbotrig.h>
 //#include <turbotrig/turbovec.h>
 
-/*
-state_t _current_state;
-vector_t _adaptive_gyro_bias;
+#define CONST_ONE_POS 0x00010000
+#define CONST_ONE_NEG 0xFFFF0000
 
-static vector_t w1;
-static vector_t w2;
-static vector_t wbar;
-static vector_t wfinal;
-static vector_t w_acc;
-static const vector_t g = {0.0f, 0.0f, -1.0f};
-static vector_t b;
-static quaternion_t q_tilde;
-static quaternion_t q_hat;
-static int32_t last_time;
-*/
-/*
+state_t _state_estimator;
+v3d _adaptive_gyro_bias;	//TODO: extern
+sensor_readings_t _sensors;
+
+static const v3d g = {0, 0, CONST_ONE_NEG};	//These were floats, but having them as int might be more accurate
+
+static v3d w1;
+static v3d w2;
+//static v3d wbar;
+//static v3d wfinal;
+static v3d w_acc;
+static v3d b;
+static qf16 q_tilde;
+static qf16 q_hat;
+static uint32_t last_time;
+
 static bool mat_exp;
 static bool quad_int;
 static bool use_acc;
 
-static float kp_;
-static float ki_;
+static fix16_t kp_;
+static fix16_t ki_;
 static uint32_t init_time;
-*/
-/*
-static vector_t _accel_LPF;
-static vector_t _gyro_LPF;
-*/
+
+static v3d _accel_LPF;
+static v3d _gyro_LPF;
+
 void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration, bool use_accelerometer) {
-	/*
-	_current_state.p = 0.0f;
-	_current_state.q = 0.0f;
-	_current_state.r = 0.0f;
-	_current_state.phi = 0.0f;
-	_current_state.theta = 0.0f;
-	_current_state.psi = 0.0f;
+	_state_estimator.p = 0;
+	_state_estimator.q = 0;
+	_state_estimator.r = 0;
+	_state_estimator.phi = 0;
+	_state_estimator.theta = 0;
+	_state_estimator.psi = 0;
 
-	q_hat.w = 1.0f;
-	q_hat.x = 0.0f;
-	q_hat.y = 0.0f;
-	q_hat.z = 0.0f;
+	q_hat.a = CONST_ONE_POS;
+	q_hat.b = 0;
+	q_hat.c = 0;
+	q_hat.d = 0;
 
-	w1.x = 0.0f;
-	w1.y = 0.0f;
-	w1.z = 0.0f;
+	q_tilde.a = CONST_ONE_NEG;
+	q_tilde.b = 0;
+	q_tilde.c = 0;
+	q_tilde.d = 0;
 
-	w2.x = 0.0f;
-	w2.y = 0.0f;
-	w2.z = 0.0f;
+	w1.x = 0;
+	w1.y = 0;
+	w1.z = 0;
 
-	b.x = 0.0f;
-	b.y = 0.0f;
-	b.z = 0.0f;
+	w2.x = 0;
+	w2.y = 0;
+	w2.z = 0;
 
-	kp_ = get_param_float(PARAM_FILTER_KP);
-	ki_ = get_param_float(PARAM_FILTER_KI);
-	init_time = get_param_int(PARAM_INIT_TIME)*1000; // microseconds
+	w_acc.x = 0;
+	w_acc.y = 0;
+	w_acc.z = 0;
 
-	w_acc.x = 0.0f;
-	w_acc.y = 0.0f;
-	w_acc.z = 0.0f;
-
-	q_tilde.w = 1.0f;
-	q_tilde.x = 0.0f;
-	q_tilde.y = 0.0f;
-	q_tilde.z = 0.0f;
-
-	mat_exp = use_matrix_exponential;
-	quad_int = use_quadratic_integration;
-	use_acc = use_accelerometer;
+	b.x = 0;
+	b.y = 0;
+	b.z = 0;
 
 	_adaptive_gyro_bias.x = 0;
 	_adaptive_gyro_bias.y = 0;
@@ -90,28 +87,34 @@ void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration,
 
 	_accel_LPF.x = 0;
 	_accel_LPF.y = 0;
-	_accel_LPF.z = -9.80665;
+	_accel_LPF.z = CONST_GRAVITY;
 
 	_gyro_LPF.x = 0;
 	_gyro_LPF.y = 0;
 	_gyro_LPF.z = 0;
 
+	kp_ = get_param_fix16(PARAM_FILTER_KP);
+	ki_ = get_param_fix16(PARAM_FILTER_KI);
+	init_time = get_param_int(PARAM_INIT_TIME)*1000;	//nano->microseconds
+
+	mat_exp = use_matrix_exponential;
+	quad_int = use_quadratic_integration;
+	use_acc = use_accelerometer;
+
 	last_time = 0;
-	*/
 }
 
 void lpf_update() {
-	/*
-	float alpha_acc = get_param_float(PARAM_ACC_ALPHA);
-	_accel_LPF.x = (1.0f-alpha_acc)*_accel.x + alpha_acc*_accel_LPF.x;
-	_accel_LPF.y = (1.0f-alpha_acc)*_accel.y + alpha_acc*_accel_LPF.y;
-	_accel_LPF.z = (1.0f-alpha_acc)*_accel.z + alpha_acc*_accel_LPF.z;
+	//value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
+	fix16_t alpha_acc = get_param_fix16(PARAM_ACC_ALPHA);
+	_accel_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE_POS, alpha_acc), _sensors.imu.accel.x), fix16_smul(alpha_acc, _accel_LPF.x));
+	_accel_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE_POS, alpha_acc), _sensors.imu.accel.y), fix16_smul(alpha_acc, _accel_LPF.y));;
+	_accel_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE_POS, alpha_acc), _sensors.imu.accel.z), fix16_smul(alpha_acc, _accel_LPF.z));;
 
-	float alpha_gyro = get_param_float(PARAM_GYRO_ALPHA);
-	_gyro_LPF.x = (1.0f-alpha_gyro)*_gyro.x + alpha_gyro*_gyro_LPF.x;
-	_gyro_LPF.y = (1.0f-alpha_gyro)*_gyro.y + alpha_gyro*_gyro_LPF.y;
-	_gyro_LPF.z = (1.0f-alpha_gyro)*_gyro.z + alpha_gyro*_gyro_LPF.z;
-	*/
+	fix16_t alpha_gyro = get_param_fix16(PARAM_GYRO_ALPHA);
+	_gyro_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE_POS, alpha_gyro), _sensors.imu.gyro.x), fix16_smul(alpha_gyro, _gyro_LPF.x));
+	_gyro_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE_POS, alpha_gyro), _sensors.imu.gyro.y), fix16_smul(alpha_gyro, _gyro_LPF.y));
+	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE_POS, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
 }
 
 
