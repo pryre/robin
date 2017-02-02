@@ -316,7 +316,7 @@ static inline uint16_t mavlink_prepare_param_value(uint8_t *buffer, uint32_t ind
 	//- heartbeat.h
 	//- manual_setpoint.h
 	//- message_interval.h
-	//- param_set.h
+	//+ param_set.h
 	//+ param_request_list.h
 	//+ param_request_read.h
 	//- ping.h

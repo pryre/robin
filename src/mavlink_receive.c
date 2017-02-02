@@ -58,6 +58,53 @@ void communication_receive(void) {
 
 					break;
 				}
+				case MAVLINK_MSG_ID_PARAM_SET: {
+					if((mavlink_msg_param_set_get_target_system(&msg) == mavlink_system.sysid) &&
+						(mavlink_msg_param_set_get_target_component(&msg) == mavlink_system.compid)) {
+
+						bool set_complete = false;
+
+						char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1];
+						mavlink_msg_param_set_get_param_id(&msg, param_id);
+						param_id_t index = lookup_param_id(param_id);
+
+						//TODO: Remember to mention in docs that the sent dat is entered as the type, regardless of what type it should be
+						//TODO: Should probably have a safetly check for this though
+						if(index < PARAMS_COUNT) { //If the ID is valid
+							switch(mavlink_msg_param_set_get_param_type(&msg)) {
+								case MAV_PARAM_TYPE_INT32: {
+									union {
+										float f;
+										uint32_t i;
+									} u;
+
+									u.f = mavlink_msg_param_set_get_param_value(&msg);
+									set_complete = set_param_by_name_int(param_id, u.i);
+
+									break;
+								}
+								case MAV_PARAM_TYPE_REAL32: {
+									float value = mavlink_msg_param_set_get_param_value(&msg);
+									set_complete = set_param_fix16(index, fix16_from_float(value));
+
+									break;
+								}
+								default:
+									break;
+							}
+
+							if(set_complete) {
+								if(check_lpq_space_free()) {
+									uint8_t i = get_lpq_next_slot();
+									_low_priority_queue.buffer_len[i] = mavlink_prepare_param_value(_low_priority_queue.buffer[i], index);
+									_low_priority_queue.queued_message_count++;
+								}
+							}
+						}
+					} //Else this message is for someone else
+
+					break;
+				}
 				case MAVLINK_MSG_ID_COMMAND_LONG: {
 					//A command should always have an acknowledge
 					bool need_ack = false;
@@ -98,8 +145,45 @@ void communication_receive(void) {
 								_low_priority_queue.queued_message_count++;
 							}
 							break;
+						case MAV_CMD_PREFLIGHT_STORAGE:
+							need_ack = true;
+
+							switch((int)mavlink_msg_command_long_get_param1(&msg)) {
+								case 0:	//Read from flash
+									if(read_params()) {
+										command_result = MAV_RESULT_ACCEPTED;
+									} else {
+										command_result = MAV_RESULT_FAILED;
+									}
+
+									break;
+
+								//TODO: Writing to EEPROM doesn't really work after boot
+								/*
+								case 1:	//Write to flash
+
+									if(write_params()) {
+										command_result = MAV_RESULT_ACCEPTED;
+									} else {
+										command_result = MAV_RESULT_FAILED;
+									}
+
+									break;
+								*/
+								case 2:	//Reset to defaults
+									set_param_defaults();
+									command_result = MAV_RESULT_ACCEPTED;
+
+									break;
+								default://Not supported
+									command_result = MAV_RESULT_UNSUPPORTED;
+									break;
+							}
+
+							break;
 						case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
 							need_ack = true;
+
 							//TODO: Make sure mav is in preflight mode
 							switch((int)mavlink_msg_command_long_get_param1(&msg)) {
 								case 1:

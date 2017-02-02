@@ -40,12 +40,13 @@ static void init_param_fix16(param_id_t id, char name[PARAMS_NAME_LENGTH], fix16
 // function definitions
 void init_params(void) {
 	initEEPROM();
+
 	if (!read_params())	{
 		set_param_defaults();
 		write_params();
 	}
 
-	/* TODO:
+	/* TODO: More to do with the live params
 	for (uint16_t id = 0; id < PARAMS_COUNT; id++)
 		param_change_callback((param_id_t) id);
 	*/
@@ -132,7 +133,7 @@ bool read_params(void) {
 }
 
 bool write_params(void) {
-	return writeEEPROM(true);
+	return writeEEPROM();
 }
 
 
@@ -232,6 +233,7 @@ bool set_param_int(param_id_t id, int32_t value) {
 
 		return true;
 	}
+
 	return false;
 }
 

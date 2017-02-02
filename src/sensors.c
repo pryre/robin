@@ -152,6 +152,8 @@ bool sensors_update(uint32_t time_us) {
 	return true;
 }
 
+//TODO: This does not take into account temperature
+//TODO: These parameters are not being written to EEPROM (Check to see if mavlink has a "save params" command)
 //TODO: This calibration method is very basic, doesn't take into acount very much...mabye?
 void sensors_calibrate(void) {
 	if(_sensor_calibration & SENSOR_CAL_GYRO) {
