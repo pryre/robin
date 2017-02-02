@@ -9,21 +9,26 @@ extern "C" {
 
 #include "fix16.h"
 #include "fixvector3d.h"
+#include "fixquat.h"
 
+
+//TODO: Get rid of phi, theta, psi
 typedef struct {
-  fix16_t p;
-  fix16_t q;
-  fix16_t r;
-  fix16_t phi;
-  fix16_t theta;
-  fix16_t psi;
+  fix16_t p;		//Roll Rate
+  fix16_t q;		//Pitch Rate
+  fix16_t r;		//Yaw Rate
+  fix16_t phi;		//Roll
+  fix16_t theta;	//Pitch
+  fix16_t psi;		//Yaw
   fix16_t altitude;
+  qf16 attitude;
 } state_t;
 
 extern state_t _state_estimator;	//_current_state
 extern v3d _adaptive_gyro_bias;
 
 
+//TODO: Redo these stats
 // mat_exp <- greater accuracy, but adds ~90 us
 // quadratic_integration <- some additional accuracy, adds ~20 us
 // accelerometer correction <- if using angle mode, this is required, adds ~70 us

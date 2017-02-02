@@ -8,6 +8,7 @@
 #include "sensors.h"
 #include "params.h"
 #include "safety.h"
+#include "estimator.h"
 #include "fix16.h"
 
 
@@ -28,6 +29,7 @@ mavlink_system_t mavlink_system;
 system_t _system_status;
 sensor_readings_t _sensors;
 params_t _params;
+state_t _state_estimator;
 
 //Firmware identifier, first 8 bytes of current BreezySTM32 commit
 static const uint8_t FW_HASH [8] = {0xb7, 0xa7, 0x59, 0x4e, 0xa7, 0xa2, 0x98, 0xb0};
@@ -210,7 +212,7 @@ static inline void mavlink_stream_sys_status(void) {
 
 //==-- Sends the latest IMU reading
 //TODO: neaten, and make a proper define for the updated_data field
-//TODO: GYRO DOES NOT WORK!!
+//TODO: GYRO DOES NOT WORK?
 static inline void mavlink_stream_highres_imu(void) {
 	mavlink_msg_highres_imu_send(MAVLINK_COMM_0,
 									_sensors.imu.time,
@@ -224,6 +226,18 @@ static inline void mavlink_stream_highres_imu(void) {
 									0, 0, 0,
 									0,
 									((1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5)) );
+}
+
+static inline void mavlink_stream_attitude_quaternion(void) {
+	mavlink_msg_attitude_quaternion_send(MAVLINK_COMM_0,
+											_sensors.imu.time,
+											fix16_to_float(_state_estimator.attitude.a),
+											fix16_to_float(_state_estimator.attitude.b),
+											fix16_to_float(_state_estimator.attitude.c),
+											fix16_to_float(_state_estimator.attitude.d),
+											fix16_to_float(_state_estimator.p),
+											fix16_to_float(_state_estimator.q),
+											fix16_to_float(_state_estimator.r));
 }
 
 //==-- Low Priority Messages

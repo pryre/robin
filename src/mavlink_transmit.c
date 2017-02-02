@@ -188,7 +188,8 @@ static void mavlink_transmit_low_priority() {
 static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 	{ .period_us = 1000000, .last_time_us = 0, .send_function = mavlink_stream_heartbeat },
 	{ .period_us = 5000000, .last_time_us = 0, .send_function = mavlink_stream_sys_status },
-	{ .period_us = 1900, .last_time_us = 0, .send_function = mavlink_stream_highres_imu },	//Set at 900, not 1000 as we want it to do it as fast as possible, but not multiple times per loop
+	{ .period_us = 10000,   .last_time_us = 0, .send_function = mavlink_stream_highres_imu },
+	{ .period_us = 20000,  .last_time_us = 0, .send_function = mavlink_stream_attitude_quaternion },
 	/*
 	{ .period_us = 200000,  .last_time_us = 0, .send_function = mavlink_send_attitude },
 

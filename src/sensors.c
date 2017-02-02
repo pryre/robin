@@ -73,7 +73,7 @@ void sensors_init(void) {
 	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
 	//TODO: Note that this is just an estimate (?) in the docs
 //	acc1G = 4096;
-	_sensors.imu.accel_scale = fix16_sdiv(CONST_GRAVITY, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
+	_sensors.imu.accel_scale = fix16_div(CONST_GRAVITY, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
 	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 
 	_sensor_cal_data.accel.temp_scale = fix16_from_float(340.0f);
@@ -133,20 +133,20 @@ bool sensors_update(uint32_t time_us) {
 
 	//==-- Temperature in degC
 	//value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
-	_sensors.imu.temperature = fix16_sadd(fix16_sdiv(fix16_from_int(_sensors.imu.temp_raw), _sensor_cal_data.accel.temp_scale), _sensor_cal_data.accel.temp_shift);
+	_sensors.imu.temperature = fix16_add(fix16_div(fix16_from_int(_sensors.imu.temp_raw), _sensor_cal_data.accel.temp_scale), _sensor_cal_data.accel.temp_shift);
 
 	//==-- Accel in NED
 	//TODO: value = (raw - BIAS - (EMP_COMP * TEMP)) * scale
 	// value = (raw - BIAS) * scale
-	_sensors.imu.accel.x = fix16_smul(fix16_from_int(-(_sensors.imu.accel_raw[0] - get_param_int(PARAM_ACC_X_BIAS))), _sensors.imu.accel_scale);
-	_sensors.imu.accel.y = fix16_smul(fix16_from_int(_sensors.imu.accel_raw[1] - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
-	_sensors.imu.accel.z = fix16_smul(fix16_from_int(_sensors.imu.accel_raw[2] - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
+	_sensors.imu.accel.x = fix16_mul(fix16_from_int(-(_sensors.imu.accel_raw[0] - get_param_int(PARAM_ACC_X_BIAS))), _sensors.imu.accel_scale);
+	_sensors.imu.accel.y = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[1] - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
+	_sensors.imu.accel.z = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[2] - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
 
 	//==-- Gyro in NED
 	// value = (raw - BIAS) * scale
-	_sensors.imu.gyro.x = fix16_smul(fix16_from_int(_sensors.imu.gyro_raw[0] - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
-	_sensors.imu.gyro.y = fix16_smul(fix16_from_int(-(_sensors.imu.gyro_raw[1] - get_param_int(PARAM_GYRO_Y_BIAS))), _sensors.imu.gyro_scale);
-	_sensors.imu.gyro.z = fix16_smul(fix16_from_int(-(_sensors.imu.gyro_raw[2] - get_param_int(PARAM_GYRO_Z_BIAS))), _sensors.imu.gyro_scale);
+	_sensors.imu.gyro.x = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw[0] - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
+	_sensors.imu.gyro.y = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[1] - get_param_int(PARAM_GYRO_Y_BIAS))), _sensors.imu.gyro_scale);
+	_sensors.imu.gyro.z = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[2] - get_param_int(PARAM_GYRO_Z_BIAS))), _sensors.imu.gyro_scale);
 
 	//TODO: This should be aware of failures
 	return true;
