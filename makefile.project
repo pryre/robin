@@ -1,4 +1,4 @@
-PROJECT_NAME = rtob
+PROJECT_NAME = robin
 
 # Contains your setup() and loop()
 PROJECT_SRC_FILES = ./src/main.c \

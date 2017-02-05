@@ -96,8 +96,6 @@ void loop(void)
 		//mavlink_msg_named_value_float_send(MAVLINK_COMM_0, micros(), "loop_ping", 0.0f);
 	}
 
-
-
 	//==-- Update Sensor Data
 	sensors_update(micros());	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
 
