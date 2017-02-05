@@ -1,2 +1,2 @@
-# rtob
-A real-time offboard flight controller for low level interfacing in ROS
+# rboin
+The ROS Offboard Integration for the Naze32
