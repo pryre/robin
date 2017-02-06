@@ -13,18 +13,18 @@ extern "C" {
 
 #include "fix16.h"
 #include "fixvector3d.h"
-#include "fixquat.h"	//TODO: Make a note about quaternion a,b,c,d
+#include "fixquat.h"	//TODO: Make a docs about quaternion a,b,c,d
 #include "fixextra.h"
-//#include <turbotrig/turbotrig.h>
-//#include <turbotrig/turbovec.h>
 
 //Quick defines of reused fix16 numbers
-#define CONST_ZERO_FIVE 0x00008000			//0.5
-#define CONST_ZERO_EIGHT_FIVE 0x0000D999	//0.85
-#define CONST_ONE 0x00010000				//1
-#define CONST_ONE_ONE_FIVE 0x00012666		//1.15
-#define CONST_TWO 0x00020000				//2
-
+#define CONST_ZERO_ZERO_EIGHT_THREE_REC 0x00001555	//0.083333
+#define CONST_ZERO_FOUR_SIX_REC			0x00006AAA	//0.083333
+#define CONST_ZERO_FIVE					0x00008000	//0.5
+#define CONST_ZERO_SIX_REC				0x0000AAAA	//0.66666
+#define CONST_ZERO_EIGHT_FIVE			0x0000D999	//0.85
+#define CONST_ONE						0x00010000	//1
+#define CONST_ONE_ONE_FIVE				0x00012666	//1.15
+#define CONST_TWO						0x00020000	//2
 
 state_t _state_estimator;
 v3d _adaptive_gyro_bias;	//TODO: extern
@@ -197,14 +197,26 @@ void estimator_update(uint32_t now) {
 
 	// Pull out Gyro measurements
 	if (quad_int) {
-		/*  TODO
 		// Quadratic Integration (Eq. 14 Casey Paper)
 		// this integration step adds 12 us on the STM32F10x chips
-		wbar = vector_add(vector_add(scalar_multiply(-1.0f/12.0f,w2), scalar_multiply(8.0f/12.0f,w1)),
-						  scalar_multiply(5.0f/12.0f,_gyro_LPF));
+		//wbar = ((-1.0f / 12.0f) * w2) + ((8.0f / 12.0f) * w1) + ((5.0f / 12.0f) * _gyro_LPF);
+
+		v3d w1_temp;
+		v3d w2_temp;
+		v3d w_sum_temp;
+		v3d gyro_temp;
+
+		v3d_mul_s(&w1_temp, CONST_ZERO_SIX_REC, &w1);
+		v3d_mul_s(&w1_temp, -CONST_ZERO_ZERO_EIGHT_THREE_REC, &w2);
+
+		v3d_add(&w_sum_temp, &w1, &w2);
+
+		v3d_mul_s(&gyro_temp, CONST_ZERO_FOUR_SIX_REC, &_gyro_LPF);
+
+		v3d_add(&wbar, &w_sum_temp, &gyro_temp);
+
 		w2 = w1;
 		w1 = _gyro_LPF;
-	*/
 	} else {
 		wbar = _gyro_LPF;
 	}
@@ -239,7 +251,8 @@ void estimator_update(uint32_t now) {
 			// This adds 90 us on STM32F10x chips
 			fix16_t norm_w = fix16_sqrt(sqrd_norm_w);
 
-			//XXX: This is can caus some serious RAM issues if either caching or lookup tables are enabled
+			//This is can caus some serious RAM issues if either caching or lookup tables are enabled
+			//XXX: Even with caching turned off, this should give a good performance increase (hopefully around 25%)
 			fix16_t t1 = fix16_cos(fix16_div(fix16_mul(norm_w, dt), CONST_TWO));
 			fix16_t t2 = fix16_mul(fix16_div(CONST_ONE, norm_w), fix16_sin(fix16_div(fix16_mul(norm_w, dt), CONST_TWO)));
 
