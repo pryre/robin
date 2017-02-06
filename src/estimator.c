@@ -221,7 +221,7 @@ void estimator_update(uint32_t now) {
 	v3d_sub(&wfinal_temp_sub, &wbar, &b);
 	v3d_add(&wfinal, &wfinal_temp_sub, &wfinal_temp_scale);
 
-	// Propagate Dynamics (only if we've moved)
+	//Propagate Dynamics (only if we've moved)
 	fix16_t sqrd_norm_w = v3d_sq_norm(&wfinal);
 
 	if (sqrd_norm_w > 0) {
@@ -229,22 +229,40 @@ void estimator_update(uint32_t now) {
 		fix16_t q = wfinal.y;	//Pitch Rate
 		fix16_t r = wfinal.z;	//Yaw Rate
 
+		qf16 q_hat_temp;
+		qf16 qdot;
+
 		if (mat_exp) {
+			// Matrix Exponential Approximation (From Attitude Representation and Kinematic
+			// Propagation for Low-Cost UAVs by Robert T. Casey)
+			// (Eq. 12 Casey Paper)
+			// This adds 90 us on STM32F10x chips
+			fix16_t norm_w = fix16_sqrt(sqrd_norm_w);
+
+			//XXX: This is can caus some serious RAM issues if either caching or lookup tables are enabled
+			fix16_t t1 = fix16_cos(fix16_div(fix16_mul(norm_w, dt), CONST_TWO));
+			fix16_t t2 = fix16_mul(fix16_div(CONST_ONE, norm_w), fix16_sin(fix16_div(fix16_mul(norm_w, dt), CONST_TWO)));
+
 			/*
-		  // Matrix Exponential Approximation (From Attitude Representation and Kinematic
-		  // Propagation for Low-Cost UAVs by Robert T. Casey)
-		  // (Eq. 12 Casey Paper)
-		  // This adds 90 us on STM32F10x chips
-		  float norm_w = sqrt(sqrd_norm_w);
-		  quaternion_t qhat_np1;
-		  float t1 = cos((norm_w*dt)/2.0f);
-		  float t2 = 1.0f/norm_w * sin((norm_w*dt)/2.0f);
-		  qhat_np1.w = t1*q_hat.w   + t2*(          - p*q_hat.x - q*q_hat.y - r*q_hat.z);
-		  qhat_np1.x = t1*q_hat.x   + t2*(p*q_hat.w             + r*q_hat.y - q*q_hat.z);
-		  qhat_np1.y = t1*q_hat.y   + t2*(q*q_hat.w - r*q_hat.x             + p*q_hat.z);
-		  qhat_np1.z = t1*q_hat.z   + t2*(r*q_hat.w + q*q_hat.x - p*q_hat.y);
-		  q_hat = quaternion_normalize(qhat_np1);
+			qhat_np1.w = t1*q_hat.w   + t2*(          - p*q_hat.x - q*q_hat.y - r*q_hat.z);
+			qhat_np1.x = t1*q_hat.x   + t2*(p*q_hat.w             + r*q_hat.y - q*q_hat.z);
+			qhat_np1.y = t1*q_hat.y   + t2*(q*q_hat.w - r*q_hat.x             + p*q_hat.z);
+			qhat_np1.z = t1*q_hat.z   + t2*(r*q_hat.w + q*q_hat.x - p*q_hat.y);
 			*/
+
+			//qdot.w = t2*(((-p*q_hat.x) + (-q*q_hat.y)) + (-r*q_hat.z)
+			qdot.a = fix16_mul(t2, fix16_add(fix16_add(fix16_mul(-p, q_hat.b), fix16_mul(-q, q_hat.c)), fix16_mul(-r, q_hat.d)));
+			qdot.b = fix16_mul(t2, fix16_add(fix16_add(fix16_mul(p, q_hat.a), fix16_mul(r, q_hat.c)), fix16_mul(-q, q_hat.d)));
+			qdot.c = fix16_mul(t2, fix16_add(fix16_add(fix16_mul(q, q_hat.a), fix16_mul(-r, q_hat.b)), fix16_mul(p, q_hat.d)));
+			qdot.d = fix16_mul(t2, fix16_add(fix16_add(fix16_mul(r, q_hat.a), fix16_mul(q, q_hat.b)), fix16_mul(-p, q_hat.c)));
+
+			//qhat_np1.w = (t1*q_hat.w) + qdot.w);
+			q_hat_temp.a = fix16_add(fix16_mul(t1, q_hat.a), qdot.a);
+			q_hat_temp.b = fix16_add(fix16_mul(t1, q_hat.b), qdot.b);
+			q_hat_temp.c = fix16_add(fix16_mul(t1, q_hat.c), qdot.c);
+			q_hat_temp.d = fix16_add(fix16_mul(t1, q_hat.d), qdot.d);
+
+			qf16_normalize(&q_hat, &q_hat_temp);
 		} else {
 			// Euler Integration
 			// (Eq. 47a Mahoney Paper), but this is pretty straight-forward
@@ -256,13 +274,11 @@ void estimator_update(uint32_t now) {
 							    };
 			*/
 
-			qf16 qdot;
 			qdot.a = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(-p, q_hat.b), fix16_add(fix16_mul(-q, q_hat.c), fix16_mul(-r, q_hat.d))));
 			qdot.b = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(p, q_hat.a), fix16_add(fix16_mul(r, q_hat.c), fix16_mul(-q, q_hat.d))));
 			qdot.c = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(q, q_hat.a), fix16_add(fix16_mul(-r, q_hat.b), fix16_mul(p, q_hat.d))));
 			qdot.d = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(r, q_hat.a), fix16_add(fix16_mul(q, q_hat.b), fix16_mul(-p, q_hat.c))));
 
-			qf16 q_hat_temp;
 			q_hat_temp.a = fix16_add(q_hat.a, fix16_mul(qdot.a, dt));
 			q_hat_temp.b = fix16_add(q_hat.b, fix16_mul(qdot.b, dt));
 			q_hat_temp.c = fix16_add(q_hat.c, fix16_mul(qdot.c, dt));
