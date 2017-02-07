@@ -228,6 +228,17 @@ static inline void mavlink_stream_highres_imu(void) {
 									((1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5)) );
 }
 
+static inline void mavlink_stream_attitude(void) {
+	mavlink_msg_attitude_send(MAVLINK_COMM_0,
+								_sensors.imu.time,
+								fix16_to_float(_state_estimator.phi),
+								fix16_to_float(_state_estimator.theta),
+								fix16_to_float(_state_estimator.psi),
+								fix16_to_float(_state_estimator.p),
+								fix16_to_float(_state_estimator.q),
+								fix16_to_float(_state_estimator.r));
+}
+
 static inline void mavlink_stream_attitude_quaternion(void) {
 	mavlink_msg_attitude_quaternion_send(MAVLINK_COMM_0,
 											_sensors.imu.time,

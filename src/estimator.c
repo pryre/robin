@@ -127,6 +127,19 @@ void lpf_update() {
 	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
 }
 
+static void euler_from_quat(qf16 *q, fix16_t *phi, fix16_t *theta, fix16_t *psi)
+{
+  *phi = fix16_atan2(fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->a, q->b), fix16_mul(q->c, q->d))),
+                      fix16_sub(CONST_ONE, fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->b, q->b), fix16_mul(q->c, q->c)))));
+
+  *theta = fix16_asin(fix16_mul(CONST_TWO, fix16_sub(fix16_mul(q->a, q->c), fix16_mul(q->d, q->b))));
+
+  *psi = fix16_atan2(fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->a, q->d), fix16_mul(q->b, q->c))),
+                     fix16_sub(CONST_ONE, fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->c, q->c), fix16_mul(q->d, q->d)))));
+}
+
+//TODO: HERE!
+//TODO: There's something wrong in here somewhere...
 void estimator_update(uint32_t now) {
 	fix16_t kp;
 	fix16_t ki;
@@ -206,12 +219,12 @@ void estimator_update(uint32_t now) {
 		v3d w_sum_temp;
 		v3d gyro_temp;
 
-		v3d_mul_s(&w1_temp, CONST_ZERO_SIX_REC, &w1);
-		v3d_mul_s(&w1_temp, -CONST_ZERO_ZERO_EIGHT_THREE_REC, &w2);
+		v3d_mul_s(&w1_temp, &w1, CONST_ZERO_SIX_REC);
+		v3d_mul_s(&w2_temp, &w2, -CONST_ZERO_ZERO_EIGHT_THREE_REC);
 
-		v3d_add(&w_sum_temp, &w1, &w2);
+		v3d_add(&w_sum_temp, &w1_temp, &w2_temp);
 
-		v3d_mul_s(&gyro_temp, CONST_ZERO_FOUR_SIX_REC, &_gyro_LPF);
+		v3d_mul_s(&gyro_temp, &_gyro_LPF, CONST_ZERO_FOUR_SIX_REC);
 
 		v3d_add(&wbar, &w_sum_temp, &gyro_temp);
 
@@ -301,10 +314,10 @@ void estimator_update(uint32_t now) {
 		}
 	}
 
+	//q_hat is given as z-down, rotate to NED
 	_state_estimator.attitude = q_hat;
-
 	// Extract Euler Angles for controller
-	//TODO (?): euler_from_quat(q_hat, &_current_state.phi, &_current_state.theta, &_current_state.psi);
+	euler_from_quat(&q_hat, &_state_estimator.phi, &_state_estimator.theta, &_state_estimator.psi);
 
 	// Save off adjust gyro measurements with estimated biases for control
 	v3d wbar_old = wbar;
