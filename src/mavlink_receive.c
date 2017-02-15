@@ -13,6 +13,8 @@ void communication_receive(void) {
 	mavlink_message_t msg;
 	mavlink_status_t status;
 
+	//TODO: Have a check on Serial 0 for... all the same messages?
+	//TODO: That would mean there is only a need to have 1 parse function, and pass the right port and buffer.
 	while( serialTotalRxBytesWaiting( Serial1 ) ) {
 		uint8_t c = serialRead(Serial1);
 
