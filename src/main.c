@@ -100,8 +100,8 @@ void loop(void)
 	sensors_update(micros());	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
 
 	//==-- Calibrations
-	if(_sensor_calibration != SENSOR_CAL_NONE)
-		sensors_calibrate();
+	if(_sensor_calibration != SENSOR_CAL_NONE)	//If any calibration is in progress
+		sensors_calibrate();	//Run the rest of the calibration logic
 
 	//==-- Timeout Checks
 	//TODO: Set MAV_STATE in this function
@@ -109,7 +109,11 @@ void loop(void)
 	//==-- Update Estimator
     estimator_update(micros()); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
+	//==-- Update Controller
+	controller_run();	//Apply the current commands and update the PID controllers
+
 	//==-- Send Motor Commands
+	mixer_output();	//Convert outputs to correct layout and send PWM
 
 	//==-- Boot Control
 	if(_system_operation_control != SYSTEM_OPERATION_RUN) {
