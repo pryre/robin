@@ -2,10 +2,13 @@
 
 #include "fix16.h"
 #include "fixvector3d.h"
+#include "fixmatrix.h"
 #include "fixquat.h"	//TODO: Make a note about quaternion a,b,c,d
 
 #define CONST_EPSILON	0x0000FFFF	//0.99999
 #define CONST_ONE		0x00010000	//1
+#define CONST_ZERO_FIVE	0x00008000	//0.5
+#define CONST_TWO		0x00020000	//2
 
 //Quaternion layout
 //q.a -> q.w
@@ -60,3 +63,35 @@ static inline void qf16_from_shortest_path(qf16 *dest, const v3d *v1, const v3d 
 		qf16_normalize(dest, &q);
 	}
 }
+
+static inline void euler_from_quat(qf16 *q, fix16_t *phi, fix16_t *theta, fix16_t *psi) {
+  *phi = fix16_atan2(fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->a, q->b), fix16_mul(q->c, q->d))),
+                      fix16_sub(CONST_ONE, fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->b, q->b), fix16_mul(q->c, q->c)))));
+
+  *theta = fix16_asin(fix16_mul(CONST_TWO, fix16_sub(fix16_mul(q->a, q->c), fix16_mul(q->d, q->b))));
+
+  *psi = fix16_atan2(fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->a, q->d), fix16_mul(q->b, q->c))),
+                     fix16_sub(CONST_ONE, fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->c, q->c), fix16_mul(q->d, q->d)))));
+}
+
+static inline void quat_from_euler(qf16 *q, fix16_t phi, fix16_t theta, fix16_t psi) {
+	fix16_t t0 = fix16_cos(fix16_mul(psi, CONST_ZERO_FIVE));
+	fix16_t t1 = fix16_sin(fix16_mul(psi, CONST_ZERO_FIVE));
+	fix16_t t2 = fix16_cos(fix16_mul(phi, CONST_ZERO_FIVE));
+	fix16_t t3 = fix16_sin(fix16_mul(phi, CONST_ZERO_FIVE));
+	fix16_t t4 = fix16_cos(fix16_mul(theta, CONST_ZERO_FIVE));
+	fix16_t t5 = fix16_sin(fix16_mul(theta, CONST_ZERO_FIVE));
+
+	q->a = fix16_add(fix16_mul(t0, fix16_mul(t2, t4)), fix16_mul(t1, fix16_mul(t3, t5)));
+	q->b = fix16_sub(fix16_mul(t0, fix16_mul(t3, t4)), fix16_mul(t1, fix16_mul(t2, t5)));
+	q->c = fix16_add(fix16_mul(t0, fix16_mul(t2, t5)), fix16_mul(t1, fix16_mul(t3, t4)));
+	q->d = fix16_sub(fix16_mul(t1, fix16_mul(t2, t4)), fix16_mul(t0, fix16_mul(t3, t5)));
+}
+
+static inline void matrix_to_qf16(qf16 *dest, const mf16 *mat) {
+	dest->a = fix16_mul(CONST_ZERO_FIVE, fix16_sqrt(fix16_add(mat->data[0][0], fix16_add(mat->data[1][1], fix16_add(mat->data[2][2], 1)))));
+	dest->b = fix16_div(fix16_sub(mat->data[1][2], mat->data[2][1]), fix16_mul(4, dest->a));
+	dest->c = fix16_div(fix16_sub(mat->data[2][0], mat->data[0][2]), fix16_mul(4, dest->a));
+	dest->d = fix16_div(fix16_sub(mat->data[0][1], mat->data[1][0]), fix16_mul(4, dest->a));
+}
+

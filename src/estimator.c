@@ -127,30 +127,6 @@ void lpf_update() {
 	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
 }
 
-static void euler_from_quat(qf16 *q, fix16_t *phi, fix16_t *theta, fix16_t *psi) {
-  *phi = fix16_atan2(fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->a, q->b), fix16_mul(q->c, q->d))),
-                      fix16_sub(CONST_ONE, fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->b, q->b), fix16_mul(q->c, q->c)))));
-
-  *theta = fix16_asin(fix16_mul(CONST_TWO, fix16_sub(fix16_mul(q->a, q->c), fix16_mul(q->d, q->b))));
-
-  *psi = fix16_atan2(fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->a, q->d), fix16_mul(q->b, q->c))),
-                     fix16_sub(CONST_ONE, fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->c, q->c), fix16_mul(q->d, q->d)))));
-}
-
-static void quat_from_euler(qf16 *q, fix16_t phi, fix16_t theta, fix16_t psi) {
-	fix16_t t0 = fix16_cos(fix16_mul(psi, CONST_ZERO_FIVE));
-	fix16_t t1 = fix16_sin(fix16_mul(psi, CONST_ZERO_FIVE));
-	fix16_t t2 = fix16_cos(fix16_mul(phi, CONST_ZERO_FIVE));
-	fix16_t t3 = fix16_sin(fix16_mul(phi, CONST_ZERO_FIVE));
-	fix16_t t4 = fix16_cos(fix16_mul(theta, CONST_ZERO_FIVE));
-	fix16_t t5 = fix16_sin(fix16_mul(theta, CONST_ZERO_FIVE));
-
-	q->a = fix16_add(fix16_mul(t0, fix16_mul(t2, t4)), fix16_mul(t1, fix16_mul(t3, t5)));
-	q->b = fix16_sub(fix16_mul(t0, fix16_mul(t3, t4)), fix16_mul(t1, fix16_mul(t2, t5)));
-	q->c = fix16_add(fix16_mul(t0, fix16_mul(t2, t5)), fix16_mul(t1, fix16_mul(t3, t4)));
-	q->d = fix16_sub(fix16_mul(t1, fix16_mul(t2, t4)), fix16_mul(t0, fix16_mul(t3, t5)));
-}
-
 //TODO: HERE!
 //TODO: There's something wrong in here somewhere...
 void estimator_update(uint32_t time_now) {
@@ -203,11 +179,33 @@ void estimator_update(uint32_t time_now) {
 		// Get the error quaternion between observer and low-freq q
 		// First we been to take out the Z (Yaw) component as it is unobservable with just imu
 		qf16 q_hat_acc;
-		fix16_t acc_phi;
-		fix16_t acc_theta;
-		fix16_t acc_psi;
-		euler_from_quat(&q_hat, &acc_phi, &acc_theta, &acc_psi);	//TODO: HIGH PRIORITY! Should be done the quaternion way
-		quat_from_euler(&q_hat_acc, acc_phi, acc_theta, 0.0);
+		mf16 rot_mat;
+		qf16_to_matrix(&rot_mat, &q_hat);
+
+		v3d body_x;
+		v3d body_y;
+		v3d body_z;
+		body_x.x = CONST_ONE;
+		body_y.x = rot_mat.data[1][0];
+		body_y.y = rot_mat.data[1][1];
+		body_y.z = rot_mat.data[1][2];
+
+		v3d_cross(&body_z, &body_x, &body_y);
+		v3d_normalize(&body_z, &body_z);
+		v3d_cross(&body_x, &body_y, &body_z);
+		v3d_normalize(&body_x, &body_x);
+
+		rot_mat.data[0][0] = body_x.x;
+		rot_mat.data[0][1] = body_x.y;
+		rot_mat.data[0][2] = body_x.z;
+		rot_mat.data[1][0] = body_y.x;
+		rot_mat.data[1][1] = body_y.y;
+		rot_mat.data[1][2] = body_y.z;
+		rot_mat.data[2][0] = body_z.x;
+		rot_mat.data[2][1] = body_z.y;
+		rot_mat.data[2][2] = body_z.z;
+
+		matrix_to_qf16(&q_hat_acc, &rot_mat );
 
 		// Below Eq. 45 Mahoney Paper
 		qf16_mul(&q_tilde, &q_acc_inv, &q_hat_acc);
