@@ -4,7 +4,8 @@
 #include "fixvector3d.h"
 #include "fixquat.h"	//TODO: Make a note about quaternion a,b,c,d
 
-#define CONST_EPSILON 0x0000FFFF	//0.99999
+#define CONST_EPSILON	0x0000FFFF	//0.99999
+#define CONST_ONE		0x00010000	//1
 
 //Quaternion layout
 //q.a -> q.w
@@ -49,8 +50,9 @@ static inline void qf16_from_shortest_path(qf16 *dest, const v3d *v1, const v3d 
 		v3d_cross(&v_c, v1, v2);
 
 		//q.w = sqrt((v1.length ^ 2) * (v2.length ^ 2)) + dotproduct(v1, v2)
-		q.a = fix16_add(fix16_sqrt(fix16_mul(fix16_sq(v3d_norm(v1)), fix16_sq(v3d_norm(v2)))), v_dot);
+		//q.a = fix16_add(fix16_sqrt(fix16_mul(fix16_sq(v3d_norm(v1)), fix16_sq(v3d_norm(v2)))), v_dot);
 
+		q.a = fix16_add(CONST_ONE, v_dot);
 		q.b = v_c.x;
 		q.c = v_c.y;
 		q.d = v_c.z;

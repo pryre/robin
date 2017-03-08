@@ -30,7 +30,7 @@ state_t _state_estimator;
 v3d _adaptive_gyro_bias;	//TODO: extern
 sensor_readings_t _sensors;
 
-static const v3d g = {0, 0, -CONST_ONE};	//These were floats, but having them as int might be more accurate
+static const v3d g = {0, 0, CONST_ONE};	//These were floats, but having them as int might be more accurate
 
 static v3d w1;
 static v3d w2;
@@ -40,7 +40,7 @@ static v3d w_acc;
 static v3d b;
 static qf16 q_tilde;
 static qf16 q_hat;
-static uint32_t last_time;
+static uint32_t time_last;
 
 static bool mat_exp;
 static bool quad_int;
@@ -111,7 +111,7 @@ void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration,
 	quad_int = use_quadratic_integration;
 	use_acc = use_accelerometer;
 
-	last_time = 0;
+	time_last = 0;
 }
 
 void lpf_update() {
@@ -127,8 +127,7 @@ void lpf_update() {
 	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
 }
 
-static void euler_from_quat(qf16 *q, fix16_t *phi, fix16_t *theta, fix16_t *psi)
-{
+static void euler_from_quat(qf16 *q, fix16_t *phi, fix16_t *theta, fix16_t *psi) {
   *phi = fix16_atan2(fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->a, q->b), fix16_mul(q->c, q->d))),
                       fix16_sub(CONST_ONE, fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->b, q->b), fix16_mul(q->c, q->c)))));
 
@@ -138,24 +137,38 @@ static void euler_from_quat(qf16 *q, fix16_t *phi, fix16_t *theta, fix16_t *psi)
                      fix16_sub(CONST_ONE, fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->c, q->c), fix16_mul(q->d, q->d)))));
 }
 
+static void quat_from_euler(qf16 *q, fix16_t phi, fix16_t theta, fix16_t psi) {
+	fix16_t t0 = fix16_cos(fix16_mul(psi, CONST_ZERO_FIVE));
+	fix16_t t1 = fix16_sin(fix16_mul(psi, CONST_ZERO_FIVE));
+	fix16_t t2 = fix16_cos(fix16_mul(phi, CONST_ZERO_FIVE));
+	fix16_t t3 = fix16_sin(fix16_mul(phi, CONST_ZERO_FIVE));
+	fix16_t t4 = fix16_cos(fix16_mul(theta, CONST_ZERO_FIVE));
+	fix16_t t5 = fix16_sin(fix16_mul(theta, CONST_ZERO_FIVE));
+
+	q->a = fix16_add(fix16_mul(t0, fix16_mul(t2, t4)), fix16_mul(t1, fix16_mul(t3, t5)));
+	q->b = fix16_sub(fix16_mul(t0, fix16_mul(t3, t4)), fix16_mul(t1, fix16_mul(t2, t5)));
+	q->c = fix16_add(fix16_mul(t0, fix16_mul(t2, t5)), fix16_mul(t1, fix16_mul(t3, t4)));
+	q->d = fix16_sub(fix16_mul(t1, fix16_mul(t2, t4)), fix16_mul(t0, fix16_mul(t3, t5)));
+}
+
 //TODO: HERE!
 //TODO: There's something wrong in here somewhere...
-void estimator_update(uint32_t now) {
+void estimator_update(uint32_t time_now) {
 	fix16_t kp;
 	fix16_t ki;
 
 	//TODO: This will exit on the first loop, not a nice way of doing it though
-	if (last_time == 0) {
-		last_time = now;
+	if (time_last == 0) {
+		time_last = time_now;
 		return;
 	}
 
 	//Converts dt from micros to secs
-	fix16_t dt = fix16_sdiv((now - last_time), 1e6f);
-	last_time = now;
+	fix16_t dt = fix16_sdiv((time_now - time_last), 1e6f);
+	time_last = time_now;
 
 	//Crank up the gains for the first few seconds for quick convergence
-	if (now < init_time) {
+	if (time_now < init_time) {
 		kp = fix16_smul(kp_, fix16_from_float(10.0f));
 		ki = fix16_smul(ki_, fix16_from_float(10.0f));
 	} else {
@@ -170,7 +183,7 @@ void estimator_update(uint32_t now) {
 	//a_sqrd_norm = x^2 + y^2 + z^2
 	fix16_t a_sqrd_norm = v3d_sq_norm(&_accel_LPF);//fix16_add(fix16_add(fix16_sq(_accel_LPF.x), fix16_sq(_accel_LPF.y)), fix16_sq(_accel_LPF.z));
 
-
+	//If we should use accelerometer compensation, and the reading is reasonably small
 	if ((use_acc) &&
 		(a_sqrd_norm < fix16_mul(fix16_sq(CONST_ONE_ONE_FIVE), fix16_sq(CONST_GRAVITY))) &&
 		(a_sqrd_norm > fix16_mul(fix16_sq(CONST_ZERO_EIGHT_FIVE), fix16_sq(CONST_GRAVITY)))) {
@@ -181,27 +194,35 @@ void estimator_update(uint32_t now) {
 
 		// Get the quaternion from accelerometer (low-frequency measure q)
 		// (Not in either paper)
+		// Rotation from accel reading to gravity
 		qf16 q_acc;
 		qf16 q_acc_inv;
 		qf16_from_shortest_path(&q_acc, &a, &g);
 		qf16_inverse(&q_acc_inv, &q_acc);
 
 		// Get the error quaternion between observer and low-freq q
+		// First we been to take out the Z (Yaw) component as it is unobservable with just imu
+		qf16 q_hat_acc;
+		fix16_t acc_phi;
+		fix16_t acc_theta;
+		fix16_t acc_psi;
+		euler_from_quat(&q_hat, &acc_phi, &acc_theta, &acc_psi);	//TODO: HIGH PRIORITY! Should be done the quaternion way
+		quat_from_euler(&q_hat_acc, acc_phi, acc_theta, 0.0);
+
 		// Below Eq. 45 Mahoney Paper
-		qf16_mul(&q_tilde, &q_acc_inv, &q_hat);
+		qf16_mul(&q_tilde, &q_acc_inv, &q_hat_acc);
 
 		// Correction Term of Eq. 47a and 47b Mahoney Paper
 		// w_acc = -2*s_tilde*v_tilde
-		//TODO: This may not meant to be negative
 		w_acc.x = fix16_mul(-CONST_TWO, fix16_mul(q_tilde.a, q_tilde.b));
 		w_acc.y = fix16_mul(-CONST_TWO, fix16_mul(q_tilde.a, q_tilde.c));
-		w_acc.z = fix16_mul(-CONST_TWO, fix16_mul(q_tilde.a, q_tilde.d));
+		w_acc.z = 0;	//This is unobservable from accelerometer: w_acc.z = fix16_mul(-CONST_TWO, fix16_mul(q_tilde.a, q_tilde.d));
 
 		// integrate biases from accelerometer feedback
 		// (eq 47b Mahoney Paper, using correction term w_acc found above)
 		b.x = fix16_sub(b.x, fix16_mul(ki, fix16_mul(w_acc.x, dt)));
 		b.y = fix16_sub(b.y, fix16_mul(ki, fix16_mul(w_acc.y, dt)));
-		//b.z = fix16_sub(b.z, fix16_mul(ki, fix16_mul(w_acc.z, dt)));	// Don't integrate z bias, because it's unobservable
+		b.z = 0;	//This is unobservable from accelerometer: b.z = fix16_sub(b.z, fix16_mul(ki, fix16_mul(w_acc.z, dt)));	// Don't integrate z bias, because it's unobservable
 	} else {
 		w_acc.x = 0;
 		w_acc.y = 0;
@@ -234,10 +255,8 @@ void estimator_update(uint32_t now) {
 		wbar = _gyro_LPF;
 	}
 
-
-
 	// Build the composite omega vector for kinematic propagation
-	// This the stuff inside the p function in eq. 47a - Mahoney Paper
+	// This is the stuff inside the p function in eq. 47a - Mahoney Paper
 	//wfinal = (wbar - b) + (kp * w_acc);
 	v3d wfinal_temp_scale;
 	v3d wfinal_temp_sub;
@@ -264,7 +283,7 @@ void estimator_update(uint32_t now) {
 			// This adds 90 us on STM32F10x chips
 			fix16_t norm_w = fix16_sqrt(sqrd_norm_w);
 
-			//This is can caus some serious RAM issues if either caching or lookup tables are enabled
+			//This is can cause some serious RAM issues if either caching or lookup tables are enabled
 			//XXX: Even with caching turned off, this should give a good performance increase (hopefully around 25%)
 			fix16_t t1 = fix16_cos(fix16_div(fix16_mul(norm_w, dt), CONST_TWO));
 			fix16_t t2 = fix16_mul(fix16_div(CONST_ONE, norm_w), fix16_sin(fix16_div(fix16_mul(norm_w, dt), CONST_TWO)));
@@ -296,7 +315,7 @@ void estimator_update(uint32_t now) {
 			quaternion_t qdot = {0.5f * (           - p*q_hat.x - q*q_hat.y - r*q_hat.z),
 							     0.5f * ( p*q_hat.w             + r*q_hat.y - q*q_hat.z),
 							     0.5f * ( q*q_hat.w - r*q_hat.x             + p*q_hat.z),
-							     0.5f * ( r*q_hat.w + q*q_hat.x - p*q_hat.y)
+							     0.5f * ( r*q_hat.w + q*q_hat.x - p*q_hat.y            )
 							    };
 			*/
 

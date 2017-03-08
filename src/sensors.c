@@ -71,8 +71,7 @@ void sensors_init(void) {
 	//TODO: Set IMU to be calibrated if not already
     mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_int(PARAM_BAUD_RATE));
 	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
-	//TODO: Note that this is just an estimate (?) in the docs
-//	acc1G = 4096;
+
 	_sensors.imu.accel_scale = fix16_div(CONST_GRAVITY, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
 	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 

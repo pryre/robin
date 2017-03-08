@@ -55,7 +55,7 @@ void setup(void)
 
 	communications_init();
 
-	estimator_init(false, false, true);
+	estimator_init(true, true, true);
 
 	//Wait here for the first imu message (probably not really neaded)
 	while(!imu_interrupt);
@@ -110,10 +110,10 @@ void loop(void)
     estimator_update(micros()); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
 	//==-- Update Controller
-	controller_run();	//Apply the current commands and update the PID controllers
+	//controller_run();	//Apply the current commands and update the PID controllers
 
 	//==-- Send Motor Commands
-	mixer_output();	//Convert outputs to correct layout and send PWM
+	//mixer_output();	//Convert outputs to correct layout and send PWM
 
 	//==-- Boot Control
 	if(_system_operation_control != SYSTEM_OPERATION_RUN) {
