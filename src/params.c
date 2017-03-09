@@ -80,7 +80,7 @@ void set_param_defaults(void) {
 	//==-- Estimator
 	init_param_int(PARAM_INIT_TIME, "FILTER_INIT_T", 3000); // ms
 	init_param_fix16(PARAM_FILTER_KP, "FILTER_KP", fix16_from_float(1.0f));
-	init_param_fix16(PARAM_FILTER_KI, "FILTER_KI", fix16_from_float(0.1f));
+	init_param_fix16(PARAM_FILTER_KI, "FILTER_KI", fix16_from_float(0.05f));
 	init_param_fix16(PARAM_GYRO_ALPHA, "GYRO_LPF_ALPHA", fix16_from_float(0.6f));
 	init_param_fix16(PARAM_ACC_ALPHA, "ACC_LPF_ALPHA", fix16_from_float(0.6f));
 	init_param_int(PARAM_STREAM_ADJUSTED_GYRO, "STRM_ADJST_GYRO", 0);

@@ -182,18 +182,21 @@ void estimator_update(uint32_t time_now) {
 		mf16 rot_mat;
 		qf16_to_matrix(&rot_mat, &q_hat);
 
+		v3d yaw_c;
 		v3d body_x;
 		v3d body_y;
 		v3d body_z;
-		body_x.x = CONST_ONE;
-		body_y.x = rot_mat.data[1][0];
-		body_y.y = rot_mat.data[1][1];
-		body_y.z = rot_mat.data[1][2];
+		yaw_c.x = 0;
+		yaw_c.y = CONST_ONE;	//TODO: This should be aligned with Compass North: yaw_c = [-sin(yaw), cos(yaw), 0.0f];
+		yaw_c.z = 0;
+		body_z.x = rot_mat.data[2][0];
+		body_z.y = rot_mat.data[2][1];
+		body_z.z = rot_mat.data[2][2];
 
-		v3d_cross(&body_z, &body_x, &body_y);
-		v3d_normalize(&body_z, &body_z);
-		v3d_cross(&body_x, &body_y, &body_z);
+		v3d_cross(&body_x, &yaw_c, &body_z);
 		v3d_normalize(&body_x, &body_x);
+		v3d_cross(&body_y, &body_z, &body_x);
+		v3d_normalize(&body_y, &body_y);
 
 		rot_mat.data[0][0] = body_x.x;
 		rot_mat.data[0][1] = body_x.y;
@@ -206,6 +209,7 @@ void estimator_update(uint32_t time_now) {
 		rot_mat.data[2][2] = body_z.z;
 
 		matrix_to_qf16(&q_hat_acc, &rot_mat );
+		qf16_normalize(&q_hat_acc, &q_hat_acc);
 
 		// Below Eq. 45 Mahoney Paper
 		qf16_mul(&q_tilde, &q_acc_inv, &q_hat_acc);
@@ -215,12 +219,14 @@ void estimator_update(uint32_t time_now) {
 		w_acc.x = fix16_mul(-CONST_TWO, fix16_mul(q_tilde.a, q_tilde.b));
 		w_acc.y = fix16_mul(-CONST_TWO, fix16_mul(q_tilde.a, q_tilde.c));
 		w_acc.z = 0;	//This is unobservable from accelerometer: w_acc.z = fix16_mul(-CONST_TWO, fix16_mul(q_tilde.a, q_tilde.d));
+						//TODO: Need to enable this when yaw_c is implemented
 
 		// integrate biases from accelerometer feedback
 		// (eq 47b Mahoney Paper, using correction term w_acc found above)
 		b.x = fix16_sub(b.x, fix16_mul(ki, fix16_mul(w_acc.x, dt)));
 		b.y = fix16_sub(b.y, fix16_mul(ki, fix16_mul(w_acc.y, dt)));
 		b.z = 0;	//This is unobservable from accelerometer: b.z = fix16_sub(b.z, fix16_mul(ki, fix16_mul(w_acc.z, dt)));	// Don't integrate z bias, because it's unobservable
+					//TODO: Need to enable this when yaw_c is implemented
 	} else {
 		w_acc.x = 0;
 		w_acc.y = 0;
