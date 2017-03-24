@@ -127,8 +127,6 @@ void lpf_update() {
 	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
 }
 
-//TODO: HERE!
-//TODO: There's something wrong in here somewhere...
 void estimator_update(uint32_t time_now) {
 	fix16_t kp;
 	fix16_t ki;
@@ -354,6 +352,7 @@ void estimator_update(uint32_t time_now) {
 	_adaptive_gyro_bias.x = b.x;
 	_adaptive_gyro_bias.y = b.y;
 	_adaptive_gyro_bias.z = 0.0;	//TODO: Until we have MAG support, the z-bias is totally meaningless
+									//TODO: Need to enable this when yaw_c is implemented
 }
 
 #ifdef __cplusplus

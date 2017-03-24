@@ -64,6 +64,7 @@ static inline void qf16_from_shortest_path(qf16 *dest, const v3d *v1, const v3d 
 	}
 }
 
+//TODO: Should use the mavlink conversions as a base if possible
 static inline void euler_from_quat(qf16 *q, fix16_t *phi, fix16_t *theta, fix16_t *psi) {
   *phi = fix16_atan2(fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->a, q->b), fix16_mul(q->c, q->d))),
                       fix16_sub(CONST_ONE, fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->b, q->b), fix16_mul(q->c, q->c)))));
@@ -89,11 +90,7 @@ static inline void quat_from_euler(qf16 *q, fix16_t phi, fix16_t theta, fix16_t 
 }
 
 static inline void matrix_to_qf16(qf16 *dest, const mf16 *mat) {
-//	dest->a = fix16_mul(CONST_ZERO_FIVE, fix16_sqrt(fix16_add(mat->data[0][0], fix16_add(mat->data[1][1], fix16_add(mat->data[2][2], 1)))));
-//	dest->b = fix16_div(fix16_sub(mat->data[1][2], mat->data[2][1]), fix16_mul(4, dest->a));
-//	dest->c = fix16_div(fix16_sub(mat->data[2][0], mat->data[0][2]), fix16_mul(4, dest->a));
-//	dest->d = fix16_div(fix16_sub(mat->data[0][1], mat->data[1][0]), fix16_mul(4, dest->a));
-
+	//Method pulled from the ROS tf2 library
 	fix16_t trace = fix16_add(mat->data[0][0], fix16_add(mat->data[1][1], mat->data[2][2]));
 	fix16_t temp[4];
 
@@ -126,33 +123,3 @@ static inline void matrix_to_qf16(qf16 *dest, const mf16 *mat) {
 	dest->c = temp[1];
 	dest->d = temp[2];
 }
-/*
-static inline void qf16_to_dcm16(mf16 *dest, const qf16 *q) {
-	dest->rows = dest->columns = 3;
-	dest->errors = 0;
-
-	tf2Scalar d = q.length2();
-	tf2FullAssert(d != tf2Scalar(0.0));
-	tf2Scalar s = tf2Scalar(2.0) / d;
-	tf2Scalar xs = q.x() * s,   ys = q.y() * s,   zs = q.z() * s;
-	tf2Scalar wx = q.w() * xs,  wy = q.w() * ys,  wz = q.w() * zs;
-	tf2Scalar xx = q.x() * xs,  xy = q.x() * ys,  xz = q.x() * zs;
-	tf2Scalar yy = q.y() * ys,  yz = q.y() * zs,  zz = q.z() * zs;
-	setValue(tf2Scalar(1.0) - (yy + zz), xy - wz, xz + wy,
-	xy + wz, tf2Scalar(1.0) - (xx + zz), yz - wx,
-	xz - wy, yz + wx, tf2Scalar(1.0) - (xx + yy));
-
-	dest[0][0] = ;
-	dest[1][1] = ;
-	dest[2][2] = ;
-
-	dest[0][1] = ;
-	dest[0][2] = ;
-
-	dest[1][0] = ;
-	dest[1][2] = ;
-
-	dest[2][0] = ;
-	dest[2][1] = ;
-}
-*/

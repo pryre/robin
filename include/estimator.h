@@ -11,7 +11,6 @@ extern "C" {
 #include "fixvector3d.h"
 #include "fixquat.h"
 
-
 //TODO: Get rid of phi, theta, psi
 typedef struct {
   fix16_t p;		//Roll Rate

@@ -97,7 +97,7 @@ void loop(void)
 	}
 
 	//==-- Update Sensor Data
-	sensors_update(micros());	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
+	sensors_update(_sensors.time.start);	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
 
 	//==-- Calibrations
 	if(_sensor_calibration != SENSOR_CAL_NONE)	//If any calibration is in progress
@@ -107,13 +107,18 @@ void loop(void)
 	//TODO: Set MAV_STATE in this function
 
 	//==-- Update Estimator
-    estimator_update(micros()); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
+    estimator_update(_sensors.time.start); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
 	//==-- Update Controller
-	//controller_run();	//Apply the current commands and update the PID controllers
+	controller_run(_sensors.time.start);	//Apply the current commands and update the PID controllers
+	//TODO: Need to reset PIDs when armed
+	//TODO: If the "sensor" for control input is on timeout, set output to 0,0,0,thrust_min
+	//TODO: Make check to see if armed, else skip
 
 	//==-- Send Motor Commands
 	//mixer_output();	//Convert outputs to correct layout and send PWM
+	//TODO: If the "sensor" for control input is on timeout, set output to 0,0,0,0
+	//TODO: Make check to see if armed, else skip
 
 	//==-- Boot Control
 	if(_system_operation_control != SYSTEM_OPERATION_RUN) {

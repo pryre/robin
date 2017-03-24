@@ -42,6 +42,7 @@ static void time_init(void) {
 	_sensors.time.max = 0;
 	_sensors.time.min = 1000;
 }
+
 /*
 static void imu_init(void) {
 	_sensors.imu.present = true;

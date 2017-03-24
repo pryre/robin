@@ -34,13 +34,6 @@ state_t _state_estimator;
 //Firmware identifier, first 8 bytes of current BreezySTM32 commit
 static const uint8_t FW_HASH [8] = {0xb7, 0xa7, 0x59, 0x4e, 0xa7, 0xa2, 0x98, 0xb0};
 
-/**
- * @brief Send one char (uint8_t) over a comm channel
- *
- * @param chan MAVLink channel to use, usually MAVLINK_COMM_0 = UART0
- * @param ch Character to send
- */
-
 static inline void communications_init(void) {
 	mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID); // System ID, 1-255
 	mavlink_system.compid = get_param_int(PARAM_COMPONENT_ID); // Component/Subsystem ID, 1-255
@@ -48,6 +41,12 @@ static inline void communications_init(void) {
 	_request_all_params = -1;
 }
 
+/**
+ * @brief Send one char (uint8_t) over a comm channel
+ *
+ * @param chan MAVLink channel to use, usually MAVLINK_COMM_0 = UART0
+ * @param ch Character to send
+ */
 static inline void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 	if (chan == MAVLINK_COMM_0) {
 		serialWrite(Serial1, ch);
@@ -152,6 +151,7 @@ static inline void mavlink_stream_heartbeat(void) {
 }
 
 //TODO: Quite a lot here
+//TODO: Make an alert to say if the UART overflows
 static inline void mavlink_stream_sys_status(void) {
 	uint32_t onboard_control_sensors_present = 0;
 	uint32_t onboard_control_sensors_enabled = 0;
