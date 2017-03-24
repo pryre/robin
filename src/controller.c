@@ -5,7 +5,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "breezystm32/breezystm32.h"
+#include "breezystm32.h"
 #include "fix16.h"
 
 #include "params.h"
@@ -22,12 +22,12 @@ state_t _state_estimator;
 command_input_t _command_input;
 control_output_t _control_output;
 
-pid_t pid_roll_rate;
-pid_t pid_pitch_rate;
-pid_t pid_yaw_rate;
-pid_t pid_roll;
-pid_t pid_pitch;
-pid_t pid_yaw;
+//pid_t pid_roll_rate;
+//pid_t pid_pitch_rate;
+//pid_t pid_yaw_rate;
+//pid_t pid_roll;
+//pid_t pid_pitch;
+//pid_t pid_yaw;
 //pid_t pid_altitude;
 
 void controller_init() {
@@ -101,7 +101,7 @@ void controller_init() {
 }
 
 
-void controller_run(uint32_t time_now) {
+void controller_run( uint32_t time_now ) {
 	//Variables that store the computed attitude goal rates
 	fix16_t goal_att_r = 0;
 	fix16_t goal_att_p = 0;

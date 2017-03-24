@@ -5,6 +5,8 @@
 #include "params.h"
 #include "sensors.h"
 #include "estimator.h"
+#include "controller.h"
+
 #include "mavlink/mavlink_types.h"
 #include "mavlink_receive.h"
 #include "mavlink_transmit.h"
@@ -16,8 +18,7 @@ system_t _system_status;
 uint8_t _system_operation_control;
 volatile bool imu_interrupt;
 
-int main(void)
-{
+int main(void) {
 	_system_status.state = MAV_STATE_UNINIT;
 
     SetSysClock(false);
@@ -43,8 +44,7 @@ int main(void)
     }
 }
 
-void setup(void)
-{
+void setup(void) {
 	init_params();
 
 	delay(500);
@@ -61,8 +61,7 @@ void setup(void)
 	while(!imu_interrupt);
 }
 
-void loop(void)
-{
+void loop(void) {
 	bool message_transmitted = false;
 
 	//==-- Timing setup get loop time
@@ -107,10 +106,10 @@ void loop(void)
 	//TODO: Set MAV_STATE in this function
 
 	//==-- Update Estimator
-    estimator_update(_sensors.time.start); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
+    estimator_update( _sensors.time.start ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
 	//==-- Update Controller
-	controller_run(_sensors.time.start);	//Apply the current commands and update the PID controllers
+	controller_run( _sensors.time.start );	//Apply the current commands and update the PID controllers
 	//TODO: Need to reset PIDs when armed
 	//TODO: If the "sensor" for control input is on timeout, set output to 0,0,0,thrust_min
 	//TODO: Make check to see if armed, else skip

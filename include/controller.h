@@ -7,8 +7,12 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "fix16.h"
+//#include "fixvector3d.h"
+#include "fixquat.h"
+
 #include "params.h"
-#include "pid.h"
+//#include "pid.h"
 
 //input_mask defines
 #define CMD_IN_IGNORE_ROLL_RATE		0b00000001
@@ -34,10 +38,10 @@ typedef struct {
 } control_output_t;
 
 extern command_input_t _command_input;
-extern control_input_t _control_output;
+extern control_output_t _control_output;
 
 void controller_init();
-void controller_run(uint32_t now);
+void controller_run( uint32_t now );
 void controller_reset();
 
 #ifdef __cplusplus
