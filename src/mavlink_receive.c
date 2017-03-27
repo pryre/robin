@@ -2,12 +2,15 @@
 #include "mavlink_system.h"
 #include "safety.h"
 #include "sensors.h"
+#include "controller.h"
 #include "breezystm32.h"
 
 int32_t _request_all_params;
 uint8_t _system_operation_control;
 uint8_t _sensor_calibration;
 mavlink_queue_t _low_priority_queue;
+
+command_input_t _command_input;
 
 void communication_receive(void) {
 	mavlink_message_t msg;
@@ -23,6 +26,7 @@ void communication_receive(void) {
 			// Handle message
 			switch(msg.msgid) {
 				case MAVLINK_MSG_ID_HEARTBEAT: {
+					//TODO: Log to make keep track of connected systems status'
 					//LED0_TOGGLE;
 					// E.g. read GCS heartbeat and go into
 					// comm lost mode if timer times out
@@ -216,6 +220,29 @@ void communication_receive(void) {
 							_low_priority_queue.queued_message_count++;
 						}
 					}
+
+					break;
+				}
+				case MAVLINK_MSG_ID_SET_ATTITUDE_TARGET: {
+					//TODO: Check timestamp was recent
+					//TODO: Check target system
+					//TODO: Check target component
+					_command_input.input_mask = mavlink_msg_set_attitude_target_get_type_mask(&msg);
+
+					_command_input.r = fix16_from_float(mavlink_msg_set_attitude_target_get_body_roll_rate(&msg));
+					_command_input.p = fix16_from_float(mavlink_msg_set_attitude_target_get_body_pitch_rate(&msg));
+					_command_input.y = fix16_from_float(mavlink_msg_set_attitude_target_get_body_yaw_rate(&msg));
+
+					//TODO: Check this is correct
+					float* qt;
+					if(mavlink_msg_set_attitude_target_get_q(&msg, qt) == 4) {
+						_command_input.q.a = fix16_from_float(qt[0]);
+						_command_input.q.b = fix16_from_float(qt[1]);
+						_command_input.q.c = fix16_from_float(qt[2]);
+						_command_input.q.d = fix16_from_float(qt[3]);
+					}
+
+					_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
 
 					break;
 				}

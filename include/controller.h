@@ -8,7 +8,6 @@ extern "C" {
 #include <stdbool.h>
 
 #include "fix16.h"
-//#include "fixvector3d.h"
 #include "fixquat.h"
 
 #include "params.h"

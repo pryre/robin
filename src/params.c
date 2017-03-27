@@ -95,27 +95,28 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_ACC_Z_TEMP_COMP, "ACC_Z_TEMP_COMP", fix16_from_float(0.0f));
 
 	//==-- Control
-	init_param_fix16(PARAM_PID_ROLL_RATE_P, "PID_ROLL_RATE_P", fix16_from_float(0.070f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_I, "PID_ROLL_RATE_I", fix16_from_float(0.00001f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_P, "PID_ROLL_RATE_P", fix16_from_float(0.15f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_I, "PID_ROLL_RATE_I", fix16_from_float(0.05f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_D, "PID_ROLL_RATE_D", fix16_from_float(0.003f));
 	init_param_fix16(PARAM_MAX_ROLL_RATE, "MAX_ROLL_RATE", fix16_from_float(3.14159f));
 
-	init_param_fix16(PARAM_PID_PITCH_RATE_P, "PID_PITCH_RATE_P", fix16_from_float(0.070f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_I, "PID_PITCH_RATE_I", fix16_from_float(0.00001f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_P, "PID_PITCH_RATE_P", fix16_from_float(0.15f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_I, "PID_PITCH_RATE_I", fix16_from_float(0.05f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_D, "PID_PITCH_RATE_D", fix16_from_float(0.003f));
 	init_param_fix16(PARAM_MAX_PITCH_RATE, "MAX_PITCH_RATE", fix16_from_float(3.14159f));
 
-	init_param_fix16(PARAM_PID_YAW_RATE_P, "PID_YAW_RATE_P", fix16_from_float(0.025f));
+	init_param_fix16(PARAM_PID_YAW_RATE_P, "PID_YAW_RATE_P", fix16_from_float(0.2f));
+	init_param_fix16(PARAM_PID_YAW_RATE_I, "PID_YAW_RATE_I", fix16_from_float(0.1f));
 	init_param_fix16(PARAM_PID_YAW_RATE_I, "PID_YAW_RATE_I", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_MAX_YAW_RATE, "MAX_YAW_RATE", fix16_from_float(6.283f));
+	init_param_fix16(PARAM_MAX_YAW_RATE, "MAX_YAW_RATE", fix16_from_float(3.14159f/2.0f));
 
-	init_param_fix16(PARAM_PID_ROLL_ANGLE_P, "PID_ROLL_ANG_P", fix16_from_float(0.15f));
-	init_param_fix16(PARAM_PID_ROLL_ANGLE_I, "PID_ROLL_ANG_I", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_PID_ROLL_ANGLE_D, "PID_ROLL_ANG_D", fix16_from_float(0.07f));
+	init_param_fix16(PARAM_PID_ROLL_ANGLE_P, "PID_ROLL_ANG_P", fix16_from_float(6.5f));
 	init_param_fix16(PARAM_MAX_ROLL_ANGLE, "MAX_ROLL_ANG", fix16_from_float(0.786f));
 
-	init_param_fix16(PARAM_PID_PITCH_ANGLE_P, "PID_PITCH_ANG_P", fix16_from_float(0.15f));
-	init_param_fix16(PARAM_PID_PITCH_ANGLE_I, "PID_PITCH_ANG_I", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_PID_PITCH_ANGLE_D, "PID_PITCH_ANG_D", fix16_from_float(0.07f));
+	init_param_fix16(PARAM_PID_PITCH_ANGLE_P, "PID_PITCH_ANG_P", fix16_from_float(6.5f));
 	init_param_fix16(PARAM_MAX_PITCH_ANGLE, "MAX_PITCH_ANG", fix16_from_float(0.786f));
+
+	init_param_fix16(PARAM_PID_YAW_ANGLE_P, "PID_YAW_ANG_P", fix16_from_float(2.8f));
 
 	init_param_fix16(PARAM_PID_TAU, "PID_TAU", fix16_from_float(0.05f));
 	init_param_int(PARAM_MAX_COMMAND, "PARAM_MAX_CMD", 1000);

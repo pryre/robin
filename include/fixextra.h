@@ -5,16 +5,33 @@
 #include "fixmatrix.h"
 #include "fixquat.h"	//TODO: Make a note about quaternion a,b,c,d
 
-#define CONST_EPSILON	0x0000FFFF	//0.99999
-#define CONST_ONE		0x00010000	//1
-#define CONST_ZERO_FIVE	0x00008000	//0.5
-#define CONST_TWO		0x00020000	//2
-
 //Quaternion layout
 //q.a -> q.w
 //q.b -> q.x
 //q.c -> q.y
 //q.d -> q.z
+
+//Quick defines of reused fix16 numbers
+#define CONST_ZERO_ZERO_EIGHT_THREE_REC 0x00001555	//0.083333
+#define CONST_ZERO_FOUR_SIX_REC			0x00006AAA	//0.46666
+#define CONST_ZERO_FIVE					0x00008000	//0.5
+#define CONST_ZERO_SIX_REC				0x0000AAAA	//0.66666
+#define CONST_ZERO_EIGHT_FIVE			0x0000D999	//0.85
+#define CONST_ONE						0x00010000	//1
+#define CONST_ONE_ONE_FIVE				0x00012666	//1.15
+#define CONST_TWO						0x00020000	//2
+
+#define CONST_EPSILON					0x0000FFFF	//0.99999
+
+static inline fix16_t fix16_constrain(fix16_t i, const fix16_t min, const fix16_t max) {
+	if(i < min) {
+		i = min;
+	} else if(i > max) {
+		i = max;
+	}
+
+	return i;
+}
 
 static inline fix16_t v3d_sq_norm(const v3d *a) {
 	return fix16_add(fix16_add(fix16_sq(a->x), fix16_sq(a->y)), fix16_sq(a->z));
