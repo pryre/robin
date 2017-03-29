@@ -14,11 +14,11 @@ extern "C" {
 //#include "pid.h"
 
 //input_mask defines
-#define CMD_IN_IGNORE_ROLL_RATE		0b00000001
-#define CMD_IN_IGNORE_PITCH_RATE	0b00000010
-#define CMD_IN_IGNORE_YAW_RATE		0b00000100
-#define CMD_IN_IGNORE_THROTTLE		0b01000000
-#define CMD_IN_IGNORE_ATTITUDE		0b10000000
+#define CMD_IN_IGNORE_ROLL_RATE		(uint8_t)1		//0b00000001
+#define CMD_IN_IGNORE_PITCH_RATE	(uint8_t)2		//0b00000010
+#define CMD_IN_IGNORE_YAW_RATE		(uint8_t)4		//0b00000100
+#define CMD_IN_IGNORE_THROTTLE		(uint8_t)64		//0b01000000
+#define CMD_IN_IGNORE_ATTITUDE		(uint8_t)128	//0b10000000
 
 typedef struct {
 	fix16_t r;

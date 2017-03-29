@@ -12,6 +12,7 @@
 //q.d -> q.z
 
 //Quick defines of reused fix16 numbers
+#define CONST_ZERO_ZERO_ONE				0x0000028F	//0.01
 #define CONST_ZERO_ZERO_EIGHT_THREE_REC 0x00001555	//0.083333
 #define CONST_ZERO_FOUR_SIX_REC			0x00006AAA	//0.46666
 #define CONST_ZERO_FIVE					0x00008000	//0.5

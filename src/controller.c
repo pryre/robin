@@ -17,6 +17,7 @@ extern "C" {
 #include "estimator.h"
 #include "safety.h"
 #include "controller.h"
+#include "pid.h"
 
 #include "mavlink_system.h"
 
@@ -27,9 +28,9 @@ state_t _state_estimator;
 command_input_t _command_input;
 control_output_t _control_output;
 
-//pid_t pid_roll_rate;
-//pid_t pid_pitch_rate;
-//pid_t pid_yaw_rate;
+pid_t pid_roll_rate;
+pid_t pid_pitch_rate;
+pid_t pid_yaw_rate;
 //pid_t pid_roll;
 //pid_t pid_pitch;
 //pid_t pid_yaw;
@@ -60,40 +61,43 @@ void controller_init() {
            &_command.y,
            get_param_int(PARAM_MAX_COMMAND)/2.0f,
            -1.0f*get_param_int(PARAM_MAX_COMMAND)/2.0f);
+*/
+pid_init(&pid_roll_rate,
+		 get_param_int(PARAM_PID_ROLL_RATE_P),
+		 get_param_int(PARAM_PID_ROLL_RATE_I),
+		 get_param_int(PARAM_PID_ROLL_RATE_D),
+		 get_param_int(PARAM_PID_TAU),
+		 _state_estimator.p,
+		 0,
+		 0,
+		 0,
+		 -get_param_int(PARAM_MAX_ROLL_RATE),
+		 get_param_int(PARAM_MAX_ROLL_RATE));
 
-  pid_init(&pid_roll_rate,
-           PARAM_PID_ROLL_RATE_P,
-           PARAM_PID_ROLL_RATE_I,
-           PARAMS_COUNT,
-           &_current_state.p,
-           NULL,
-           &_combined_control.x.value,
-           &_command.x,
-           get_param_int(PARAM_MAX_COMMAND)/2.0f,
-           -1.0f*get_param_int(PARAM_MAX_COMMAND)/2.0f);
+pid_init(&pid_roll_rate,
+		 get_param_int(PARAM_PID_PITCH_RATE_P),
+		 get_param_int(PARAM_PID_PITCH_RATE_I),
+		 get_param_int(PARAM_PID_PITCH_RATE_D),
+		 get_param_int(PARAM_PID_TAU),
+		 _state_estimator.q,
+		 0,
+		 0,
+		 0,
+		 -get_param_int(PARAM_MAX_PITCH_RATE),
+		 get_param_int(PARAM_MAX_PITCH_RATE));
 
-  pid_init(&pid_pitch_rate,
-           PARAM_PID_PITCH_RATE_P,
-           PARAM_PID_PITCH_RATE_I,
-           PARAMS_COUNT,
-           &_current_state.q,
-           NULL,
-           &_combined_control.y.value,
-           &_command.y,
-           get_param_int(PARAM_MAX_COMMAND)/2.0f,
-           -1.0f*get_param_int(PARAM_MAX_COMMAND)/2.0f);
-
-  pid_init(&pid_yaw_rate,
-           PARAM_PID_YAW_RATE_P,
-           PARAM_PID_YAW_RATE_I,
-           PARAMS_COUNT,
-           &_current_state.r,
-           NULL,
-           &_combined_control.z.value,
-           &_command.z,
-           get_param_int(PARAM_MAX_COMMAND)/2.0f,
-           -1.0f*get_param_int(PARAM_MAX_COMMAND)/2.0f);
-
+pid_init(&pid_yaw_rate,
+		 get_param_int(PARAM_PID_YAW_RATE_P),
+		 get_param_int(PARAM_PID_YAW_RATE_I),
+		 get_param_int(PARAM_PID_YAW_RATE_D),
+		 get_param_int(PARAM_PID_TAU),
+		 _state_estimator.r,
+		 0,
+		 0,
+		 0,
+		 -get_param_int(PARAM_MAX_YAW_RATE),
+		 get_param_int(PARAM_MAX_YAW_RATE));
+/*
   pid_init(&pid_altitude,
            PARAM_PID_ALT_P,
            PARAM_PID_ALT_I,
@@ -109,18 +113,17 @@ void controller_init() {
 
 void controller_run( uint32_t time_now ) {
 	//Variables that store the computed attitude goal rates
-	fix16_t goal_att_r = 0;
-	fix16_t goal_att_p = 0;
-	fix16_t goal_att_y = 0;
-	fix16_t goal_auto_throttle = 0;
+	fix16_t goal_r = 0;
+	fix16_t goal_p = 0;
+	fix16_t goal_y = 0;
+	fix16_t goal_throttle = 0;
 
 	_control_output.r = 0;
 	_control_output.p = 0;
 	_control_output.y = 0;
 	_control_output.T = 0;
 
-	//TODO: Could do something here for altitude hold mode if enabled
-
+	//==-- Attitude Control
 	//If we should listen to attitude input
 	if( !(_command_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
 		mf16 I;
@@ -278,36 +281,43 @@ void controller_run( uint32_t time_now ) {
 		//rates_sp.z += _v_att_sp.yaw_sp_move_rate * yaw_w * _params.yaw_ff;
 
 		//px4: constrain rates to set params
-		goal_att_r = fix16_constrain(rates_sp.x, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
-		goal_att_p = fix16_constrain(rates_sp.y, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
-		goal_att_y = fix16_constrain(rates_sp.z, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
+		goal_r = fix16_constrain(rates_sp.x, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
+		goal_p = fix16_constrain(rates_sp.y, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
+		goal_y = fix16_constrain(rates_sp.z, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
 	}
 
+	//==-- Rate Control PIDs
 	//Roll Rate
 	if( !(_command_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
-		//Run PID for roll rate with _command_input.p
-	} else {	//Else use the computed roll rate goal
-		//_control_output.r = ...(goal_att_r);
+		//Use the commanded roll rate goal
+		goal_r = _command_input.r;
+
 	}
 
 	//Pitch Rate
 	if( !(_command_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
-		//Run PID for pitch rate with _command_input.q
-	} else {	//Else use the computed pitch rate goal
-		//_control_output.p = ...(goal_att_p);
+		//Use the commanded pitch rate goal
+		goal_p = _command_input.p;
 	}
 
 	//Yaw Rate
 	if( !(_command_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
-		//Run PID for pitch rate with _command_input.r
-	} else {	//Else use the computed yaw rate goal
-		//_control_output.y = ...(goal_att_y);
+		//Use the commanded yaw rate goal
+		goal_y = _command_input.y;
 	}
+
+	_control_output.r = pid_step(&pid_roll_rate, time_now, goal_r, _state_estimator.p, 0, false);
+	_control_output.p = pid_step(&pid_pitch_rate, time_now, goal_p, _state_estimator.q, 0, false);
+	_control_output.y = pid_step(&pid_yaw_rate, time_now, goal_y, _state_estimator.r, 0, false);
+
+	//==-- Throttle Control
+	//TODO: Could do something here for altitude hold mode if enabled
 
 	//Trottle
 	if( !(_command_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) {
-		_control_output.T = _command_input.T;
-	} else {	//Else use the computed throttle goal
-		_control_output.T = goal_auto_throttle;
+		//Use the commanded throttle
+		goal_throttle = _command_input.T;
 	}
+
+	_control_output.T = goal_throttle;
 }

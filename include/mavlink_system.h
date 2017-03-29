@@ -9,6 +9,8 @@
 #include "params.h"
 #include "safety.h"
 #include "estimator.h"
+#include "controller.h"
+#include "estimator.h"
 #include "fix16.h"
 
 
@@ -30,6 +32,9 @@ system_t _system_status;
 sensor_readings_t _sensors;
 params_t _params;
 state_t _state_estimator;
+
+command_input_t _command_input;
+control_output_t _control_output;
 
 //Firmware identifier, first 8 bytes of current BreezySTM32 commit
 static const uint8_t FW_HASH [8] = {0xb7, 0xa7, 0x59, 0x4e, 0xa7, 0xa2, 0x98, 0xb0};
@@ -249,6 +254,25 @@ static inline void mavlink_stream_attitude_quaternion(void) {
 											fix16_to_float(_state_estimator.p),
 											fix16_to_float(_state_estimator.q),
 											fix16_to_float(_state_estimator.r));
+}
+
+
+static inline void mavlink_stream_attitude_target(void) {
+	float q[4] = {fix16_to_float(_command_input.q.a),
+				  fix16_to_float(_command_input.q.b),
+				  fix16_to_float(_command_input.q.c),
+				  fix16_to_float(_command_input.q.d)};
+	//Use the control output for some of these commands as they reflect the actual goals
+	// The input mask applied is included, but the information will still potentially be useful
+	// The timestamp used is the one that is used to generate the commands
+	mavlink_msg_attitude_target_send(MAVLINK_COMM_0,
+									 _sensors.time.start,
+									 fix16_to_float(_command_input.input_mask),
+									 q,
+									 fix16_to_float(_control_output.r),
+									 fix16_to_float(_control_output.p),
+									 fix16_to_float(_control_output.y),
+									 fix16_to_float(_control_output.T));
 }
 
 //==-- Low Priority Messages

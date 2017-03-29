@@ -234,7 +234,7 @@ void communication_receive(void) {
 					_command_input.y = fix16_from_float(mavlink_msg_set_attitude_target_get_body_yaw_rate(&msg));
 
 					//TODO: Check this is correct
-					float* qt;
+					float qt[4];
 					if(mavlink_msg_set_attitude_target_get_q(&msg, qt) == 4) {
 						_command_input.q.a = fix16_from_float(qt[0]);
 						_command_input.q.b = fix16_from_float(qt[1]);
