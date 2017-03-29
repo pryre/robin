@@ -2,7 +2,6 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
 
 #include "breezystm32.h"
@@ -13,16 +12,10 @@ extern "C" {
 #include "fixextra.h"
 
 #include "params.h"
-#include "mixer.h"
 #include "estimator.h"
 #include "safety.h"
 #include "controller.h"
 #include "pid.h"
-
-#include "mavlink_system.h"
-
-//TODO: needed?
-//static uint32_t counter = 0;
 
 state_t _state_estimator;
 command_input_t _command_input;
@@ -35,8 +28,6 @@ pid_t pid_yaw_rate;
 //pid_t pid_pitch;
 //pid_t pid_yaw;
 //pid_t pid_altitude;
-
-
 
 void controller_init() {
 /*
@@ -306,9 +297,10 @@ void controller_run( uint32_t time_now ) {
 		goal_y = _command_input.y;
 	}
 
-	_control_output.r = pid_step(&pid_roll_rate, time_now, goal_r, _state_estimator.p, 0, false);
-	_control_output.p = pid_step(&pid_pitch_rate, time_now, goal_p, _state_estimator.q, 0, false);
-	_control_output.y = pid_step(&pid_yaw_rate, time_now, goal_y, _state_estimator.r, 0, false);
+
+	//_control_output.r = pid_step(&pid_roll_rate, time_now, goal_r, _state_estimator.p, 0, false);
+	//_control_output.p = pid_step(&pid_pitch_rate, time_now, goal_p, _state_estimator.q, 0, false);
+	//_control_output.y = pid_step(&pid_yaw_rate, time_now, goal_y, _state_estimator.r, 0, false);
 
 	//==-- Throttle Control
 	//TODO: Could do something here for altitude hold mode if enabled
@@ -321,3 +313,7 @@ void controller_run( uint32_t time_now ) {
 
 	_control_output.T = goal_throttle;
 }
+
+#ifdef __cplusplus
+}
+#endif

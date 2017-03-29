@@ -96,7 +96,7 @@ void loop(void) {
 	}
 
 	//==-- Update Sensor Data
-	sensors_update(_sensors.time.start);	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
+	sensors_update( _sensors.time.start );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
 
 	//==-- Calibrations
 	if(_sensor_calibration != SENSOR_CAL_NONE)	//If any calibration is in progress
