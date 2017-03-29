@@ -21,9 +21,10 @@ state_t _state_estimator;
 command_input_t _command_input;
 control_output_t _control_output;
 
-pid_t pid_roll_rate;
-pid_t pid_pitch_rate;
-pid_t pid_yaw_rate;
+static pid_t pid_roll_rate;
+static pid_t pid_pitch_rate;
+static pid_t pid_yaw_rate;
+
 //pid_t pid_roll;
 //pid_t pid_pitch;
 //pid_t pid_yaw;
@@ -100,6 +101,10 @@ pid_init(&pid_yaw_rate,
            get_param_int(PARAM_MAX_COMMAND),
            0.0f);
 */
+}
+
+void controller_update_pid_gains() {
+	//TODO:
 }
 
 void controller_run( uint32_t time_now ) {

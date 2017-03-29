@@ -40,6 +40,7 @@ extern command_input_t _command_input;
 extern control_output_t _control_output;
 
 void controller_init();
+void controller_update_pid_gains();
 void controller_run( uint32_t now );
 void controller_reset();
 
