@@ -298,8 +298,8 @@ void controller_run( uint32_t time_now ) {
 	}
 
 	_control_output.r = pid_step(&pid_roll_rate, time_now, goal_r, _state_estimator.p, 0, false);
-	//_control_output.p = pid_step(&pid_pitch_rate, time_now, goal_p, _state_estimator.q, 0, false);
-	//_control_output.y = pid_step(&pid_yaw_rate, time_now, goal_y, _state_estimator.r, 0, false);
+	_control_output.p = pid_step(&pid_pitch_rate, time_now, goal_p, _state_estimator.q, 0, false);
+	_control_output.y = pid_step(&pid_yaw_rate, time_now, goal_y, _state_estimator.r, 0, false);
 
 	//==-- Throttle Control
 	//TODO: Could do something here for altitude hold mode if enabled
