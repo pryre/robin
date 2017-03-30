@@ -104,7 +104,6 @@ pid_init(&_pid_yaw_rate,
 }
 
 static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
-		v3d rates_sp;
 		mf16 I;
 		I.rows = 3;
 		I.columns = 3;
@@ -251,6 +250,7 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		}
 
 		//px4: calculate angular rates setpoint
+		v3d rates_sp;
 		rates_sp.x = fix16_mul(get_param_fix16(PARAM_PID_ROLL_ANGLE_P), e_R.x);
 		rates_sp.y = fix16_mul(get_param_fix16(PARAM_PID_PITCH_ANGLE_P), e_R.y);
 		rates_sp.z = fix16_mul(get_param_fix16(PARAM_PID_YAW_ANGLE_P), e_R.z);
@@ -259,11 +259,12 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		//rates_sp.z += _v_att_sp.yaw_sp_move_rate * yaw_w * _params.yaw_ff;
 
 		//px4: constrain rates to set params
-		rates_sp.x = fix16_constrain(rates_sp.x, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
-		rates_sp.y = fix16_constrain(rates_sp.y, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
-		rates_sp.z = fix16_constrain(rates_sp.z, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
+		v3d rates_sp_sat;
+		rates_sp_sat.x = fix16_constrain(rates_sp.x, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
+		rates_sp_sat.y = fix16_constrain(rates_sp.y, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
+		rates_sp_sat.z = fix16_constrain(rates_sp.z, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
 
-		return rates_sp;
+		return rates_sp_sat;
 }
 
 void controller_run( uint32_t time_now ) {
