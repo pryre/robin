@@ -15,20 +15,20 @@ extern "C" {
 #include "estimator.h"
 #include "safety.h"
 #include "controller.h"
-#include "pid.h"
+#include "pid_controller.h"
 
 state_t _state_estimator;
 command_input_t _command_input;
 control_output_t _control_output;
 
-static pid_t pid_roll_rate;
-static pid_t pid_pitch_rate;
-static pid_t pid_yaw_rate;
+pid_controller_t _pid_roll_rate;
+pid_controller_t _pid_pitch_rate;
+pid_controller_t _pid_yaw_rate;
 
-//pid_t pid_roll;
-//pid_t pid_pitch;
-//pid_t pid_yaw;
-//pid_t pid_altitude;
+//pid_controller_t pid_roll;
+//pid_controller_t pid_pitch;
+//pid_controller_t pid_yaw;
+//pid_controller_t pid_altitude;
 
 void controller_init() {
 /*
@@ -54,7 +54,7 @@ void controller_init() {
            get_param_int(PARAM_MAX_COMMAND)/2.0f,
            -1.0f*get_param_int(PARAM_MAX_COMMAND)/2.0f);
 */
-pid_init(&pid_roll_rate,
+pid_init(&_pid_roll_rate,
 		 get_param_int(PARAM_PID_ROLL_RATE_P),
 		 get_param_int(PARAM_PID_ROLL_RATE_I),
 		 get_param_int(PARAM_PID_ROLL_RATE_D),
@@ -66,7 +66,7 @@ pid_init(&pid_roll_rate,
 		 -get_param_int(PARAM_MAX_ROLL_RATE),
 		 get_param_int(PARAM_MAX_ROLL_RATE));
 
-pid_init(&pid_roll_rate,
+pid_init(&_pid_pitch_rate,
 		 get_param_int(PARAM_PID_PITCH_RATE_P),
 		 get_param_int(PARAM_PID_PITCH_RATE_I),
 		 get_param_int(PARAM_PID_PITCH_RATE_D),
@@ -78,7 +78,7 @@ pid_init(&pid_roll_rate,
 		 -get_param_int(PARAM_MAX_PITCH_RATE),
 		 get_param_int(PARAM_MAX_PITCH_RATE));
 
-pid_init(&pid_yaw_rate,
+pid_init(&_pid_yaw_rate,
 		 get_param_int(PARAM_PID_YAW_RATE_P),
 		 get_param_int(PARAM_PID_YAW_RATE_I),
 		 get_param_int(PARAM_PID_YAW_RATE_D),
@@ -103,25 +103,8 @@ pid_init(&pid_yaw_rate,
 */
 }
 
-void controller_update_pid_gains() {
-	//TODO:
-}
-
-void controller_run( uint32_t time_now ) {
-	//Variables that store the computed attitude goal rates
-	fix16_t goal_r = 0;
-	fix16_t goal_p = 0;
-	fix16_t goal_y = 0;
-	fix16_t goal_throttle = 0;
-
-	_control_output.r = 0;
-	_control_output.p = 0;
-	_control_output.y = 0;
-	_control_output.T = 0;
-
-	//==-- Attitude Control
-	//If we should listen to attitude input
-	if( !(_command_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
+static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
+		v3d rates_sp;
 		mf16 I;
 		I.rows = 3;
 		I.columns = 3;
@@ -132,9 +115,9 @@ void controller_run( uint32_t time_now ) {
 		//Method derived from px4 attitude controller:
 		//DCM from for state and setpoint
 		mf16 R_sp;
-		qf16_to_matrix(&R_sp, &_command_input.q);
+		qf16_to_matrix(&R_sp, q_sp);
 		mf16 R;
-		qf16_to_matrix(&R, &_state_estimator.attitude);
+		qf16_to_matrix(&R, q_current);
 
 		//Calculate shortest path to goal rotation without yaw (as it's slower than roll/pitch)
 		v3d R_z;
@@ -268,7 +251,6 @@ void controller_run( uint32_t time_now ) {
 		}
 
 		//px4: calculate angular rates setpoint
-		v3d rates_sp;
 		rates_sp.x = fix16_mul(get_param_fix16(PARAM_PID_ROLL_ANGLE_P), e_R.x);
 		rates_sp.y = fix16_mul(get_param_fix16(PARAM_PID_PITCH_ANGLE_P), e_R.y);
 		rates_sp.z = fix16_mul(get_param_fix16(PARAM_PID_YAW_ANGLE_P), e_R.z);
@@ -277,9 +259,33 @@ void controller_run( uint32_t time_now ) {
 		//rates_sp.z += _v_att_sp.yaw_sp_move_rate * yaw_w * _params.yaw_ff;
 
 		//px4: constrain rates to set params
-		goal_r = fix16_constrain(rates_sp.x, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
-		goal_p = fix16_constrain(rates_sp.y, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
-		goal_y = fix16_constrain(rates_sp.z, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
+		rates_sp.x = fix16_constrain(rates_sp.x, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
+		rates_sp.y = fix16_constrain(rates_sp.y, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
+		rates_sp.z = fix16_constrain(rates_sp.z, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
+
+		return rates_sp;
+}
+
+void controller_run( uint32_t time_now ) {
+	//Variables that store the computed attitude goal rates
+	fix16_t goal_r = 0;
+	fix16_t goal_p = 0;
+	fix16_t goal_y = 0;
+	fix16_t goal_throttle = 0;
+
+	_control_output.r = 0;
+	_control_output.p = 0;
+	_control_output.y = 0;
+	_control_output.T = 0;
+
+	//==-- Attitude Control
+	//If we should listen to attitude input
+	if( !(_command_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
+		v3d rates_sp = rate_goals_from_attitude(&_command_input.q, &_state_estimator.attitude);
+
+		goal_r = rates_sp.x;
+		goal_p = rates_sp.y;
+		goal_y = rates_sp.z;
 	}
 
 	//==-- Rate Control PIDs
@@ -302,9 +308,9 @@ void controller_run( uint32_t time_now ) {
 		goal_y = _command_input.y;
 	}
 
-	_control_output.r = pid_step(&pid_roll_rate, time_now, goal_r, _state_estimator.p, 0, false);
-	_control_output.p = pid_step(&pid_pitch_rate, time_now, goal_p, _state_estimator.q, 0, false);
-	_control_output.y = pid_step(&pid_yaw_rate, time_now, goal_y, _state_estimator.r, 0, false);
+	_control_output.r = pid_step(&_pid_roll_rate, time_now, goal_r, _state_estimator.p, 0, false);
+	_control_output.p = pid_step(&_pid_pitch_rate, time_now, goal_p, _state_estimator.q, 0, false);
+	_control_output.y = pid_step(&_pid_yaw_rate, time_now, goal_y, _state_estimator.r, 0, false);
 
 	//==-- Throttle Control
 	//TODO: Could do something here for altitude hold mode if enabled

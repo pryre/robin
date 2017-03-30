@@ -57,6 +57,8 @@ void setup(void) {
 
 	estimator_init(true, true, true);
 
+	//controller_init();
+
 	//Wait here for the first imu message (probably not really neaded)
 	while(!imu_interrupt);
 }

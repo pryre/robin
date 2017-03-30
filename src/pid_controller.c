@@ -4,28 +4,28 @@ extern "C" {
 
 #include "fix16.h"
 #include "fixextra.h"
-#include "pid.h"
+#include "pid_controller.h"
 
 //By default, pass prev_x as 0, unless you know the first measurement
-void pid_reset(pid_t *pid, fix16_t prev_x) {
+void pid_reset(pid_controller_t *pid, fix16_t prev_x) {
 	pid->integrator = 0;
 	pid->prev_time = 0;
 	pid->prev_x = prev_x;
 }
 
-void pid_set_gains(pid_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t tau) {
+void pid_set_gains(pid_controller_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t tau) {
 	pid->kp = kp;
 	pid->ki = ki;
 	pid->kd = kd;
 	pid->tau = tau;
 }
 
-void pid_set_min_max(pid_t *pid, fix16_t min, fix16_t max) {
+void pid_set_min_max(pid_controller_t *pid, fix16_t min, fix16_t max) {
 	pid->min = min;
 	pid->max = max;
 }
 
-void pid_init(pid_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t tau, fix16_t initial_x, fix16_t initial_x_dot, fix16_t initial_setpoint, fix16_t initial_output, fix16_t min, fix16_t max) {
+void pid_init(pid_controller_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t tau, fix16_t initial_x, fix16_t initial_x_dot, fix16_t initial_setpoint, fix16_t initial_output, fix16_t min, fix16_t max) {
 	pid_set_gains(pid, kp, ki, kd, tau);
 
 	pid->x = initial_x;
@@ -47,7 +47,7 @@ void pid_init(pid_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t tau, fix16
 //	- Whether to use the measured derivative state (previous arg) or (PID) estimated derivative state
 // Returns:
 //	- Output Command
-fix16_t pid_step(pid_t *pid, uint32_t time_now, fix16_t sp, fix16_t x, fix16_t x_dot, bool use_x_dot) {
+fix16_t pid_step(pid_controller_t *pid, uint32_t time_now, fix16_t sp, fix16_t x, fix16_t x_dot, bool use_x_dot) {
 	fix16_t dt = fix16_from_float((float)(time_now - pid->prev_time) * 1e-6);	//Delta time in milliseconds
 	pid->prev_time = time_now;
 

@@ -11,7 +11,7 @@ extern "C" {
 #include "fixquat.h"
 
 #include "params.h"
-//#include "pid.h"
+#include "pid_controller.h"
 
 //input_mask defines
 #define CMD_IN_IGNORE_ROLL_RATE		(uint8_t)1		//0b00000001
@@ -39,8 +39,11 @@ typedef struct {
 extern command_input_t _command_input;
 extern control_output_t _control_output;
 
+extern pid_controller_t _pid_roll_rate;
+extern pid_controller_t _pid_pitch_rate;
+extern pid_controller_t _pid_yaw_rate;
+
 void controller_init();
-void controller_update_pid_gains();
 void controller_run( uint32_t now );
 void controller_reset();
 

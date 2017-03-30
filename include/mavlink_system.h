@@ -1,7 +1,7 @@
 #pragma once
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
-#define LOW_PRIORITY_QUEUE_SIZE 50
+#define LOW_PRIORITY_QUEUE_SIZE 10
 
 #include "mavlink/mavlink_types.h"
 #include "breezystm32.h"
