@@ -59,6 +59,8 @@ void setup(void) {
 
 	controller_init();
 
+	mixer_init();
+
 	//Wait here for the first imu message (probably not really neaded)
 	while(!imu_interrupt);
 }
@@ -106,20 +108,30 @@ void loop(void) {
 
 	//==-- Timeout Checks
 	//TODO: Set MAV_STATE in this function
+	//TODO: Read for safety button here
+	//TODO: Check timeouts for:
+		//Accellerometer
+		//Gyroscope
+		//Compass
+		//External Attitude Input
+		//Command Input
+		//External System Heartbeats
+		//Anything else?
 
 	//==-- Update Estimator
     estimator_update( _sensors.time.start ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
-	//==-- Update Controller
-	controller_run( _sensors.time.start );	//Apply the current commands and update the PID controllers
-	//TODO: Need to reset PIDs when armed
-	//TODO: If the "sensor" for control input is on timeout, set output to 0,0,0,thrust_min
-	//TODO: Make check to see if armed, else skip
 
-	//==-- Send Motor Commands
-	//mixer_output();	//Convert outputs to correct layout and send PWM
-	//TODO: If the "sensor" for control input is on timeout, set output to 0,0,0,0
 	//TODO: Make check to see if armed, else skip
+		//==-- Update Controller
+		controller_run( _sensors.time.start );	//Apply the current commands and update the PID controllers
+		//TODO: Need to reset PIDs when armed
+		//TODO: If there are any critical timeouts, set output to 0,0,0,throttle_emergency_land
+		//TODO: Make check to see if armed, else skip
+
+		//==-- Send Motor Commands
+		mixer_output();	//Convert outputs to correct layout and send PWM
+		//TODO: If the "sensor" for safety button off, set output to PWM_LOW
 
 	//==-- Boot Control
 	if(_system_operation_control != SYSTEM_OPERATION_RUN) {

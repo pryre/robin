@@ -1,55 +1,53 @@
 #include <stdint.h>
 
-#include <breezystm32/breezystm32.h>
+#include "breezystm32.h"
+#include "fix16.h"
+//#include "fixvector3d.h"
+//#include "fixmatrix.h"
+//#include "fixquat.h"
+#include "fixextra.h"
 
 #include "mixer.h"
 #include "params.h"
-#include "rc.h"
+#include "safety.h"	//TODO: See where this functionallity should be used
+#include "controller.h"
+#include "rc.h"		//TODO: Put this file back in!
 
 int32_t _GPIO_outputs[8];
 static int32_t prescaled_outputs[8];
 int32_t _outputs[8];
-command_t _command;
+
+control_output_t _control_output;
 output_type_t _GPIO_output_type[8];
 
+//TODO: Double check
 static mixer_t quadcopter_plus_mixing = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
-	{ 1.0f,  1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f}, // F Mix
-	{ 0.0f, -1.0f,  1.0f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, // X Mix
-	{-1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f}, // Y Mix
-	{-1.0f,  1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f}  // Z Mix
+	{ CONST_ONE, CONST_ONE, CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // F Mix
+	{ 0, -CONST_ONE, CONST_ONE, 0, 0, 0, 0, 0}, // X Mix
+	{-CONST_ONE, 0, 0, CONST_ONE, 0, 0, 0, 0}, // Y Mix
+	{-CONST_ONE, CONST_ONE, CONST_ONE, -CONST_ONE, 0, 0, 0, 0}  // Z Mix
 };
 
-
+//TODO: Double check
 static mixer_t quadcopter_x_mixing = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
-	{ 1.0f, 1.0f, 1.0f, 1.0f,  0.0f, 0.0f, 0.0f, 0.0f}, // F Mix
-	{-1.0f,-1.0f, 1.0f, 1.0f,  0.0f, 0.0f, 0.0f, 0.0f}, // X Mix
-	{-1.0f, 1.0f,-1.0f, 1.0f,  0.0f, 0.0f, 0.0f, 0.0f}, // Y Mix
-	{ 1.0f,-1.0f,-1.0f, 1.0f,  0.0f, 0.0f, 0.0f, 0.0f}  // Z Mix
-};
-
-static mixer_t quadcopter_h_mixing = {
-	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
-
-	{ 1.0f, 1.0f, 1.0f, 1.0f,  0.0f, 0.0f, 0.0f, 0.0f}, // F Mix
-	{-1057, -943, 1057,  943,  0.0f, 0.0f, 0.0f, 0.0f}, // X Mix
-	{-1005,  995,-1005,  995,  0.0f, 0.0f, 0.0f, 0.0f}, // Y Mix
-	{ 1.0f,-1.0f,-1.0f, 1.0f,  0.0f, 0.0f, 0.0f, 0.0f}  // Z Mix
+	{ CONST_ONE, CONST_ONE, CONST_ONE, CONST_ONE,  0, 0, 0, 0}, // F Mix
+	{-CONST_ONE,-CONST_ONE, CONST_ONE, CONST_ONE,  0, 0, 0, 0}, // X Mix
+	{-CONST_ONE, CONST_ONE,-CONST_ONE, CONST_ONE,  0, 0, 0, 0}, // Y Mix
+	{ CONST_ONE,-CONST_ONE,-CONST_ONE, CONST_ONE,  0, 0, 0, 0}  // Z Mix
 };
 
 static mixer_t mixer_to_use;
 
 static mixer_t *array_of_mixers[NUM_MIXERS] = {
 	&quadcopter_plus_mixing,
-	&quadcopter_x_mixing,
-	&quadcopter_h_mixing
+	&quadcopter_x_mixing
 };
 
-
-
+//TODO: This logic needs to be double checked
 void mixer_init()
 {
 	//TODO: We need a better way to choosing the mixer
@@ -62,6 +60,7 @@ void mixer_init()
 		_GPIO_output_type[i] = NONE;
 	}
 
+	//TODO: This is handled by the controller
 	_command.F = 0;
 	_command.x = 0;
 	_command.y = 0;
@@ -81,9 +80,9 @@ void PWM_init()
 	pwmInit(useCPPM, false, false, motor_refresh_rate, idle_pwm);
 }
 
+//TODO: This logic needs to be double checked
 //Write a pwm value to the motor channel, value should be between 0 and 1000
-void write_motor(uint8_t index, int32_t value)
-{
+void write_motor(uint8_t index, int32_t value) {
 	value += 1000;
 
 	if (_armed_state == ARMED) {
@@ -102,9 +101,9 @@ void write_motor(uint8_t index, int32_t value)
 	pwmWriteMotor(index, _outputs[index]);
 }
 
+//TODO: This logic needs to be double checked
 //Write a pwm value to the motor channel, value should be between -500 and 500
-void write_servo(uint8_t index, int32_t value)
-{
+void write_servo(uint8_t index, int32_t value) {
 	if (value > 500) {
 		value = 500;
 	} else if (value < -500) {
@@ -115,8 +114,11 @@ void write_servo(uint8_t index, int32_t value)
 }
 
 
-void mixer_output()
-{
+//TODO: This logic needs to be double checked
+//TODO: Need to do fix16 operations in this section
+//TODO: Need correct references to _control_output
+//TODO: HERE!
+void mixer_output() {
 	int32_t max_output = 0;
 	for (int8_t i=0; i<8; i++) {
 		if (mixer_to_use.output_type[i] != NONE) {
