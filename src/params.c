@@ -122,11 +122,12 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_MAX_COMMAND, "PARAM_MAX_CMD", 1000);
 
 	//==-- Output
-	init_param_int(PARAM_MIXER, "MIXER", QUADCOPTER_PLUS);
-
 	init_param_int(PARAM_MOTOR_PWM_SEND_RATE, "MOTOR_PWM_RATE", 400);
 	init_param_int(PARAM_MOTOR_PWM_IDLE, "MOTOR_PWM_IDLE", 1150);
-	init_param_int(PARAM_SPIN_MOTORS_WHEN_ARMED, "ARM_SPIN_MOTORS", true);
+	init_param_int(PARAM_MOTOR_PWM_MIN, "MOTOR_PWM_MIN", 1000);
+	init_param_int(PARAM_MOTOR_PWM_MAX, "MOTOR_PWM_MAX", 2000);
+
+	init_param_int(PARAM_MIXER, "MIXER", QUADCOPTER_PLUS);
 }
 
 bool read_params(void) {

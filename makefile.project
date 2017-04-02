@@ -4,12 +4,13 @@ PROJECT_NAME = robin
 PROJECT_SRC_FILES = ./src/main.c \
 					./src/flash.c \
 					./src/params.c \
+					./src/mavlink_receive.c \
+					./src/mavlink_transmit.c \
 					./src/sensors.c \
 					./src/estimator.c \
 					./src/pid_controller.c \
 					./src/controller.c \
-					./src/mavlink_receive.c \
-					./src/mavlink_transmit.c
+					./src/mixer.c
 
 # Drivers, etc.
 PROJECT_BREEZY_FILES = $(F1_DIR)/i2c_stm32f10x.c \

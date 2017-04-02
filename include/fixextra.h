@@ -25,6 +25,7 @@
 #define CONST_EPSILON					0x0000FFFF	//0.99999
 
 static inline fix16_t fix16_constrain(fix16_t i, const fix16_t min, const fix16_t max) {
+	/*
 	if(i < min) {
 		i = min;
 	} else if(i > max) {
@@ -32,6 +33,9 @@ static inline fix16_t fix16_constrain(fix16_t i, const fix16_t min, const fix16_
 	}
 
 	return i;
+	*/
+
+	return (i < min) ? min : (i > max) ? max : i;
 }
 
 static inline fix16_t v3d_sq_norm(const v3d *a) {

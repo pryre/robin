@@ -6,6 +6,7 @@
 #include "sensors.h"
 #include "estimator.h"
 #include "controller.h"
+#include "mixer.h"
 
 #include "mavlink/mavlink_types.h"
 #include "mavlink_receive.h"
@@ -27,6 +28,7 @@ int main(void) {
     systemInit();
 
 	_system_status.state = MAV_STATE_BOOT;
+	_system_status.mode = MAV_MODE_PREFLIGHT;
 
     setup();
 
@@ -38,6 +40,7 @@ int main(void) {
     Serial1 = uartOpen(USART1, NULL, get_param_int(PARAM_BAUD_RATE), MODE_RXTX, SERIAL_NOT_INVERTED);
 
 	_system_status.state = MAV_STATE_STANDBY;
+	_system_status.state = MAV_MODE_STABILIZE_DISARMED;
 
     while (true) {
         loop();
@@ -60,6 +63,8 @@ void setup(void) {
 	controller_init();
 
 	mixer_init();
+
+	pwm_init();
 
 	//Wait here for the first imu message (probably not really neaded)
 	while(!imu_interrupt);
@@ -120,7 +125,6 @@ void loop(void) {
 
 	//==-- Update Estimator
     estimator_update( _sensors.time.start ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
-
 
 	//TODO: Make check to see if armed, else skip
 		//==-- Update Controller

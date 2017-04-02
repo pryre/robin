@@ -132,13 +132,17 @@ static inline void mavlink_stream_heartbeat(void) {
 	if(_system_status.arm_status)
 		mav_base_mode |= MAV_MODE_FLAG_SAFETY_ARMED;
 
+	/*
 	//TODO: Document mode meanings
-	if(_system_status.mode == SYSTEM_MODE_OFFBOARD) { //This is the "main" mode
+	if( (_system_status.state & SYSTEM_MODE_OFFBOARD) ||
+		(_system_status.state & SYSTEM_MODE_OFFBOARD) { //This is the "main" mode
 			mav_base_mode |= MAV_MODE_FLAG_GUIDED_ENABLED;
-	} else if((_system_status.mode == SYSTEM_MODE_STANDBY) ||
-				(_system_status.mode == SYSTEM_MODE_FAILSAFE)) {
+	} else if( (_system_status.mode == SYSTEM_MODE_STANDBY) ||
+			   (_system_status.mode == SYSTEM_MODE_FAILSAFE)) {
 			mav_base_mode |= MAV_MODE_FLAG_STABILIZE_ENABLED;
 	} //Other modes will show as 0, and should be cause for alarm if they are seen anyway, and thus unique
+	*/
+	mav_base_mode = _system_status.mode;
 
 	//We don't use custom_mode
 	//TODO: MAV_TYPE should be dynamically set

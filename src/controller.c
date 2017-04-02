@@ -101,6 +101,21 @@ pid_init(&_pid_yaw_rate,
            get_param_int(PARAM_MAX_COMMAND),
            0.0f);
 */
+
+	_command_input.r = 0;
+	_command_input.p = 0;
+	_command_input.y = 0;
+	_command_input.q.a = 1;
+	_command_input.q.b = 0;
+	_command_input.q.c = 0;
+	_command_input.q.d = 0;
+	_command_input.T = 0;
+	_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
+
+	_control_output.r = 0;
+	_control_output.p = 0;
+	_control_output.y = 0;
+	_control_output.T = 0;
 }
 
 static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
