@@ -64,6 +64,7 @@ void setup(void) {
 
 	mixer_init();
 
+	//TODO: Could do motor calibration logic here
 	pwm_init();
 
 	//Wait here for the first imu message (probably not really neaded)
@@ -133,9 +134,8 @@ void loop(void) {
 		//TODO: If there are any critical timeouts, set output to 0,0,0,throttle_emergency_land
 		//TODO: Make check to see if armed, else skip
 
-		//==-- Send Motor Commands
-		mixer_output();	//Convert outputs to correct layout and send PWM
-		//TODO: If the "sensor" for safety button off, set output to PWM_LOW
+	//==-- Send Motor Commands
+	mixer_output();	//Convert outputs to correct layout and send PWM (and considers failsafes)
 
 	//==-- Boot Control
 	if(_system_operation_control != SYSTEM_OPERATION_RUN) {

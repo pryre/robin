@@ -19,7 +19,8 @@ system_t _system_status;
 
 int32_t _GPIO_outputs[8];
 output_type_t _GPIO_output_type[8];
-int32_t _outputs[8];
+int32_t _pwm_output_requested[8];
+int32_t _pwm_output[8];
 
 //TODO: Double check
 static mixer_t quadcopter_plus_mixing = {
@@ -53,7 +54,8 @@ void mixer_init() {
 	mixer_to_use = *array_of_mixers[get_param_int(PARAM_MIXER)];
 
 	for (int8_t i=0; i<8; i++) {
-		_outputs[i] = 0;
+		_pwm_output_requested[i] = 0;
+		_pwm_output[i] = 0;
 		_GPIO_outputs[i] = 0;
 		_GPIO_output_type[i] = NONE;
 	}
@@ -68,7 +70,7 @@ void pwm_init() {
 	*/
 
 	int16_t motor_refresh_rate = get_param_int(PARAM_MOTOR_PWM_SEND_RATE);
-	int16_t idle_pwm = get_param_int(PARAM_MOTOR_PWM_IDLE);
+	int16_t idle_pwm = 1000;	//TODO? get_param_int(PARAM_MOTOR_PWM_MIN);
 	pwmInit(useCPPM, false, false, motor_refresh_rate, idle_pwm);	//TODO: Poor use of similar naming
 }
 
@@ -86,37 +88,66 @@ static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) 
 	return (i < min) ? min : (i > max) ? max : i;
 }
 
+//Direct write to the motor with failsafe checks
+//1000 <= value <= 2000
+//value_disarm (for motors) should be 1000
+void write_output_pwm(uint8_t index, int32_t value, int32_t value_disarm) {
+	if ( (_system_status.mode & MAV_MODE_FLAG_SAFETY_ARMED) && (_system_status.mode == MAV_STATE_ACTIVE) ) {
+		_pwm_output[index] = int32_constrain(value, 1000, 2000);
+	} else {
+		_pwm_output[index] = value_disarm;
+	}
+
+	pwmWriteMotor(index, _pwm_output[index]);
+}
+
 //TODO: Maybe this logic should be checked elsewhere?
 //Write a pwm value to the motor channel, value should be between 0 and 1000
 void write_motor(uint8_t index, int32_t value) {
-	if ( (_system_status.mode & MAV_MODE_FLAG_SAFETY_ARMED) && (_system_status.mode == MAV_STATE_ACTIVE) ) {
-		//If the "hardware" safety and software safety is armed (double safety check)
-		_outputs[index] = int32_constrain(value, 0, 1000) + get_param_int(PARAM_MOTOR_PWM_MIN);
+	value = int32_constrain(value, 0, 1000) + get_param_int(PARAM_MOTOR_PWM_MIN);
 
-		//If there is an idle set
-		if( value < get_param_int(PARAM_MOTOR_PWM_IDLE) )
-			_outputs[index] = get_param_int(PARAM_MOTOR_PWM_IDLE);
-	} else {
-		_outputs[index] = get_param_int(PARAM_MOTOR_PWM_MIN);
-	}
+	//If there is an idle set
+	if( value < get_param_int(PARAM_MOTOR_PWM_IDLE) )
+		value = get_param_int(PARAM_MOTOR_PWM_IDLE);
 
-	pwmWriteMotor(index, _outputs[index]);
+	write_output_pwm(index, value, get_param_int(PARAM_MOTOR_PWM_MIN));
 }
 
 //TODO: Is this even needed? (Tricopters)
 //Write a pwm value to the motor channel, value should be between -500 and 500
 void write_servo(uint8_t index, int32_t value) {
-	_outputs[index] = int32_constrain(value, -500, 500) + 1500;
-	pwmWriteMotor(index, _outputs[index]);
+	value = int32_constrain(value, -500, 500) + 1500;	//TODO: Make and use servo_min, servo_max, and servo_mid an actual parameter
+
+	write_output_pwm(index, value, 1500);	//TODO: Failsafe param here as well
 }
 
+//Used to send a PWM while
+void pwm_output() {
+	// Add in GPIO inputs from Onboard Computer
+	for (int8_t i=0; i<8; i++) {
+		output_type_t output_type = mixer_to_use.output_type[i];
+
+		//TODO: This logic needs to be double checked
+		if (output_type == NONE) {
+			// Incorporate GPIO on not already reserved outputs
+			_pwm_output_requested[i] = _GPIO_outputs[i];
+			output_type = _GPIO_output_type[i];
+		}
+
+		// Write output to motors
+		if (output_type == S) {
+			write_servo(i, _pwm_output_requested[i]);
+		} else if (output_type == M) {
+			write_motor(i, _pwm_output_requested[i]);
+		}
+	}
+}
 
 //TODO: Need to do fix16 operations in this section
-//TODO: Some of this logic does not look right at all
 void mixer_output() {
-	int32_t max_output = 0;
+	int32_t max_output = 1000;
+	int32_t scale_factor = 1000;
 	int32_t prescaled_outputs[8];
-	int32_t scaled_outputs[8];
 
 	for (uint8_t i = 0; i<8; i++) {
 		//TODO: This logic needs to be double checked
@@ -127,42 +158,25 @@ void mixer_output() {
 			//prescaled_outputs[i] = (int32_t)((_control_output.F*mixer_to_use.F[i] + _control_output.x*mixer_to_use.x[i] +
 			//								  _control_output.y*mixer_to_use.y[i] + _control_output.z*mixer_to_use.z[i])*1000.0f);
 
-			if (prescaled_outputs[i] > 1000 && prescaled_outputs[i] > max_output) {
+			//Note: Negitive PWM values can be calculated here, but will be saturated to 0pwm later
+
+			if( (mixer_to_use.output_type[i] == M) && ( prescaled_outputs[i] > max_output ) )
 				max_output = prescaled_outputs[i];
-			}
-			// negative motor outputs are set to zero when writing to the motor,
-			// but they have to be allowed here because the same logic is used for
-			// servo commands, which may be negative
 		}
 	}
 
+	//TODO: Need to check if this still holds
 	// saturate outputs to maintain controllability even during aggressive maneuvers
-	if (max_output > 1000) {
-		int32_t scale_factor = 1000*1000/max_output;
+	if (max_output > 1000)
+		scale_factor = 1000*1000/max_output;
 
-		for (int8_t i=0; i<8; i++) {
-			if (mixer_to_use.output_type[i] == M) {
-				scaled_outputs[i] = (prescaled_outputs[i])*scale_factor/1000; // divide by scale factor
-			}
-		}
-	}
-
-	// Add in GPIO inputs from Onboard Computer
 	for (int8_t i=0; i<8; i++) {
-		output_type_t output_type = mixer_to_use.output_type[i];
-
-		//TODO: This logic needs to be double checked
-		if (output_type == NONE) {
-			// Incorporate GPIO on not already reserved outputs
-			scaled_outputs[i] = _GPIO_outputs[i];
-			output_type = _GPIO_output_type[i];
-		}
-
-		// Write output to motors
-		if (output_type == S) {
-			write_servo(i, scaled_outputs[i]);
-		} else if (output_type == M) {
-			write_motor(i, scaled_outputs[i]);
+		if (mixer_to_use.output_type[i] == M) {
+			_pwm_output_requested[i] = prescaled_outputs[i]*scale_factor/1000; // divide by scale factor
+		} else {
+			_pwm_output_requested[i] = prescaled_outputs[i];
 		}
 	}
+
+	pwm_output();
 }
