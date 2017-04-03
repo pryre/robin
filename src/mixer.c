@@ -122,7 +122,7 @@ void write_servo(uint8_t index, int32_t value) {
 }
 
 //Used to send a PWM while
-void pwm_output() {
+static void pwm_output() {
 	// Add in GPIO inputs from Onboard Computer
 	for (int8_t i=0; i<8; i++) {
 		output_type_t output_type = mixer_to_use.output_type[i];

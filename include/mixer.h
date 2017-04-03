@@ -36,4 +36,9 @@ extern int32_t _pwm_output[8];
 
 void pwm_init();
 void mixer_init();
+
+void write_output_pwm(uint8_t index, int32_t value, int32_t value_disarm);
+void write_motor(uint8_t index, int32_t value);
+void write_servo(uint8_t index, int32_t value);
+
 void mixer_output();
