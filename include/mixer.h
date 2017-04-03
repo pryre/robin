@@ -22,7 +22,7 @@ typedef enum {
 
 typedef struct {
 	output_type_t output_type[8];
-	fix16_t F[8];
+	fix16_t T[8];
 	fix16_t x[8];
 	fix16_t y[8];
 	fix16_t z[8];

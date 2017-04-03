@@ -21,6 +21,7 @@
 #define CONST_ONE						0x00010000	//1
 #define CONST_ONE_ONE_FIVE				0x00012666	//1.15
 #define CONST_TWO						0x00020000	//2
+#define CONST_ONE_K						0x03E80000	//1000
 
 #define CONST_EPSILON					0x0000FFFF	//0.99999
 

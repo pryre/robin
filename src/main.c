@@ -14,7 +14,7 @@
 
 serialPort_t * Serial1;
 extern void SetSysClock(bool overclock);
-sensor_readings_t _sensors;
+//sensor_readings_t _sensors;
 system_t _system_status;
 uint8_t _system_operation_control;
 volatile bool imu_interrupt;
@@ -40,7 +40,7 @@ int main(void) {
     Serial1 = uartOpen(USART1, NULL, get_param_int(PARAM_BAUD_RATE), MODE_RXTX, SERIAL_NOT_INVERTED);
 
 	_system_status.state = MAV_STATE_STANDBY;
-	_system_status.state = MAV_MODE_STABILIZE_DISARMED;
+	_system_status.mode = MAV_MODE_STABILIZE_DISARMED;
 
     while (true) {
         loop();
@@ -109,8 +109,10 @@ void loop(void) {
 	sensors_update( _sensors.time.start );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
 
 	//==-- Calibrations
-	if(_sensor_calibration != SENSOR_CAL_NONE)	//If any calibration is in progress
-		sensors_calibrate();	//Run the rest of the calibration logic
+	if(_system_status.state == MAV_STATE_CALIBRATING) {	//If any calibration is in progress
+		if( sensors_calibrate() )	//Run the rest of the calibration logic
+			_system_status.state = MAV_STATE_STANDBY;	//TODO: Make sure this is in state logic
+	}
 
 	//==-- Timeout Checks
 	//TODO: Set MAV_STATE in this function

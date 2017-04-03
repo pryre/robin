@@ -184,7 +184,7 @@ static void mavlink_transmit_low_priority() {
 	}
 }
 
-//TODO: Should IMU be sending this fast?
+//Stream rate in milliseconds: 1s = 1,000,000ms
 static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 	{ .period_us = 1000000, .last_time_us = 0, .send_function = mavlink_stream_heartbeat },
 	{ .period_us = 5000000, .last_time_us = 0, .send_function = mavlink_stream_sys_status },
@@ -192,6 +192,7 @@ static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 	{ .period_us = 0,  .last_time_us = 0, .send_function = mavlink_stream_attitude },
 	{ .period_us = 20000,  .last_time_us = 0, .send_function = mavlink_stream_attitude_quaternion },
 	{ .period_us = 20000,  .last_time_us = 0, .send_function = mavlink_stream_attitude_target },
+	{ .period_us = 100000,  .last_time_us = 0, .send_function = mavlink_stream_servo_output_raw },
 	/*
 	{ .period_us = 1000,    .last_time_us = 0, .send_function = mavlink_send_imu },
 	{ .period_us = 200000,  .last_time_us = 0, .send_function = mavlink_send_diff_pressure },

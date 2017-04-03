@@ -134,7 +134,7 @@ void sensors_init(void);
 bool sensors_read(void);
 //void sensors_poll(void);
 bool sensors_update(uint32_t time_us);
-void sensors_calibrate(void);
+bool sensors_calibrate(void);
 
 //bool calibrate_acc(void);
 //bool calibrate_gyro(void);

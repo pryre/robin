@@ -75,16 +75,6 @@ void pwm_init() {
 }
 
 static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) {
-	/*
-	if(i < min) {
-		i = min;
-	} else if(i > max) {
-		i = max;
-	}
-
-	return i;
-	*/
-
 	return (i < min) ? min : (i > max) ? max : i;
 }
 
@@ -154,9 +144,18 @@ void mixer_output() {
 		if (mixer_to_use.output_type[i] != NONE) {
 			// Matrix multiply (in so many words) -- done in integer, hence the /1000 at the end
 			//TODO: This might actually be very easy to do with fix16 matrix operations...
-			//TODO: HERE!
-			//prescaled_outputs[i] = (int32_t)((_control_output.F*mixer_to_use.F[i] + _control_output.x*mixer_to_use.x[i] +
-			//								  _control_output.y*mixer_to_use.y[i] + _control_output.z*mixer_to_use.z[i])*1000.0f);
+			/*
+			float thrust_calc = (_control_output.T * mixer_to_use.T[i])
+								+ (_control_output.r * mixer_to_use.x[i])
+								+ (_control_output.p * mixer_to_use.y[i])
+								+ (_control_output.y * mixer_to_use.z[i]);
+			prescaled_outputs[i] = (int32_t)(thrust_calc * 1000.0f);
+			*/
+			fix16_t thrust_calc = fix16_add(fix16_mul(_control_output.T, mixer_to_use.T[i]),
+								  fix16_add(fix16_mul(_control_output.r, mixer_to_use.x[i]),
+								  fix16_add(fix16_mul(_control_output.p, mixer_to_use.y[i]),
+								  fix16_mul(_control_output.y, mixer_to_use.z[i]))));
+			prescaled_outputs[i] = fix16_to_int(fix16_mul(thrust_calc, CONST_ONE_K));
 
 			//Note: Negitive PWM values can be calculated here, but will be saturated to 0pwm later
 

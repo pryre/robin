@@ -155,13 +155,14 @@ bool sensors_update(uint32_t time_us) {
 //TODO: This does not take into account temperature
 //TODO: These parameters are not being written to EEPROM (Check to see if mavlink has a "save params" command)
 //TODO: This calibration method is very basic, doesn't take into acount very much...mabye?
-void sensors_calibrate(void) {
+//Returns true if all calibrations are complete
+bool sensors_calibrate(void) {
 	if(_sensor_calibration & SENSOR_CAL_GYRO) {
 		_sensor_cal_data.gyro.sum_x += _sensors.imu.gyro_raw[0];
 		_sensor_cal_data.gyro.sum_y += _sensors.imu.gyro_raw[1];
 		_sensor_cal_data.gyro.sum_z += _sensors.imu.gyro_raw[2];
 
-	_sensor_cal_data.gyro.count++;
+		_sensor_cal_data.gyro.count++;
 
 		if (_sensor_cal_data.gyro.count >= SENSOR_CAL_IMU_PASSES) {
 			set_param_int(PARAM_GYRO_X_BIAS, (_sensor_cal_data.gyro.sum_x / _sensor_cal_data.gyro.count));
@@ -215,5 +216,7 @@ void sensors_calibrate(void) {
 			_low_priority_queue.queued_message_count++;
 		}
 	}
+
+	return !_sensor_calibration;
 }
 

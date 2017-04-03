@@ -120,6 +120,8 @@ void communication_receive(void) {
 					switch(command) {
 						case MAV_CMD_PREFLIGHT_CALIBRATION:
 							if(_system_status.state == MAV_STATE_STANDBY) {
+								_system_status.state = MAV_STATE_CALIBRATING;
+
 								if((int)mavlink_msg_command_long_get_param1(&msg))
 									_sensor_calibration |= SENSOR_CAL_GYRO;
 

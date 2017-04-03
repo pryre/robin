@@ -5,13 +5,13 @@
 
 #include "mavlink/mavlink_types.h"
 #include "breezystm32.h"
-#include "sensors.h"
+#include "fix16.h"
 #include "params.h"
 #include "safety.h"
+#include "sensors.h"
 #include "estimator.h"
 #include "controller.h"
-#include "estimator.h"
-#include "fix16.h"
+#include "mixer.h"
 
 
 /* Struct that stores the communication settings of this system.
@@ -35,6 +35,7 @@ state_t _state_estimator;
 
 command_input_t _command_input;
 control_output_t _control_output;
+int32_t _pwm_output[8];
 
 //Firmware identifier, first 8 bytes of current BreezySTM32 commit
 static const uint8_t FW_HASH [8] = {0xb7, 0xa7, 0x59, 0x4e, 0xa7, 0xa2, 0x98, 0xb0};
@@ -260,7 +261,6 @@ static inline void mavlink_stream_attitude_quaternion(void) {
 											fix16_to_float(_state_estimator.r));
 }
 
-
 static inline void mavlink_stream_attitude_target(void) {
 	float q[4] = {fix16_to_float(_command_input.q.a),
 				  fix16_to_float(_command_input.q.b),
@@ -277,6 +277,20 @@ static inline void mavlink_stream_attitude_target(void) {
 									 fix16_to_float(_control_output.p),
 									 fix16_to_float(_control_output.y),
 									 fix16_to_float(_control_output.T));
+}
+
+static inline void mavlink_stream_servo_output_raw(void) {
+	mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0,
+									  _sensors.time.start,
+									  0,	//Port 0
+									  _pwm_output[0],
+									  _pwm_output[1],
+									  _pwm_output[2],
+									  _pwm_output[3],
+									  _pwm_output[4],
+									  _pwm_output[5],
+									  _pwm_output[6],
+									  _pwm_output[7]);
 }
 
 //==-- Low Priority Messages
@@ -383,17 +397,17 @@ static inline uint16_t mavlink_prepare_param_value(uint8_t *buffer, uint32_t ind
 
 	//Transmit
 		//Stream
-			//- attitude_target.h
+			//+ attitude_target.h
 			//- attitude_quaternion_cov.h
 			//o battery_status.h
 			//- distance_sensor.h
 			//+ heartbeat.h
 			//+ highres_imu.h
 			//- scaled_pressure.h
-			//- servo_output_raw.h
+			//+ servo_output_raw.h
 			//+ sys_status.h
-			//o attitude.h
-			//o attitude_quaternion.h
+			//+ attitude.h
+			//+ attitude_quaternion.h
 			//o optical_flow.h
 			//o optical_flow_rad.h
 
