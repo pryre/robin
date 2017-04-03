@@ -177,12 +177,12 @@ static inline void mavlink_stream_sys_status(void) {
 	uint16_t errors_count3 = 0;
 	uint16_t errors_count4 = 0;
 
-	load = _sensors.time.average_time/_sensors.time.counter;
+	load = _sensors.clock.average_time/_sensors.clock.counter;
 
-	_sensors.time.counter = 0;
-	_sensors.time.average_time = 0;
-	_sensors.time.max = 0;
-	_sensors.time.min = 1000;
+	_sensors.clock.counter = 0;
+	_sensors.clock.average_time = 0;
+	_sensors.clock.max = 0;
+	_sensors.clock.min = 1000;
 
 
 
@@ -270,7 +270,7 @@ static inline void mavlink_stream_attitude_target(void) {
 	// The input mask applied is included, but the information will still potentially be useful
 	// The timestamp used is the one that is used to generate the commands
 	mavlink_msg_attitude_target_send(MAVLINK_COMM_0,
-									 _sensors.time.start,
+									 sensors_clock_ls_get(),
 									 fix16_to_float(_command_input.input_mask),
 									 q,
 									 fix16_to_float(_control_output.r),
@@ -281,7 +281,7 @@ static inline void mavlink_stream_attitude_target(void) {
 
 static inline void mavlink_stream_servo_output_raw(void) {
 	mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0,
-									  _sensors.time.start,
+									  sensors_clock_ls_get(),
 									  0,	//Port 0
 									  _pwm_output[0],
 									  _pwm_output[1],

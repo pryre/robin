@@ -33,14 +33,14 @@ volatile bool imu_interrupt;
 
 
 //==-- Functions
-static void time_init(void) {
-	_sensors.time.present = true;
-	_sensors.time.dt = 0;
-	_sensors.time.counter = 0;
-	_sensors.time.start = 0;
-	_sensors.time.end = 0;
-	_sensors.time.max = 0;
-	_sensors.time.min = 1000;
+static void clock_init(void) {
+	_sensors.clock.present = true;
+	_sensors.clock.dt = 0;
+	_sensors.clock.counter = 0;
+	_sensors.clock.start = 0;
+	_sensors.clock.end = 0;
+	_sensors.clock.max = 0;
+	_sensors.clock.min = 1000;
 }
 
 /*
@@ -91,7 +91,7 @@ void sensors_init(void) {
 	_sensor_cal_data.accel.sum_t = 0;
 
 	//==-- Timer
-	time_init();
+	clock_init();
 }
 
 bool sensors_read(void) {
@@ -116,21 +116,21 @@ bool sensors_read(void) {
 	return imu_job_complete;
 }
 
-uint32_t sensors_time_ls_get(void) {
-	return _sensors.time.start;
+uint32_t sensors_clock_ls_get(void) {
+	return _sensors.clock.start;
 }
 
-void sensors_time_ls_set(uint32_t time_us) {
-	_sensors.time.start = time_us;
+void sensors_clock_ls_set(uint32_t time_us) {
+	_sensors.clock.start = time_us;
 }
 
-void sensors_time_update(uint32_t time_us) {
-	_sensors.time.end = time_us;
-	_sensors.time.dt = _sensors.time.end - _sensors.time.start;
-	_sensors.time.average_time += _sensors.time.dt;
-	_sensors.time.counter++;
-	_sensors.time.max = (_sensors.time.dt > _sensors.time.max) ? _sensors.time.dt : _sensors.time.max;
-	_sensors.time.min = (_sensors.time.dt < _sensors.time.min) ? _sensors.time.dt : _sensors.time.min;
+void sensors_clock_update(uint32_t time_us) {
+	_sensors.clock.end = time_us;
+	_sensors.clock.dt = _sensors.clock.end - _sensors.clock.start;
+	_sensors.clock.average_time += _sensors.clock.dt;
+	_sensors.clock.counter++;
+	_sensors.clock.max = (_sensors.clock.dt > _sensors.clock.max) ? _sensors.clock.dt : _sensors.clock.max;
+	_sensors.clock.min = (_sensors.clock.dt < _sensors.clock.min) ? _sensors.clock.dt : _sensors.clock.min;
 }
 
 bool sensors_update(uint32_t time_us) {

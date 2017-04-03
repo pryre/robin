@@ -74,7 +74,7 @@ void loop(void) {
 	bool message_transmitted = false;
 
 	//==-- Timing setup get loop time
-	sensors_time_ls_set( micros() );
+	sensors_clock_ls_set( micros() );
 
 	//==-- Read Sensors
 
@@ -105,7 +105,7 @@ void loop(void) {
 	}
 
 	//==-- Update Sensor Data
-	sensors_update( sensors_time_ls_get() );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
+	sensors_update( sensors_clock_ls_get() );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
 
 	//==-- Calibrations
 	if( _system_status.state == MAV_STATE_CALIBRATING ) {	//If any calibration is in progress
@@ -126,11 +126,11 @@ void loop(void) {
 		//Anything else?
 
 	//==-- Update Estimator
-    estimator_update( sensors_time_ls_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
+    estimator_update( sensors_clock_ls_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
 	//TODO: Make check to see if armed, else skip
 		//==-- Update Controller
-		controller_run( sensors_time_ls_get() );	//Apply the current commands and update the PID controllers
+		controller_run( sensors_clock_ls_get() );	//Apply the current commands and update the PID controllers
 		//TODO: Need to reset PIDs when armed
 		//TODO: If there are any critical timeouts, set output to 0,0,0,throttle_emergency_land
 		//TODO: Make check to see if armed, else skip
@@ -139,8 +139,8 @@ void loop(void) {
 	mixer_output();	//Convert outputs to correct layout and send PWM (and considers failsafes)
 
 	//==-- Boot Control
-	if(_system_operation_control != SYSTEM_OPERATION_RUN) {
-		if(_system_operation_control == SYSTEM_OPERATION_REBOOT_BOOTLOADER)
+	if( _system_operation_control != SYSTEM_OPERATION_RUN ) {
+		if( _system_operation_control == SYSTEM_OPERATION_REBOOT_BOOTLOADER )
 			systemResetToBootloader();
 		//Could be potentially more options here but just leave this as an error fallback
 		systemReset();
@@ -149,8 +149,8 @@ void loop(void) {
     //==-- loop time calculation
 
 	//TODO: Move this elsewhere?
-	sensors_time_update(micros());
+	sensors_clock_update( micros() );
 
 	//==-- Waste remaining time
-	while(!imu_interrupt);
+	while( !imu_interrupt );
 }

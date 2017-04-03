@@ -39,7 +39,7 @@ typedef struct {
 	uint32_t average_time;	//Sum of dt
 	uint32_t max;			//Maximum dt so far
 	uint32_t min;			//Minimum dt so far
-} sensor_readings_time_t;
+} sensor_readings_clock_t;
 
 typedef struct {
 	bool present;
@@ -69,7 +69,7 @@ typedef struct {
 } sensor_readings_sonar_t;
 
 typedef struct {
-	sensor_readings_time_t time;
+	sensor_readings_clock_t clock;
 	sensor_readings_imu_t imu;
 	sensor_readings_barometer_t baro;
 	sensor_readings_sonar_t sonar;
@@ -134,9 +134,9 @@ void sensors_init(void);
 bool sensors_read(void);
 
 //void sensors_poll(void);
-uint32_t sensors_time_ls_get(void);	//Get time at loop start
-void sensors_time_ls_set(uint32_t time_us);	//Set time at loop start
-void sensors_time_update(uint32_t time_us);
+uint32_t sensors_clock_ls_get(void);	//Get time at loop start
+void sensors_clock_ls_set(uint32_t time_us);	//Set time at loop start
+void sensors_clock_update(uint32_t time_us);	//Update the timing variable (used at the end of the loop)
 
 bool sensors_update(uint32_t time_us);
 bool sensors_calibrate(void);
