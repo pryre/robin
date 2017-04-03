@@ -59,7 +59,6 @@ void mixer_init() {
 	}
 }
 
-//TODO: Errors here with linker because pwm.h isn't included properly?
 void pwm_init() {
 	bool useCPPM = false;
 
@@ -114,7 +113,6 @@ void write_servo(uint8_t index, int32_t value) {
 
 //TODO: Need to do fix16 operations in this section
 //TODO: Some of this logic does not look right at all
-//TODO: Errors here with linker because pwm.h isn't included properly?
 void mixer_output() {
 	int32_t max_output = 0;
 	int32_t prescaled_outputs[8];

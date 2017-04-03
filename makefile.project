@@ -14,7 +14,8 @@ PROJECT_SRC_FILES = ./src/main.c \
 
 # Drivers, etc.
 PROJECT_BREEZY_FILES = $(F1_DIR)/i2c_stm32f10x.c \
-					   $(F1_DIR)/drivers/mpu.c
+					   $(F1_DIR)/drivers/mpu.c \
+					   $(F1_DIR)/pwm.c
 
 # Math Libs.
 PROJECT_DIR_LIBFIXMATH = ./lib/libfixmath/libfixmath
