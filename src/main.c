@@ -138,7 +138,7 @@ void loop(void) {
 	//==-- Send Motor Commands
 	mixer_output();	//Convert outputs to correct layout and send PWM (and considers failsafes)
 
-	//==-- Boot Control
+	//==-- Boot Control	//TODO: Might be a better way to organize this
 	if( _system_operation_control != SYSTEM_OPERATION_RUN ) {
 		if( _system_operation_control == SYSTEM_OPERATION_REBOOT_BOOTLOADER )
 			systemResetToBootloader();
