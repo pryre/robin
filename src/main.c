@@ -14,7 +14,6 @@
 
 serialPort_t * Serial1;
 extern void SetSysClock(bool overclock);
-//sensor_readings_t _sensors;
 system_t _system_status;
 uint8_t _system_operation_control;
 volatile bool imu_interrupt;
@@ -75,7 +74,7 @@ void loop(void) {
 	bool message_transmitted = false;
 
 	//==-- Timing setup get loop time
-	_sensors.time.start = micros();
+	sensors_time_ls_set( micros() );
 
 	//==-- Read Sensors
 
@@ -88,7 +87,7 @@ void loop(void) {
 	//Non-critical functions should be here, but we should also
 	//do this loop multiple times, so it shouldn't lock the
 	//thread for a long time
-	while(!sensors_read()) { //XXX: With no load, it takes ~557us to complete sensor_read()
+	while( !sensors_read() ) { //XXX: With no load, it takes ~557us to complete sensor_read()
 
 		//==-- Check Serial
 		communication_receive();
@@ -96,8 +95,8 @@ void loop(void) {
 		//==-- Send Serial
 		//Check to see if a message has been sent this loop, then see if a message should be sent
 		//Only allow this once per loop due to buffer risks (see serial define above)
-		if(!message_transmitted)
-			message_transmitted = communication_transmit(micros());
+		if( !message_transmitted )
+			message_transmitted = communication_transmit( micros() );
 
 		//==-- Parameter Handilng
 
@@ -106,10 +105,10 @@ void loop(void) {
 	}
 
 	//==-- Update Sensor Data
-	sensors_update( _sensors.time.start );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
+	sensors_update( sensors_time_ls_get() );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
 
 	//==-- Calibrations
-	if(_system_status.state == MAV_STATE_CALIBRATING) {	//If any calibration is in progress
+	if( _system_status.state == MAV_STATE_CALIBRATING ) {	//If any calibration is in progress
 		if( sensors_calibrate() )	//Run the rest of the calibration logic
 			_system_status.state = MAV_STATE_STANDBY;	//TODO: Make sure this is in state logic
 	}
@@ -127,11 +126,11 @@ void loop(void) {
 		//Anything else?
 
 	//==-- Update Estimator
-    estimator_update( _sensors.time.start ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
+    estimator_update( sensors_time_ls_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
 	//TODO: Make check to see if armed, else skip
 		//==-- Update Controller
-		controller_run( _sensors.time.start );	//Apply the current commands and update the PID controllers
+		controller_run( sensors_time_ls_get() );	//Apply the current commands and update the PID controllers
 		//TODO: Need to reset PIDs when armed
 		//TODO: If there are any critical timeouts, set output to 0,0,0,throttle_emergency_land
 		//TODO: Make check to see if armed, else skip
@@ -149,13 +148,8 @@ void loop(void) {
 
     //==-- loop time calculation
 
-	//TODO: Move this elsewhere
-    _sensors.time.end = micros();
-    _sensors.time.dt = _sensors.time.end - _sensors.time.start;
-    _sensors.time.average_time += _sensors.time.dt;
-    _sensors.time.counter++;
-    _sensors.time.max = (_sensors.time.dt > _sensors.time.max) ? _sensors.time.dt : _sensors.time.max;
-    _sensors.time.min = (_sensors.time.dt < _sensors.time.min) ? _sensors.time.dt : _sensors.time.min;
+	//TODO: Move this elsewhere?
+	sensors_time_update(micros());
 
 	//==-- Waste remaining time
 	while(!imu_interrupt);

@@ -132,7 +132,12 @@ static const fix16_t CONST_GRAVITY = 0x0009CE80; //Is equal to 9.80665 (Positive
 // function declarations
 void sensors_init(void);
 bool sensors_read(void);
+
 //void sensors_poll(void);
+uint32_t sensors_time_ls_get(void);	//Get time at loop start
+void sensors_time_ls_set(uint32_t time_us);	//Set time at loop start
+void sensors_time_update(uint32_t time_us);
+
 bool sensors_update(uint32_t time_us);
 bool sensors_calibrate(void);
 

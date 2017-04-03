@@ -116,6 +116,23 @@ bool sensors_read(void) {
 	return imu_job_complete;
 }
 
+uint32_t sensors_time_ls_get(void) {
+	return _sensors.time.start;
+}
+
+void sensors_time_ls_set(uint32_t time_us) {
+	_sensors.time.start = time_us;
+}
+
+void sensors_time_update(uint32_t time_us) {
+	_sensors.time.end = time_us;
+	_sensors.time.dt = _sensors.time.end - _sensors.time.start;
+	_sensors.time.average_time += _sensors.time.dt;
+	_sensors.time.counter++;
+	_sensors.time.max = (_sensors.time.dt > _sensors.time.max) ? _sensors.time.dt : _sensors.time.max;
+	_sensors.time.min = (_sensors.time.dt < _sensors.time.min) ? _sensors.time.dt : _sensors.time.min;
+}
+
 bool sensors_update(uint32_t time_us) {
 	//bool update_success = false;
 	//TODO: Remember not to expect all sensors to be ready
