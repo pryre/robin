@@ -15,7 +15,7 @@
 #include "controller.h"
 
 control_output_t _control_output;
-system_t _system_status;
+system_status_t _system_status;
 
 int32_t _GPIO_outputs[8];
 output_type_t _GPIO_output_type[8];

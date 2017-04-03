@@ -1,28 +1,29 @@
 #pragma once
 
+#include <stdbool.h>
+#include "mavlink/mavlink_types.h"
+
 //This will contain functions and variables to keep track of critical system status'
 //as well as making sure that if a failure occurs, it is handled correctly
 
-//Used to initialize all of the structs and timeouts
-void init_safety(void);
-
-//Used to initialize all of the structs and timeouts
-void check_safety_monitor(void);
-
 //General UAV health status
 typedef enum {
-	SYSTEM_HEALTH_PERFECT,	//Operation is fine
-	SYSTEM_HEALTH_ERROR,	//Operation is fine
+	SYSTEM_HEALTH_UNKNOWN,	//Have not made contact with sensor
+	SYSTEM_HEALTH_OK,		//Operation is fine
+	SYSTEM_HEALTH_TIMEOUT,	//Stopped recieving messages
+	SYSTEM_HEALTH_ERROR,	//Error in readings
 	SYSTEM_HEALTH_INVALID
-} safety_sensor_health_t;
+} safety_health_t;
 
 typedef struct {
-	bool health;	//Set with safety_sensor_health_t
-	int32_t last_read;
+	uint8_t health;	//Set with safety_health_t
+	uint32_t last_read;
+	uint32_t count;
+	char name[25];
 } timeout_status_t;
 
 typedef struct {
-	timeout_status_t heartbeat;
+	timeout_status_t offboard_heartbeat;
 	timeout_status_t offboard_control;
 } mavlink_stream_status_t;
 
@@ -59,7 +60,7 @@ typedef struct {
 	bool arm_status;
 	mavlink_stream_status_t mavlink;
 	sensor_status_t sensors;
-} system_t;
+} system_status_t;
 
 //TODO: This could almost be merged with mav_state
 typedef enum {
@@ -69,5 +70,9 @@ typedef enum {
 	SYSTEM_OPERATION_REBOOT_BOOTLOADER
 } system_operation_t;
 
-extern system_t _system_status;
+extern system_status_t _system_status;
 extern uint8_t _system_operation_control;
+
+void safety_init( void );
+void safety_update( timeout_status_t *sensor, uint32_t stream_count);
+void safety_run( uint32_t time_now );

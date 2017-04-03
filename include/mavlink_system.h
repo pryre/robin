@@ -28,7 +28,7 @@
 extern int32_t _request_all_params;
 
 mavlink_system_t mavlink_system;
-system_t _system_status;
+system_status_t _system_status;
 sensor_readings_t _sensors;
 params_t _params;
 state_t _state_estimator;
@@ -124,6 +124,12 @@ static inline uint16_t mavlink_prepare_debug(uint8_t *buffer, uint32_t stamp, ui
 							u.f);	//Value (always as float)
 
 	return mavlink_msg_to_send_buffer(buffer, &msg);
+}
+
+static inline void mavlink_send_statustext_notice(uint8_t severity, char* text) {
+	mavlink_msg_statustext_send(MAVLINK_COMM_0,
+								severity,
+								&text[0]);
 }
 
 //==-- Sends
@@ -266,13 +272,14 @@ static inline void mavlink_stream_attitude_target(void) {
 				  fix16_to_float(_command_input.q.b),
 				  fix16_to_float(_command_input.q.c),
 				  fix16_to_float(_command_input.q.d)};
+
 	//Use the control output for some of these commands as they reflect the actual goals
 	// The input mask applied is included, but the information will still potentially be useful
 	// The timestamp used is the one that is used to generate the commands
 	mavlink_msg_attitude_target_send(MAVLINK_COMM_0,
 									 sensors_clock_ls_get(),
-									 fix16_to_float(_command_input.input_mask),
-									 q,
+									 _command_input.input_mask,
+									 &q[0],
 									 fix16_to_float(_control_output.r),
 									 fix16_to_float(_control_output.p),
 									 fix16_to_float(_control_output.y),

@@ -62,8 +62,9 @@ void set_param_defaults(void) {
 	//==-- Mavlink
 	init_param_int(PARAM_SYSTEM_ID, "SYS_ID", 1);
 	init_param_int(PARAM_COMPONENT_ID, "COMP_ID", 1);
-	init_param_int(PARAM_STREAM_HEARTBEAT_RATE, "STRM_HRTBT", 1);
 
+	//TODO: Implement all of these
+	init_param_int(PARAM_STREAM_HEARTBEAT_RATE, "STRM_HRTBT", 1);
 	init_param_int(PARAM_STREAM_ATTITUDE_RATE, "STRM_ATTITUDE", 100);
 	init_param_int(PARAM_STREAM_IMU_RATE, "STRM_IMU", 500);
 	init_param_int(PARAM_STREAM_MAG_RATE, "STRM_MAG", 0);

@@ -11,6 +11,7 @@ uint8_t _sensor_calibration;
 mavlink_queue_t _low_priority_queue;
 
 command_input_t _command_input;
+system_status_t _system_status;
 
 void communication_receive(void) {
 	mavlink_message_t msg;
@@ -237,7 +238,7 @@ void communication_receive(void) {
 
 					//TODO: Check this is correct
 					float qt[4];
-					if(mavlink_msg_set_attitude_target_get_q(&msg, qt) == 4) {
+					if(mavlink_msg_set_attitude_target_get_q(&msg, &qt[0]) == 4) {
 						_command_input.q.a = fix16_from_float(qt[0]);
 						_command_input.q.b = fix16_from_float(qt[1]);
 						_command_input.q.c = fix16_from_float(qt[2]);
@@ -245,6 +246,8 @@ void communication_receive(void) {
 					}
 
 					_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
+
+					safety_update(&_system_status.mavlink.offboard_control, 100);	//TODO: Use params here
 
 					break;
 				}

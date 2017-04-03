@@ -3,6 +3,7 @@
 
 #include "breezystm32.h"
 #include "params.h"
+#include "safety.h"
 #include "sensors.h"
 #include "estimator.h"
 #include "controller.h"
@@ -14,9 +15,11 @@
 
 serialPort_t * Serial1;
 extern void SetSysClock(bool overclock);
-system_t _system_status;
 uint8_t _system_operation_control;
 volatile bool imu_interrupt;
+
+system_status_t _system_status;
+command_input_t _command_input;
 
 int main(void) {
 	_system_status.state = MAV_STATE_UNINIT;
@@ -58,6 +61,8 @@ void setup(void) {
 	communications_init();
 
 	estimator_init(true, true, true);
+
+	safety_init();
 
 	controller_init();
 
@@ -114,6 +119,7 @@ void loop(void) {
 	}
 
 	//==-- Timeout Checks
+	safety_run( micros() );
 	//TODO: Set MAV_STATE in this function
 	//TODO: Read for safety button here
 	//TODO: Check timeouts for:
@@ -129,6 +135,18 @@ void loop(void) {
     estimator_update( sensors_clock_ls_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
 	//TODO: Make check to see if armed, else skip
+		if( _system_status.mavlink.offboard_control.health != SYSTEM_HEALTH_OK ) {
+			_command_input.r = 0;
+			_command_input.p = 0;
+			_command_input.y = 0;
+			_command_input.q.a = 1;
+			_command_input.q.b = 0;
+			_command_input.q.c = 0;
+			_command_input.q.d = 0;
+			_command_input.T = 0;	//TODO: Throttle failsafe if timeout?
+			_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
+		}
+
 		//==-- Update Controller
 		controller_run( sensors_clock_ls_get() );	//Apply the current commands and update the PID controllers
 		//TODO: Need to reset PIDs when armed

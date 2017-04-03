@@ -13,7 +13,6 @@ extern "C" {
 
 #include "params.h"
 #include "estimator.h"
-#include "safety.h"
 #include "controller.h"
 #include "pid_controller.h"
 
@@ -289,11 +288,6 @@ void controller_run( uint32_t time_now ) {
 	fix16_t goal_y = 0;
 	fix16_t goal_throttle = 0;
 
-	_control_output.r = 0;
-	_control_output.p = 0;
-	_control_output.y = 0;
-	_control_output.T = 0;
-
 	//==-- Attitude Control
 	//If we should listen to attitude input
 	if( !(_command_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
@@ -324,6 +318,7 @@ void controller_run( uint32_t time_now ) {
 		goal_y = _command_input.y;
 	}
 
+	//Rate PID Controllers
 	_control_output.r = pid_step(&_pid_roll_rate, time_now, goal_r, _state_estimator.p, 0, false);
 	_control_output.p = pid_step(&_pid_pitch_rate, time_now, goal_p, _state_estimator.q, 0, false);
 	_control_output.y = pid_step(&_pid_yaw_rate, time_now, goal_y, _state_estimator.r, 0, false);

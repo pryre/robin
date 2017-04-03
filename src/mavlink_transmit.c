@@ -184,7 +184,7 @@ static void mavlink_transmit_low_priority() {
 	}
 }
 
-//Stream rate in milliseconds: 1s = 1,000,000ms
+//Stream rate in microseconds: 1s = 1,000,000ms
 static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 	{ .period_us = 1000000, .last_time_us = 0, .send_function = mavlink_stream_heartbeat },
 	{ .period_us = 5000000, .last_time_us = 0, .send_function = mavlink_stream_sys_status },
