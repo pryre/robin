@@ -379,6 +379,32 @@ static inline uint16_t mavlink_prepare_param_value(uint8_t *buffer, uint32_t ind
 	return mavlink_msg_to_send_buffer(buffer, &msg);
 }
 
+static inline uint16_t mavlink_prepare_statustext(uint8_t *buffer, uint8_t severity, char* text) {
+	mavlink_message_t msg;
+
+	mavlink_msg_statustext_pack(mavlink_system.sysid,
+								 mavlink_system.compid,
+								 &msg,
+								 severity,
+								 text);
+
+	return mavlink_msg_to_send_buffer(buffer, &msg);
+}
+
+static inline bool mavlink_queue_notice(char* text) {
+	bool success = false;
+
+	if( check_lpq_space_free() ) {
+		uint8_t i = get_lpq_next_slot();
+		_low_priority_queue.buffer_len[i] = mavlink_prepare_statustext(_low_priority_queue.buffer[i], MAV_SEVERITY_NOTICE, text);
+		_low_priority_queue.queued_message_count++;
+
+		success = true;
+	}
+
+	return success;
+}
+
 //==-- List of supported mavlink messages
 	//o Optional
 	//- Needed

@@ -6,11 +6,6 @@
 #include "params.h"
 #include "mixer.h"
 #include "fix16.h"
-/*
-#include "mavlink.h"
-#include "mavlink_param.h"
-#include "mavlink_stream.h"
-*/
 
 // global variable definitions
 params_t _params;
@@ -73,10 +68,19 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_STREAM_SERVO_OUTPUT_RAW_RATE, "STRM_SERVO", 50);
 
 	//==-- Sensors
-	init_param_int(PARAM_DIFF_PRESS_UPDATE, "DIFF_PRESS_UP", 0); // us
-	init_param_int(PARAM_BARO_UPDATE, "BARO_UPDATE", 0);
-	init_param_int(PARAM_SONAR_UPDATE, "SONAR_UPDATE", 0);
-	init_param_int(PARAM_MAG_UPDATE, "MAG_UPDATE", 20000);
+	//All params here in us
+	//TODO: Double check which is used here
+	init_param_int(PARAM_SENSOR_DIFF_PRESS_UPDATE, "UPDATE_DIFF_P", 0);
+	init_param_int(PARAM_SENSOR_BARO_UPDATE, "UPDATE_BARO", 0);
+	init_param_int(PARAM_SENSOR_SONAR_UPDATE, "UPDATE_SONAR", 0);
+	init_param_int(PARAM_SENSOR_MAG_UPDATE, "UPDATE_MAG", 0);
+	init_param_int(PARAM_SENSOR_OFFB_CTRL_UPDATE, "UPDATE_OFFB_CTRL", 0);
+
+	init_param_int(PARAM_SENSOR_DIFF_PRESS_TIMEOUT, "TIMEOUT_DIFF_P", 20000);
+	init_param_int(PARAM_SENSOR_BARO_TIMEOUT, "TIMEOUT_BARO", 20000);
+	init_param_int(PARAM_SENSOR_SONAR_TIMEOUT, "TIMEOUT_SONAR", 20000);
+	init_param_int(PARAM_SENSOR_MAG_TIMEOUT, "TIMEOUT_MAG", 20000);
+	init_param_int(PARAM_SENSOR_OFFB_CTRL_TIMEOUT, "TIMEOUT_OFFB_CTRL", 50000);
 
 	//==-- Estimator
 	init_param_int(PARAM_INIT_TIME, "FILTER_INIT_T", 3000); // ms

@@ -36,6 +36,10 @@ void safety_init() {
 	_system_status.sensors.sonar.last_read = 0;
 	_system_status.sensors.sonar.count = 0;
 	strncpy(_system_status.sensors.sonar.name, "Sonar", 24);
+
+	//TODO:
+		//Barometer
+		//Diff Pressure
 }
 
 void safety_update( timeout_status_t *sensor, uint32_t stream_count ) {
@@ -45,10 +49,10 @@ void safety_update( timeout_status_t *sensor, uint32_t stream_count ) {
 	if( ( sensor->health == SYSTEM_HEALTH_TIMEOUT ) && ( sensor->count > stream_count ) ) {
 		sensor->health = SYSTEM_HEALTH_OK;
 
-		//TODO: Needs to be buffered
-		char text[50] = "[SENSOR] Connected: ";
-		strncat(text, sensor->name, 29);
-		mavlink_send_statustext_notice(MAV_SEVERITY_NOTICE, &text[0]);
+		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Connected: ";
+		strncat(text, sensor->name, (MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 20) );	//Magic number is size of the message start
+		//mavlink_send_statustext_notice(MAV_SEVERITY_NOTICE, &text[0]);
+		mavlink_queue_notice( &text[0] );
 	} else if( sensor->health == SYSTEM_HEALTH_UNKNOWN ) {
 		sensor->health = SYSTEM_HEALTH_TIMEOUT;
 	}
@@ -59,15 +63,17 @@ static void safety_check( timeout_status_t *sensor, uint32_t time_now, uint32_t 
 		sensor->health = SYSTEM_HEALTH_TIMEOUT;
 		sensor->count = 0;
 
-		//TODO: Needs to be buffered
-		char text[50] = "[SENSOR] Timeout: ";
-		strncat(text, sensor->name, 31);
-		mavlink_send_statustext_notice(MAV_SEVERITY_NOTICE, &text[0]);
+		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Timeout: ";
+		strncat(text, sensor->name, (MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 18) );	//Magic number is size of the message start
+		//mavlink_send_statustext_notice(MAV_SEVERITY_NOTICE, &text[0]);
+		mavlink_queue_notice( &text[0] );
 	}
 }
 
 void safety_run( uint32_t time_now ) {
-	safety_check(&_system_status.mavlink.offboard_control, time_now, 100000);	//TODO: Use params here
+	safety_check( &_system_status.mavlink.offboard_control, time_now, get_param_int(PARAM_SENSOR_OFFB_CTRL_TIMEOUT) );
+
+	//TODO: Need to do more checks here!
 }
 
 #ifdef __cplusplus
