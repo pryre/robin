@@ -156,14 +156,13 @@ int32_t _request_all_params;
 mavlink_queue_t _low_priority_queue;
 
 static void mavlink_transmit_low_priority() {
+	//TODO: Should be a better place for this
 	if(_request_all_params >= 0) {
-		if(check_lpq_space_free()) {	//Don't flood the buffer
-			//Insert the new message
-			uint8_t i = get_lpq_next_slot();
-			_low_priority_queue.buffer_len[i] = mavlink_prepare_param_value(_low_priority_queue.buffer[i], _request_all_params);
-			_low_priority_queue.queued_message_count++;
+		mavlink_message_t msg;
+		mavlink_prepare_param_value(&msg, _request_all_params);
 
-			//
+		//Don't flood the buffer
+		if(lpq_queue_msg(MAVLINK_COMM_0, &msg)) {	//TODO: should be for the port that requested params, not this port
 			_request_all_params++;
 
 			if(_request_all_params >= PARAMS_COUNT) {
@@ -179,8 +178,7 @@ static void mavlink_transmit_low_priority() {
 
 		//TODO: Make this smart so it sends only to the channel that requested it
 		for (i = 0; i < _low_priority_queue.buffer_len[_low_priority_queue.queue_position]; i++) {
-			comm_send_ch(MAVLINK_COMM_0, _low_priority_queue.buffer[_low_priority_queue.queue_position][i]);
-			comm_send_ch(MAVLINK_COMM_1, _low_priority_queue.buffer[_low_priority_queue.queue_position][i]);
+			comm_send_ch(_low_priority_queue.buffer_comm_port[_low_priority_queue.queue_position], _low_priority_queue.buffer[_low_priority_queue.queue_position]);
 		}
 
 		//Move the queue along

@@ -226,12 +226,9 @@ bool sensors_calibrate(void) {
 
 	//If there are no longer any sensors to calibrate
 	if(_sensor_calibration == SENSOR_CAL_NONE) {
-		//Inform the GCS that it has been completed
-		if(check_lpq_space_free()) {
-			uint8_t i = get_lpq_next_slot();
-			_low_priority_queue.buffer_len[i] = mavlink_prepare_command_ack(_low_priority_queue.buffer[i], MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_ACCEPTED);
-			_low_priority_queue.queued_message_count++;
-		}
+		mavlink_message_t msg;
+		mavlink_prepare_command_ack(&msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_ACCEPTED);
+		lpq_queue_msg(MAVLINK_COMM_0, &msg);	//TODO: Select correct port
 	}
 
 	return !_sensor_calibration;

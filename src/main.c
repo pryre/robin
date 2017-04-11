@@ -10,6 +10,7 @@
 #include "mixer.h"
 
 #include "mavlink/mavlink_types.h"
+#include "mavlink_system.h"
 #include "mavlink_receive.h"
 #include "mavlink_transmit.h"
 

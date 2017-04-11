@@ -1,10 +1,14 @@
 #pragma once
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
-#define LOW_PRIORITY_QUEUE_SIZE 10
+#define LOW_PRIORITY_QUEUE_SIZE 16
 
 #include "mavlink/mavlink_types.h"
 #include "breezystm32.h"
+#include "gpio.h"
+#include "serial.h"
+#include "serial_uart.h"
+
 #include "fix16.h"
 #include "params.h"
 #include "safety.h"
@@ -26,6 +30,7 @@
  */
 
 extern int32_t _request_all_params;
+extern serialPort_t * Serial2;
 
 mavlink_system_t mavlink_system;
 system_status_t _system_status;
@@ -62,12 +67,26 @@ static inline void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 }
 
 #include "mavlink/common/mavlink.h"
+//==-- Transmit arbitrary message to port
+static inline void mavlink_transmit(uint8_t port, mavlink_message_t *msg) {
+    //TODO: Figure out if there's a way that will allow arbitrary message sending without knowing min lenght, etc.
+	//HERE!
+	mavlink_finalize_message_chan(msg, mavlink_system.sysid, mavlink_system.cmopid, port, MAVLINK_MSG_ID_AUTOPILOT_VERSION_MIN_LEN, MAVLINK_MSG_ID_AUTOPILOT_VERSION_LEN, MAVLINK_MSG_ID_AUTOPILOT_VERSION_CRC);
+}
+
+//==-- Set up in advance for error messages
+static inline void mavlink_send_statustext_notice(uint8_t port, uint8_t severity, char* text) {
+	mavlink_msg_statustext_send(port,
+								severity,
+								&text[0]);
+}
 
 //==-- Low priority message queue
-
 typedef struct {
-	uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE][MAVLINK_MAX_PACKET_LEN];
-	uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE];
+	//uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE][MAVLINK_MAX_PACKET_LEN];
+	//uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE];
+	mavlink_message_t buffer[LOW_PRIORITY_QUEUE_SIZE];
+	uint8_t buffer_comm_port[LOW_PRIORITY_QUEUE_SIZE];
 	uint16_t queue_position;
 	uint16_t queued_message_count;
 } mavlink_queue_t;
@@ -86,10 +105,8 @@ static inline uint16_t get_lpq_next_slot(void) {
 	return next_slot;
 }
 
-
 static inline bool check_lpq_space_free(void) {
 	//If the count is at the queue size limit, return false
-	//TODO: Have an error check here to alert if this overflows
 	return (_low_priority_queue.queued_message_count < LOW_PRIORITY_QUEUE_SIZE);
 }
 
@@ -103,33 +120,21 @@ static inline void remove_current_lpq_message(void) {
 		_low_priority_queue.queued_message_count--;
 }
 
+static inline bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg) {
+	bool success = false;
 
-//TODO: Move this lower
-//==-- Sends a debug parameter through the lpq
-static inline uint16_t mavlink_prepare_debug(uint8_t *buffer, uint32_t stamp, uint8_t index, uint32_t value) {
-	mavlink_message_t msg;
+	if( check_lpq_space_free() ) {
+		uint8_t i = get_lpq_next_slot();
+		_low_priority_queue.buffer[i] = *msg;	//Copy message struct data to buffer;
+		_low_priority_queue.buffer_comm_port[i] = port;
+		_low_priority_queue.queued_message_count++;
 
-	union {
-		float f;
-		uint32_t i;
-	} u;	//The bytes are translated to the right unit on receiving, but need to be sent as a "float"
+		success = true;
+	} else {
+		mavlink_send_statustext_notice(port, MAV_SEVERITY_ERROR, "[COMMS] LPQ message dropped!");
+	}
 
-	u.i = value;
-
-	mavlink_msg_debug_pack(mavlink_system.sysid,
-							mavlink_system.compid,
-							&msg,
-							stamp,	//Timestamo
-							index,	//Variable index
-							u.f);	//Value (always as float)
-
-	return mavlink_msg_to_send_buffer(buffer, &msg);
-}
-
-static inline void mavlink_send_statustext_notice(uint8_t severity, char* text) {
-	mavlink_msg_statustext_send(MAVLINK_COMM_0,
-								severity,
-								&text[0]);
+	return success;
 }
 
 //==-- Sends
@@ -367,7 +372,7 @@ static inline void mavlink_stream_servo_output_raw(void) {
 //==-- Low Priority Messages
 
 //==-- Sends the autopilot version details
-static inline uint16_t mavlink_prepare_autopilot_version(uint8_t *buffer) {
+static inline void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 	const uint64_t capabilities = MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT +
 									MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET +
 									MAV_PROTOCOL_CAPABILITY_SET_ACTUATOR_TARGET +
@@ -375,11 +380,9 @@ static inline uint16_t mavlink_prepare_autopilot_version(uint8_t *buffer) {
 
 	const uint8_t blank_array[8] = {0,0,0,0,0,0,0,0};
 
-	mavlink_message_t msg;
-
 	mavlink_msg_autopilot_version_pack(mavlink_system.sysid,
 										mavlink_system.compid,
-										&msg,
+										msg,
 										capabilities,
 										get_param_int(PARAM_VERSION_SOFTWARE),
 										0,
@@ -391,27 +394,21 @@ static inline uint16_t mavlink_prepare_autopilot_version(uint8_t *buffer) {
 										0x10c4,	//TODO: This is the serial vendor and product ID, should be dynamic?
 										0xea60,
 										U_ID_0);
-
-	return mavlink_msg_to_send_buffer(buffer, &msg);
 }
 
 //==-- Sends the autopilot version details
-static inline uint16_t mavlink_prepare_command_ack(uint8_t *buffer, uint16_t command, uint8_t result) {
-	mavlink_message_t msg;
+static inline void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result) {
 	mavlink_msg_command_ack_pack(mavlink_system.sysid,
 										mavlink_system.compid,
-										&msg,
+										msg,
 										command,
 										result);
-
-	return mavlink_msg_to_send_buffer(buffer, &msg);
 }
 
 //==-- Sends the requested parameter
-static inline uint16_t mavlink_prepare_param_value(uint8_t *buffer, uint32_t index) {
+static inline void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index) {
 	char param_name[16];
 	uint8_t param_type = 0;
-	mavlink_message_t msg;
 
 	union {
 		float f;
@@ -433,40 +430,67 @@ static inline uint16_t mavlink_prepare_param_value(uint8_t *buffer, uint32_t ind
 
 	mavlink_msg_param_value_pack(mavlink_system.sysid,
 										mavlink_system.compid,
-										&msg,
+										msg,
 										param_name,		//String of name
 										u.f,			//Value (always as float)
 										param_type,		//From MAV_PARAM_TYPE
 										PARAMS_COUNT,	//Total number of parameters
 										index);
-
-	return mavlink_msg_to_send_buffer(buffer, &msg);
 }
 
-static inline uint16_t mavlink_prepare_statustext(uint8_t *buffer, uint8_t severity, char* text) {
-	mavlink_message_t msg;
-
+static inline void mavlink_prepare_statustext(mavlink_message_t *msg, uint8_t severity, char* text) {
 	mavlink_msg_statustext_pack(mavlink_system.sysid,
 								 mavlink_system.compid,
-								 &msg,
+								 msg,
 								 severity,
 								 text);
-
-	return mavlink_msg_to_send_buffer(buffer, &msg);
 }
 
+//TODO:This can be done better for sure
 static inline bool mavlink_queue_notice(char* text) {
 	bool success = false;
+
+	mavlink_message_t msg;
+	mavlink_prepare_statustext(&msg, MAV_SEVERITY_NOTICE, text);
+	lpq_queue_msg(MAVLINK_COMM_0, &msg);
+	lpq_queue_msg(MAVLINK_COMM_1, &msg);
+
+/*	if( check_lpq_space_free() ) {
+		uint8_t i = get_lpq_next_slot();
+		_low_priority_queue.buffer_len[i] = mavlink_prepare_statustext(_low_priority_queue.buffer[i], MAV_SEVERITY_NOTICE, text);
+		_low_priority_queue.buffer_comm_port[i] = MAVLINK_COMM_0;
+		_low_priority_queue.queued_message_count++;
+
+		success |= true;
+	}
 
 	if( check_lpq_space_free() ) {
 		uint8_t i = get_lpq_next_slot();
 		_low_priority_queue.buffer_len[i] = mavlink_prepare_statustext(_low_priority_queue.buffer[i], MAV_SEVERITY_NOTICE, text);
+		_low_priority_queue.buffer_comm_port[i] = MAVLINK_COMM_1;
 		_low_priority_queue.queued_message_count++;
 
-		success = true;
+		success &= true;
 	}
-
+*/
 	return success;
+}
+
+//==-- Sends a debug parameter through the lpq
+static inline void mavlink_prepare_debug(mavlink_message_t *msg, uint32_t stamp, uint8_t index, uint32_t value) {
+	union {
+		float f;
+		uint32_t i;
+	} u;	//The bytes are translated to the right unit on receiving, but need to be sent as a "float"
+
+	u.i = value;
+
+	mavlink_msg_debug_pack(mavlink_system.sysid,
+							mavlink_system.compid,
+							msg,
+							stamp,	//Timestamo
+							index,	//Variable index
+							u.f);	//Value (always as float)
 }
 
 //==-- List of supported mavlink messages

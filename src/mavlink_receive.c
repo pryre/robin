@@ -50,11 +50,9 @@ static void communication_decode(uint8_t port, uint8_t c) {
 							index = lookup_param_id(param_id); //TODO: UNTESTED
 						}
 
-						if(check_lpq_space_free()) {
-							uint8_t i = get_lpq_next_slot();
-							_low_priority_queue.buffer_len[i] = mavlink_prepare_param_value(_low_priority_queue.buffer[i], index);
-							_low_priority_queue.queued_message_count++;
-						}
+						mavlink_message_t msg;
+						mavlink_prepare_param_value(&msg, index);
+						lpq_queue_msg(port, &msg);
 					}
 				} //Else this message is for someone else
 
@@ -96,11 +94,9 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						}
 
 						if(set_complete) {
-							if(check_lpq_space_free()) {
-								uint8_t i = get_lpq_next_slot();
-								_low_priority_queue.buffer_len[i] = mavlink_prepare_param_value(_low_priority_queue.buffer[i], index);
-								_low_priority_queue.queued_message_count++;
-							}
+							mavlink_message_t msg;
+							mavlink_prepare_param_value(&msg, index);
+							lpq_queue_msg(port, &msg);
 						}
 					}
 				} //Else this message is for someone else
@@ -143,11 +139,10 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 						break;
 					case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES:
-						if(check_lpq_space_free()) {
-							uint8_t i = get_lpq_next_slot();
-							_low_priority_queue.buffer_len[i] = mavlink_prepare_autopilot_version(_low_priority_queue.buffer[i]);
-							_low_priority_queue.queued_message_count++;
-						}
+						mavlink_message_t msg;
+						mavlink_prepare_autopilot_version(&msg);
+						lpq_queue_msg(port, &msg);
+
 						break;
 					case MAV_CMD_PREFLIGHT_STORAGE:
 						need_ack = true;
@@ -212,11 +207,9 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				}
 
 				if(need_ack) {
-					if(check_lpq_space_free()) {
-						uint8_t i = get_lpq_next_slot();
-						_low_priority_queue.buffer_len[i] = mavlink_prepare_command_ack(_low_priority_queue.buffer[i], command, command_result);
-						_low_priority_queue.queued_message_count++;
-					}
+					mavlink_message_t msg;
+					mavlink_prepare_command_ack(&msg, command, command_result);
+					lpq_queue_msg(port, &msg);
 				}
 
 				break;
