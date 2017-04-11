@@ -176,8 +176,12 @@ static void mavlink_transmit_low_priority() {
 	if(_low_priority_queue.queued_message_count > 0) {
 		//Transmit the message
 		uint16_t i;
-		for (i = 0; i < _low_priority_queue.buffer_len[_low_priority_queue.queue_position]; i++)
+
+		//TODO: Make this smart so it sends only to the channel that requested it
+		for (i = 0; i < _low_priority_queue.buffer_len[_low_priority_queue.queue_position]; i++) {
 			comm_send_ch(MAVLINK_COMM_0, _low_priority_queue.buffer[_low_priority_queue.queue_position][i]);
+			comm_send_ch(MAVLINK_COMM_1, _low_priority_queue.buffer[_low_priority_queue.queue_position][i]);
+		}
 
 		//Move the queue along
 		remove_current_lpq_message();

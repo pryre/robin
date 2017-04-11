@@ -14,6 +14,7 @@
 #include "mavlink_transmit.h"
 
 serialPort_t * Serial1;
+serialPort_t * Serial2;
 extern void SetSysClock(bool overclock);
 uint8_t _system_operation_control;
 volatile bool imu_interrupt;
@@ -40,6 +41,7 @@ int main(void) {
 	//This means we can send ~115 bytes per loop without any risk of a buffer overflow
 	//As mavlink can have max messages of 250+ bytes, we want to send as little as possible each loop to allow catchup
     Serial1 = uartOpen(USART1, NULL, get_param_int(PARAM_BAUD_RATE), MODE_RXTX, SERIAL_NOT_INVERTED);
+	Serial2 = uartOpen(USART2, NULL, get_param_int(PARAM_BAUD_RATE), MODE_RXTX, SERIAL_NOT_INVERTED);	//TODO: Allow this to have a difference baud rate through params
 
 	_system_status.state = MAV_STATE_STANDBY;
 	_system_status.mode = MAV_MODE_STABILIZE_DISARMED;
