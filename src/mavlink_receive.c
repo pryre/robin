@@ -50,9 +50,9 @@ static void communication_decode(uint8_t port, uint8_t c) {
 							index = lookup_param_id(param_id); //TODO: UNTESTED
 						}
 
-						mavlink_message_t msg;
-						mavlink_prepare_param_value(&msg, index);
-						lpq_queue_msg(port, &msg);
+						mavlink_message_t msg_out;
+						mavlink_prepare_param_value(&msg_out, index);
+						lpq_queue_msg(port, &msg_out);
 					}
 				} //Else this message is for someone else
 
@@ -94,9 +94,9 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						}
 
 						if(set_complete) {
-							mavlink_message_t msg;
-							mavlink_prepare_param_value(&msg, index);
-							lpq_queue_msg(port, &msg);
+							mavlink_message_t msg_out;
+							mavlink_prepare_param_value(&msg_out, index);
+							lpq_queue_msg(port, &msg_out);
 						}
 					}
 				} //Else this message is for someone else
@@ -110,7 +110,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				uint8_t command_result = MAV_RESULT_FAILED;
 
 				switch(command) {
-					case MAV_CMD_PREFLIGHT_CALIBRATION:
+					case MAV_CMD_PREFLIGHT_CALIBRATION: {
 						if(_system_status.state == MAV_STATE_STANDBY) {
 							_system_status.state = MAV_STATE_CALIBRATING;
 
@@ -138,13 +138,15 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 
 						break;
-					case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES:
-						mavlink_message_t msg;
-						mavlink_prepare_autopilot_version(&msg);
-						lpq_queue_msg(port, &msg);
+					}
+					case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES: {
+						mavlink_message_t msg_out;
+						mavlink_prepare_autopilot_version(&msg_out);
+						lpq_queue_msg(port, &msg_out);
 
 						break;
-					case MAV_CMD_PREFLIGHT_STORAGE:
+					}
+					case MAV_CMD_PREFLIGHT_STORAGE: {
 						need_ack = true;
 
 						switch((int)mavlink_msg_command_long_get_param1(&msg)) {
@@ -180,7 +182,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						}
 
 						break;
-					case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
+					}
+					case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN: {
 						need_ack = true;
 
 						//TODO: Make sure mav is in preflight mode
@@ -199,17 +202,19 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						}
 
 						break;
-						//TODO: Handle other cases?
-					default:
+					}
+					//TODO: Handle other cases?
+					default: {
 						need_ack = true;
 						command_result = MAV_RESULT_UNSUPPORTED;
 						break;
+					}
 				}
 
 				if(need_ack) {
-					mavlink_message_t msg;
-					mavlink_prepare_command_ack(&msg, command, command_result);
-					lpq_queue_msg(port, &msg);
+					mavlink_message_t msg_out;
+					mavlink_prepare_command_ack(&msg_out, command, command_result);
+					lpq_queue_msg(port, &msg_out);
 				}
 
 				break;

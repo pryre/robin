@@ -67,12 +67,6 @@ static inline void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 }
 
 #include "mavlink/common/mavlink.h"
-//==-- Transmit arbitrary message to port
-static inline void mavlink_transmit(uint8_t port, mavlink_message_t *msg) {
-    //TODO: Figure out if there's a way that will allow arbitrary message sending without knowing min lenght, etc.
-	//HERE!
-	mavlink_finalize_message_chan(msg, mavlink_system.sysid, mavlink_system.cmopid, port, MAVLINK_MSG_ID_AUTOPILOT_VERSION_MIN_LEN, MAVLINK_MSG_ID_AUTOPILOT_VERSION_LEN, MAVLINK_MSG_ID_AUTOPILOT_VERSION_CRC);
-}
 
 //==-- Set up in advance for error messages
 static inline void mavlink_send_statustext_notice(uint8_t port, uint8_t severity, char* text) {
@@ -83,10 +77,9 @@ static inline void mavlink_send_statustext_notice(uint8_t port, uint8_t severity
 
 //==-- Low priority message queue
 typedef struct {
-	//uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE][MAVLINK_MAX_PACKET_LEN];
-	//uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE];
-	mavlink_message_t buffer[LOW_PRIORITY_QUEUE_SIZE];
-	uint8_t buffer_comm_port[LOW_PRIORITY_QUEUE_SIZE];
+	uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE][MAVLINK_MAX_PACKET_LEN];
+	uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE];
+	uint8_t buffer_port[LOW_PRIORITY_QUEUE_SIZE];
 	uint16_t queue_position;
 	uint16_t queued_message_count;
 } mavlink_queue_t;
@@ -125,8 +118,8 @@ static inline bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg) {
 
 	if( check_lpq_space_free() ) {
 		uint8_t i = get_lpq_next_slot();
-		_low_priority_queue.buffer[i] = *msg;	//Copy message struct data to buffer;
-		_low_priority_queue.buffer_comm_port[i] = port;
+		_low_priority_queue.buffer_len[i] = mavlink_msg_to_send_buffer(_low_priority_queue.buffer[i], msg);	//Copy message struct data to buffer;
+		_low_priority_queue.buffer_port[i] = port;
 		_low_priority_queue.queued_message_count++;
 
 		success = true;
@@ -374,35 +367,35 @@ static inline void mavlink_stream_servo_output_raw(void) {
 //==-- Sends the autopilot version details
 static inline void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 	const uint64_t capabilities = MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT +
-									MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET +
-									MAV_PROTOCOL_CAPABILITY_SET_ACTUATOR_TARGET +
-									MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION;
+								  MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET +
+								  MAV_PROTOCOL_CAPABILITY_SET_ACTUATOR_TARGET +
+								  MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION;
 
 	const uint8_t blank_array[8] = {0,0,0,0,0,0,0,0};
 
 	mavlink_msg_autopilot_version_pack(mavlink_system.sysid,
-										mavlink_system.compid,
-										msg,
-										capabilities,
-										get_param_int(PARAM_VERSION_SOFTWARE),
-										0,
-										get_param_int(PARAM_VERSION_FIRMWARE),
-										get_param_int(PARAM_BOARD_REVISION),
-										blank_array,	//TODO: This should probably be a commit as well
-										blank_array,
-										FW_HASH,
-										0x10c4,	//TODO: This is the serial vendor and product ID, should be dynamic?
-										0xea60,
-										U_ID_0);
+									   mavlink_system.compid,
+									   msg,
+									   capabilities,
+									   get_param_int(PARAM_VERSION_SOFTWARE),
+									   0,
+									   get_param_int(PARAM_VERSION_FIRMWARE),
+									   get_param_int(PARAM_BOARD_REVISION),
+									   blank_array,	//TODO: This should probably be a commit as well
+									   blank_array,
+									   FW_HASH,
+									   0x10c4,	//TODO: This is the serial vendor and product ID, should be dynamic?
+									   0xea60,
+									   U_ID_0);
 }
 
 //==-- Sends the autopilot version details
 static inline void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result) {
 	mavlink_msg_command_ack_pack(mavlink_system.sysid,
-										mavlink_system.compid,
-										msg,
-										command,
-										result);
+								 mavlink_system.compid,
+								 msg,
+								 command,
+								 result);
 }
 
 //==-- Sends the requested parameter
@@ -429,13 +422,13 @@ static inline void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t 
 	memcpy(param_name, _params.names[index], MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
 
 	mavlink_msg_param_value_pack(mavlink_system.sysid,
-										mavlink_system.compid,
-										msg,
-										param_name,		//String of name
-										u.f,			//Value (always as float)
-										param_type,		//From MAV_PARAM_TYPE
-										PARAMS_COUNT,	//Total number of parameters
-										index);
+								 mavlink_system.compid,
+								 msg,
+								 param_name,		//String of name
+								 u.f,			//Value (always as float)
+								 param_type,		//From MAV_PARAM_TYPE
+								 PARAMS_COUNT,	//Total number of parameters
+								 index);
 }
 
 static inline void mavlink_prepare_statustext(mavlink_message_t *msg, uint8_t severity, char* text) {
