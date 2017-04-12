@@ -178,7 +178,6 @@ static void mavlink_transmit_low_priority() {
 		uint16_t buffer_len = _low_priority_queue.buffer_len[_low_priority_queue.queue_position];
 		uint8_t buffer_port = _low_priority_queue.buffer_port[_low_priority_queue.queue_position];
 
-		//TODO: Make this smart so it sends only to the channel that requested it
 		for (i = 0; i < buffer_len; i++) {
 			comm_send_ch(buffer_port, _low_priority_queue.buffer[_low_priority_queue.queue_position][i]);
 		}
