@@ -5,6 +5,8 @@
 #include "controller.h"
 #include "breezystm32.h"
 
+#include <stdio.h>
+
 int32_t _request_all_params;
 uint8_t _system_operation_control;
 uint8_t _sensor_calibration;
@@ -220,27 +222,59 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				break;
 			}
 			case MAVLINK_MSG_ID_SET_ATTITUDE_TARGET: {
-				//TODO: Check timestamp was recent
-				//TODO: Check target system
-				//TODO: Check target component
-				_command_input.input_mask = mavlink_msg_set_attitude_target_get_type_mask(&msg);
+				if( (mavlink_msg_set_attitude_target_get_target_system(&msg) == mavlink_system.sysid) &&
+					(mavlink_msg_set_attitude_target_get_target_system(&msg) == mavlink_system.compid) ) {
 
-				_command_input.r = fix16_from_float(mavlink_msg_set_attitude_target_get_body_roll_rate(&msg));
-				_command_input.p = fix16_from_float(mavlink_msg_set_attitude_target_get_body_pitch_rate(&msg));
-				_command_input.y = fix16_from_float(mavlink_msg_set_attitude_target_get_body_yaw_rate(&msg));
+					//TODO: Check timestamp was recent
+					_command_input.input_mask = mavlink_msg_set_attitude_target_get_type_mask(&msg);
 
-				//TODO: Check this is correct
-				float qt[4];
-				if(mavlink_msg_set_attitude_target_get_q(&msg, &qt[0]) == 4) {
-					_command_input.q.a = fix16_from_float(qt[0]);
-					_command_input.q.b = fix16_from_float(qt[1]);
-					_command_input.q.c = fix16_from_float(qt[2]);
-					_command_input.q.d = fix16_from_float(qt[3]);
+					_command_input.r = fix16_from_float(mavlink_msg_set_attitude_target_get_body_roll_rate(&msg));
+					_command_input.p = fix16_from_float(mavlink_msg_set_attitude_target_get_body_pitch_rate(&msg));
+					_command_input.y = fix16_from_float(mavlink_msg_set_attitude_target_get_body_yaw_rate(&msg));
+
+					//TODO: Check this is correct
+					float qt[4];
+					if(mavlink_msg_set_attitude_target_get_q(&msg, &qt[0]) == 4) {
+						_command_input.q.a = fix16_from_float(qt[0]);
+						_command_input.q.b = fix16_from_float(qt[1]);
+						_command_input.q.c = fix16_from_float(qt[2]);
+						_command_input.q.d = fix16_from_float(qt[3]);
+					}
+
+					_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
+
+					safety_update(&_system_status.mavlink.offboard_control, 100);	//TODO: Use params here
 				}
 
-				_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
+				break;
+			}
+			case MAVLINK_MSG_ID_TIMESYNC: {
+				mavlink_timesync_t tsync;
+				mavlink_msg_timesync_decode(&msg, &tsync);
 
-				safety_update(&_system_status.mavlink.offboard_control, 100);	//TODO: Use params here
+				//Pulled from px4 firmware
+				uint64_t now_ns = micros() * 1000LL ;
+				int64_t time_offset_new = _sensors.clock.rt_offset_ns;
+
+				if (tsync.tc1 == 0) {
+					mavlink_send_timesync(port, now_ns, tsync.ts1);
+				} else if (tsync.tc1 > 0) {
+					int64_t offset_ns = (int64_t)(tsync.ts1 + now_ns - tsync.tc1 * 2) / 2 ;
+					int64_t dt = _sensors.clock.rt_offset_ns - offset_ns;
+
+					if ( abs(dt) > 10000000LL ) { // 10 millisecond skew
+						time_offset_new = offset_ns;
+
+						//char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+						//snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[SENSOR] Hard setting skew: %lld", time_offset_new);
+						//mavlink_queue_notice( &text[0] );
+					} else {
+						//Filter the new time offset
+						time_offset_new = sensors_clock_smooth_time_offset(_sensors.clock.rt_offset_ns, offset_ns);
+					}
+				}
+
+				_sensors.clock.rt_offset_ns = time_offset_new;
 
 				break;
 			}

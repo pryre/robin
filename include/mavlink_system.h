@@ -68,11 +68,17 @@ static inline void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 
 #include "mavlink/common/mavlink.h"
 
-//==-- Set up in advance for error messages
+//==-- On-demand messages
 static inline void mavlink_send_statustext_notice(uint8_t port, uint8_t severity, char* text) {
 	mavlink_msg_statustext_send(port,
 								severity,
 								&text[0]);
+}
+
+static inline void mavlink_send_timesync(uint8_t port, uint64_t tc1, uint64_t ts1) {
+	mavlink_msg_timesync_send(port,
+							  tc1,
+							  ts1);
 }
 
 //==-- Low priority message queue
@@ -152,17 +158,7 @@ static inline void mavlink_stream_heartbeat(void) {
 	//We don't use custom_mode
 	//TODO: MAV_TYPE should be dynamically set
 	mavlink_msg_heartbeat_send(MAVLINK_COMM_0, MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_GENERIC, mav_base_mode, 0, _system_status.state);
-	mavlink_msg_heartbeat_send(MAVLINK_COMM_1, MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_GENERIC, mav_base_mode, 0, _system_status.state);
-	LED1_TOGGLE;
-
-	/*	//XXX: Quick hack to send out a value once a second
-	if(check_lpq_space_free()) {	//Don't flood the buffer
-		//Insert the new message
-		uint8_t i = get_lpq_next_slot();
-		_low_priority_queue.buffer_len[i] = mavlink_prepare_debug(_low_priority_queue.buffer[i], micros(), 0, fix16_from_int(-2));
-		_low_priority_queue.queued_message_count++;
-	}
-	*/
+	LED1_TOGGLE;	//TODO: should be somwhere else
 }
 
 //TODO: Quite a lot here
@@ -178,9 +174,9 @@ static inline void mavlink_stream_sys_status(void) {
 	uint16_t drop_rate_comm = 0;
 	uint16_t errors_comm = 0;
 	uint16_t errors_count1 = _low_priority_queue.queued_message_count;
-	uint16_t errors_count2 = _low_priority_queue.queue_position;
-	uint16_t errors_count3 = 0;
-	uint16_t errors_count4 = 0;
+	uint16_t errors_count2 = 0;
+	uint16_t errors_count3 = _sensors.clock.min;
+	uint16_t errors_count4 = _sensors.clock.max;
 
 	load = _sensors.clock.average_time/_sensors.clock.counter;
 
@@ -223,21 +219,6 @@ static inline void mavlink_stream_sys_status(void) {
 								errors_count2,
 								errors_count3,
 								errors_count4);
-	//mavlink_msg_sys_status_send(MAVLINK_COMM_0, uint32_t onboard_control_sensors_present, uint32_t onboard_control_sensors_enabled, uint32_t onboard_control_sensors_health, uint16_t load, uint16_t voltage_battery, int16_t current_battery, int8_t battery_remaining, uint16_t drop_rate_comm, uint16_t errors_comm, uint16_t errors_count1, uint16_t errors_count2, uint16_t errors_count3, uint16_t errors_count4)
-	mavlink_msg_sys_status_send(MAVLINK_COMM_1,
-								onboard_control_sensors_present,
-								onboard_control_sensors_enabled,
-								onboard_control_sensors_health,
-								load,
-								voltage_battery,
-								current_battery,
-								battery_remaining,
-								drop_rate_comm,
-								errors_comm,
-								errors_count1,
-								errors_count2,
-								errors_count3,
-								errors_count4);
 }
 
 //==-- Sends the latest IMU reading
@@ -245,18 +226,6 @@ static inline void mavlink_stream_sys_status(void) {
 //TODO: GYRO DOES NOT WORK?
 static inline void mavlink_stream_highres_imu(void) {
 	mavlink_msg_highres_imu_send(MAVLINK_COMM_0,
-									_sensors.imu.time,
-									fix16_to_float(_sensors.imu.accel.x),
-									fix16_to_float(_sensors.imu.accel.y),
-									fix16_to_float(_sensors.imu.accel.z),
-									fix16_to_float(_sensors.imu.gyro.x),
-									fix16_to_float(_sensors.imu.gyro.y),
-									fix16_to_float(_sensors.imu.gyro.z),
-									0, 0, 0,
-									0, 0, 0,
-									0,
-									((1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5)) );
-	mavlink_msg_highres_imu_send(MAVLINK_COMM_1,
 									_sensors.imu.time,
 									fix16_to_float(_sensors.imu.accel.x),
 									fix16_to_float(_sensors.imu.accel.y),
@@ -291,15 +260,6 @@ static inline void mavlink_stream_attitude(void) {
 
 static inline void mavlink_stream_attitude_quaternion(void) {
 	mavlink_msg_attitude_quaternion_send(MAVLINK_COMM_0,
-											_sensors.imu.time,
-											fix16_to_float(_state_estimator.attitude.a),
-											fix16_to_float(_state_estimator.attitude.b),
-											fix16_to_float(_state_estimator.attitude.c),
-											fix16_to_float(_state_estimator.attitude.d),
-											fix16_to_float(_state_estimator.p),
-											fix16_to_float(_state_estimator.q),
-											fix16_to_float(_state_estimator.r));
-	mavlink_msg_attitude_quaternion_send(MAVLINK_COMM_1,
 											_sensors.imu.time,
 											fix16_to_float(_state_estimator.attitude.a),
 											fix16_to_float(_state_estimator.attitude.b),
@@ -349,17 +309,12 @@ static inline void mavlink_stream_servo_output_raw(void) {
 									  _pwm_output[5],
 									  _pwm_output[6],
 									  _pwm_output[7]);
-	mavlink_msg_servo_output_raw_send(MAVLINK_COMM_1,
-									  sensors_clock_ls_get(),
-									  0,	//Port 0
-									  _pwm_output[0],
-									  _pwm_output[1],
-									  _pwm_output[2],
-									  _pwm_output[3],
-									  _pwm_output[4],
-									  _pwm_output[5],
-									  _pwm_output[6],
-									  _pwm_output[7]);
+}
+
+static inline void mavlink_stream_timesync() {
+	mavlink_msg_timesync_send(MAVLINK_COMM_0,
+							  0,
+							  ( (uint64_t)micros() ) * 1000);
 }
 
 //==-- Low Priority Messages

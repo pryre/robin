@@ -31,7 +31,7 @@
 
 typedef struct {
 	bool present;
-	uint32_t start;			//Loop start time
+	volatile uint32_t start;//Loop start time
 	uint32_t end;			//Loop end time
 	uint32_t dt;			//Time sepent this loop
 
@@ -39,13 +39,15 @@ typedef struct {
 	uint32_t average_time;	//Sum of dt
 	uint32_t max;			//Maximum dt so far
 	uint32_t min;			//Minimum dt so far
+
+	int64_t rt_offset_ns;
 } sensor_readings_clock_t;
 
 typedef struct {
 	bool present;
     int16_t accel_raw[3];
     int16_t gyro_raw[3];
-    int16_t temp_raw;
+    volatile int16_t temp_raw;
 
 	v3d accel;		//Vector of accel data
 	v3d gyro;		//Vector of gyro data
@@ -122,7 +124,7 @@ typedef struct {
 	sensor_calibration_accel_data_t accel;
 } sensor_calibration_data_t;
 
-extern volatile bool imu_interrupt;
+extern volatile uint32_t imu_read_time;
 extern uint8_t _sensor_calibration;
 extern sensor_readings_t _sensors;
 extern sensor_calibration_data_t _sensor_cal_data;
@@ -137,6 +139,8 @@ bool sensors_read(void);
 uint32_t sensors_clock_ls_get(void);	//Get time at loop start
 void sensors_clock_ls_set(uint32_t time_us);	//Set time at loop start
 void sensors_clock_update(uint32_t time_us);	//Update the timing variable (used at the end of the loop)
+int64_t sensors_clock_smooth_time_offset(int64_t offset_current, int64_t offset_new);
+uint64_t sensors_clock_rt_get(void);	//Get the current time syncronized real time (good for logging)
 
 bool sensors_update(uint32_t time_us);
 bool sensors_calibrate(void);

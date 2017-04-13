@@ -192,9 +192,9 @@ static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 	{ .period_us = 1000000, .last_time_us = 0, .send_function = mavlink_stream_heartbeat },
 	{ .period_us = 5000000, .last_time_us = 0, .send_function = mavlink_stream_sys_status },
 	{ .period_us = 10000,   .last_time_us = 0, .send_function = mavlink_stream_highres_imu },
-	{ .period_us = 0,  .last_time_us = 0, .send_function = mavlink_stream_attitude },
-	{ .period_us = 20000,  .last_time_us = 0, .send_function = mavlink_stream_attitude_quaternion },
-	{ .period_us = 20000,  .last_time_us = 0, .send_function = mavlink_stream_attitude_target },
+	{ .period_us = 0,       .last_time_us = 0, .send_function = mavlink_stream_attitude },
+	{ .period_us = 20000,   .last_time_us = 0, .send_function = mavlink_stream_attitude_quaternion },
+	{ .period_us = 20000,   .last_time_us = 0, .send_function = mavlink_stream_attitude_target },
 	{ .period_us = 100000,  .last_time_us = 0, .send_function = mavlink_stream_servo_output_raw },
 	/*
 	{ .period_us = 1000,    .last_time_us = 0, .send_function = mavlink_send_imu },
@@ -204,6 +204,7 @@ static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 
 	{ .period_us = 0,       .last_time_us = 0, .send_function = mavlink_send_servo_output_raw },
 	{ .period_us = 0,       .last_time_us = 0, .send_function = mavlink_send_rc_raw },*/
+	{ .period_us = 100000,  .last_time_us = 0, .send_function = mavlink_stream_timesync },
 	{ .period_us = 10000,   .last_time_us = 0, .send_function = mavlink_transmit_low_priority }
 };
 
@@ -226,6 +227,7 @@ bool communication_transmit(uint32_t time_us) {
 			//We only want to send 1 message each loop, otherwise we risk overloading the serial buffer
 			//This will also offset the message streams so they are all staggered
 			message_sent = true;
+
 			break;
 		}
 	}

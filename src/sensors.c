@@ -23,14 +23,14 @@ static int16_t accel_data[3];
 static int16_t gyro_data[3];
 static int16_t temp_data;
 */
-static uint8_t accel_status = 0;
-static uint8_t gyro_status = 0;
-static uint8_t temp_status = 0;
+static volatile uint8_t accel_status = 0;
+static volatile uint8_t gyro_status = 0;
+static volatile uint8_t temp_status = 0;
 sensor_readings_t _sensors;
 uint8_t _sensor_calibration;
 sensor_calibration_data_t _sensor_cal_data;
-volatile bool imu_interrupt;
 
+volatile uint32_t imu_read_time;
 
 //==-- Functions
 static void clock_init(void) {
@@ -41,6 +41,7 @@ static void clock_init(void) {
 	_sensors.clock.end = 0;
 	_sensors.clock.max = 0;
 	_sensors.clock.min = 1000;
+	_sensors.clock.rt_offset_ns = 0;
 }
 
 /*
@@ -61,7 +62,9 @@ static void sonar_init(void) {
 }*/
 
 static void sensors_imu_poll(void) {
-		imu_interrupt = true;
+		//==-- Timing setup get loop time
+		imu_read_time = micros();
+
 		mpu6050_request_async_accel_read(_sensors.imu.accel_raw, &accel_status);
 		mpu6050_request_async_gyro_read(_sensors.imu.gyro_raw, &gyro_status);
 		mpu6050_request_async_temp_read(&(_sensors.imu.temp_raw), &temp_status);
@@ -99,7 +102,6 @@ bool sensors_read(void) {
 
 	//Check IMU status
 	if(accel_status == I2C_JOB_COMPLETE && gyro_status == I2C_JOB_COMPLETE && temp_status == I2C_JOB_COMPLETE) {
-		imu_interrupt = false;	//TODO: There might be a better place to have this
 		imu_job_complete = true;
 		accel_status = I2C_JOB_DEFAULT;
 		gyro_status = I2C_JOB_DEFAULT;
@@ -131,6 +133,20 @@ void sensors_clock_update(uint32_t time_us) {
 	_sensors.clock.counter++;
 	_sensors.clock.max = (_sensors.clock.dt > _sensors.clock.max) ? _sensors.clock.dt : _sensors.clock.max;
 	_sensors.clock.min = (_sensors.clock.dt < _sensors.clock.min) ? _sensors.clock.dt : _sensors.clock.min;
+}
+
+//==-- Low Pass Filter for time offsets
+int64_t sensors_clock_smooth_time_offset(int64_t offset_current, int64_t offset_new) {
+	/* The closer alpha is to 1.0, the faster the moving
+	 * average updates in response to new offset samples.
+	 */
+	//Do this in floating point as fix16_t does not have an easy interface for uint64_t
+	float alpha = fix16_to_float( get_param_fix16( PARAM_TIMESYNC_ALPHA ) );
+	return (int64_t)( alpha * offset_new ) + (int64_t)( ( 1.0f - alpha ) * offset_current );
+}
+
+uint64_t sensors_clock_rt_get(void) {
+	return (uint64_t)( micros() * 1000LL ) + _sensors.clock.rt_offset_ns;
 }
 
 bool sensors_update(uint32_t time_us) {

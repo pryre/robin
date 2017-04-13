@@ -25,6 +25,7 @@ typedef enum {
 	MAVLINK_STREAM_ID_ATTITUDE_QUATERNION,
 	MAVLINK_STREAM_ID_ATTITUDE_TARGET,
 	MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW,
+	MAVLINK_STREAM_ID_TIMESYNC,
 	MAVLINK_STREAM_ID_LOW_PRIORITY,
 	MAVLINK_STREAM_COUNT
 } mavlink_stream_id_t;
@@ -33,5 +34,4 @@ typedef enum {
 bool communication_transmit(uint32_t time_us);
 //void mavlink_stream_set_rate(mavlink_stream_id_t stream_id, uint32_t rate);
 //void mavlink_stream_set_period(mavlink_stream_id_t stream_id, uint32_t period_us);
-//void mavlink_send_heartbeat(void);
 
