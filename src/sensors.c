@@ -41,7 +41,9 @@ static void clock_init(void) {
 	_sensors.clock.end = 0;
 	_sensors.clock.max = 0;
 	_sensors.clock.min = 1000;
+
 	_sensors.clock.rt_offset_ns = 0;
+	_sensors.clock.rt_sync_last = 0;
 }
 
 /*

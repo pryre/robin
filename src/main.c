@@ -92,7 +92,7 @@ void loop(void) {
 	//==-- Send Serial
 	//Check to see if a message has been sent this loop, then see if a message should be sent
 	//Only allow this once per loop due to buffer risks (see serial define above)
-	communication_transmit( imu_read_time );
+	communication_transmit( micros() );
 
 	//==-- Update Sensor Data
 	sensors_update( imu_read_time );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
@@ -150,12 +150,8 @@ void loop(void) {
 	}
 
     //==-- loop time calculation
-
-	//TODO: Move this elsewhere?
 	sensors_clock_update( micros() );
 
-	//==-- Waste remaining time
-	//while( !imu_interrupt );
 
 	//==-- Read sensors for next loop
 	// IMU interrupt can cappen halfway through the processing loop

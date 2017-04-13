@@ -41,6 +41,7 @@ typedef struct {
 	uint32_t min;			//Minimum dt so far
 
 	int64_t rt_offset_ns;
+	uint32_t rt_sync_last;
 } sensor_readings_clock_t;
 
 typedef struct {
@@ -62,6 +63,7 @@ typedef struct {
 	bool present;
 	int16_t pressure;		//Barometer reading
 	int16_t temperature;	//Sensor temperature reading
+	uint32_t time;		//Time measured
 } sensor_readings_barometer_t;
 
 typedef struct {

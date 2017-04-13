@@ -248,26 +248,34 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 				break;
 			}
+			/*
 			case MAVLINK_MSG_ID_TIMESYNC: {
 				mavlink_timesync_t tsync;
 				mavlink_msg_timesync_decode(&msg, &tsync);
 
+				uint32_t now_ms = micros();
+
+				//TODO: Should be in sensors_check()
+				if( (now_ms - _sensors.clock.rt_sync_last) > 500000) {	//There hasn't been a sync in a while
+					_sensors.clock.rt_offset_ns = 0;
+				}
+
 				//Pulled from px4 firmware
-				uint64_t now_ns = micros() * 1000LL ;
+				uint64_t now_ns = now_ms * 1000LL;
 				int64_t time_offset_new = _sensors.clock.rt_offset_ns;
 
 				if (tsync.tc1 == 0) {
 					mavlink_send_timesync(port, now_ns, tsync.ts1);
 				} else if (tsync.tc1 > 0) {
-					int64_t offset_ns = (int64_t)(tsync.ts1 + now_ns - tsync.tc1 * 2) / 2 ;
+					int64_t offset_ns = (int64_t)(tsync.ts1 + now_ns - tsync.tc1 * 2) / 2;
 					int64_t dt = _sensors.clock.rt_offset_ns - offset_ns;
 
 					if ( abs(dt) > 10000000LL ) { // 10 millisecond skew
 						time_offset_new = offset_ns;
 
-						//char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-						//snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[SENSOR] Hard setting skew: %lld", time_offset_new);
-						//mavlink_queue_notice( &text[0] );
+						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+						snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[SENSOR] Hard setting skew: %0.9f", dt / 1e9);
+						mavlink_queue_notice( &text[0] );
 					} else {
 						//Filter the new time offset
 						time_offset_new = sensors_clock_smooth_time_offset(_sensors.clock.rt_offset_ns, offset_ns);
@@ -275,9 +283,11 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				}
 
 				_sensors.clock.rt_offset_ns = time_offset_new;
+				_sensors.clock.rt_sync_last = now_ms;
 
 				break;
 			}
+			*/
 			default:
 				//TODO: Error?
 				//Do nothing
