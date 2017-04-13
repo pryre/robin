@@ -187,6 +187,7 @@ static void mavlink_transmit_low_priority() {
 	}
 }
 
+//TODO: Individual streams for each comm port
 //Stream rate in microseconds: 1s = 1,000,000ms
 static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 	{ .period_us = 1000000, .last_time_us = 0, .send_function = mavlink_stream_heartbeat },
@@ -207,10 +208,6 @@ static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 	{ .period_us = 0,  .last_time_us = 0, .send_function = mavlink_stream_timesync },
 	{ .period_us = 10000,   .last_time_us = 0, .send_function = mavlink_transmit_low_priority }
 };
-
-//static void mavlink_send_stream(uint32_t time_us) {
-
-//}
 
 //This function will send out 1 packet of requested data at a time
 //This is for data that isn't time-sensitive or may need a lot of processing per packet
