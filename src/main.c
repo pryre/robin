@@ -39,8 +39,9 @@ int main(void) {
 	//This is assuming we don't use stop bits
 	//This means we can send ~115 bytes per loop without any risk of a buffer overflow
 	//As mavlink can have max messages of 250+ bytes, we want to send as little as possible each loop to allow catchup
-    Serial1 = uartOpen(USART1, NULL, get_param_int(PARAM_BAUD_RATE), MODE_RXTX, SERIAL_NOT_INVERTED);
-	Serial2 = uartOpen(USART2, NULL, get_param_int(PARAM_BAUD_RATE), MODE_RXTX, SERIAL_NOT_INVERTED);	//TODO: Allow this to have a difference baud rate through params
+
+	Serial1 = uartOpen(USART1, NULL, get_param_int(PARAM_BAUD_RATE_0), MODE_RXTX, SERIAL_NOT_INVERTED);
+	Serial2 = uartOpen(USART2, NULL, get_param_int(PARAM_BAUD_RATE_1), MODE_RXTX, SERIAL_NOT_INVERTED);	//TODO: Allow this to have a difference baud rate through params
 
 	_system_status.state = MAV_STATE_STANDBY;
 	_system_status.mode = MAV_MODE_STABILIZE_DISARMED;
@@ -60,6 +61,7 @@ void setup(void) {
 	sensors_init();
 
 	communications_init();
+	communication_streams_init();
 
 	estimator_init((bool)get_param_int(PARAM_EST_USE_MAT_EXP), (bool)get_param_int(PARAM_EST_USE_QUAD_INT), (bool)get_param_int(PARAM_EST_USE_ACC_COR));
 

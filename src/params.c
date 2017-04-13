@@ -52,21 +52,33 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_BOARD_REVISION, "BOARD_REV", 5);
 	init_param_int(PARAM_VERSION_FIRMWARE, "FW_VERSION", 1);
 	init_param_int(PARAM_VERSION_SOFTWARE, "SW_VERSION", 1);
-	init_param_int(PARAM_BAUD_RATE, "BAUD_RATE", 921600);
+	init_param_int(PARAM_BAUD_RATE_0, "BAUD_RATE_0", 921600);	//Set baud rate to 0 to disable a comm port
+	init_param_int(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//TODO: Check if this works
 	init_param_int(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));
 
 	//==-- Mavlink
 	init_param_int(PARAM_SYSTEM_ID, "SYS_ID", 1);
 	init_param_int(PARAM_COMPONENT_ID, "COMP_ID", 1);
 
-	//TODO: Implement all of these
-	init_param_int(PARAM_STREAM_HEARTBEAT_RATE, "STRM_HRTBT", 1);
-	init_param_int(PARAM_STREAM_ATTITUDE_RATE, "STRM_ATTITUDE", 100);
-	init_param_int(PARAM_STREAM_IMU_RATE, "STRM_IMU", 500);
-	init_param_int(PARAM_STREAM_MAG_RATE, "STRM_MAG", 0);
-	init_param_int(PARAM_STREAM_BARO_RATE, "STRM_BARO", 0);
-	init_param_int(PARAM_STREAM_SONAR_RATE, "STRM_SONAR", 0);
-	init_param_int(PARAM_STREAM_SERVO_OUTPUT_RAW_RATE, "STRM_SERVO", 50);
+	init_param_int(PARAM_STREAM_RATE_HEARTBEAT_0, "STRM_HRTBT_0", 1000000);
+	init_param_int(PARAM_STREAM_RATE_SYS_STATUS_0, "STRM_SYS_STAT_0", 5000000);
+	init_param_int(PARAM_STREAM_RATE_HIGHRES_IMU_0, "STRM_HR_IMU_0", 10000);
+	init_param_int(PARAM_STREAM_RATE_ATTITUDE_0, "STRM_ATT_0", 0);
+	init_param_int(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0, "STRM_ATT_Q_0", 20000);
+	init_param_int(PARAM_STREAM_RATE_ATTITUDE_TARGET_0, "STRM_ATT_T_0", 20000);
+	init_param_int(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0, "STRM_SRV_OUT_0", 100000);
+	init_param_int(PARAM_STREAM_RATE_TIMESYNC_0, "STRM_TIMESYNC_0", 100000);
+	init_param_int(PARAM_STREAM_RATE_LOW_PRIORITY_0, "STRM_LPQ_0", 10000);
+
+	init_param_int(PARAM_STREAM_RATE_HEARTBEAT_1, "STRM_HRTBT_1", 1000000);
+	init_param_int(PARAM_STREAM_RATE_SYS_STATUS_1, "STRM_SYS_STAT_1", 5000000);
+	init_param_int(PARAM_STREAM_RATE_HIGHRES_IMU_1, "STRM_HR_IMU_1", 10000);
+	init_param_int(PARAM_STREAM_RATE_ATTITUDE_1, "STRM_ATT_1", 0);
+	init_param_int(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1, "STRM_ATT_Q_1", 20000);
+	init_param_int(PARAM_STREAM_RATE_ATTITUDE_TARGET_1, "STRM_ATT_T_1", 20000);
+	init_param_int(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1, "STRM_SRV_OUT_1", 100000);
+	init_param_int(PARAM_STREAM_RATE_TIMESYNC_1, "STRM_TIMESYNC_1", 100000);
+	init_param_int(PARAM_STREAM_RATE_LOW_PRIORITY_1, "STRM_LPQ_1", 10000);
 
 	//==-- Sensors
 	//All params here in us

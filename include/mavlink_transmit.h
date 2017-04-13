@@ -13,7 +13,7 @@
 typedef struct {
 	uint32_t period_us;
 	uint32_t last_time_us;
-	void (*send_function)(void);
+	void (*send_function)(uint8_t port);
 } mavlink_stream_t;
 
 // type definitions
@@ -30,8 +30,12 @@ typedef enum {
 	MAVLINK_STREAM_COUNT
 } mavlink_stream_id_t;
 
+extern bool stream_comm_0[MAVLINK_STREAM_COUNT];
+extern bool stream_comm_1[MAVLINK_STREAM_COUNT];
+
 // function declarations
-bool communication_transmit(uint32_t time_us);
+void communication_streams_init(void);
+void communication_transmit(uint32_t time_us);
 //void mavlink_stream_set_rate(mavlink_stream_id_t stream_id, uint32_t rate);
 //void mavlink_stream_set_period(mavlink_stream_id_t stream_id, uint32_t period_us);
 

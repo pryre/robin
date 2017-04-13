@@ -155,7 +155,7 @@ static void mavlink_send_low_priority(void)
 int32_t _request_all_params;
 mavlink_queue_t _low_priority_queue;
 
-static void mavlink_transmit_low_priority() {
+static void mavlink_transmit_low_priority(uint8_t port) {
 	//TODO: Should be a better place for this
 	if(_request_all_params >= 0) {
 		mavlink_message_t msg;
@@ -187,49 +187,86 @@ static void mavlink_transmit_low_priority() {
 	}
 }
 
-//TODO: Individual streams for each comm port
+//TODO: Individual LPQ streams
 //Stream rate in microseconds: 1s = 1,000,000ms
-static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
-	{ .period_us = 1000000, .last_time_us = 0, .send_function = mavlink_stream_heartbeat },
-	{ .period_us = 5000000, .last_time_us = 0, .send_function = mavlink_stream_sys_status },
-	{ .period_us = 10000,   .last_time_us = 0, .send_function = mavlink_stream_highres_imu },
-	{ .period_us = 0,       .last_time_us = 0, .send_function = mavlink_stream_attitude },
-	{ .period_us = 20000,   .last_time_us = 0, .send_function = mavlink_stream_attitude_quaternion },
-	{ .period_us = 20000,   .last_time_us = 0, .send_function = mavlink_stream_attitude_target },
-	{ .period_us = 100000,  .last_time_us = 0, .send_function = mavlink_stream_servo_output_raw },
-	/*
-	{ .period_us = 1000,    .last_time_us = 0, .send_function = mavlink_send_imu },
-	{ .period_us = 200000,  .last_time_us = 0, .send_function = mavlink_send_diff_pressure },
-	{ .period_us = 200000,  .last_time_us = 0, .send_function = mavlink_send_baro },
-	{ .period_us = 100000,  .last_time_us = 0, .send_function = mavlink_send_sonar },
-
-	{ .period_us = 0,       .last_time_us = 0, .send_function = mavlink_send_servo_output_raw },
-	{ .period_us = 0,       .last_time_us = 0, .send_function = mavlink_send_rc_raw },*/
-	{ .period_us = 100000,  .last_time_us = 0, .send_function = mavlink_stream_timesync },
-	{ .period_us = 10000,   .last_time_us = 0, .send_function = mavlink_transmit_low_priority }
+static mavlink_stream_t mavlink_stream_comm_0[MAVLINK_STREAM_COUNT] = {
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_heartbeat },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_sys_status },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_highres_imu },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_attitude },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_attitude_quaternion },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_attitude_target },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_servo_output_raw },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_timesync },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_transmit_low_priority }
 };
 
-//This function will send out 1 packet of requested data at a time
-//This is for data that isn't time-sensitive or may need a lot of processing per packet
+static mavlink_stream_t mavlink_stream_comm_1[MAVLINK_STREAM_COUNT] = {
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_heartbeat },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_sys_status },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_highres_imu },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_attitude },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_attitude_quaternion },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_attitude_target },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_servo_output_raw },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_stream_timesync },
+	{ .period_us = 0, .last_time_us = 0, .send_function = mavlink_transmit_low_priority }
+};
 
-// function definitions
-bool communication_transmit(uint32_t time_us) {
-	bool message_sent = false;
+void communication_streams_init(void) {
+	mavlink_stream_comm_0[MAVLINK_STREAM_ID_HEARTBEAT].period_us = get_param_int(PARAM_STREAM_RATE_HEARTBEAT_0);
+	mavlink_stream_comm_0[MAVLINK_STREAM_ID_SYS_STATUS].period_us = get_param_int(PARAM_STREAM_RATE_SYS_STATUS_0);
+	mavlink_stream_comm_0[MAVLINK_STREAM_ID_HIGHRES_IMU].period_us = get_param_int(PARAM_STREAM_RATE_HIGHRES_IMU_0);
+	mavlink_stream_comm_0[MAVLINK_STREAM_ID_ATTITUDE].period_us = get_param_int(PARAM_STREAM_RATE_ATTITUDE_0);
+	mavlink_stream_comm_0[MAVLINK_STREAM_ID_ATTITUDE_QUATERNION].period_us = get_param_int(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0);
+	mavlink_stream_comm_0[MAVLINK_STREAM_ID_ATTITUDE_TARGET].period_us = get_param_int(PARAM_STREAM_RATE_ATTITUDE_TARGET_0);
+	mavlink_stream_comm_0[MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW].period_us = get_param_int(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0);
+	mavlink_stream_comm_0[MAVLINK_STREAM_ID_TIMESYNC].period_us = get_param_int(PARAM_STREAM_RATE_TIMESYNC_0);
+	mavlink_stream_comm_0[MAVLINK_STREAM_ID_LOW_PRIORITY].period_us = get_param_int(PARAM_STREAM_RATE_LOW_PRIORITY_0);
 
-	for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
-		if ((mavlink_streams[i].period_us > 0) && (time_us >= mavlink_streams[i].last_time_us + mavlink_streams[i].period_us)) {
-			mavlink_streams[i].last_time_us = time_us;
-			mavlink_streams[i].send_function();
+	mavlink_stream_comm_1[MAVLINK_STREAM_ID_HEARTBEAT].period_us = get_param_int(PARAM_STREAM_RATE_HEARTBEAT_1);
+	mavlink_stream_comm_1[MAVLINK_STREAM_ID_SYS_STATUS].period_us = get_param_int(PARAM_STREAM_RATE_SYS_STATUS_1);
+	mavlink_stream_comm_1[MAVLINK_STREAM_ID_HIGHRES_IMU].period_us = get_param_int(PARAM_STREAM_RATE_HIGHRES_IMU_1);
+	mavlink_stream_comm_1[MAVLINK_STREAM_ID_ATTITUDE].period_us = get_param_int(PARAM_STREAM_RATE_ATTITUDE_1);
+	mavlink_stream_comm_1[MAVLINK_STREAM_ID_ATTITUDE_QUATERNION].period_us = get_param_int(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1);
+	mavlink_stream_comm_1[MAVLINK_STREAM_ID_ATTITUDE_TARGET].period_us = get_param_int(PARAM_STREAM_RATE_ATTITUDE_TARGET_1);
+	mavlink_stream_comm_1[MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW].period_us = get_param_int(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1);
+	mavlink_stream_comm_1[MAVLINK_STREAM_ID_TIMESYNC].period_us = get_param_int(PARAM_STREAM_RATE_TIMESYNC_1);
+	mavlink_stream_comm_1[MAVLINK_STREAM_ID_LOW_PRIORITY].period_us = get_param_int(PARAM_STREAM_RATE_LOW_PRIORITY_1);
+}
 
-			//We only want to send 1 message each loop, otherwise we risk overloading the serial buffer
-			//This will also offset the message streams so they are all staggered
-			message_sent = true;
+static bool transmit_stream(uint32_t time_us, uint8_t port, mavlink_stream_t *stream) {
+	bool sent_message = false;
 
-			break;
-		}
+	if( (stream->period_us > 0) && (time_us >= ( stream->last_time_us + stream->period_us ) ) ) {
+		stream->send_function(port);
+		stream->last_time_us = time_us;
+
+		sent_message = true;
 	}
 
-	return message_sent;
+	return sent_message;
+}
+
+void communication_transmit(uint32_t time_us) {
+	//We only want to send 1 message each loop (per port),
+	// otherwise we risk overloading the serial buffer. This
+	// will also offset the message streams so they are all staggered
+	//Disable checking for outputs if port disabled
+	bool message_sent_comm_0 = ( get_param_int(PARAM_BAUD_RATE_0) != 0 );
+	bool message_sent_comm_1 = ( get_param_int(PARAM_BAUD_RATE_0) != 0 );
+
+	for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
+
+		if (!message_sent_comm_0)
+			message_sent_comm_0 = transmit_stream(time_us, MAVLINK_COMM_0, &(mavlink_stream_comm_0[i]));
+
+		if (!message_sent_comm_1)
+			message_sent_comm_1 = transmit_stream(time_us, MAVLINK_COMM_1, &(mavlink_stream_comm_1[i]));
+
+		if(message_sent_comm_0 && message_sent_comm_1)
+			break;
+	}
 }
 
 /*

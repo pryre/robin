@@ -271,7 +271,6 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				if (tsync.tc1 == 0) {
 					mavlink_send_timesync(port, now_ns_corrected, tsync.ts1);
 				} else if (tsync.tc1 > 0) {
-
 					if( (_sensors.clock.rt_ts_last != 0) && (_sensors.clock.rt_ts_last != 0) ) {
 						float drift = (float)(tsync.tc1 - _sensors.clock.rt_tc_last) / (float)(tsync.ts1 - _sensors.clock.rt_ts_last);
 						_sensors.clock.rt_drift = sensors_clock_smooth_time_drift(_sensors.clock.rt_drift, drift);

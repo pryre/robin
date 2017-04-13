@@ -137,7 +137,7 @@ static inline bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg) {
 }
 
 //==-- Sends
-static inline void mavlink_stream_heartbeat(void) {
+static inline void mavlink_stream_heartbeat(uint8_t port) {
 	uint8_t mav_base_mode = 0;
 
 	if(_system_status.arm_status)
@@ -157,13 +157,13 @@ static inline void mavlink_stream_heartbeat(void) {
 
 	//We don't use custom_mode
 	//TODO: MAV_TYPE should be dynamically set
-	mavlink_msg_heartbeat_send(MAVLINK_COMM_0, MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_GENERIC, mav_base_mode, 0, _system_status.state);
+	mavlink_msg_heartbeat_send(port, MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_GENERIC, mav_base_mode, 0, _system_status.state);
 	LED1_TOGGLE;	//TODO: should be somwhere else
 }
 
 //TODO: Quite a lot here
 //TODO: Make an alert to say if the UART overflows
-static inline void mavlink_stream_sys_status(void) {
+static inline void mavlink_stream_sys_status(uint8_t port) {
 	uint32_t onboard_control_sensors_present = 0;
 	uint32_t onboard_control_sensors_enabled = 0;
 	uint32_t onboard_control_sensors_health = 0;
@@ -189,23 +189,23 @@ static inline void mavlink_stream_sys_status(void) {
 
 	//TODO: This should be dynamic, probably in safety.h or sensors.h
 	onboard_control_sensors_present = MAV_SYS_STATUS_SENSOR_3D_GYRO |
-										MAV_SYS_STATUS_SENSOR_3D_ACCEL |
-										MAV_SYS_STATUS_SENSOR_3D_MAG |
-										MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
+									  MAV_SYS_STATUS_SENSOR_3D_ACCEL |
+									  MAV_SYS_STATUS_SENSOR_3D_MAG |
+									  MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
 	onboard_control_sensors_enabled = MAV_SYS_STATUS_SENSOR_3D_GYRO |
-										MAV_SYS_STATUS_SENSOR_3D_ACCEL |
-										MAV_SYS_STATUS_SENSOR_3D_MAG |
-										MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
+									  MAV_SYS_STATUS_SENSOR_3D_ACCEL |
+									  MAV_SYS_STATUS_SENSOR_3D_MAG |
+									  MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
 	onboard_control_sensors_health = MAV_SYS_STATUS_SENSOR_3D_GYRO |
-										MAV_SYS_STATUS_SENSOR_3D_ACCEL |
-										MAV_SYS_STATUS_SENSOR_3D_MAG |
-										MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
+									 MAV_SYS_STATUS_SENSOR_3D_ACCEL |
+									 MAV_SYS_STATUS_SENSOR_3D_MAG |
+									 MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
 
 
 	//TODO: The rest of the sensors
 
 	//mavlink_msg_sys_status_send(MAVLINK_COMM_0, uint32_t onboard_control_sensors_present, uint32_t onboard_control_sensors_enabled, uint32_t onboard_control_sensors_health, uint16_t load, uint16_t voltage_battery, int16_t current_battery, int8_t battery_remaining, uint16_t drop_rate_comm, uint16_t errors_comm, uint16_t errors_count1, uint16_t errors_count2, uint16_t errors_count3, uint16_t errors_count4)
-	mavlink_msg_sys_status_send(MAVLINK_COMM_0,
+	mavlink_msg_sys_status_send(port,
 								onboard_control_sensors_present,
 								onboard_control_sensors_enabled,
 								onboard_control_sensors_health,
@@ -224,53 +224,45 @@ static inline void mavlink_stream_sys_status(void) {
 //==-- Sends the latest IMU reading
 //TODO: neaten, and make a proper define for the updated_data field
 //TODO: GYRO DOES NOT WORK?
-static inline void mavlink_stream_highres_imu(void) {
-	mavlink_msg_highres_imu_send(MAVLINK_COMM_0,
-									_sensors.imu.time,
-									fix16_to_float(_sensors.imu.accel.x),
-									fix16_to_float(_sensors.imu.accel.y),
-									fix16_to_float(_sensors.imu.accel.z),
-									fix16_to_float(_sensors.imu.gyro.x),
-									fix16_to_float(_sensors.imu.gyro.y),
-									fix16_to_float(_sensors.imu.gyro.z),
-									0, 0, 0,
-									0, 0, 0,
-									0,
-									((1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5)) );
+static inline void mavlink_stream_highres_imu(uint8_t port) {
+	mavlink_msg_highres_imu_send(port,
+								 _sensors.imu.time,
+								 fix16_to_float(_sensors.imu.accel.x),
+								 fix16_to_float(_sensors.imu.accel.y),
+								 fix16_to_float(_sensors.imu.accel.z),
+								 fix16_to_float(_sensors.imu.gyro.x),
+								 fix16_to_float(_sensors.imu.gyro.y),
+								 fix16_to_float(_sensors.imu.gyro.z),
+								 0, 0, 0,
+								 0, 0, 0,
+								 0,
+								 ((1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5)) );
 }
 
-static inline void mavlink_stream_attitude(void) {
-	mavlink_msg_attitude_send(MAVLINK_COMM_0,
-								_sensors.imu.time,
-								fix16_to_float(_state_estimator.phi),
-								fix16_to_float(_state_estimator.theta),
-								fix16_to_float(_state_estimator.psi),
-								fix16_to_float(_state_estimator.p),
-								fix16_to_float(_state_estimator.q),
-								fix16_to_float(_state_estimator.r));
-	mavlink_msg_attitude_send(MAVLINK_COMM_1,
-								_sensors.imu.time,
-								fix16_to_float(_state_estimator.phi),
-								fix16_to_float(_state_estimator.theta),
-								fix16_to_float(_state_estimator.psi),
-								fix16_to_float(_state_estimator.p),
-								fix16_to_float(_state_estimator.q),
-								fix16_to_float(_state_estimator.r));
+static inline void mavlink_stream_attitude(uint8_t port) {
+	mavlink_msg_attitude_send(port,
+							  _sensors.imu.time,
+							  fix16_to_float(_state_estimator.phi),
+							  fix16_to_float(_state_estimator.theta),
+							  fix16_to_float(_state_estimator.psi),
+							  fix16_to_float(_state_estimator.p),
+							  fix16_to_float(_state_estimator.q),
+							  fix16_to_float(_state_estimator.r));
 }
 
-static inline void mavlink_stream_attitude_quaternion(void) {
-	mavlink_msg_attitude_quaternion_send(MAVLINK_COMM_0,
-											_sensors.imu.time,
-											fix16_to_float(_state_estimator.attitude.a),
-											fix16_to_float(_state_estimator.attitude.b),
-											fix16_to_float(_state_estimator.attitude.c),
-											fix16_to_float(_state_estimator.attitude.d),
-											fix16_to_float(_state_estimator.p),
-											fix16_to_float(_state_estimator.q),
-											fix16_to_float(_state_estimator.r));
+static inline void mavlink_stream_attitude_quaternion(uint8_t port) {
+	mavlink_msg_attitude_quaternion_send(port,
+										 _sensors.imu.time,
+										 fix16_to_float(_state_estimator.attitude.a),
+										 fix16_to_float(_state_estimator.attitude.b),
+										 fix16_to_float(_state_estimator.attitude.c),
+										 fix16_to_float(_state_estimator.attitude.d),
+										 fix16_to_float(_state_estimator.p),
+										 fix16_to_float(_state_estimator.q),
+										 fix16_to_float(_state_estimator.r));
 }
 
-static inline void mavlink_stream_attitude_target(void) {
+static inline void mavlink_stream_attitude_target(uint8_t port) {
 	float q[4] = {fix16_to_float(_command_input.q.a),
 				  fix16_to_float(_command_input.q.b),
 				  fix16_to_float(_command_input.q.c),
@@ -279,15 +271,7 @@ static inline void mavlink_stream_attitude_target(void) {
 	//Use the control output for some of these commands as they reflect the actual goals
 	// The input mask applied is included, but the information will still potentially be useful
 	// The timestamp used is the one that is used to generate the commands
-	mavlink_msg_attitude_target_send(MAVLINK_COMM_0,
-									 sensors_clock_ls_get(),
-									 _command_input.input_mask,
-									 &q[0],
-									 fix16_to_float(_control_output.r),
-									 fix16_to_float(_control_output.p),
-									 fix16_to_float(_control_output.y),
-									 fix16_to_float(_control_output.T));
-	mavlink_msg_attitude_target_send(MAVLINK_COMM_1,
+	mavlink_msg_attitude_target_send(port,
 									 sensors_clock_ls_get(),
 									 _command_input.input_mask,
 									 &q[0],
@@ -297,8 +281,8 @@ static inline void mavlink_stream_attitude_target(void) {
 									 fix16_to_float(_control_output.T));
 }
 
-static inline void mavlink_stream_servo_output_raw(void) {
-	mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0,
+static inline void mavlink_stream_servo_output_raw(uint8_t port) {
+	mavlink_msg_servo_output_raw_send(port,
 									  sensors_clock_ls_get(),
 									  0,	//Port 0
 									  _pwm_output[0],
@@ -311,8 +295,8 @@ static inline void mavlink_stream_servo_output_raw(void) {
 									  _pwm_output[7]);
 }
 
-static inline void mavlink_stream_timesync() {
-	mavlink_msg_timesync_send(MAVLINK_COMM_0,
+static inline void mavlink_stream_timesync(uint8_t port) {
+	mavlink_msg_timesync_send(port,
 							  0,
 							  ( (uint64_t)micros() ) * 1000);
 }
