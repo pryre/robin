@@ -18,8 +18,6 @@ serialPort_t * Serial1;
 serialPort_t * Serial2;
 extern void SetSysClock(bool overclock);
 uint8_t _system_operation_control;
-//volatile bool imu_interrupt;
-volatile uint32_t imu_read_time;
 
 system_status_t _system_status;
 command_input_t _command_input;
@@ -95,7 +93,7 @@ void loop(void) {
 	communication_transmit( micros() );
 
 	//==-- Update Sensor Data
-	sensors_update( imu_read_time );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
+	sensors_update( sensors_clock_imu_int_get() );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
 
 	//==-- Calibrations
 	if( _system_status.state == MAV_STATE_CALIBRATING ) {	//If any calibration is in progress
@@ -117,7 +115,7 @@ void loop(void) {
 		//Anything else?
 
 	//==-- Update Estimator
-    estimator_update( imu_read_time ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
+    estimator_update( sensors_clock_imu_int_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
 	//TODO: Make check to see if armed, else skip
 		if( _system_status.mavlink.offboard_control.health != SYSTEM_HEALTH_OK ) {
@@ -133,7 +131,7 @@ void loop(void) {
 		}
 
 		//==-- Update Controller
-		controller_run( imu_read_time );	//Apply the current commands and update the PID controllers
+		controller_run( sensors_clock_imu_int_get() );	//Apply the current commands and update the PID controllers
 		//TODO: Need to reset PIDs when armed
 		//TODO: If there are any critical timeouts, set output to 0,0,0,throttle_emergency_land
 		//TODO: Make check to see if armed, else skip

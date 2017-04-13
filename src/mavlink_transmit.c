@@ -205,7 +205,7 @@ static mavlink_stream_t mavlink_streams[MAVLINK_STREAM_COUNT] = {
 
 	{ .period_us = 0,       .last_time_us = 0, .send_function = mavlink_send_servo_output_raw },
 	{ .period_us = 0,       .last_time_us = 0, .send_function = mavlink_send_rc_raw },*/
-	{ .period_us = 0,  .last_time_us = 0, .send_function = mavlink_stream_timesync },
+	{ .period_us = 100000,  .last_time_us = 0, .send_function = mavlink_stream_timesync },
 	{ .period_us = 10000,   .last_time_us = 0, .send_function = mavlink_transmit_low_priority }
 };
 
