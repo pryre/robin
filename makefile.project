@@ -1,5 +1,8 @@
 PROJECT_NAME = robin
 
+GIT_VERSION_FLIGHT := $(shell git describe --abbrev=8 --always | sed 's/^ *//g' | head -c 8)
+GIT_VERSION_OS := $(shell git submodule status | grep BreezySTM32 | sed 's/^ *//g' | head -c 8)
+
 # Contains your setup() and loop()
 PROJECT_SRC_FILES = ./src/main.c \
 					./src/flash.c \

@@ -10,6 +10,7 @@
 #include "serial_uart.h"
 
 #include "fix16.h"
+#include "fixextra.h"
 #include "params.h"
 #include "safety.h"
 #include "sensors.h"
@@ -44,9 +45,6 @@ state_t _state_estimator;
 command_input_t _command_input;
 control_output_t _control_output;
 int32_t _pwm_output[8];
-
-//Firmware identifier, first 8 bytes of current BreezySTM32 commit
-static const uint8_t FW_HASH [8] = {0xb7, 0xa7, 0x59, 0x4e, 0xa7, 0xa2, 0x98, 0xb0};
 
 static inline void communications_init(void) {
 	mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID); // System ID, 1-255
@@ -234,7 +232,7 @@ static inline void mavlink_stream_sys_status(uint8_t port) {
 //TODO: GYRO DOES NOT WORK?
 static inline void mavlink_stream_highres_imu(uint8_t port) {
 	mavlink_msg_highres_imu_send(port,
-								 _sensors.imu.time,
+								 _sensors.imu.status.time_read,
 								 fix16_to_float(_sensors.imu.accel.x),
 								 fix16_to_float(_sensors.imu.accel.y),
 								 fix16_to_float(_sensors.imu.accel.z),
@@ -248,11 +246,18 @@ static inline void mavlink_stream_highres_imu(uint8_t port) {
 }
 
 static inline void mavlink_stream_attitude(uint8_t port) {
+	fix16_t roll;
+	fix16_t pitch;
+	fix16_t yaw;
+
+	//Extract Euler Angles for controller
+	euler_from_quat(&_state_estimator.attitude, &roll, &pitch, &yaw);
+
 	mavlink_msg_attitude_send(port,
-							  _sensors.imu.time,
-							  fix16_to_float(_state_estimator.phi),
-							  fix16_to_float(_state_estimator.theta),
-							  fix16_to_float(_state_estimator.psi),
+							  _sensors.imu.status.time_read,
+							  fix16_to_float(roll),
+							  fix16_to_float(pitch),
+							  fix16_to_float(yaw),
 							  fix16_to_float(_state_estimator.p),
 							  fix16_to_float(_state_estimator.q),
 							  fix16_to_float(_state_estimator.r));
@@ -260,7 +265,7 @@ static inline void mavlink_stream_attitude(uint8_t port) {
 
 static inline void mavlink_stream_attitude_quaternion(uint8_t port) {
 	mavlink_msg_attitude_quaternion_send(port,
-										 _sensors.imu.time,
+										 _sensors.imu.status.time_read,
 										 fix16_to_float(_state_estimator.attitude.a),
 										 fix16_to_float(_state_estimator.attitude.b),
 										 fix16_to_float(_state_estimator.attitude.c),
@@ -319,6 +324,8 @@ static inline void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 								  MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION;
 
 	const uint8_t blank_array[8] = {0,0,0,0,0,0,0,0};
+	const uint8_t flight_custom_version[8] = GIT_VERSION_FLIGHT;
+	const uint8_t os_custom_version[8] = GIT_VERSION_OS;
 
 	mavlink_msg_autopilot_version_pack(mavlink_system.sysid,
 									   mavlink_system.compid,
@@ -328,9 +335,9 @@ static inline void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 									   0,
 									   get_param_int(PARAM_VERSION_FIRMWARE),
 									   get_param_int(PARAM_BOARD_REVISION),
-									   blank_array,	//TODO: This should probably be a commit as well
+									   flight_custom_version,	//TODO: Check that this method of getting commit hash works
 									   blank_array,
-									   FW_HASH,
+									   os_custom_version,
 									   0x10c4,	//TODO: This is the serial vendor and product ID, should be dynamic?
 									   0xea60,
 									   U_ID_0);

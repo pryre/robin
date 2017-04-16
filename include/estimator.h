@@ -11,14 +11,13 @@ extern "C" {
 #include "fixvector3d.h"
 #include "fixquat.h"
 
-//TODO: Get rid of phi, theta, psi
 typedef struct {
   fix16_t p;		//Roll Rate
   fix16_t q;		//Pitch Rate
   fix16_t r;		//Yaw Rate
-  fix16_t phi;		//Roll
-  fix16_t theta;	//Pitch
-  fix16_t psi;		//Yaw
+//  fix16_t phi;		//Roll
+//  fix16_t theta;	//Pitch
+//  fix16_t psi;		//Yaw
   fix16_t altitude;
   qf16 attitude;
 } state_t;

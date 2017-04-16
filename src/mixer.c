@@ -2,8 +2,8 @@
 
 #include "breezystm32.h"
 #include "pwm.h"
-#include "mavlink/common/mavlink.h"
 #include "mavlink_system.h"
+#include "mavlink/mavlink_types.h"
 #include "fix16.h"
 //#include "fixvector3d.h"
 //#include "fixmatrix.h"
@@ -73,7 +73,12 @@ void mixer_init() {
 		}
 		default: {
 			mixer_to_use = &mixer_none;
-			mavlink_send_statustext_notice(port, MAV_SEVERITY_ERROR, "[MIX] Unknown mixer! Disabling!");
+
+			if( get_param_int(PARAM_BAUD_RATE_0) > 0 )
+				mavlink_send_statustext_notice(MAVLINK_COMM_0, MAV_SEVERITY_ERROR, "[MIX] Unknown mixer! Disabling!");
+
+			if( get_param_int(PARAM_BAUD_RATE_1) > 0 )
+				mavlink_send_statustext_notice(MAVLINK_COMM_1, MAV_SEVERITY_ERROR, "[MIX] Unknown mixer! Disabling!");
 
 			break;
 		}
@@ -96,8 +101,8 @@ void pwm_init() {
 	*/
 
 	int16_t motor_refresh_rate = get_param_int(PARAM_MOTOR_PWM_SEND_RATE);
-	int16_t idle_pwm = 1000;	//TODO? get_param_int(PARAM_MOTOR_PWM_MIN);
-	pwmInit(useCPPM, false, false, motor_refresh_rate, idle_pwm);	//TODO: Poor use of similar naming
+	int16_t pwm_disarm = 1000;	//TODO? get_param_int(PARAM_MOTOR_PWM_MIN);
+	pwmInit(useCPPM, false, false, motor_refresh_rate, pwm_disarm);
 }
 
 static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) {

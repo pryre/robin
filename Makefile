@@ -142,7 +142,9 @@ CFLAGS	 = $(ARCH_FLAGS) \
 		   $(DEVICE_FLAGS) \
 		   -DUSE_STDPERIPH_DRIVER \
 		   -D$(TARGET) \
-		   -Wno-unused-parameter
+		   -Wno-unused-parameter \
+		   -DGIT_VERSION_FLIGHT=\"$(GIT_VERSION_FLIGHT)\" \
+		   -DGIT_VERSION_OS=\"$(GIT_VERSION_OS)\"
 
 ASFLAGS		 = $(ARCH_FLAGS) \
 		   -x assembler-with-cpp \

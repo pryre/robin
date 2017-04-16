@@ -23,7 +23,7 @@ static int16_t accel_data[3];
 static int16_t gyro_data[3];
 static int16_t temp_data;
 */
-static volatile uint32_t _time_imu_read = 0;
+static volatile uint32_t _imu_time_read = 0;
 static volatile uint8_t accel_status = 0;
 static volatile uint8_t gyro_status = 0;
 static volatile uint8_t temp_status = 0;
@@ -45,7 +45,7 @@ static void clock_init(void) {
 	_sensors.clock.max = 0;
 	_sensors.clock.min = 1000;
 
-	_sensors.clock.imu_read = 0;
+	_sensors.clock.imu_time_read = 0;
 
 	_sensors.clock.rt_offset_ns = 0;
 	_sensors.clock.rt_drift = 1.0;
@@ -73,7 +73,7 @@ static void sonar_init(void) {
 
 static void sensors_imu_poll(void) {
 		//==-- Timing setup get loop time
-		_time_imu_read = micros();
+		_imu_time_read = micros();
 
 		mpu6050_request_async_accel_read(_sensors.imu.accel_raw, &accel_status);
 		mpu6050_request_async_gyro_read(_sensors.imu.gyro_raw, &gyro_status);
@@ -117,7 +117,7 @@ bool sensors_read(void) {
 		gyro_status = I2C_JOB_DEFAULT;
 		temp_status = I2C_JOB_DEFAULT;
 
-		_sensors.clock.imu_read = _time_imu_read;
+		_sensors.clock.imu_time_read = _imu_time_read;
 		//TODO: Maybe the imu data should be aggregated so it can be called at a lower Hz?
 	}
 
@@ -170,7 +170,7 @@ uint64_t sensors_clock_rt_get(void) {
 }
 
 uint32_t sensors_clock_imu_int_get(void) {
-	return _sensors.clock.imu_read;
+	return _sensors.clock.imu_time_read;
 }
 
 bool sensors_update(uint32_t time_us) {
@@ -186,7 +186,6 @@ bool sensors_update(uint32_t time_us) {
 
 	//TODO: Perhaps X is being calculated in revearse?
 	//TODO:Something about the frame of reference (NED/ENU) isn't quite right
-	_sensors.imu.time = time_us;
 
 	//==-- Temperature in degC
 	//value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
@@ -204,6 +203,9 @@ bool sensors_update(uint32_t time_us) {
 	_sensors.imu.gyro.x = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw[0] - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
 	_sensors.imu.gyro.y = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[1] - get_param_int(PARAM_GYRO_Y_BIAS))), _sensors.imu.gyro_scale);
 	_sensors.imu.gyro.z = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[2] - get_param_int(PARAM_GYRO_Z_BIAS))), _sensors.imu.gyro_scale);
+
+	_sensors.imu.status.time_read = time_us;
+	_sensors.imu.status.new_data = true;
 
 	//TODO: This should be aware of failures
 	return true;

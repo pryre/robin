@@ -57,9 +57,9 @@ void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration,
 	_state_estimator.p = 0;
 	_state_estimator.q = 0;
 	_state_estimator.r = 0;
-	_state_estimator.phi = 0;
-	_state_estimator.theta = 0;
-	_state_estimator.psi = 0;
+	//_state_estimator.phi = 0;
+	//_state_estimator.theta = 0;
+	//_state_estimator.psi = 0;
 	_state_estimator.attitude.a = 1;
 	_state_estimator.attitude.b = 0;
 	_state_estimator.attitude.c = 0;
@@ -338,7 +338,7 @@ void estimator_update(uint32_t time_now) {
 	//q_hat is given as z-down, rotate to NED
 	_state_estimator.attitude = q_hat;
 	// Extract Euler Angles for controller
-	euler_from_quat(&q_hat, &_state_estimator.phi, &_state_estimator.theta, &_state_estimator.psi);
+	//euler_from_quat(&q_hat, &_state_estimator.phi, &_state_estimator.theta, &_state_estimator.psi);
 
 	// Save off adjust gyro measurements with estimated biases for control
 	v3d wbar_old = wbar;

@@ -31,7 +31,7 @@ typedef struct {
 	timeout_status_t imu;
 	timeout_status_t mag;
 	timeout_status_t sonar;
-} sensor_status_t;
+} safety_sensor_status_t;
 
 //List of failures
 //True means system is OK
@@ -59,7 +59,7 @@ typedef struct {
 	bool parameters;
 	bool arm_status;
 	mavlink_stream_status_t mavlink;
-	sensor_status_t sensors;
+	safety_sensor_status_t sensors;
 } system_status_t;
 
 //TODO: This could almost be merged with mav_state
