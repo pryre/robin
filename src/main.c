@@ -40,28 +40,29 @@ int main(void) {
 	//This means we can send ~115 bytes per loop without any risk of a buffer overflow
 	//As mavlink can have max messages of 250+ bytes, we want to send as little as possible each loop to allow catchup
 
-	Serial1 = uartOpen(USART1, NULL, get_param_int(PARAM_BAUD_RATE_0), MODE_RXTX, SERIAL_NOT_INVERTED);
-	Serial2 = uartOpen(USART2, NULL, get_param_int(PARAM_BAUD_RATE_1), MODE_RXTX, SERIAL_NOT_INVERTED);	//TODO: Allow this to have a difference baud rate through params
+	if(get_param_int(PARAM_BAUD_RATE_0) > 0)
+		Serial1 = uartOpen(USART1, NULL, get_param_int(PARAM_BAUD_RATE_0), MODE_RXTX, SERIAL_NOT_INVERTED);
+
+	if(get_param_int(PARAM_BAUD_RATE_1) > 0)
+		Serial2 = uartOpen(USART2, NULL, get_param_int(PARAM_BAUD_RATE_1), MODE_RXTX, SERIAL_NOT_INVERTED);
 
 	_system_status.state = MAV_STATE_STANDBY;
 	_system_status.mode = MAV_MODE_STABILIZE_DISARMED;
 
-    while (true) {
+    while (true)
         loop();
-    }
 }
 
 void setup(void) {
 	init_params();
 
-	delay(500);
+	delay(500);	//Wait for i2c devices to boot properly
 
     i2cInit(I2CDEV);
 
 	sensors_init();
 
 	communications_init();
-	communication_streams_init();
 
 	estimator_init((bool)get_param_int(PARAM_EST_USE_MAT_EXP), (bool)get_param_int(PARAM_EST_USE_QUAD_INT), (bool)get_param_int(PARAM_EST_USE_ACC_COR));
 
@@ -79,6 +80,7 @@ void setup(void) {
 }
 
 void loop(void) {
+	//Take note of when this loop starts
 	sensors_clock_ls_set( micros() );
 
 	//Sensor Poll
@@ -87,7 +89,7 @@ void loop(void) {
 						//TODO: This should alert sensors_read() somhow to let it know there's more data to wait for
 
 	//==-- Check Serial
-	communication_receive();
+	communication_receive();	//TODO: Can this be moved to a UART callback?
 
 	//==-- Send Serial
 	//Check to see if a message has been sent this loop, then see if a message should be sent
@@ -115,6 +117,7 @@ void loop(void) {
 		//Command Input
 		//External System Heartbeats
 		//Anything else?
+	//TODO: Arming timeout
 
 	//==-- Update Estimator
     estimator_update( sensors_clock_imu_int_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
@@ -137,6 +140,7 @@ void loop(void) {
 		//TODO: Need to reset PIDs when armed
 		//TODO: If there are any critical timeouts, set output to 0,0,0,throttle_emergency_land
 		//TODO: Make check to see if armed, else skip
+
 
 	//==-- Send Motor Commands
 	mixer_output();	//Convert outputs to correct layout and send PWM (and considers failsafes)

@@ -10,6 +10,16 @@ extern "C" {
 #include "safety.h"
 
 system_status_t _system_status;
+status_led_t _status_led;
+
+static void status_led_init() {
+	_status_led.is_on = false;
+	_status_led.num_pulses = 0;
+	_status_led.num_pulses_done = 0;
+	_status_led.last_start = 0;
+	_status_led.last_pulse = 0;
+	_status_led.pulse_length = 200000;	//0.2s
+}
 
 void safety_init() {
 	_system_status.mavlink.offboard_heartbeat.health = SYSTEM_HEALTH_UNKNOWN;
@@ -37,12 +47,46 @@ void safety_init() {
 	_system_status.sensors.sonar.count = 0;
 	strncpy(_system_status.sensors.sonar.name, "Sonar", 24);
 
+	status_led_init();
+
 	//TODO:
 		//Barometer
 		//Diff Pressure
 }
 
-void safety_update( timeout_status_t *sensor, uint32_t stream_count ) {
+//TODO: Should not be hard coded?
+static void status_led_update() {
+	//LED blinker
+	// Single blink for unarmed, double blink for armed
+	if( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY ) {
+		_status_led.num_pulses = 2;
+	} else {
+		_status_led.num_pulses = 1;
+	}
+
+	if( ( micros() - _status_led.last_start ) > 1000000) {
+		_status_led.num_pulses = 0;
+		_status_led.last_start = micros();
+	}
+
+	if( _status_led.num_pulses_done < _status_led.num_pulses ) {
+		if( ( micros() - _status_led.last_pulse ) > _status_led.pulse_length ) {
+			if( _status_led.is_on ) {
+				LED0_OFF;
+			}
+
+			if( ( micros() - _status_led.last_pulse ) > ( 2* _status_led.pulse_length ) ) {
+				_status_led.last_pulse = micros();
+				_status_led.num_pulses_done++;
+			}
+		} else {
+			if( !_status_led.is_on )
+				LED0_ON;
+		}
+	}
+}
+
+void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count ) {
 	sensor->last_read = micros();
 	sensor->count++;
 
@@ -72,6 +116,8 @@ static void safety_check( timeout_status_t *sensor, uint32_t time_now, uint32_t 
 
 void safety_run( uint32_t time_now ) {
 	safety_check( &_system_status.mavlink.offboard_control, time_now, get_param_int(PARAM_SENSOR_OFFB_CTRL_TIMEOUT) );
+
+	status_led_update();
 
 	//TODO: Need to do more checks here!
 }

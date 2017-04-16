@@ -29,8 +29,11 @@
    Lines also in your main.c, e.g. by reading these parameter from EEPROM.
  */
 
-extern int32_t _request_all_params;
 extern serialPort_t * Serial2;
+
+extern int32_t _request_all_params_port_0;
+extern int32_t _request_all_params_port_1;
+static uint32_t _lpq_warn_full;
 
 mavlink_system_t mavlink_system;
 system_status_t _system_status;
@@ -49,7 +52,10 @@ static inline void communications_init(void) {
 	mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID); // System ID, 1-255
 	mavlink_system.compid = get_param_int(PARAM_COMPONENT_ID); // Component/Subsystem ID, 1-255
 
-	_request_all_params = -1;
+	_request_all_params_port_0 = -1;
+	_request_all_params_port_1 = -1;
+
+	_lpq_warn_full = 0;
 }
 
 /**
@@ -130,7 +136,10 @@ static inline bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg) {
 
 		success = true;
 	} else {
-		mavlink_send_statustext_notice(port, MAV_SEVERITY_ERROR, "[COMMS] LPQ message dropped!");
+		if( micros() - _lpq_warn_full > 1000000) {	//XXX: Only outout the error at 1/s maximum otherwise buffer will never catch up
+			mavlink_send_statustext_notice(port, MAV_SEVERITY_ERROR, "[COMMS] LPQ message dropped!");
+			_lpq_warn_full = micros();
+		}
 	}
 
 	return success;
@@ -158,7 +167,6 @@ static inline void mavlink_stream_heartbeat(uint8_t port) {
 	//We don't use custom_mode
 	//TODO: MAV_TYPE should be dynamically set
 	mavlink_msg_heartbeat_send(port, MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_GENERIC, mav_base_mode, 0, _system_status.state);
-	LED1_TOGGLE;	//TODO: should be somwhere else
 }
 
 //TODO: Quite a lot here
@@ -378,7 +386,6 @@ static inline void mavlink_prepare_statustext(mavlink_message_t *msg, uint8_t se
 								 text);
 }
 
-//TODO:This can be done better for sure
 static inline bool mavlink_queue_notice(char* text) {
 	bool success = false;
 
@@ -387,24 +394,6 @@ static inline bool mavlink_queue_notice(char* text) {
 	lpq_queue_msg(MAVLINK_COMM_0, &msg);
 	lpq_queue_msg(MAVLINK_COMM_1, &msg);
 
-/*	if( check_lpq_space_free() ) {
-		uint8_t i = get_lpq_next_slot();
-		_low_priority_queue.buffer_len[i] = mavlink_prepare_statustext(_low_priority_queue.buffer[i], MAV_SEVERITY_NOTICE, text);
-		_low_priority_queue.buffer_comm_port[i] = MAVLINK_COMM_0;
-		_low_priority_queue.queued_message_count++;
-
-		success |= true;
-	}
-
-	if( check_lpq_space_free() ) {
-		uint8_t i = get_lpq_next_slot();
-		_low_priority_queue.buffer_len[i] = mavlink_prepare_statustext(_low_priority_queue.buffer[i], MAV_SEVERITY_NOTICE, text);
-		_low_priority_queue.buffer_comm_port[i] = MAVLINK_COMM_1;
-		_low_priority_queue.queued_message_count++;
-
-		success &= true;
-	}
-*/
 	return success;
 }
 

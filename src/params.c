@@ -53,7 +53,7 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_VERSION_FIRMWARE, "FW_VERSION", 1);
 	init_param_int(PARAM_VERSION_SOFTWARE, "SW_VERSION", 1);
 	init_param_int(PARAM_BAUD_RATE_0, "BAUD_RATE_0", 921600);	//Set baud rate to 0 to disable a comm port
-	init_param_int(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//TODO: Check if this works
+	init_param_int(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//Set baud rate to 0 to disable a comm port
 	init_param_int(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));
 
 	//==-- Mavlink

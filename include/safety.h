@@ -70,9 +70,19 @@ typedef enum {
 	SYSTEM_OPERATION_REBOOT_BOOTLOADER
 } system_operation_t;
 
+typedef struct {	//TODO: Should include the LEDx number
+	bool is_on;
+	uint32_t num_pulses;
+	uint32_t num_pulses_done;
+	uint32_t last_start;
+	uint32_t last_pulse;
+	uint32_t pulse_length;
+} status_led_t;
+
+extern status_led_t _status_led;
 extern system_status_t _system_status;
 extern uint8_t _system_operation_control;
 
 void safety_init( void );
-void safety_update( timeout_status_t *sensor, uint32_t stream_count);
+void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count);
 void safety_run( uint32_t time_now );

@@ -7,7 +7,8 @@
 
 #include <stdio.h>
 
-int32_t _request_all_params;
+int32_t _request_all_params_port_0;
+int32_t _request_all_params_port_1;
 uint8_t _system_operation_control;
 uint8_t _sensor_calibration;
 mavlink_queue_t _low_priority_queue;
@@ -34,7 +35,11 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				if((mavlink_msg_param_request_list_get_target_system(&msg) == mavlink_system.sysid) &&
 					(mavlink_msg_param_request_list_get_target_component(&msg) == mavlink_system.compid)) {
 					//Set the new request flag
-					_request_all_params = 0;
+					if(port == MAVLINK_COMM_0) {
+						_request_all_params_port_0 = 0;
+					} else if(port == MAVLINK_COMM_1) {
+						_request_all_params_port_1 = 0;
+					}
 				} //Else this message is for someone else
 
 				break;
@@ -243,7 +248,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 					_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
 
-					safety_update(&_system_status.mavlink.offboard_control, 100);	//TODO: Use params here
+					safety_update_sensor(&_system_status.mavlink.offboard_control, 100);	//TODO: Use params here
 				}
 
 				break;
@@ -254,7 +259,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 				uint32_t now_ms = micros();
 
-				//TODO: Should be in sensors_check()
+				//TODO: Should be in safety_check()?
 				if( (now_ms - _sensors.clock.rt_sync_last) > 500000) {	//There hasn't been a sync in a while
 					_sensors.clock.rt_offset_ns = 0;
 					_sensors.clock.rt_drift = 1.0;
@@ -310,14 +315,17 @@ static void communication_decode(uint8_t port, uint8_t c) {
 void communication_receive(void) {
 	//TODO: Have a check on Serial 0 for... all the same messages?
 	//TODO: That would mean there is only a need to have 1 parse function, and pass the right port and buffer.
-	while( serialTotalRxBytesWaiting( Serial1 ) || serialTotalRxBytesWaiting( Serial2 ) ) {
-		if( serialTotalRxBytesWaiting( Serial1 ) )
-			communication_decode(MAVLINK_COMM_0, serialRead(Serial1));
 
-		if( serialTotalRxBytesWaiting( Serial2 ) )
-			communication_decode(MAVLINK_COMM_1, serialRead(Serial2));
 
-	}
+	if( get_param_int(PARAM_BAUD_RATE_0) > 0 )
+		while( serialTotalRxBytesWaiting( Serial1 ) )
+			if( serialTotalRxBytesWaiting( Serial1 ) )
+				communication_decode( MAVLINK_COMM_0, serialRead(Serial1) );
+
+	if( get_param_int(PARAM_BAUD_RATE_1) > 0 )
+		while( serialTotalRxBytesWaiting( Serial2 ) )
+			if( serialTotalRxBytesWaiting( Serial2 ) )
+				communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
 
 	//TODO: Update global packet drops counter
 	//packet_drops += status.packet_rx_drop_count;
