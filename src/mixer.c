@@ -3,6 +3,7 @@
 #include "breezystm32.h"
 #include "pwm.h"
 #include "mavlink/common/mavlink.h"
+#include "mavlink_system.h"
 #include "fix16.h"
 //#include "fixvector3d.h"
 //#include "fixmatrix.h"
@@ -22,38 +23,63 @@ output_type_t _GPIO_output_type[8];
 int32_t _pwm_output_requested[8];
 int32_t _pwm_output[8];
 
+static mixer_t mixer_none = {
+	{NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE}, // output_type
+
+	{ 0, 0, 0, 0, 0, 0, 0, 0}, // F Mix
+	{ 0, 0, 0, 0, 0, 0, 0, 0}, // X Mix
+	{ 0, 0, 0, 0, 0, 0, 0, 0}, // Y Mix
+	{ 0, 0, 0, 0, 0, 0, 0, 0}  // Z Mix
+};
+
 //TODO: Double check
-static mixer_t quadcopter_plus_mixing = {
+static mixer_t mixer_quadcopter_plus = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
 	{ CONST_ONE, CONST_ONE, CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // F Mix
-	{ 0, -CONST_ONE, CONST_ONE, 0, 0, 0, 0, 0}, // X Mix
-	{-CONST_ONE, 0, 0, CONST_ONE, 0, 0, 0, 0}, // Y Mix
-	{-CONST_ONE, CONST_ONE, CONST_ONE, -CONST_ONE, 0, 0, 0, 0}  // Z Mix
+	{-CONST_ONE, CONST_ONE, 0,         0,         0, 0, 0, 0}, // X Mix
+	{ 0,         0,        -CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // Y Mix
+	{ CONST_ONE, CONST_ONE,-CONST_ONE,-CONST_ONE, 0, 0, 0, 0}  // Z Mix
 };
 
 //TODO: Double check
-static mixer_t quadcopter_x_mixing = {
+static mixer_t mixer_quadcopter_x = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
-	{ CONST_ONE, CONST_ONE, CONST_ONE, CONST_ONE,  0, 0, 0, 0}, // F Mix
-	{-CONST_ONE,-CONST_ONE, CONST_ONE, CONST_ONE,  0, 0, 0, 0}, // X Mix
-	{-CONST_ONE, CONST_ONE,-CONST_ONE, CONST_ONE,  0, 0, 0, 0}, // Y Mix
-	{ CONST_ONE,-CONST_ONE,-CONST_ONE, CONST_ONE,  0, 0, 0, 0}  // Z Mix
+	{ CONST_ONE, CONST_ONE, CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // F Mix
+	{-CONST_ONE, CONST_ONE, CONST_ONE,-CONST_ONE, 0, 0, 0, 0}, // X Mix
+	{ CONST_ONE,-CONST_ONE,-CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // Y Mix
+	{ CONST_ONE, CONST_ONE,-CONST_ONE,-CONST_ONE, 0, 0, 0, 0}  // Z Mix
 };
 
-static mixer_t mixer_to_use;
-
+static mixer_t *mixer_to_use;
+/*
 static mixer_t *array_of_mixers[NUM_MIXERS] = {
 	&quadcopter_plus_mixing,
 	&quadcopter_x_mixing
 };
-
+*/
 void mixer_init() {
-	//TODO: We need a better way to choosing the mixer
-	mixer_to_use = *array_of_mixers[get_param_int(PARAM_MIXER)];
+	switch(get_param_int(PARAM_MIXER)) {
+		case QUADCOPTER_PLUS: {
+			mixer_to_use = &mixer_quadcopter_plus;
 
-	for (int8_t i=0; i<8; i++) {
+			break;
+		}
+		case QUADCOPTER_X: {
+			mixer_to_use = &mixer_quadcopter_x;
+
+			break;
+		}
+		default: {
+			mixer_to_use = &mixer_none;
+			mavlink_send_statustext_notice(port, MAV_SEVERITY_ERROR, "[MIX] Unknown mixer! Disabling!");
+
+			break;
+		}
+	}
+
+	for (uint8_t i = 0; i < 8; i++) {
 		_pwm_output_requested[i] = 0;
 		_pwm_output[i] = 0;
 		_GPIO_outputs[i] = 0;
@@ -94,7 +120,7 @@ void write_output_pwm(uint8_t index, int32_t value, int32_t value_disarm) {
 //TODO: Maybe this logic should be checked elsewhere?
 //Write a pwm value to the motor channel, value should be between 0 and 1000
 void write_motor(uint8_t index, int32_t value) {
-	value = int32_constrain(value, 0, 1000) + get_param_int(PARAM_MOTOR_PWM_MIN);
+	value = int32_constrain(value, 0, 1000) + 1000;
 
 	//If there is an idle set
 	if( value < get_param_int(PARAM_MOTOR_PWM_IDLE) )
@@ -115,7 +141,7 @@ void write_servo(uint8_t index, int32_t value) {
 static void pwm_output() {
 	// Add in GPIO inputs from Onboard Computer
 	for (int8_t i=0; i<8; i++) {
-		output_type_t output_type = mixer_to_use.output_type[i];
+		output_type_t output_type = mixer_to_use->output_type[i];
 
 		//TODO: This logic needs to be double checked
 		if (output_type == NONE) {
@@ -139,9 +165,9 @@ void mixer_output() {
 	int32_t scale_factor = 1000;
 	int32_t prescaled_outputs[8];
 
-	for (uint8_t i = 0; i<8; i++) {
+	for (uint8_t i = 0; i < 8; i++) {
 		//TODO: This logic needs to be double checked
-		if (mixer_to_use.output_type[i] != NONE) {
+		if (mixer_to_use->output_type[i] != NONE) {
 			// Matrix multiply (in so many words) -- done in integer, hence the /1000 at the end
 			//TODO: This might actually be very easy to do with fix16 matrix operations...
 			/*
@@ -151,15 +177,15 @@ void mixer_output() {
 								+ (_control_output.y * mixer_to_use.z[i]);
 			prescaled_outputs[i] = (int32_t)(thrust_calc * 1000.0f);
 			*/
-			fix16_t thrust_calc = fix16_add(fix16_mul(_control_output.T, mixer_to_use.T[i]),
-								  fix16_add(fix16_mul(_control_output.r, mixer_to_use.x[i]),
-								  fix16_add(fix16_mul(_control_output.p, mixer_to_use.y[i]),
-								  fix16_mul(_control_output.y, mixer_to_use.z[i]))));
+			fix16_t thrust_calc = fix16_add(fix16_mul(_control_output.T, mixer_to_use->T[i]),
+								  fix16_add(fix16_mul(_control_output.r, mixer_to_use->x[i]),
+								  fix16_add(fix16_mul(_control_output.p, mixer_to_use->y[i]),
+								  fix16_mul(_control_output.y, mixer_to_use->z[i]))));
 			prescaled_outputs[i] = fix16_to_int(fix16_mul(thrust_calc, CONST_ONE_K));
 
 			//Note: Negitive PWM values can be calculated here, but will be saturated to 0pwm later
 
-			if( (mixer_to_use.output_type[i] == M) && ( prescaled_outputs[i] > max_output ) )
+			if( (mixer_to_use->output_type[i] == M) && ( prescaled_outputs[i] > max_output ) )
 				max_output = prescaled_outputs[i];
 		}
 	}
@@ -167,11 +193,11 @@ void mixer_output() {
 	//TODO: Need to check if this still holds
 	// saturate outputs to maintain controllability even during aggressive maneuvers
 	if (max_output > 1000)
-		scale_factor = 1000*1000/max_output;
+		scale_factor = 1000 * 1000 / max_output;
 
 	for (int8_t i=0; i<8; i++) {
-		if (mixer_to_use.output_type[i] == M) {
-			_pwm_output_requested[i] = prescaled_outputs[i]*scale_factor/1000; // divide by scale factor
+		if (mixer_to_use->output_type[i] == M) {
+			_pwm_output_requested[i] = prescaled_outputs[i] * scale_factor / 1000; // divide by scale factor
 		} else {
 			_pwm_output_requested[i] = prescaled_outputs[i];
 		}
