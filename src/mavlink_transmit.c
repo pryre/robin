@@ -9,52 +9,6 @@
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
-// local variable definitions
-int32_t _request_all_params_port_0;
-int32_t _request_all_params_port_1;
-mavlink_queue_t _low_priority_queue;
-
-static void lpq_queue_all_params(uint8_t port, int32_t request_all_params) {
-	if( request_all_params >= 0 ) {
-		mavlink_message_t msg;
-		mavlink_prepare_param_value(&msg, request_all_params);
-
-		//Don't flood the buffer
-		if(lpq_queue_msg(port, &msg)) {
-			request_all_params++;
-
-			if(request_all_params >= PARAMS_COUNT) {
-				request_all_params = -1;
-			}
-		}
-	}
-}
-
-static void mavlink_transmit_low_priority(uint8_t port) {
-
-	if(port == MAVLINK_COMM_0)
-		lpq_queue_all_params(port, _request_all_params_port_0);
-
-	if(port == MAVLINK_COMM_1)
-		lpq_queue_all_params(port, _request_all_params_port_1);
-
-	//If there are messages in the queue
-	if(_low_priority_queue.queued_message_count > 0) {
-		//Transmit the message
-		uint16_t buffer_len = _low_priority_queue.buffer_len[_low_priority_queue.queue_position];
-		uint8_t buffer_port = _low_priority_queue.buffer_port[_low_priority_queue.queue_position];
-
-		if( port == buffer_port ) {
-			for(uint16_t i = 0; i < buffer_len; i++) {
-				comm_send_ch(buffer_port, _low_priority_queue.buffer[_low_priority_queue.queue_position][i]);
-			}
-
-			//Move the queue along
-			remove_current_lpq_message();
-		}
-	}
-}
-
 //Stream rate in microseconds: 1s = 1,000,000ms
 static mavlink_stream_t mavlink_stream_comm_0[MAVLINK_STREAM_COUNT] = {
 	{ .period_param = PARAM_STREAM_RATE_HEARTBEAT_0,			.last_time_us = 0, .send_function = mavlink_stream_heartbeat },
@@ -65,7 +19,7 @@ static mavlink_stream_t mavlink_stream_comm_0[MAVLINK_STREAM_COUNT] = {
 	{ .period_param = PARAM_STREAM_RATE_ATTITUDE_TARGET_0,		.last_time_us = 0, .send_function = mavlink_stream_attitude_target },
 	{ .period_param = PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0,		.last_time_us = 0, .send_function = mavlink_stream_servo_output_raw },
 	{ .period_param = PARAM_STREAM_RATE_TIMESYNC_0,				.last_time_us = 0, .send_function = mavlink_stream_timesync },
-	{ .period_param = PARAM_STREAM_RATE_LOW_PRIORITY_0,			.last_time_us = 0, .send_function = mavlink_transmit_low_priority }
+	{ .period_param = PARAM_STREAM_RATE_LOW_PRIORITY_0,			.last_time_us = 0, .send_function = mavlink_stream_low_priority }
 };
 
 static mavlink_stream_t mavlink_stream_comm_1[MAVLINK_STREAM_COUNT] = {
@@ -77,7 +31,7 @@ static mavlink_stream_t mavlink_stream_comm_1[MAVLINK_STREAM_COUNT] = {
 	{ .period_param = PARAM_STREAM_RATE_ATTITUDE_TARGET_1,		.last_time_us = 0, .send_function = mavlink_stream_attitude_target },
 	{ .period_param = PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1,		.last_time_us = 0, .send_function = mavlink_stream_servo_output_raw },
 	{ .period_param = PARAM_STREAM_RATE_TIMESYNC_1,				.last_time_us = 0, .send_function = mavlink_stream_timesync },
-	{ .period_param = PARAM_STREAM_RATE_LOW_PRIORITY_1,			.last_time_us = 0, .send_function = mavlink_transmit_low_priority }
+	{ .period_param = PARAM_STREAM_RATE_LOW_PRIORITY_1,			.last_time_us = 0, .send_function = mavlink_stream_low_priority }
 };
 
 static bool transmit_stream(uint32_t time_us, uint8_t port, mavlink_stream_t *stream) {

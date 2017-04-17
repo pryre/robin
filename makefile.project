@@ -8,6 +8,7 @@ PROJECT_SRC_FILES = ./src/main.c \
 					./src/flash.c \
 					./src/params.c \
 					./src/safety.c \
+					./src/mavlink_system.c \
 					./src/mavlink_receive.c \
 					./src/mavlink_transmit.c \
 					./src/sensors.c \

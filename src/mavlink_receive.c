@@ -253,6 +253,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 				break;
 			}
+			/*
 			case MAVLINK_MSG_ID_TIMESYNC: {
 				mavlink_timesync_t tsync;
 				mavlink_msg_timesync_decode(&msg, &tsync);
@@ -292,7 +293,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
 						snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[SENSOR] Hard setting skew: %0.9f", dt / 1e9);
-						mavlink_queue_notice( &text[0] );
+						mavlink_queue_notice_broadcast( &text[0] );
 					} else {
 						//Filter the new time offset
 						time_offset_new = sensors_clock_smooth_time_skew(_sensors.clock.rt_offset_ns, offset_ns);
@@ -304,6 +305,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 				break;
 			}
+			*/
 			default:
 				//TODO: Error?
 				//Do nothing
@@ -315,7 +317,6 @@ static void communication_decode(uint8_t port, uint8_t c) {
 void communication_receive(void) {
 	//TODO: Have a check on Serial 0 for... all the same messages?
 	//TODO: That would mean there is only a need to have 1 parse function, and pass the right port and buffer.
-
 
 	if( get_param_int(PARAM_BAUD_RATE_0) > 0 )
 		while( serialTotalRxBytesWaiting( Serial1 ) )

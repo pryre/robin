@@ -72,7 +72,6 @@ static void status_led_do_pulse(status_led_t* led) {
 	}
 }
 
-//TODO: Should not be hard coded?
 static void status_led_update() {
 	// Safety LED
 	if( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY ) {
@@ -97,7 +96,7 @@ void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count ) {
 		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Connected: ";
 		strncat(text, sensor->name, (MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 20) );	//Magic number is size of the message start
 		//mavlink_send_statustext_notice(MAV_SEVERITY_NOTICE, &text[0]);
-		mavlink_queue_notice( &text[0] );
+		mavlink_queue_notice_broadcast( &text[0] );
 	} else if( sensor->health == SYSTEM_HEALTH_UNKNOWN ) {
 		sensor->health = SYSTEM_HEALTH_TIMEOUT;
 	}
@@ -111,7 +110,7 @@ static void safety_check( timeout_status_t *sensor, uint32_t time_now, uint32_t 
 		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Timeout: ";
 		strncat(text, sensor->name, (MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 18) );	//Magic number is size of the message start
 		//mavlink_send_statustext_notice(MAV_SEVERITY_NOTICE, &text[0]);
-		mavlink_queue_notice( &text[0] );
+		mavlink_queue_notice_broadcast( &text[0] );
 	}
 }
 
