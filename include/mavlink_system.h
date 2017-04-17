@@ -145,11 +145,6 @@ static inline bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg) {
 
 //==-- Sends
 static inline void mavlink_stream_heartbeat(uint8_t port) {
-	uint8_t mav_base_mode = 0;
-
-	if(_system_status.arm_status)
-		mav_base_mode |= MAV_MODE_FLAG_SAFETY_ARMED;
-
 	/*
 	//TODO: Document mode meanings
 	if( (_system_status.state & SYSTEM_MODE_OFFBOARD) ||
@@ -160,11 +155,15 @@ static inline void mavlink_stream_heartbeat(uint8_t port) {
 			mav_base_mode |= MAV_MODE_FLAG_STABILIZE_ENABLED;
 	} //Other modes will show as 0, and should be cause for alarm if they are seen anyway, and thus unique
 	*/
-	mav_base_mode = _system_status.mode;
 
 	//We don't use custom_mode
 	//TODO: MAV_TYPE should be dynamically set
-	mavlink_msg_heartbeat_send(port, MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_GENERIC, mav_base_mode, 0, _system_status.state);
+	mavlink_msg_heartbeat_send(port,
+							   MAV_TYPE_QUADROTOR,
+							   MAV_AUTOPILOT_GENERIC,
+							   _system_status.mode,
+							   0,
+							   _system_status.state);
 }
 
 //TODO: Quite a lot here

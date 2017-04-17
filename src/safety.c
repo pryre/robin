@@ -10,15 +10,22 @@ extern "C" {
 #include "safety.h"
 
 system_status_t _system_status;
-status_led_t _status_led;
+
+static status_led_t _status_led_green;
+static status_led_t _status_led_red;
 
 static void status_led_init() {
-	_status_led.is_on = false;
-	_status_led.num_pulses = 0;
-	_status_led.num_pulses_done = 0;
-	_status_led.last_start = 0;
-	_status_led.last_pulse = 0;
-	_status_led.pulse_length = 200000;	//0.2s
+	_status_led_green.gpio_p = LED0_GPIO;
+	_status_led_green.pin = LED0_PIN;
+	_status_led_green.period_us = 1000000;
+	_status_led_green.length_us = 250000;
+	_status_led_green.last_pulse = 0;
+
+	_status_led_red.gpio_p = LED1_GPIO;
+	_status_led_red.pin = LED1_PIN;
+	_status_led_red.period_us = 500000;
+	_status_led_red.length_us = 250000;
+	_status_led_red.last_pulse = 0;
 }
 
 void safety_init() {
@@ -54,36 +61,30 @@ void safety_init() {
 		//Diff Pressure
 }
 
+static void status_led_do_pulse(status_led_t* led) {
+	if( ( micros() - led->last_pulse ) > led->period_us )
+		led->last_pulse = micros();
+
+	if( ( micros() - led->last_pulse ) < led->length_us ) {
+		digitalLo(led->gpio_p, led->pin);	//On
+	} else {
+		digitalHi(led->gpio_p, led->pin);	//Off
+	}
+}
+
 //TODO: Should not be hard coded?
 static void status_led_update() {
-	//LED blinker
-	// Single blink for unarmed, double blink for armed
+	// Safety LED
 	if( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY ) {
-		_status_led.num_pulses = 2;
+		digitalLo(_status_led_red.gpio_p, _status_led_red.pin);	//On
+	} else if (_system_status.safety_button_status) {
+		status_led_do_pulse(&_status_led_red);
 	} else {
-		_status_led.num_pulses = 1;
+		digitalHi(_status_led_red.gpio_p, _status_led_red.pin);	//Off
 	}
 
-	if( ( micros() - _status_led.last_start ) > 1000000) {
-		_status_led.num_pulses = 0;
-		_status_led.last_start = micros();
-	}
-
-	if( _status_led.num_pulses_done < _status_led.num_pulses ) {
-		if( ( micros() - _status_led.last_pulse ) > _status_led.pulse_length ) {
-			if( _status_led.is_on ) {
-				LED0_OFF;
-			}
-
-			if( ( micros() - _status_led.last_pulse ) > ( 2* _status_led.pulse_length ) ) {
-				_status_led.last_pulse = micros();
-				_status_led.num_pulses_done++;
-			}
-		} else {
-			if( !_status_led.is_on )
-				LED0_ON;
-		}
-	}
+	//System heartbeat LED
+	status_led_do_pulse(&_status_led_green);
 }
 
 void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count ) {

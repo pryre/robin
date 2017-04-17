@@ -57,7 +57,7 @@ typedef struct {
 		//Active: MAV_MODE_GUIDED_DISARMED/MAV_MODE_GUIDED_ARMED
 	uint8_t mode;	//Set with MAV_MODE_FLAG	//TODO: Must be implemented
 	bool parameters;
-	bool arm_status;
+	bool safety_button_status;	//Safety button to engage and disengage motor output
 	mavlink_stream_status_t mavlink;
 	safety_sensor_status_t sensors;
 } system_status_t;
@@ -70,16 +70,15 @@ typedef enum {
 	SYSTEM_OPERATION_REBOOT_BOOTLOADER
 } system_operation_t;
 
-typedef struct {	//TODO: Should include the LEDx number
-	bool is_on;
-	uint32_t num_pulses;
-	uint32_t num_pulses_done;
-	uint32_t last_start;
+typedef struct {
+	GPIO_TypeDef *gpio_p;
+	uint16_t pin;
+
+	uint32_t period_us;
+	uint32_t length_us;
 	uint32_t last_pulse;
-	uint32_t pulse_length;
 } status_led_t;
 
-extern status_led_t _status_led;
 extern system_status_t _system_status;
 extern uint8_t _system_operation_control;
 
