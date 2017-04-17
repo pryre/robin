@@ -21,10 +21,6 @@
  */
 
 extern serialPort_t * Serial2;
-
-extern int32_t _request_all_params_port_0;
-extern int32_t _request_all_params_port_1;
-
 extern mavlink_system_t mavlink_system;
 
 void communications_init(void);
@@ -45,16 +41,20 @@ void mavlink_send_timesync(uint8_t port, uint64_t tc1, uint64_t ts1);
 
 //==-- Low priority message queue
 typedef struct {
+	uint8_t port;
+	int32_t request_all_params;
+
 	uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE][MAVLINK_MAX_PACKET_LEN];
 	uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE];
-	uint8_t buffer_port[LOW_PRIORITY_QUEUE_SIZE];
-	uint16_t queue_position;
-	uint16_t queued_message_count;
+	uint16_t position;	//Current position in the queue
+	uint16_t length;	//Current length of the queue
+
+	uint32_t timer_warn_full;
 } mavlink_queue_t;
 
-extern mavlink_queue_t _low_priority_queue;
-//TODO: LPQ is still in a terrible state
-//TODO: Needs to be split, 1 for each channel
+extern mavlink_queue_t _lpq_port_0;
+extern mavlink_queue_t _lpq_port_1;
+
 bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg);
 
 //==-- Streams

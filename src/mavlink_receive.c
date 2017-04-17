@@ -7,11 +7,10 @@
 
 #include <stdio.h>
 
-int32_t _request_all_params_port_0;
-int32_t _request_all_params_port_1;
 uint8_t _system_operation_control;
 uint8_t _sensor_calibration;
-mavlink_queue_t _low_priority_queue;
+mavlink_queue_t _lpq_port_0;
+mavlink_queue_t _lpq_port_1;
 
 command_input_t _command_input;
 system_status_t _system_status;
@@ -36,9 +35,9 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					(mavlink_msg_param_request_list_get_target_component(&msg) == mavlink_system.compid)) {
 					//Set the new request flag
 					if(port == MAVLINK_COMM_0) {
-						_request_all_params_port_0 = 0;
+						_lpq_port_0.request_all_params = 0;
 					} else if(port == MAVLINK_COMM_1) {
-						_request_all_params_port_1 = 0;
+						_lpq_port_1.request_all_params = 0;
 					}
 				} //Else this message is for someone else
 
@@ -59,6 +58,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 						mavlink_message_t msg_out;
 						mavlink_prepare_param_value(&msg_out, index);
+
 						lpq_queue_msg(port, &msg_out);
 					}
 				} //Else this message is for someone else

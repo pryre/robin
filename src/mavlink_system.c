@@ -29,11 +29,8 @@
  */
 
 serialPort_t * Serial2;
-
-int32_t _request_all_params_port_0;
-int32_t _request_all_params_port_1;
-static uint32_t _lpq_warn_full;
-mavlink_queue_t _low_priority_queue;
+mavlink_queue_t _lpq_port_0;
+mavlink_queue_t _lpq_port_1;
 
 mavlink_system_t mavlink_system;
 system_status_t _system_status;
@@ -49,10 +46,17 @@ void communications_init(void) {
 	mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID); // System ID, 1-255
 	mavlink_system.compid = get_param_int(PARAM_COMPONENT_ID); // Component/Subsystem ID, 1-255
 
-	_request_all_params_port_0 = -1;
-	_request_all_params_port_1 = -1;
+	_lpq_port_0.port = MAVLINK_COMM_0;
+	_lpq_port_0.position = 0;
+	_lpq_port_0.length = 0;
+	_lpq_port_0.request_all_params = -1;
+	_lpq_port_0.timer_warn_full = 0;
 
-	_lpq_warn_full = 0;
+	_lpq_port_1.port = MAVLINK_COMM_1;
+	_lpq_port_1.position = 0;
+	_lpq_port_1.length = 0;
+	_lpq_port_1.request_all_params = -1;
+	_lpq_port_1.timer_warn_full = 0;
 }
 
 /**
@@ -83,10 +87,10 @@ void mavlink_send_timesync(uint8_t port, uint64_t tc1, uint64_t ts1) {
 }
 
 //==-- Low priority message queue
-static uint16_t get_lpq_next_slot(void) {
+static uint16_t get_lpq_next_slot(mavlink_queue_t* queue) {
 	uint16_t next_slot = 0;
 
-	next_slot = _low_priority_queue.queue_position + _low_priority_queue.queued_message_count;
+	next_slot = queue->position + queue->length;
 
 	//See if the queue needs to wrap around the circular buffer
 	if (next_slot >= LOW_PRIORITY_QUEUE_SIZE)
@@ -95,77 +99,86 @@ static uint16_t get_lpq_next_slot(void) {
 	return next_slot;
 }
 
-static bool check_lpq_space_free(void) {
+static bool check_lpq_space_free(mavlink_queue_t* queue) {
 	//If the count is at the queue size limit, return false
-	return (_low_priority_queue.queued_message_count < LOW_PRIORITY_QUEUE_SIZE);
+	return (queue->length < LOW_PRIORITY_QUEUE_SIZE);
 }
 
-static void remove_current_lpq_message(void) {
-	_low_priority_queue.queue_position++;
+static void remove_current_lpq_message(mavlink_queue_t* queue) {
+	queue->position++;
 
-	if(_low_priority_queue.queue_position >= LOW_PRIORITY_QUEUE_SIZE)
-		_low_priority_queue.queue_position = 0;
+	if(queue->position >= LOW_PRIORITY_QUEUE_SIZE)
+		queue->position = 0;
 
-	if(_low_priority_queue.queued_message_count > 0)
-		_low_priority_queue.queued_message_count--;
-}
-
-static void lpq_queue_all_params(uint8_t port, int32_t *request_all_params) {
-	mavlink_message_t msg;
-	mavlink_prepare_param_value(&msg, *request_all_params);
-
-	//Don't flood the buffer
-	if(lpq_queue_msg(port, &msg)) {
-		(*request_all_params)++;
-
-		if( (*request_all_params) >= PARAMS_COUNT) {
-			*request_all_params = -1;
-		}
-	}
+	if(queue->length > 0)
+		queue->length--;
 }
 
 bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg) {
 	bool success = false;
+	mavlink_queue_t* queue;
 
-	if( check_lpq_space_free() ) {
-		uint8_t i = get_lpq_next_slot();
-		_low_priority_queue.buffer_len[i] = mavlink_msg_to_send_buffer(_low_priority_queue.buffer[i], msg);	//Copy message struct data to buffer;
-		_low_priority_queue.buffer_port[i] = port;
-		_low_priority_queue.queued_message_count++;
+	if( port == _lpq_port_0.port ) {
+		queue = &_lpq_port_0;
+	} else if( port == _lpq_port_1.port ) {
+		queue = &_lpq_port_1;
+	}
+
+	if( check_lpq_space_free( queue ) && ( queue != NULL) ) {
+		uint8_t i = get_lpq_next_slot(queue);
+		queue->buffer_len[i] = mavlink_msg_to_send_buffer(queue->buffer[i], msg);	//Copy message struct data to buffer;
+		queue->length++;
 
 		success = true;
 	} else {
-		if( micros() - _lpq_warn_full > 1000000) {	//XXX: Only outout the error at 1/s maximum otherwise buffer will never catch up
-			mavlink_send_statustext_notice(port, MAV_SEVERITY_ERROR, "[COMMS] LPQ message dropped!");
-			_lpq_warn_full = micros();
+		if( micros() - queue->timer_warn_full > 1000000) {	//XXX: Only outout the error at 1/s maximum otherwise buffer will never catch up
+			mavlink_send_statustext_notice(queue->port, MAV_SEVERITY_ERROR, "[COMMS] LPQ message dropped!");
+			queue->timer_warn_full = micros();
 		}
 	}
 
 	return success;
 }
 
+static void lpq_queue_all_params(mavlink_queue_t* queue) {
+	mavlink_message_t msg;
+	mavlink_prepare_param_value( &msg, queue->request_all_params );
+
+	//Don't flood the buffer
+	if( lpq_queue_msg( queue->port, &msg ) ) {
+		queue->request_all_params++;
+
+		if( queue->request_all_params >= PARAMS_COUNT ) {
+			queue->request_all_params = -1;
+		}
+	}
+}
+
+void lpq_send(mavlink_queue_t* queue) {
+	//If there are messages in the queue
+	if(queue->length > 0) {
+		//Transmit the message
+		for(uint16_t i = 0; i < queue->buffer_len[queue->position]; i++) {
+			comm_send_ch(queue->port, queue->buffer[queue->position][i]);
+		}
+
+		//Move the queue along
+		remove_current_lpq_message(queue);
+	}
+}
+
 //==-- Streams
 void mavlink_stream_low_priority(uint8_t port) {
-	if( ( port == MAVLINK_COMM_0 ) && ( _request_all_params_port_0 >= 0 ) )
-		lpq_queue_all_params(port, &_request_all_params_port_0);
+	if( port == _lpq_port_0.port ) {
+		if( _lpq_port_0.request_all_params >= 0 )
+			lpq_queue_all_params(&_lpq_port_0);
 
-	if( ( port == MAVLINK_COMM_1 ) && ( _request_all_params_port_1 >= 0 ) )
-		lpq_queue_all_params(port, &_request_all_params_port_1);
+		lpq_send(&_lpq_port_0);
+	} else if( port == _lpq_port_1.port ) {
+		if( _lpq_port_1.request_all_params >= 0 )
+			lpq_queue_all_params(&_lpq_port_1);
 
-	//If there are messages in the queue
-	if(_low_priority_queue.queued_message_count > 0) {
-		//Transmit the message
-		uint16_t buffer_len = _low_priority_queue.buffer_len[_low_priority_queue.queue_position];
-		uint8_t buffer_port = _low_priority_queue.buffer_port[_low_priority_queue.queue_position];
-
-		if( port == buffer_port ) {
-			for(uint16_t i = 0; i < buffer_len; i++) {
-				comm_send_ch(buffer_port, _low_priority_queue.buffer[_low_priority_queue.queue_position][i]);
-			}
-
-			//Move the queue along
-			remove_current_lpq_message();
-		}
+		lpq_send(&_lpq_port_1);
 	}
 }
 
@@ -203,8 +216,8 @@ void mavlink_stream_sys_status(uint8_t port) {
 	uint8_t battery_remaining = 0;
 	uint16_t drop_rate_comm = 0;
 	uint16_t errors_comm = 0;
-	uint16_t errors_count1 = _low_priority_queue.queued_message_count;
-	uint16_t errors_count2 = 0;
+	uint16_t errors_count1 = _lpq_port_0.length;
+	uint16_t errors_count2 = _lpq_port_1.length;
 	uint16_t errors_count3 = _sensors.clock.min;
 	uint16_t errors_count4 = _sensors.clock.max;
 
