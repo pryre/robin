@@ -93,7 +93,7 @@ void mixer_init() {
 }
 
 void pwm_init() {
-	bool useCPPM = false;
+	bool useCPPM = true;	//XXX: Frees up the ports for telem2 and safety switch
 
 	/*TODO: Put this back in?
 	if(get_param_int(PARAM_RC_TYPE) == 1)

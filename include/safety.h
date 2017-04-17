@@ -83,5 +83,7 @@ extern system_status_t _system_status;
 extern uint8_t _system_operation_control;
 
 void safety_init( void );
+bool safety_request_arm( void );
+bool safety_request_disarm( void );
 void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count);
 void safety_run( uint32_t time_now );

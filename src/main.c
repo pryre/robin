@@ -97,7 +97,7 @@ void loop(void) {
 	communication_transmit( micros() );
 
 	//==-- Update Sensor Data
-	sensors_update( sensors_clock_imu_int_get() );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
+	sensors_update( micros() );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
 
 	//==-- Calibrations
 	if( _system_status.state == MAV_STATE_CALIBRATING ) {	//If any calibration is in progress
@@ -116,14 +116,20 @@ void loop(void) {
 		//External Attitude Input
 		//Command Input
 		//External System Heartbeats
+		//Offboard control
 		//Anything else?
+	//TODO: Deal with emergency modes
 	//TODO: Arming timeout
+
+	if( ( _system_status.state = MAV_STATE_ACTIVE ) &&
+		( _system_status.mavlink.offboard_control.health != SYSTEM_HEALTH_OK ) )
+		_system_status.state = MAV_STATE_CRITICAL;
 
 	//==-- Update Estimator
     estimator_update( sensors_clock_imu_int_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
-	//TODO: Make check to see if armed, else skip
-		if( _system_status.mavlink.offboard_control.health != SYSTEM_HEALTH_OK ) {
+	if(_system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY) {
+		if(_system_status.state == MAV_STATE_CRITICAL) {
 			_command_input.r = 0;
 			_command_input.p = 0;
 			_command_input.y = 0;
@@ -131,16 +137,26 @@ void loop(void) {
 			_command_input.q.b = 0;
 			_command_input.q.c = 0;
 			_command_input.q.d = 0;
-			_command_input.T = 0;	//TODO: Throttle failsafe if timeout?
-			_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
+			_command_input.T = get_param_fix16(PARAM_THROTTLE_FAILSAFE);
+			_command_input.input_mask |= CMD_IN_IGNORE_ROLL_RATE | CMD_IN_IGNORE_PITCH_RATE | CMD_IN_IGNORE_YAW_RATE;	//Set it to just hold flat and steady
 		}
 
+		if(_system_status.state == MAV_STATE_EMERGENCY) {
+			_command_input.r = 0;
+			_command_input.p = 0;
+			_command_input.y = 0;
+			_command_input.q.a = 1;
+			_command_input.q.b = 0;
+			_command_input.q.c = 0;
+			_command_input.q.d = 0;
+			_command_input.T = 0;
+			_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
+		}
 		//==-- Update Controller
 		controller_run( sensors_clock_imu_int_get() );	//Apply the current commands and update the PID controllers
-		//TODO: Need to reset PIDs when armed
-		//TODO: If there are any critical timeouts, set output to 0,0,0,throttle_emergency_land
-		//TODO: Make check to see if armed, else skip
-
+	} else {
+		controller_reset();
+	}
 
 	//==-- Send Motor Commands
 	mixer_output();	//Convert outputs to correct layout and send PWM (and considers failsafes)

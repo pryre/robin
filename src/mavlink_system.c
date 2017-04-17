@@ -16,6 +16,8 @@
 #include "controller.h"
 #include "mixer.h"
 
+#include <stdio.h>
+
 
 /* Struct that stores the communication settings of this system.
    you can also define / alter these settings elsewhere, as long
@@ -41,6 +43,8 @@ state_t _state_estimator;
 command_input_t _command_input;
 control_output_t _control_output;
 int32_t _pwm_output[8];
+
+static const uint8_t blank_array[8] = {0,0,0,0,0,0,0,0};
 
 void communications_init(void) {
 	mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID); // System ID, 1-255
@@ -360,10 +364,7 @@ void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 								  MAV_PROTOCOL_CAPABILITY_SET_ACTUATOR_TARGET +
 								  MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION;
 
-	const uint8_t blank_array[8] = {0,0,0,0,0,0,0,0};
-	const uint8_t flight_custom_version[8] = GIT_VERSION_FLIGHT;
-	const uint8_t os_custom_version[8] = GIT_VERSION_OS;
-
+	//TODO: Use GIT_VERSION_FLIGHT and GIT_VERSION_OS
 	mavlink_msg_autopilot_version_pack(mavlink_system.sysid,
 									   mavlink_system.compid,
 									   msg,
@@ -372,9 +373,9 @@ void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 									   0,
 									   get_param_int(PARAM_VERSION_FIRMWARE),
 									   get_param_int(PARAM_BOARD_REVISION),
-									   flight_custom_version,	//TODO: Check that this method of getting commit hash works
-									   blank_array,
-									   os_custom_version,
+									   &blank_array[0],
+									   &blank_array[0],
+									   &blank_array[0],
 									   0x10c4,	//TODO: This is the serial vendor and product ID, should be dynamic?
 									   0xea60,
 									   U_ID_0);
@@ -415,7 +416,7 @@ void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index) {
 	mavlink_msg_param_value_pack(mavlink_system.sysid,
 								 mavlink_system.compid,
 								 msg,
-								 param_name,		//String of name
+								 &param_name[0],		//String of name
 								 u.f,			//Value (always as float)
 								 param_type,		//From MAV_PARAM_TYPE
 								 PARAMS_COUNT,	//Total number of parameters
@@ -452,8 +453,12 @@ bool mavlink_queue_notice_broadcast(char* text) {
 
 	mavlink_message_t msg;
 	mavlink_prepare_statustext(&msg, MAV_SEVERITY_NOTICE, text);
-	lpq_queue_msg(MAVLINK_COMM_0, &msg);
-	lpq_queue_msg(MAVLINK_COMM_1, &msg);
+
+	if(get_param_int(PARAM_BAUD_RATE_0) > 0)
+		lpq_queue_msg(MAVLINK_COMM_0, &msg);
+
+	if(get_param_int(PARAM_BAUD_RATE_1) > 0)
+		lpq_queue_msg(MAVLINK_COMM_1, &msg);
 
 	return success;
 }

@@ -148,6 +148,8 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_MOTOR_PWM_MIN, "MOTOR_PWM_MIN", 1000);
 	init_param_int(PARAM_MOTOR_PWM_MAX, "MOTOR_PWM_MAX", 2000);
 
+	init_param_fix16(PARAM_THROTTLE_FAILSAFE, "THROTTLE_FAILSAFE", fix16_from_float(0.25f));
+
 	init_param_int(PARAM_MIXER, "MIXER", QUADCOPTER_PLUS);
 }
 

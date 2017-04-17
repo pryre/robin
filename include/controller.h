@@ -43,9 +43,9 @@ extern pid_controller_t _pid_roll_rate;
 extern pid_controller_t _pid_pitch_rate;
 extern pid_controller_t _pid_yaw_rate;
 
-void controller_init();
+void controller_reset(void);
+void controller_init(void);
 void controller_run( uint32_t now );
-void controller_reset();
 
 #ifdef __cplusplus
 }

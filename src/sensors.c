@@ -5,8 +5,9 @@
 #include "sensors.h"
 #include "params.h"
 #include "mavlink_system.h"
-#include "drivers/mpu.h"
 #include "breezystm32.h"
+#include "drivers/mpu.h"
+#include "gpio.h"
 
 #include "fix16.h"
 #include "fixvector3d.h"
@@ -80,9 +81,16 @@ static void sensors_imu_poll(void) {
 		mpu6050_request_async_temp_read(&(_sensors.imu.temp_raw), &temp_status);
 }
 
+static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
+	status->present = sensor_present;
+	status->new_data = false;
+	status->time_read = 0;
+}
+
 void sensors_init(void) {
 	//==-- IMU-MPU6050
 	//TODO: Set IMU to be calibrated if not already
+	sensor_status_init(&_sensors.imu.status, true);
     mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_int(PARAM_BOARD_REVISION));
 	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
 
@@ -102,6 +110,23 @@ void sensors_init(void) {
 	_sensor_cal_data.accel.sum_y = 0;
 	_sensor_cal_data.accel.sum_z = 0;
 	_sensor_cal_data.accel.sum_t = 0;
+
+	//==-- Safety button
+	sensor_status_init(&_sensors.safety_button.status, true);
+	_sensors.safety_button.gpio_p = GPIOA;
+	_sensors.safety_button.pin = Pin_1;
+
+	gpio_config_t safety_button_cfg;
+    safety_button_cfg.pin = _sensors.safety_button.pin;
+    safety_button_cfg.mode = Mode_IPU;
+    safety_button_cfg.speed = Speed_2MHz;
+    gpioInit(_sensors.safety_button.gpio_p, &safety_button_cfg);
+
+	_sensors.safety_button.state = false;
+	_sensors.safety_button.period_us = 100000;		//100ms update rate
+	_sensors.safety_button.time_db_read = 0;
+	_sensors.safety_button.period_db_us = 50000;	//50ms debounce period
+	_sensors.safety_button.state_db = false;
 
 	//==-- Timer
 	clock_init();
@@ -204,8 +229,30 @@ bool sensors_update(uint32_t time_us) {
 	_sensors.imu.gyro.y = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[1] - get_param_int(PARAM_GYRO_Y_BIAS))), _sensors.imu.gyro_scale);
 	_sensors.imu.gyro.z = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[2] - get_param_int(PARAM_GYRO_Z_BIAS))), _sensors.imu.gyro_scale);
 
-	_sensors.imu.status.time_read = time_us;
+	_sensors.imu.status.time_read = sensors_clock_imu_int_get();
 	_sensors.imu.status.new_data = true;
+
+	//==-- Safety Button
+	bool safety_button_reading = false;
+
+	safety_button_reading = digitalIn(_sensors.safety_button.gpio_p, _sensors.safety_button.pin);
+
+	if(safety_button_reading != _sensors.safety_button.state_db )
+		_sensors.safety_button.time_db_read = time_us;
+
+	if( ( time_us - _sensors.safety_button.time_db_read ) > _sensors.safety_button.period_db_us ) {
+		if(safety_button_reading != _sensors.safety_button.state) {	//The reading has changed
+			_sensors.safety_button.state = safety_button_reading;
+
+			_sensors.safety_button.status.time_read = time_us;
+			_sensors.safety_button.status.new_data = true;
+
+			//if(!_sensors.safety_button.state)
+			//	LED1_TOGGLE;
+		}
+	}
+
+	_sensors.safety_button.state_db = safety_button_reading;
 
 	//TODO: This should be aware of failures
 	return true;

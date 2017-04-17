@@ -1,9 +1,10 @@
+#include "breezystm32.h"
+
 #include "mavlink_receive.h"
 #include "mavlink_system.h"
 #include "safety.h"
 #include "sensors.h"
 #include "controller.h"
-#include "breezystm32.h"
 
 #include <stdio.h>
 
@@ -158,7 +159,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 						switch((int)mavlink_msg_command_long_get_param1(&msg)) {
 							case 0:	//Read from flash
-								if(read_params()) {
+								if( read_params() ) {
 									command_result = MAV_RESULT_ACCEPTED;
 								} else {
 									command_result = MAV_RESULT_FAILED;
@@ -209,6 +210,18 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						}
 
 						break;
+					}
+					case MAV_CMD_COMPONENT_ARM_DISARM: {	//TODO: For some reason this doesn't return an acceptable result
+						need_ack = true;
+						command_result = MAV_RESULT_DENIED;
+
+						if( (bool)mavlink_msg_command_long_get_param1(&msg) ) { //ARM
+							if( safety_request_arm() )
+								command_result = MAV_RESULT_ACCEPTED;
+						} else { //DISARM
+							if( safety_request_disarm() )
+								command_result = MAV_RESULT_ACCEPTED;
+						}
 					}
 					//TODO: Handle other cases?
 					default: {

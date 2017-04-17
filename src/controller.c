@@ -29,7 +29,13 @@ pid_controller_t _pid_yaw_rate;
 //pid_controller_t pid_yaw;
 //pid_controller_t pid_altitude;
 
-void controller_init() {
+void controller_reset(void) {
+	pid_reset(&_pid_roll_rate, _state_estimator.p);
+	pid_reset(&_pid_pitch_rate, _state_estimator.q);
+	pid_reset(&_pid_yaw_rate, _state_estimator.r);
+}
+
+void controller_init(void) {
 /*
   pid_init(&pid_roll,
            PARAM_PID_ROLL_ANGLE_P,

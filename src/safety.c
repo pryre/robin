@@ -8,11 +8,16 @@ extern "C" {
 
 #include "params.h"
 #include "safety.h"
+#include "sensors.h"
 
 system_status_t _system_status;
+sensor_readings_t _sensors;
 
 static status_led_t _status_led_green;
 static status_led_t _status_led_red;
+
+static uint32_t _time_safety_button_pressed;
+static bool _new_safety_button_press;
 
 static void status_led_init() {
 	_status_led_green.gpio_p = LED0_GPIO;
@@ -54,11 +59,71 @@ void safety_init() {
 	_system_status.sensors.sonar.count = 0;
 	strncpy(_system_status.sensors.sonar.name, "Sonar", 24);
 
+	_new_safety_button_press = false;
+	_time_safety_button_pressed = 0;
+
 	status_led_init();
 
 	//TODO:
 		//Barometer
 		//Diff Pressure
+}
+
+bool safety_request_arm(void) {
+	bool result = false;
+	//TODO: Should there be any other checks here?
+	//	Check to see if all inputs are good to go
+
+	if(_system_status.safety_button_status) {
+		_system_status.mode |= MAV_MODE_FLAG_SAFETY_ARMED;	//ARM!
+
+		//TODO: Make success system beep here
+
+		result = true;
+	} else {
+		//TODO: Make success system failure here
+	}
+
+	return result;
+}
+
+bool safety_request_disarm(void) {
+	bool result = false;
+
+	_system_status.mode &= !MAV_MODE_FLAG_SAFETY_ARMED;	//DISARM!
+
+	//TODO: Make system beep here as well
+
+	result = true;
+
+	return result;
+}
+
+static void safety_switch_update(uint32_t time_now) {
+	if(_sensors.safety_button.status.new_data) {
+		if(!_sensors.safety_button.state) {	//Inversed as a pull-up resistor is used for button detect
+			_time_safety_button_pressed = time_now;
+			_new_safety_button_press = true;
+		} else {
+			_new_safety_button_press = false;
+		}
+
+		//if( ( time_safety_button_released - time_safety_button_pressed ) > 1000000 )
+		//	_system_status.safety_button_status = !_system_status.safety_button_status;	//Toggle arming safety
+
+		_sensors.safety_button.status.new_data = false;
+	}
+
+	if(_new_safety_button_press && ( time_now - _time_safety_button_pressed ) > 1000000 ) {
+		_system_status.safety_button_status = !_system_status.safety_button_status;	//Toggle arming safety
+		_new_safety_button_press = false;
+
+		//If the mav was armed and safety was switched off, disarm it
+		if( !_system_status.safety_button_status &&
+			(_system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY) ) {
+			safety_request_disarm();
+		}
+	}
 }
 
 static void status_led_do_pulse(status_led_t* led) {
@@ -72,7 +137,7 @@ static void status_led_do_pulse(status_led_t* led) {
 	}
 }
 
-static void status_led_update() {
+static void status_led_update(void) {
 	// Safety LED
 	if( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY ) {
 		digitalLo(_status_led_red.gpio_p, _status_led_red.pin);	//On
@@ -116,6 +181,8 @@ static void safety_check( timeout_status_t *sensor, uint32_t time_now, uint32_t 
 
 void safety_run( uint32_t time_now ) {
 	safety_check( &_system_status.mavlink.offboard_control, time_now, get_param_int(PARAM_SENSOR_OFFB_CTRL_TIMEOUT) );
+
+	safety_switch_update(time_now);
 
 	status_led_update();
 
