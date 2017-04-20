@@ -71,11 +71,23 @@ void safety_init() {
 
 bool safety_request_arm(void) {
 	bool result = false;
-	//TODO: Should there be any other checks here?
-	//	Check to see if all inputs are good to go
+	bool base_systems_health = false;
 
-	if(_system_status.safety_button_status) {
+	if( ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) &&
+		( _system_status.mavlink.offboard_control.health == SYSTEM_HEALTH_OK ) &&
+		( _system_status.mavlink.offboard_control.health == SYSTEM_HEALTH_OK ) )
+		base_systems_health = true;
+		//TODO: Should there be any other checks here?
+		//	Check to see if all inputs are good to go
+
+
+
+	if(	base_systems_health &&
+		_system_status.safety_button_status &&
+		( _system_status.state == MAV_STATE_STANDBY ) ) {
 		_system_status.mode |= MAV_MODE_FLAG_SAFETY_ARMED;	//ARM!
+
+		_system_status.state = MAV_STATE_ACTIVE;
 
 		//TODO: Make success system beep here
 
@@ -91,6 +103,7 @@ bool safety_request_disarm(void) {
 	bool result = false;
 
 	_system_status.mode &= !MAV_MODE_FLAG_SAFETY_ARMED;	//DISARM!
+	_system_status.state = MAV_STATE_STANDBY;
 
 	//TODO: Make system beep here as well
 
@@ -161,7 +174,7 @@ void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count ) {
 		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Connected: ";
 		strncat(text, sensor->name, (MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 20) );	//Magic number is size of the message start
 		//mavlink_send_statustext_notice(MAV_SEVERITY_NOTICE, &text[0]);
-		mavlink_queue_notice_broadcast( &text[0] );
+		mavlink_queue_broadcast_notice( &text[0] );
 	} else if( sensor->health == SYSTEM_HEALTH_UNKNOWN ) {
 		sensor->health = SYSTEM_HEALTH_TIMEOUT;
 	}
@@ -175,12 +188,15 @@ static void safety_check( timeout_status_t *sensor, uint32_t time_now, uint32_t 
 		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Timeout: ";
 		strncat(text, sensor->name, (MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 18) );	//Magic number is size of the message start
 		//mavlink_send_statustext_notice(MAV_SEVERITY_NOTICE, &text[0]);
-		mavlink_queue_notice_broadcast( &text[0] );
+		mavlink_queue_broadcast_notice( &text[0] );
 	}
 }
 
 void safety_run( uint32_t time_now ) {
-	safety_check( &_system_status.mavlink.offboard_control, time_now, get_param_int(PARAM_SENSOR_OFFB_CTRL_TIMEOUT) );
+	safety_check( &_system_status.sensors.imu, time_now, get_param_uint(PARAM_SENSOR_IMU_TIMEOUT) );
+
+	safety_check( &_system_status.mavlink.offboard_heartbeat, time_now, get_param_uint(PARAM_SENSOR_OFFB_HRBT_TIMEOUT) );
+	safety_check( &_system_status.mavlink.offboard_control, time_now, get_param_uint(PARAM_SENSOR_OFFB_CTRL_TIMEOUT) );
 
 	safety_switch_update(time_now);
 

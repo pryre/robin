@@ -23,7 +23,7 @@
 extern serialPort_t * Serial2;
 extern mavlink_system_t mavlink_system;
 
-void communications_init(void);
+void communications_system_init(void);
 
 /**
  * @brief Send one char (uint8_t) over a comm channel
@@ -70,13 +70,15 @@ void mavlink_stream_timesync(uint8_t port);
 
 //==-- Low Priority Messages
 void mavlink_prepare_autopilot_version(mavlink_message_t *msg);
+void mavlink_queue_broadcast_notice(char* text);
+void mavlink_queue_broadcast_error(char* text);
+
 void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result);
 void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index);
 void mavlink_prepare_statustext(mavlink_message_t *msg, uint8_t severity, char* text);
 void mavlink_prepare_debug(mavlink_message_t *msg, uint32_t stamp, uint8_t index, uint32_t value);
 
 //==-- Utility Messages
-bool mavlink_queue_notice_broadcast(char* text);
 
 //==-- List of supported mavlink messages
 	//o Optional

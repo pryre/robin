@@ -45,6 +45,7 @@ extern pid_controller_t _pid_yaw_rate;
 
 void controller_reset(void);
 void controller_init(void);
+void controller_set_input_failsafe(void);
 void controller_run( uint32_t now );
 
 #ifdef __cplusplus

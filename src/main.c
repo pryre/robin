@@ -62,7 +62,7 @@ void setup(void) {
 
 	sensors_init();
 
-	communications_init();
+	communications_system_init();
 
 	estimator_init((bool)get_param_int(PARAM_EST_USE_MAT_EXP), (bool)get_param_int(PARAM_EST_USE_QUAD_INT), (bool)get_param_int(PARAM_EST_USE_ACC_COR));
 
@@ -79,6 +79,8 @@ void setup(void) {
 	while( !sensors_read() );
 }
 
+
+//XXX: Measured CPU load when armed and running: 51.4%
 void loop(void) {
 	//Take note of when this loop starts
 	sensors_clock_ls_set( micros() );
@@ -121,37 +123,19 @@ void loop(void) {
 	//TODO: Deal with emergency modes
 	//TODO: Arming timeout
 
-	if( ( _system_status.state = MAV_STATE_ACTIVE ) &&
+	if( ( _system_status.state == MAV_STATE_ACTIVE ) &&
 		( _system_status.mavlink.offboard_control.health != SYSTEM_HEALTH_OK ) )
-		_system_status.state = MAV_STATE_CRITICAL;
+		_system_status.state = MAV_STATE_EMERGENCY;
 
 	//==-- Update Estimator
     estimator_update( sensors_clock_imu_int_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
+	//Only run the controller if the mav is armed
 	if(_system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY) {
-		if(_system_status.state == MAV_STATE_CRITICAL) {
-			_command_input.r = 0;
-			_command_input.p = 0;
-			_command_input.y = 0;
-			_command_input.q.a = 1;
-			_command_input.q.b = 0;
-			_command_input.q.c = 0;
-			_command_input.q.d = 0;
-			_command_input.T = get_param_fix16(PARAM_THROTTLE_FAILSAFE);
-			_command_input.input_mask |= CMD_IN_IGNORE_ROLL_RATE | CMD_IN_IGNORE_PITCH_RATE | CMD_IN_IGNORE_YAW_RATE;	//Set it to just hold flat and steady
-		}
+		//Handle failsafes
+		if(_system_status.state == MAV_STATE_EMERGENCY)
+				controller_set_input_failsafe();	//Cut to hold angle and failsafe throttle
 
-		if(_system_status.state == MAV_STATE_EMERGENCY) {
-			_command_input.r = 0;
-			_command_input.p = 0;
-			_command_input.y = 0;
-			_command_input.q.a = 1;
-			_command_input.q.b = 0;
-			_command_input.q.c = 0;
-			_command_input.q.d = 0;
-			_command_input.T = 0;
-			_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
-		}
 		//==-- Update Controller
 		controller_run( sensors_clock_imu_int_get() );	//Apply the current commands and update the PID controllers
 	} else {

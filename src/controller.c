@@ -123,6 +123,18 @@ pid_init(&_pid_yaw_rate,
 	_control_output.T = 0;
 }
 
+void controller_set_input_failsafe(void) {
+	_command_input.r = 0;
+	_command_input.p = 0;
+	_command_input.y = 0;
+	_command_input.q.a = 1;
+	_command_input.q.b = 0;
+	_command_input.q.c = 0;
+	_command_input.q.d = 0;
+	_command_input.T = get_param_fix16(PARAM_FAILSAFE_THROTTLE);
+	_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
+}
+
 static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		mf16 I;
 		I.rows = 3;

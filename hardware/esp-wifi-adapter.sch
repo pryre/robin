@@ -1,0 +1,155 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L MCP1826S U?
+U 1 1 58F6BA97
+P 5150 3050
+F 0 "U?" H 5150 3300 50  0000 C CNN
+F 1 "MCP1826S" H 5550 2800 50  0000 C CNN
+F 2 "" H 5150 3050 60  0001 C CNN
+F 3 "" H 5150 3050 60  0001 C CNN
+	1    5150 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L BSS138 Q?
+U 1 1 58F6BCD2
+P 6800 3050
+F 0 "Q?" H 7000 3125 50  0000 L CNN
+F 1 "BSS138" H 7000 3050 50  0000 L CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23" H 7000 2975 50  0001 L CIN
+F 3 "" H 6800 3050 50  0001 L CNN
+	1    6800 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R?
+U 1 1 58F6C006
+P 6350 3850
+F 0 "R?" V 6430 3850 50  0000 C CNN
+F 1 "R" V 6350 3850 50  0000 C CNN
+F 2 "" V 6280 3850 50  0001 C CNN
+F 3 "" H 6350 3850 50  0001 C CNN
+	1    6350 3850
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R?
+U 1 1 58F6C0A9
+P 6650 3850
+F 0 "R?" V 6730 3850 50  0000 C CNN
+F 1 "R" V 6650 3850 50  0000 C CNN
+F 2 "" V 6580 3850 50  0001 C CNN
+F 3 "" H 6650 3850 50  0001 C CNN
+	1    6650 3850
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R?
+U 1 1 58F6C102
+P 6950 3850
+F 0 "R?" V 7030 3850 50  0000 C CNN
+F 1 "R" V 6950 3850 50  0000 C CNN
+F 2 "" V 6880 3850 50  0001 C CNN
+F 3 "" H 6950 3850 50  0001 C CNN
+	1    6950 3850
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R?
+U 1 1 58F6C161
+P 7250 3850
+F 0 "R?" V 7330 3850 50  0000 C CNN
+F 1 "R" V 7250 3850 50  0000 C CNN
+F 2 "" V 7180 3850 50  0001 C CNN
+F 3 "" H 7250 3850 50  0001 C CNN
+	1    7250 3850
+	1    0    0    -1  
+$EndComp
+$Comp
+L BSS138 Q?
+U 1 1 58F6C1DC
+P 7750 3050
+F 0 "Q?" H 7950 3125 50  0000 L CNN
+F 1 "BSS138" H 7950 3050 50  0000 L CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23" H 7950 2975 50  0001 L CIN
+F 3 "" H 7750 3050 50  0001 L CNN
+	1    7750 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_02X04 J?
+U 1 1 58F6C219
+P 8350 3900
+F 0 "J?" H 8350 4150 50  0000 C CNN
+F 1 "CONN_02X04" H 8350 3650 50  0000 C CNN
+F 2 "" H 8350 2700 50  0001 C CNN
+F 3 "" H 8350 2700 50  0001 C CNN
+	1    8350 3900
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_02X05 J?
+U 1 1 58F6C296
+P 8350 4800
+F 0 "J?" H 8350 5100 50  0000 C CNN
+F 1 "CONN_02X05" H 8350 4500 50  0000 C CNN
+F 2 "" H 8350 3600 50  0001 C CNN
+F 3 "" H 8350 3600 50  0001 C CNN
+	1    8350 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R?
+U 1 1 58F6C30F
+P 5800 4950
+F 0 "R?" V 5880 4950 50  0000 C CNN
+F 1 "R" V 5800 4950 50  0000 C CNN
+F 2 "" V 5730 4950 50  0001 C CNN
+F 3 "" H 5800 4950 50  0001 C CNN
+	1    5800 4950
+	1    0    0    -1  
+$EndComp
+$EndSCHEMATC

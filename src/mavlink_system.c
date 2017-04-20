@@ -46,7 +46,7 @@ int32_t _pwm_output[8];
 
 static const uint8_t blank_array[8] = {0,0,0,0,0,0,0,0};
 
-void communications_init(void) {
+void communications_system_init(void) {
 	mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID); // System ID, 1-255
 	mavlink_system.compid = get_param_int(PARAM_COMPONENT_ID); // Component/Subsystem ID, 1-255
 
@@ -232,8 +232,6 @@ void mavlink_stream_sys_status(uint8_t port) {
 	_sensors.clock.max = 0;
 	_sensors.clock.min = 1000;
 
-
-
 	//TODO: This should be dynamic, probably in safety.h or sensors.h
 	onboard_control_sensors_present = MAV_SYS_STATUS_SENSOR_3D_GYRO |
 									  MAV_SYS_STATUS_SENSOR_3D_ACCEL |
@@ -357,7 +355,59 @@ void mavlink_stream_timesync(uint8_t port) {
 
 //==-- Low Priority Messages
 
-//==-- Sends the autopilot version details
+//Sends a status text message
+void mavlink_prepare_statustext(mavlink_message_t *msg, uint8_t severity, char* text) {
+	mavlink_msg_statustext_pack(mavlink_system.sysid,
+								 mavlink_system.compid,
+								 msg,
+								 severity,
+								 text);
+}
+
+//Broadcasts an notice to all open comm channels
+void mavlink_queue_broadcast_notice(char* text) {
+	mavlink_message_t msg;
+	mavlink_prepare_statustext(&msg, MAV_SEVERITY_NOTICE, text);
+
+	if(get_param_int(PARAM_BAUD_RATE_0) > 0)
+		lpq_queue_msg(MAVLINK_COMM_0, &msg);
+
+	if(get_param_int(PARAM_BAUD_RATE_1) > 0)
+		lpq_queue_msg(MAVLINK_COMM_1, &msg);
+
+}
+
+//Broadcasts an error to all open comm channels
+void mavlink_queue_broadcast_error(char* text) {
+	mavlink_message_t msg;
+	mavlink_prepare_statustext(&msg, MAV_SEVERITY_ERROR, text);
+
+	if(get_param_int(PARAM_BAUD_RATE_0) > 0)
+		lpq_queue_msg(MAVLINK_COMM_0, &msg);
+
+	if(get_param_int(PARAM_BAUD_RATE_1) > 0)
+		lpq_queue_msg(MAVLINK_COMM_1, &msg);
+
+}
+
+//Sends a debug parameter
+void mavlink_prepare_debug(mavlink_message_t *msg, uint32_t stamp, uint8_t index, uint32_t value) {
+	union {
+		float f;
+		uint32_t i;
+	} u;	//The bytes are translated to the right unit on receiving, but need to be sent as a "float"
+
+	u.i = value;
+
+	mavlink_msg_debug_pack(mavlink_system.sysid,
+							mavlink_system.compid,
+							msg,
+							stamp,	//Timestamo
+							index,	//Variable index
+							u.f);	//Value (always as float)
+}
+
+//Sends the autopilot version details
 void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 	const uint64_t capabilities = MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT +
 								  MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET +
@@ -381,7 +431,7 @@ void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 									   U_ID_0);
 }
 
-//==-- Sends the autopilot version details
+//Sends a command acknowledgement
 void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result) {
 	mavlink_msg_command_ack_pack(mavlink_system.sysid,
 								 mavlink_system.compid,
@@ -390,75 +440,55 @@ void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8
 								 result);
 }
 
-//==-- Sends the requested parameter
+//Sends the requested parameter
 void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index) {
-	char param_name[16];
-	uint8_t param_type = 0;
+	//char param_name[PARAMS_NAME_LENGTH];
+	bool param_ok = false;
 
 	union {
 		float f;
-		uint32_t i;
+		int32_t i;
+		uint32_t u;
 	} u;	//The bytes are translated to the right unit on receiving, but need to be sent as a "float"
 
-	if(_params.types[index] == PARAM_TYPE_INT32) {
-		param_type = MAV_PARAM_TYPE_UINT32;
+	switch(_params.types[index]) {
+		case MAVLINK_TYPE_UINT32_T: {
+			u.u = get_param_uint(index);
+			param_ok = true;
 
-		u.i = get_param_int(index);
+			break;
+		}
+		case MAVLINK_TYPE_INT32_T : {
+			u.i = get_param_int(index);
+			param_ok = true;
 
-	} else if (_params.types[index] == PARAM_TYPE_FIX16) {
-		param_type = MAV_PARAM_TYPE_REAL32;
+			break;
+		}
+		case MAVLINK_TYPE_FLOAT: {
+			u.f = fix16_to_float(get_param_fix16(index));
+			param_ok = true;
 
-		u.f = fix16_to_float(get_param_fix16(index));
+			break;
+		}
+		default: {
+			break;
+		}
 	}
 
-	memcpy(param_name, _params.names[index], MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
-
-	mavlink_msg_param_value_pack(mavlink_system.sysid,
-								 mavlink_system.compid,
-								 msg,
-								 &param_name[0],		//String of name
-								 u.f,			//Value (always as float)
-								 param_type,		//From MAV_PARAM_TYPE
-								 PARAMS_COUNT,	//Total number of parameters
-								 index);
-}
-
-void mavlink_prepare_statustext(mavlink_message_t *msg, uint8_t severity, char* text) {
-	mavlink_msg_statustext_pack(mavlink_system.sysid,
-								 mavlink_system.compid,
-								 msg,
-								 severity,
-								 text);
-}
-
-//==-- Sends a debug parameter through the lpq
-void mavlink_prepare_debug(mavlink_message_t *msg, uint32_t stamp, uint8_t index, uint32_t value) {
-	union {
-		float f;
-		uint32_t i;
-	} u;	//The bytes are translated to the right unit on receiving, but need to be sent as a "float"
-
-	u.i = value;
-
-	mavlink_msg_debug_pack(mavlink_system.sysid,
-							mavlink_system.compid,
-							msg,
-							stamp,	//Timestamo
-							index,	//Variable index
-							u.f);	//Value (always as float)
-}
-
-bool mavlink_queue_notice_broadcast(char* text) {
-	bool success = false;
-
-	mavlink_message_t msg;
-	mavlink_prepare_statustext(&msg, MAV_SEVERITY_NOTICE, text);
-
-	if(get_param_int(PARAM_BAUD_RATE_0) > 0)
-		lpq_queue_msg(MAVLINK_COMM_0, &msg);
-
-	if(get_param_int(PARAM_BAUD_RATE_1) > 0)
-		lpq_queue_msg(MAVLINK_COMM_1, &msg);
-
-	return success;
+	if( param_ok ) {
+		mavlink_msg_param_value_pack(mavlink_system.sysid,
+									 mavlink_system.compid,
+									 msg,
+									 &_params.names[index][0],		//String of name
+									 u.f,			//Value (always as float)
+									 _params.types[index],		//From MAV_PARAM_TYPE
+									 PARAMS_COUNT,	//Total number of parameters
+									 index);
+	} else {
+		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PARAM] Unknown paramater type found: ";
+		char bad_param_id[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+		itoa(index, bad_param_id, 10);
+		strncat(text, bad_param_id, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+		mavlink_queue_broadcast_error(text);
+	}
 }

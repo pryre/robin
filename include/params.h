@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mavlink_system.h>
+#include <mavlink/mavlink_types.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -9,7 +11,7 @@
 
 //This needs to be 1 less, as we need to allow space for '\n'
 //MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1
-#define PARAMS_NAME_LENGTH 17
+#define PARAMS_NAME_LENGTH MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 
 typedef enum {
 	//==-- System
@@ -50,12 +52,13 @@ typedef enum {
 	PARAM_SENSOR_BARO_UPDATE,
 	PARAM_SENSOR_SONAR_UPDATE,
 	PARAM_SENSOR_MAG_UPDATE,
-	PARAM_SENSOR_OFFB_CTRL_UPDATE,
 
+	PARAM_SENSOR_IMU_TIMEOUT,
 	PARAM_SENSOR_DIFF_PRESS_TIMEOUT,
 	PARAM_SENSOR_BARO_TIMEOUT,
 	PARAM_SENSOR_SONAR_TIMEOUT,
 	PARAM_SENSOR_MAG_TIMEOUT,
+	PARAM_SENSOR_OFFB_HRBT_TIMEOUT,
 	PARAM_SENSOR_OFFB_CTRL_TIMEOUT,
 
 	//==-- Estimator
@@ -111,7 +114,7 @@ typedef enum {
 	PARAM_MOTOR_PWM_MIN,
 	PARAM_MOTOR_PWM_MAX,
 
-	PARAM_THROTTLE_FAILSAFE,
+	PARAM_FAILSAFE_THROTTLE,
 
 	PARAM_MIXER,
 
@@ -119,21 +122,15 @@ typedef enum {
 	PARAMS_COUNT
 } param_id_t;
 
-typedef enum {
-	PARAM_TYPE_INT32,
-	PARAM_TYPE_FIX16,
-	PARAM_TYPE_INVALID
-} param_type_t;
-
 // type definitions
 typedef struct {
 	uint8_t version;
 	uint16_t size;
 	uint8_t magic_be;                       // magic number, should be 0xBE
 
-	int32_t values[PARAMS_COUNT];
+	uint32_t values[PARAMS_COUNT];
 	char names[PARAMS_COUNT][PARAMS_NAME_LENGTH];
-	param_type_t types[PARAMS_COUNT];
+	mavlink_message_type_t types[PARAMS_COUNT];
 
 	uint8_t magic_ef;                       // magic number, should be 0xEF
 	uint8_t chk;                            // XOR checksum
@@ -184,6 +181,13 @@ param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]);
  * @param id The ID of the parameter
  * @return The value of the parameter
  */
+uint32_t get_param_uint(param_id_t id);
+
+/**
+ * @brief Get the value of an integer parameter by id
+ * @param id The ID of the parameter
+ * @return The value of the parameter
+ */
 int32_t get_param_int(param_id_t id);
 
 /**
@@ -198,14 +202,14 @@ fix16_t get_param_fix16(param_id_t id);
  * @param id The ID of the parameter
  * @return The name of the parameter
  */
-char * get_param_name(param_id_t id);
+void get_param_name(param_id_t id, char *name);
 
 /**
  * @brief Get the type of a parameter
  * @param id The ID of the parameter
  * @return The type of the parameter
  */
-param_type_t get_param_type(param_id_t id);
+mavlink_message_type_t get_param_type(param_id_t id);
 
 /**
  * @brief Sets the value of a parameter by ID and calls the parameter change callback
@@ -216,12 +220,28 @@ param_type_t get_param_type(param_id_t id);
 bool set_param_int(param_id_t id, int32_t value);
 
 /**
+ * @brief Sets the value of a parameter by ID and calls the parameter change callback
+ * @param id The ID of the parameter
+ * @param value The new value
+ * @return True if a parameter value was changed, false otherwise
+ */
+bool set_param_uint(param_id_t id, uint32_t value);
+
+/**
  * @brief Sets the value of a fixed point parameter by ID and calls the parameter callback
  * @param id The ID of the parameter
  * @param value The new value
  * @return  True if a parameter was changed, false otherwise
  */
 bool set_param_fix16(param_id_t id, fix16_t value);
+
+/**
+ * @brief Sets the value of a parameter by name and calls the parameter change callback
+ * @param name The name of the parameter
+ * @param value The new value
+ * @return True if a parameter value was changed, false otherwise
+ */
+bool set_param_by_name_uint(const char name[PARAMS_NAME_LENGTH], uint32_t value);
 
 /**
  * @brief Sets the value of a parameter by name and calls the parameter change callback

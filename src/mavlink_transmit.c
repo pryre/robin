@@ -37,7 +37,7 @@ static mavlink_stream_t mavlink_stream_comm_1[MAVLINK_STREAM_COUNT] = {
 static bool transmit_stream(uint32_t time_us, uint8_t port, mavlink_stream_t *stream) {
 	bool sent_message = false;
 
-	if( ( get_param_int(stream->period_param) > 0) && ( ( time_us - stream->last_time_us) > (uint32_t)get_param_int(stream->period_param) ) ) {
+	if( ( get_param_uint(stream->period_param) > 0) && ( ( time_us - stream->last_time_us) > get_param_uint(stream->period_param) ) ) {
 		stream->send_function(port);
 		stream->last_time_us = time_us;
 

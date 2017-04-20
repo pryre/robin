@@ -11,25 +11,36 @@
 params_t _params;
 
 // local function definitions
-static void init_param_int(param_id_t id, char name[PARAMS_NAME_LENGTH], int32_t value)
-{
+static void init_param_uint(param_id_t id, const char name[PARAMS_NAME_LENGTH], const uint32_t value) {
 	memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
 	_params.values[id] = value;
-	_params.types[id] = PARAM_TYPE_INT32;
+	_params.types[id] = MAVLINK_TYPE_UINT32_T;
 }
 
-static void init_param_fix16(param_id_t id, char name[PARAMS_NAME_LENGTH], fix16_t value) {
-	memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
+static void init_param_int(param_id_t id, const char name[PARAMS_NAME_LENGTH], const int32_t value) {
+	union {
+		int32_t i;
+		uint32_t u;
+	} u;
 
+	u.i = value;
+
+	memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
+	_params.values[id] = u.u;
+	_params.types[id] = MAVLINK_TYPE_INT32_T;
+}
+
+static void init_param_fix16(param_id_t id, const char name[PARAMS_NAME_LENGTH], const fix16_t value) {
 	union {
 		fix16_t f;
-		uint32_t i;
+		uint32_t u;
 	} u;
 
 	u.f = value;
 
-	_params.values[id] = u.i;
-	_params.types[id] = PARAM_TYPE_FIX16;
+	memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
+	_params.values[id] = u.u;
+	_params.types[id] = MAVLINK_TYPE_FLOAT;
 }
 
 // function definitions
@@ -60,25 +71,25 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_SYSTEM_ID, "SYS_ID", 1);
 	init_param_int(PARAM_COMPONENT_ID, "COMP_ID", 1);
 
-	init_param_int(PARAM_STREAM_RATE_HEARTBEAT_0, "STRM_HRTBT_0", 1000000);
-	init_param_int(PARAM_STREAM_RATE_SYS_STATUS_0, "STRM_SYS_STAT_0", 5000000);
-	init_param_int(PARAM_STREAM_RATE_HIGHRES_IMU_0, "STRM_HR_IMU_0", 10000);
-	init_param_int(PARAM_STREAM_RATE_ATTITUDE_0, "STRM_ATT_0", 0);
-	init_param_int(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0, "STRM_ATT_Q_0", 20000);
-	init_param_int(PARAM_STREAM_RATE_ATTITUDE_TARGET_0, "STRM_ATT_T_0", 20000);
-	init_param_int(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0, "STRM_SRV_OUT_0", 100000);
-	init_param_int(PARAM_STREAM_RATE_TIMESYNC_0, "STRM_TIMESYNC_0", 100000);
-	init_param_int(PARAM_STREAM_RATE_LOW_PRIORITY_0, "STRM_LPQ_0", 10000);
+	init_param_uint(PARAM_STREAM_RATE_HEARTBEAT_0, "STRM0_HRTBT", 1000000);
+	init_param_uint(PARAM_STREAM_RATE_SYS_STATUS_0, "STRM0_SYS_STAT", 5000000);
+	init_param_uint(PARAM_STREAM_RATE_HIGHRES_IMU_0, "STRM0_HR_IMU", 10000);
+	init_param_uint(PARAM_STREAM_RATE_ATTITUDE_0, "STRM0_ATT", 0);
+	init_param_uint(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0, "STRM0_ATT_Q", 20000);
+	init_param_uint(PARAM_STREAM_RATE_ATTITUDE_TARGET_0, "STRM0_ATT_T", 20000);
+	init_param_uint(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0, "STRM0_SRV_OUT", 100000);
+	init_param_uint(PARAM_STREAM_RATE_TIMESYNC_0, "STRM0_TIMESYNC", 100000);
+	init_param_uint(PARAM_STREAM_RATE_LOW_PRIORITY_0, "STRM0_LPQ", 10000);
 
-	init_param_int(PARAM_STREAM_RATE_HEARTBEAT_1, "STRM_HRTBT_1", 1000000);
-	init_param_int(PARAM_STREAM_RATE_SYS_STATUS_1, "STRM_SYS_STAT_1", 5000000);
-	init_param_int(PARAM_STREAM_RATE_HIGHRES_IMU_1, "STRM_HR_IMU_1", 10000);
-	init_param_int(PARAM_STREAM_RATE_ATTITUDE_1, "STRM_ATT_1", 0);
-	init_param_int(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1, "STRM_ATT_Q_1", 20000);
-	init_param_int(PARAM_STREAM_RATE_ATTITUDE_TARGET_1, "STRM_ATT_T_1", 20000);
-	init_param_int(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1, "STRM_SRV_OUT_1", 100000);
-	init_param_int(PARAM_STREAM_RATE_TIMESYNC_1, "STRM_TIMESYNC_1", 100000);
-	init_param_int(PARAM_STREAM_RATE_LOW_PRIORITY_1, "STRM_LPQ_1", 10000);
+	init_param_uint(PARAM_STREAM_RATE_HEARTBEAT_1, "STRM1_HRTBT", 1000000);
+	init_param_uint(PARAM_STREAM_RATE_SYS_STATUS_1, "STRM1_SYS_STAT", 5000000);
+	init_param_uint(PARAM_STREAM_RATE_HIGHRES_IMU_1, "STRM1_HR_IMU", 10000);
+	init_param_uint(PARAM_STREAM_RATE_ATTITUDE_1, "STRM1_ATT", 0);
+	init_param_uint(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1, "STRM1_ATT_Q", 20000);
+	init_param_uint(PARAM_STREAM_RATE_ATTITUDE_TARGET_1, "STRM1_ATT_T", 20000);
+	init_param_uint(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1, "STRM1_SRV_OUT", 100000);
+	init_param_uint(PARAM_STREAM_RATE_TIMESYNC_1, "STRM1_TIMESYNC", 100000);
+	init_param_uint(PARAM_STREAM_RATE_LOW_PRIORITY_1, "STRM1_LPQ", 10000);
 
 	//==-- Sensors
 	//All params here in us
@@ -87,13 +98,14 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_SENSOR_BARO_UPDATE, "UPDATE_BARO", 0);
 	init_param_int(PARAM_SENSOR_SONAR_UPDATE, "UPDATE_SONAR", 0);
 	init_param_int(PARAM_SENSOR_MAG_UPDATE, "UPDATE_MAG", 0);
-	init_param_int(PARAM_SENSOR_OFFB_CTRL_UPDATE, "UPDATE_OFFB_CTRL", 0);
 
-	init_param_int(PARAM_SENSOR_DIFF_PRESS_TIMEOUT, "TIMEOUT_DIFF_P", 20000);
-	init_param_int(PARAM_SENSOR_BARO_TIMEOUT, "TIMEOUT_BARO", 20000);
-	init_param_int(PARAM_SENSOR_SONAR_TIMEOUT, "TIMEOUT_SONAR", 20000);
-	init_param_int(PARAM_SENSOR_MAG_TIMEOUT, "TIMEOUT_MAG", 20000);
-	init_param_int(PARAM_SENSOR_OFFB_CTRL_TIMEOUT, "TIMEOUT_OFFB_CTRL", 50000);
+	init_param_uint(PARAM_SENSOR_IMU_TIMEOUT, "TIMEOUT_IMU", 2000);
+	init_param_uint(PARAM_SENSOR_DIFF_PRESS_TIMEOUT, "TIMEOUT_DIFF_P", 20000);
+	init_param_uint(PARAM_SENSOR_BARO_TIMEOUT, "TIMEOUT_BARO", 20000);
+	init_param_uint(PARAM_SENSOR_SONAR_TIMEOUT, "TIMEOUT_SONAR", 20000);
+	init_param_uint(PARAM_SENSOR_MAG_TIMEOUT, "TIMEOUT_MAG", 20000);
+	init_param_uint(PARAM_SENSOR_OFFB_HRBT_TIMEOUT, "UPDATE_OB_HRBT", 5000000);
+	init_param_uint(PARAM_SENSOR_OFFB_CTRL_TIMEOUT, "TIMEOUT_OB_CTRL", 50000);
 
 	//==-- Estimator
 	init_param_int(PARAM_INIT_TIME, "FILTER_INIT_T", 3000); // ms
@@ -116,20 +128,20 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_ACC_Z_TEMP_COMP, "ACC_Z_TEMP_COMP", fix16_from_float(0.0f));
 
 	//==-- Control
-	init_param_fix16(PARAM_PID_ROLL_RATE_P, "PID_ROLL_RATE_P", fix16_from_float(0.15f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_I, "PID_ROLL_RATE_I", fix16_from_float(0.05f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_D, "PID_ROLL_RATE_D", fix16_from_float(0.003f));
-	init_param_fix16(PARAM_MAX_ROLL_RATE, "MAX_ROLL_RATE", fix16_from_float(3.14159f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_P, "PID_ROLL_R_P", fix16_from_float(0.15f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_I, "PID_ROLL_R_I", fix16_from_float(0.05f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_D, "PID_ROLL_R_D", fix16_from_float(0.003f));
+	init_param_fix16(PARAM_MAX_ROLL_RATE, "MAX_ROLL_R", fix16_from_float(3.14159f));
 
-	init_param_fix16(PARAM_PID_PITCH_RATE_P, "PID_PITCH_RATE_P", fix16_from_float(0.15f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_I, "PID_PITCH_RATE_I", fix16_from_float(0.05f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_D, "PID_PITCH_RATE_D", fix16_from_float(0.003f));
-	init_param_fix16(PARAM_MAX_PITCH_RATE, "MAX_PITCH_RATE", fix16_from_float(3.14159f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_P, "PID_PITCH_R_P", fix16_from_float(0.15f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_I, "PID_PITCH_R_I", fix16_from_float(0.05f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_D, "PID_PITCH_R_D", fix16_from_float(0.003f));
+	init_param_fix16(PARAM_MAX_PITCH_RATE, "MAX_PITCH_R", fix16_from_float(3.14159f));
 
-	init_param_fix16(PARAM_PID_YAW_RATE_P, "PID_YAW_RATE_P", fix16_from_float(0.2f));
-	init_param_fix16(PARAM_PID_YAW_RATE_I, "PID_YAW_RATE_I", fix16_from_float(0.1f));
-	init_param_fix16(PARAM_PID_YAW_RATE_I, "PID_YAW_RATE_I", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_MAX_YAW_RATE, "MAX_YAW_RATE", fix16_from_float(3.14159f/2.0f));
+	init_param_fix16(PARAM_PID_YAW_RATE_P, "PID_YAW_R_P", fix16_from_float(0.2f));
+	init_param_fix16(PARAM_PID_YAW_RATE_I, "PID_YAW_R_I", fix16_from_float(0.1f));
+	init_param_fix16(PARAM_PID_YAW_RATE_D, "PID_YAW_R_D", fix16_from_float(0.0f));
+	init_param_fix16(PARAM_MAX_YAW_RATE, "MAX_YAW_R", fix16_from_float(3.14159f/2.0f));
 
 	init_param_fix16(PARAM_PID_ROLL_ANGLE_P, "PID_ROLL_ANG_P", fix16_from_float(6.5f));
 	init_param_fix16(PARAM_MAX_ROLL_ANGLE, "MAX_ROLL_ANG", fix16_from_float(0.786f));
@@ -148,9 +160,9 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_MOTOR_PWM_MIN, "MOTOR_PWM_MIN", 1000);
 	init_param_int(PARAM_MOTOR_PWM_MAX, "MOTOR_PWM_MAX", 2000);
 
-	init_param_fix16(PARAM_THROTTLE_FAILSAFE, "THROTTLE_FAILSAFE", fix16_from_float(0.25f));
+	init_param_fix16(PARAM_FAILSAFE_THROTTLE, "FAILSAFE_THRTL", fix16_from_float(0.25f));
 
-	init_param_int(PARAM_MIXER, "MIXER", QUADCOPTER_PLUS);
+	init_param_int(PARAM_MIXER, "MIXER", QUADCOPTER_X);
 }
 
 bool read_params(void) {
@@ -228,30 +240,41 @@ param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]) {
 	return PARAMS_COUNT;
 }
 
-int32_t get_param_int(param_id_t id) {
+uint32_t get_param_uint(param_id_t id) {
 	return _params.values[id];
+}
+
+int32_t get_param_int(param_id_t id) {
+	union {
+		uint32_t u;
+		int32_t i;
+	} u;
+
+	u.u = _params.values[id];
+
+	return u.i;
 }
 
 fix16_t get_param_fix16(param_id_t id) {
 	union {
 		fix16_t f;
-		uint32_t i;
+		uint32_t u;
 	} u;
 
-	u.i = _params.values[id];
+	u.u = _params.values[id];
 
 	return u.f;
 }
 
-char *get_param_name(param_id_t id) {
-	return _params.names[id];
+void get_param_name(param_id_t id, char name[PARAMS_NAME_LENGTH]) {
+	memcpy(name, _params.names[id], PARAMS_NAME_LENGTH);
 }
 
-param_type_t get_param_type(param_id_t id) {
+mavlink_message_type_t get_param_type(param_id_t id) {
 	return _params.types[id];
 }
 
-bool set_param_int(param_id_t id, int32_t value) {
+bool set_param_uint(param_id_t id, uint32_t value) {
 	if (id < PARAMS_COUNT && value != _params.values[id]) {
 		_params.values[id] = value;
 		param_change_callback(id);
@@ -262,28 +285,52 @@ bool set_param_int(param_id_t id, int32_t value) {
 	return false;
 }
 
+bool set_param_int(param_id_t id, int32_t value) {
+	union {
+		int32_t i;
+		uint32_t u;
+	} u;
+
+	u.i = value;
+
+	return set_param_uint(id, u.u);
+}
+
 bool set_param_fix16(param_id_t id, fix16_t value) {
 	union {
 		fix16_t f;
-		uint32_t i;
+		uint32_t u;
 	} u;
 
 	u.f = value;
 
- return set_param_int(id, u.i);
+	return set_param_uint(id, u.u);
+}
+
+bool set_param_by_name_uint(const char name[PARAMS_NAME_LENGTH], uint32_t value) {
+	param_id_t id = lookup_param_id(name);
+
+	return set_param_uint(id, value);
 }
 
 bool set_param_by_name_int(const char name[PARAMS_NAME_LENGTH], int32_t value) {
-	param_id_t id = lookup_param_id(name);
-	return set_param_int(id, value);
+	union {
+		int32_t i;
+		uint32_t u;
+	} u;
+
+	u.i = value;
+
+	return set_param_by_name_uint(name, u.u);
 }
 
 bool set_param_by_name_fix16(const char name[PARAMS_NAME_LENGTH], fix16_t value) {
 	union {
 		fix16_t f;
-		uint32_t i;
+		uint32_t u;
 	} u;
 
 	u.f = value;
-	return set_param_by_name_int(name, u.i);
+
+	return set_param_by_name_uint(name, u.u);
 }

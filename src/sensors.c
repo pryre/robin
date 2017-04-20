@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "sensors.h"
+#include "safety.h"
 #include "params.h"
 #include "mavlink_system.h"
 #include "breezystm32.h"
@@ -32,6 +33,8 @@ static volatile uint8_t temp_status = 0;
 sensor_readings_t _sensors;
 uint8_t _sensor_calibration;
 sensor_calibration_data_t _sensor_cal_data;
+
+system_status_t _system_status;
 
 
 //==-- Functions
@@ -231,6 +234,8 @@ bool sensors_update(uint32_t time_us) {
 
 	_sensors.imu.status.time_read = sensors_clock_imu_int_get();
 	_sensors.imu.status.new_data = true;
+
+	safety_update_sensor(&_system_status.sensors.imu, 1000);	//TODO: Use params here
 
 	//==-- Safety Button
 	bool safety_button_reading = false;

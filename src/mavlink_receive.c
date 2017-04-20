@@ -2,6 +2,7 @@
 
 #include "mavlink_receive.h"
 #include "mavlink_system.h"
+#include "mavlink/mavlink_types.h"
 #include "safety.h"
 #include "sensors.h"
 #include "controller.h"
@@ -29,6 +30,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				//LED0_TOGGLE;
 				// E.g. read GCS heartbeat and go into
 				// comm lost mode if timer times out
+				safety_update_sensor(&_system_status.mavlink.offboard_heartbeat, 2);	//TODO: Use params here
+
 				break;
 			}
 			case MAVLINK_MSG_ID_PARAM_REQUEST_LIST: {
@@ -40,6 +43,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					} else if(port == MAVLINK_COMM_1) {
 						_lpq_port_1.request_all_params = 0;
 					}
+
+					mavlink_queue_broadcast_notice("[PARAM] Caution: Broadcasting param list!");
 				} //Else this message is for someone else
 
 				break;
@@ -54,7 +59,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						if(index == -1) {	//Parameter is specified with name
 							char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1];
 							mavlink_msg_param_request_read_get_param_id(&msg, param_id);
-							index = lookup_param_id(param_id); //TODO: UNTESTED
+							index = lookup_param_id(param_id);
 						}
 
 						mavlink_message_t msg_out;
@@ -79,33 +84,51 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					//TODO: Remember to mention in docs that the sent dat is entered as the type, regardless of what type it should be
 					//TODO: Should probably have a safetly check for this though
 					if(index < PARAMS_COUNT) { //If the ID is valid
-						switch(mavlink_msg_param_set_get_param_type(&msg)) {
-							case MAV_PARAM_TYPE_INT32: {
-								union {
-									float f;
-									uint32_t i;
-								} u;
+						if( mavlink_msg_param_set_get_param_type(&msg) == get_param_type(index) ) {
+							switch(mavlink_msg_param_set_get_param_type(&msg)) {
+								case MAV_PARAM_TYPE_UINT32: {
+									union {
+										float f;
+										uint32_t u;
+									} u;
 
-								u.f = mavlink_msg_param_set_get_param_value(&msg);
-								set_complete = set_param_by_name_int(param_id, u.i);
+									u.f = mavlink_msg_param_set_get_param_value(&msg);
+									set_complete = set_param_by_name_uint(param_id, u.u);
 
-								break;
+									break;
+								}
+								case MAV_PARAM_TYPE_INT32: {
+									union {
+										float f;
+										int32_t i;
+									} u;
+
+									u.f = mavlink_msg_param_set_get_param_value(&msg);
+									set_complete = set_param_by_name_int(param_id, u.i);
+
+									break;
+								}
+								case MAV_PARAM_TYPE_REAL32: {
+									float value = mavlink_msg_param_set_get_param_value(&msg);
+									set_complete = set_param_fix16(index, fix16_from_float(value));
+
+									break;
+								}
+								default:
+									mavlink_queue_broadcast_error("[PARAM] Do not know how to handle read paramater type!");
+
+									break;
 							}
-							case MAV_PARAM_TYPE_REAL32: {
-								float value = mavlink_msg_param_set_get_param_value(&msg);
-								set_complete = set_param_fix16(index, fix16_from_float(value));
-
-								break;
-							}
-							default:
-								break;
+						} else {
+							mavlink_queue_broadcast_error("[PARAM] Paramater type mismatch!");
 						}
 
-						if(set_complete) {
-							mavlink_message_t msg_out;
-							mavlink_prepare_param_value(&msg_out, index);
-							lpq_queue_msg(port, &msg_out);
-						}
+					}
+
+					if(set_complete) {
+						mavlink_message_t msg_out;
+						mavlink_prepare_param_value(&msg_out, index);
+						lpq_queue_msg(port, &msg_out);
 					}
 				} //Else this message is for someone else
 
@@ -328,17 +351,17 @@ static void communication_decode(uint8_t port, uint8_t c) {
 }
 
 void communication_receive(void) {
-	//TODO: Have a check on Serial 0 for... all the same messages?
-	//TODO: That would mean there is only a need to have 1 parse function, and pass the right port and buffer.
+	const uint32_t time_read_max = 250;	//XXX: Make sure the read step doesn't last more that 250us (means we might drop packets, but it won't lock the system)
+	uint32_t time_start_read = micros();
 
 	if( get_param_int(PARAM_BAUD_RATE_0) > 0 )
-		while( serialTotalRxBytesWaiting( Serial1 ) )
-			if( serialTotalRxBytesWaiting( Serial1 ) )
+		while( serialTotalRxBytesWaiting( Serial1 ) && ( (micros() - time_start_read ) < time_read_max ) )
 				communication_decode( MAVLINK_COMM_0, serialRead(Serial1) );
 
+	time_start_read = micros();
+
 	if( get_param_int(PARAM_BAUD_RATE_1) > 0 )
-		while( serialTotalRxBytesWaiting( Serial2 ) )
-			if( serialTotalRxBytesWaiting( Serial2 ) )
+		while( serialTotalRxBytesWaiting( Serial2 ) && ( (micros() - time_start_read ) < time_read_max ) )
 				communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
 
 	//TODO: Update global packet drops counter
