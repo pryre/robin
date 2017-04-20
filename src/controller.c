@@ -60,40 +60,40 @@ void controller_init(void) {
            -1.0f*get_param_int(PARAM_MAX_COMMAND)/2.0f);
 */
 pid_init(&_pid_roll_rate,
-		 get_param_int(PARAM_PID_ROLL_RATE_P),
-		 get_param_int(PARAM_PID_ROLL_RATE_I),
-		 get_param_int(PARAM_PID_ROLL_RATE_D),
-		 get_param_int(PARAM_PID_TAU),
+		 get_param_fix16(PARAM_PID_ROLL_RATE_P),
+		 get_param_fix16(PARAM_PID_ROLL_RATE_I),
+		 get_param_fix16(PARAM_PID_ROLL_RATE_D),
+		 get_param_fix16(PARAM_PID_TAU),
 		 _state_estimator.p,
 		 0,
 		 0,
 		 0,
-		 -get_param_int(PARAM_MAX_ROLL_RATE),
-		 get_param_int(PARAM_MAX_ROLL_RATE));
+		 -get_param_fix16(PARAM_MAX_ROLL_RATE),
+		 get_param_fix16(PARAM_MAX_ROLL_RATE));
 
 pid_init(&_pid_pitch_rate,
-		 get_param_int(PARAM_PID_PITCH_RATE_P),
-		 get_param_int(PARAM_PID_PITCH_RATE_I),
-		 get_param_int(PARAM_PID_PITCH_RATE_D),
-		 get_param_int(PARAM_PID_TAU),
+		 get_param_fix16(PARAM_PID_PITCH_RATE_P),
+		 get_param_fix16(PARAM_PID_PITCH_RATE_I),
+		 get_param_fix16(PARAM_PID_PITCH_RATE_D),
+		 get_param_fix16(PARAM_PID_TAU),
 		 _state_estimator.q,
 		 0,
 		 0,
 		 0,
-		 -get_param_int(PARAM_MAX_PITCH_RATE),
-		 get_param_int(PARAM_MAX_PITCH_RATE));
+		 -get_param_fix16(PARAM_MAX_PITCH_RATE),
+		 get_param_fix16(PARAM_MAX_PITCH_RATE));
 
 pid_init(&_pid_yaw_rate,
-		 get_param_int(PARAM_PID_YAW_RATE_P),
-		 get_param_int(PARAM_PID_YAW_RATE_I),
-		 get_param_int(PARAM_PID_YAW_RATE_D),
-		 get_param_int(PARAM_PID_TAU),
+		 get_param_fix16(PARAM_PID_YAW_RATE_P),
+		 get_param_fix16(PARAM_PID_YAW_RATE_I),
+		 get_param_fix16(PARAM_PID_YAW_RATE_D),
+		 get_param_fix16(PARAM_PID_TAU),
 		 _state_estimator.r,
 		 0,
 		 0,
 		 0,
-		 -get_param_int(PARAM_MAX_YAW_RATE),
-		 get_param_int(PARAM_MAX_YAW_RATE));
+		 -get_param_fix16(PARAM_MAX_YAW_RATE),
+		 get_param_fix16(PARAM_MAX_YAW_RATE));
 /*
   pid_init(&pid_altitude,
            PARAM_PID_ALT_P,
