@@ -30,9 +30,9 @@ static void init_param_int(param_id_t id, const char name[PARAMS_NAME_LENGTH], c
 	_params.types[id] = MAVLINK_TYPE_INT32_T;
 }
 
-static void init_param_fix16(param_id_t id, const char name[PARAMS_NAME_LENGTH], const fix16_t value) {
+static void init_param_float(param_id_t id, const char name[PARAMS_NAME_LENGTH], const float value) {
 	union {
-		fix16_t f;
+		float f;
 		uint32_t u;
 	} u;
 
@@ -112,10 +112,10 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_EST_USE_ACC_COR, "EST_ACC_COR", 1); // 1=true; 0=false
 	init_param_int(PARAM_EST_USE_MAT_EXP, "EST_MAT_EXP", 1); // 1=true; 0=false
 	init_param_int(PARAM_EST_USE_QUAD_INT, "EST_QUAD_INT", 1); // 1=true; 0=false
-	init_param_fix16(PARAM_FILTER_KP, "FILTER_KP", fix16_from_float(1.0f));
-	init_param_fix16(PARAM_FILTER_KI, "FILTER_KI", fix16_from_float(0.05f));
-	init_param_fix16(PARAM_GYRO_ALPHA, "GYRO_LPF_ALPHA", fix16_from_float(0.6f));
-	init_param_fix16(PARAM_ACC_ALPHA, "ACC_LPF_ALPHA", fix16_from_float(0.6f));
+	init_param_float(PARAM_FILTER_KP, "FILTER_KP", 1.0f);
+	init_param_float(PARAM_FILTER_KI, "FILTER_KI", 0.05f);
+	init_param_float(PARAM_GYRO_ALPHA, "GYRO_LPF_ALPHA", 0.6f);
+	init_param_float(PARAM_ACC_ALPHA, "ACC_LPF_ALPHA", 0.6f);
 	init_param_int(PARAM_STREAM_ADJUSTED_GYRO, "STRM_ADJST_GYRO", 0);
 	init_param_int(PARAM_GYRO_X_BIAS, "GYRO_X_BIAS", 0);
 	init_param_int(PARAM_GYRO_Y_BIAS, "GYRO_Y_BIAS", 0);
@@ -123,35 +123,35 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_ACC_X_BIAS, "ACC_X_BIAS", 0);
 	init_param_int(PARAM_ACC_Y_BIAS, "ACC_Y_BIAS", 0);
 	init_param_int(PARAM_ACC_Z_BIAS, "ACC_Z_BIAS", 0);
-	init_param_fix16(PARAM_ACC_X_TEMP_COMP, "ACC_X_TEMP_COMP", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_ACC_Y_TEMP_COMP, "ACC_Y_TEMP_COMP", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_ACC_Z_TEMP_COMP, "ACC_Z_TEMP_COMP", fix16_from_float(0.0f));
+	init_param_float(PARAM_ACC_X_TEMP_COMP, "ACC_X_TEMP_COMP", 0.0f);
+	init_param_float(PARAM_ACC_Y_TEMP_COMP, "ACC_Y_TEMP_COMP", 0.0f);
+	init_param_float(PARAM_ACC_Z_TEMP_COMP, "ACC_Z_TEMP_COMP", 0.0f);
 
 	//==-- Control
-	init_param_fix16(PARAM_PID_ROLL_RATE_P, "PID_ROLL_R_P", fix16_from_float(0.15f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_I, "PID_ROLL_R_I", fix16_from_float(0.05f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_D, "PID_ROLL_R_D", fix16_from_float(0.003f));
-	init_param_fix16(PARAM_MAX_ROLL_RATE, "MAX_ROLL_R", fix16_from_float(3.14159f));
+	init_param_float(PARAM_PID_ROLL_RATE_P, "PID_ROLL_R_P", 0.15f);
+	init_param_float(PARAM_PID_ROLL_RATE_I, "PID_ROLL_R_I", 0.05f);
+	init_param_float(PARAM_PID_ROLL_RATE_D, "PID_ROLL_R_D", 0.003f);
+	init_param_float(PARAM_MAX_ROLL_RATE, "MAX_ROLL_R", 3.14159f);
 
-	init_param_fix16(PARAM_PID_PITCH_RATE_P, "PID_PITCH_R_P", fix16_from_float(0.15f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_I, "PID_PITCH_R_I", fix16_from_float(0.05f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_D, "PID_PITCH_R_D", fix16_from_float(0.003f));
-	init_param_fix16(PARAM_MAX_PITCH_RATE, "MAX_PITCH_R", fix16_from_float(3.14159f));
+	init_param_float(PARAM_PID_PITCH_RATE_P, "PID_PITCH_R_P", 0.15f);
+	init_param_float(PARAM_PID_PITCH_RATE_I, "PID_PITCH_R_I", 0.05f);
+	init_param_float(PARAM_PID_PITCH_RATE_D, "PID_PITCH_R_D", 0.003f);
+	init_param_float(PARAM_MAX_PITCH_RATE, "MAX_PITCH_R", 3.14159f);
 
-	init_param_fix16(PARAM_PID_YAW_RATE_P, "PID_YAW_R_P", fix16_from_float(0.2f));
-	init_param_fix16(PARAM_PID_YAW_RATE_I, "PID_YAW_R_I", fix16_from_float(0.1f));
-	init_param_fix16(PARAM_PID_YAW_RATE_D, "PID_YAW_R_D", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_MAX_YAW_RATE, "MAX_YAW_R", fix16_from_float(3.14159f/2.0f));
+	init_param_float(PARAM_PID_YAW_RATE_P, "PID_YAW_R_P", 0.2f);
+	init_param_float(PARAM_PID_YAW_RATE_I, "PID_YAW_R_I", 0.1f);
+	init_param_float(PARAM_PID_YAW_RATE_D, "PID_YAW_R_D", 0.0f);
+	init_param_float(PARAM_MAX_YAW_RATE, "MAX_YAW_R", 1.57079f);
 
-	init_param_fix16(PARAM_PID_ROLL_ANGLE_P, "PID_ROLL_ANG_P", fix16_from_float(6.5f));
-	init_param_fix16(PARAM_MAX_ROLL_ANGLE, "MAX_ROLL_ANG", fix16_from_float(0.786f));
+	init_param_float(PARAM_PID_ROLL_ANGLE_P, "PID_ROLL_ANG_P", 6.5f);
+	init_param_float(PARAM_MAX_ROLL_ANGLE, "MAX_ROLL_ANG", 0.786f);
 
-	init_param_fix16(PARAM_PID_PITCH_ANGLE_P, "PID_PITCH_ANG_P", fix16_from_float(6.5f));
-	init_param_fix16(PARAM_MAX_PITCH_ANGLE, "MAX_PITCH_ANG", fix16_from_float(0.786f));
+	init_param_float(PARAM_PID_PITCH_ANGLE_P, "PID_PITCH_ANG_P", 6.5f);
+	init_param_float(PARAM_MAX_PITCH_ANGLE, "MAX_PITCH_ANG", 0.786f);
 
-	init_param_fix16(PARAM_PID_YAW_ANGLE_P, "PID_YAW_ANG_P", fix16_from_float(2.8f));
+	init_param_float(PARAM_PID_YAW_ANGLE_P, "PID_YAW_ANG_P", 2.8f);
 
-	init_param_fix16(PARAM_PID_TAU, "PID_TAU", fix16_from_float(0.05f));
+	init_param_float(PARAM_PID_TAU, "PID_TAU", 0.05f);
 	init_param_int(PARAM_MAX_COMMAND, "PARAM_MAX_CMD", 1000);
 
 	//==-- Output
@@ -160,7 +160,7 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_MOTOR_PWM_MIN, "MOTOR_PWM_MIN", 1000);
 	init_param_int(PARAM_MOTOR_PWM_MAX, "MOTOR_PWM_MAX", 2000);
 
-	init_param_fix16(PARAM_FAILSAFE_THROTTLE, "FAILSAFE_THRTL", fix16_from_float(0.25f));
+	init_param_float(PARAM_FAILSAFE_THROTTLE, "FAILSAFE_THRTL", 0.25f);
 
 	init_param_int(PARAM_MIXER, "MIXER", QUADCOPTER_X);
 }
@@ -255,9 +255,9 @@ int32_t get_param_int(param_id_t id) {
 	return u.i;
 }
 
-fix16_t get_param_fix16(param_id_t id) {
+float get_param_float(param_id_t id) {
 	union {
-		fix16_t f;
+		float f;
 		uint32_t u;
 	} u;
 
@@ -296,9 +296,9 @@ bool set_param_int(param_id_t id, int32_t value) {
 	return set_param_uint(id, u.u);
 }
 
-bool set_param_fix16(param_id_t id, fix16_t value) {
+bool set_param_float(param_id_t id, float value) {
 	union {
-		fix16_t f;
+		float f;
 		uint32_t u;
 	} u;
 
@@ -324,9 +324,9 @@ bool set_param_by_name_int(const char name[PARAMS_NAME_LENGTH], int32_t value) {
 	return set_param_by_name_uint(name, u.u);
 }
 
-bool set_param_by_name_fix16(const char name[PARAMS_NAME_LENGTH], fix16_t value) {
+bool set_param_by_name_float(const char name[PARAMS_NAME_LENGTH], float value) {
 	union {
-		fix16_t f;
+		float f;
 		uint32_t u;
 	} u;
 

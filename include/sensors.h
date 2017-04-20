@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "fixvector3d.h"
 #include "breezystm32.h"
+#include "math_types.h"
 
 //TODO: Common header file for defines like this
 //#define BOARD_REV 2
@@ -62,12 +62,12 @@ typedef struct {
     int16_t gyro_raw[3];
     volatile int16_t temp_raw;
 
-	v3d accel;		//Vector of accel data
-	v3d gyro;		//Vector of gyro data
-	fix16_t temperature;	//Sensor temperature reading
+	vector3_t accel;		//Vector of accel data
+	vector3_t gyro;		//Vector of gyro data
+	float temperature;	//Sensor temperature reading
 
-	fix16_t accel_scale;	//Scale to correct raw accel data
-	fix16_t gyro_scale;	//Scale to correct raw gyro data
+	float accel_scale;	//Scale to correct raw accel data
+	float gyro_scale;	//Scale to correct raw gyro data
 } sensor_readings_imu_t;
 
 typedef struct {
@@ -118,9 +118,9 @@ typedef enum {
 
 typedef struct {
 	uint16_t count;
-	fix16_t sum_x;
-	fix16_t sum_y;
-	fix16_t sum_z;
+	float sum_x;
+	float sum_y;
+	float sum_z;
 } sensor_calibration_gyro_data_t;
 
 typedef struct {
@@ -139,8 +139,8 @@ typedef struct {
 	int32_t sum_t;
 
 	uint16_t acc1G;
-	fix16_t temp_scale;
-	fix16_t temp_shift;
+	float temp_scale;
+	float temp_shift;
 //	fix16_t sum_x;
 //	fix16_t sum_y;
 //	fix16_t sum_z;
@@ -156,7 +156,7 @@ extern uint8_t _sensor_calibration;
 extern sensor_readings_t _sensors;
 extern sensor_calibration_data_t _sensor_cal_data;
 
-static const fix16_t CONST_GRAVITY = 0x0009CE80; //Is equal to 9.80665 (Positive!) in Q16.16
+static const float CONST_GRAVITY = 0x0009CE80; //Is equal to 9.80665 (Positive!) in Q16.16
 
 // function declarations
 void sensors_init(void);

@@ -7,8 +7,8 @@
 #include "mavlink/mavlink_types.h"
 #include "mavlink/common/mavlink.h"
 
-#include "fix16.h"
-#include "fixextra.h"
+#include "math_types.h"
+
 #include "params.h"
 #include "safety.h"
 #include "sensors.h"
@@ -272,12 +272,12 @@ void mavlink_stream_sys_status(uint8_t port) {
 void mavlink_stream_highres_imu(uint8_t port) {
 	mavlink_msg_highres_imu_send(port,
 								 _sensors.imu.status.time_read,
-								 fix16_to_float(_sensors.imu.accel.x),
-								 fix16_to_float(_sensors.imu.accel.y),
-								 fix16_to_float(_sensors.imu.accel.z),
-								 fix16_to_float(_sensors.imu.gyro.x),
-								 fix16_to_float(_sensors.imu.gyro.y),
-								 fix16_to_float(_sensors.imu.gyro.z),
+								 _sensors.imu.accel.x,
+								 _sensors.imu.accel.y,
+								 _sensors.imu.accel.z,
+								 _sensors.imu.gyro.x,
+								 _sensors.imu.gyro.y,
+								 _sensors.imu.gyro.z,
 								 0, 0, 0,
 								 0, 0, 0,
 								 0,
@@ -285,40 +285,40 @@ void mavlink_stream_highres_imu(uint8_t port) {
 }
 
 void mavlink_stream_attitude(uint8_t port) {
-	fix16_t roll;
-	fix16_t pitch;
-	fix16_t yaw;
+	float roll;
+	float pitch;
+	float yaw;
 
 	//Extract Euler Angles for controller
 	euler_from_quat(&_state_estimator.attitude, &roll, &pitch, &yaw);
 
 	mavlink_msg_attitude_send(port,
 							  _sensors.imu.status.time_read,
-							  fix16_to_float(roll),
-							  fix16_to_float(pitch),
-							  fix16_to_float(yaw),
-							  fix16_to_float(_state_estimator.p),
-							  fix16_to_float(_state_estimator.q),
-							  fix16_to_float(_state_estimator.r));
+							  roll,
+							  pitch,
+							  yaw,
+							  _state_estimator.p,
+							  _state_estimator.q,
+							  _state_estimator.r);
 }
 
 void mavlink_stream_attitude_quaternion(uint8_t port) {
 	mavlink_msg_attitude_quaternion_send(port,
 										 _sensors.imu.status.time_read,
-										 fix16_to_float(_state_estimator.attitude.a),
-										 fix16_to_float(_state_estimator.attitude.b),
-										 fix16_to_float(_state_estimator.attitude.c),
-										 fix16_to_float(_state_estimator.attitude.d),
-										 fix16_to_float(_state_estimator.p),
-										 fix16_to_float(_state_estimator.q),
-										 fix16_to_float(_state_estimator.r));
+										 _state_estimator.attitude.w,
+										 _state_estimator.attitude.x,
+										 _state_estimator.attitude.y,
+										 _state_estimator.attitude.z,
+										 _state_estimator.p,
+										 _state_estimator.q,
+										 _state_estimator.r);
 }
 
 void mavlink_stream_attitude_target(uint8_t port) {
-	float q[4] = {fix16_to_float(_command_input.q.a),
-				  fix16_to_float(_command_input.q.b),
-				  fix16_to_float(_command_input.q.c),
-				  fix16_to_float(_command_input.q.d)};
+	float q[4] = {_command_input.q.w,
+				  _command_input.q.x,
+				  _command_input.q.y,
+				  _command_input.q.z};
 
 	//Use the control output for some of these commands as they reflect the actual goals
 	// The input mask applied is included, but the information will still potentially be useful
@@ -327,10 +327,10 @@ void mavlink_stream_attitude_target(uint8_t port) {
 									 sensors_clock_ls_get(),
 									 _command_input.input_mask,
 									 &q[0],
-									 fix16_to_float(_control_output.r),
-									 fix16_to_float(_control_output.p),
-									 fix16_to_float(_control_output.y),
-									 fix16_to_float(_control_output.T));
+									 _control_output.r,
+									 _control_output.p,
+									 _control_output.y,
+									 _control_output.T);
 }
 
 void mavlink_stream_servo_output_raw(uint8_t port) {
@@ -465,7 +465,7 @@ void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index) {
 			break;
 		}
 		case MAVLINK_TYPE_FLOAT: {
-			u.f = fix16_to_float(get_param_fix16(index));
+			u.f = get_param_float(index);
 			param_ok = true;
 
 			break;

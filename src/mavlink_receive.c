@@ -110,7 +110,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 								}
 								case MAV_PARAM_TYPE_REAL32: {
 									float value = mavlink_msg_param_set_get_param_value(&msg);
-									set_complete = set_param_fix16(index, fix16_from_float(value));
+									set_complete = set_param_float(index, value);
 
 									break;
 								}
@@ -269,20 +269,20 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					//TODO: Check timestamp was recent
 					_command_input.input_mask = mavlink_msg_set_attitude_target_get_type_mask(&msg);
 
-					_command_input.r = fix16_from_float(mavlink_msg_set_attitude_target_get_body_roll_rate(&msg));
-					_command_input.p = fix16_from_float(mavlink_msg_set_attitude_target_get_body_pitch_rate(&msg));
-					_command_input.y = fix16_from_float(mavlink_msg_set_attitude_target_get_body_yaw_rate(&msg));
+					_command_input.r = mavlink_msg_set_attitude_target_get_body_roll_rate(&msg);
+					_command_input.p = mavlink_msg_set_attitude_target_get_body_pitch_rate(&msg);
+					_command_input.y = mavlink_msg_set_attitude_target_get_body_yaw_rate(&msg);
 
 					//TODO: Check this is correct
 					float qt[4];
 					if(mavlink_msg_set_attitude_target_get_q(&msg, &qt[0]) == 4) {
-						_command_input.q.a = fix16_from_float(qt[0]);
-						_command_input.q.b = fix16_from_float(qt[1]);
-						_command_input.q.c = fix16_from_float(qt[2]);
-						_command_input.q.d = fix16_from_float(qt[3]);
+						_command_input.q.w = qt[0];
+						_command_input.q.x = qt[1];
+						_command_input.q.y = qt[2];
+						_command_input.q.z = qt[3];
 					}
 
-					_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
+					_command_input.T = mavlink_msg_set_attitude_target_get_thrust(&msg);
 
 					safety_update_sensor(&_system_status.mavlink.offboard_control, 100);	//TODO: Use params here
 				}

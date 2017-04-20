@@ -4,11 +4,7 @@
 #include "pwm.h"
 #include "mavlink_system.h"
 #include "mavlink/mavlink_types.h"
-#include "fix16.h"
-//#include "fixvector3d.h"
-//#include "fixmatrix.h"
-//#include "fixquat.h"
-#include "fixextra.h"
+#include "math_types.h"
 
 #include "mixer.h"
 #include "params.h"
@@ -26,30 +22,30 @@ int32_t _pwm_output[8];
 static mixer_t mixer_none = {
 	{NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE}, // output_type
 
-	{ 0, 0, 0, 0, 0, 0, 0, 0}, // F Mix
-	{ 0, 0, 0, 0, 0, 0, 0, 0}, // X Mix
-	{ 0, 0, 0, 0, 0, 0, 0, 0}, // Y Mix
-	{ 0, 0, 0, 0, 0, 0, 0, 0}  // Z Mix
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0}, // F Mix
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0}, // X Mix
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0}, // Y Mix
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0}  // Z Mix
 };
 
 //TODO: Double check
 static mixer_t mixer_quadcopter_plus = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
-	{ CONST_ONE, CONST_ONE, CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // F Mix
-	{-CONST_ONE, CONST_ONE, 0,         0,         0, 0, 0, 0}, // X Mix
-	{ 0,         0,        -CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // Y Mix
-	{ CONST_ONE, CONST_ONE,-CONST_ONE,-CONST_ONE, 0, 0, 0, 0}  // Z Mix
+	{ 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0}, // F Mix
+	{-1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0}, // X Mix
+	{ 0.0f, 0.0f,-1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0}, // Y Mix
+	{ 1.0f, 1.0f,-1.0f,-1.0f, 0.0f, 0.0f, 0.0f, 0}  // Z Mix
 };
 
 //TODO: Double check
 static mixer_t mixer_quadcopter_x = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
-	{ CONST_ONE, CONST_ONE, CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // F Mix
-	{-CONST_ONE, CONST_ONE, CONST_ONE,-CONST_ONE, 0, 0, 0, 0}, // X Mix
-	{ CONST_ONE,-CONST_ONE,-CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // Y Mix
-	{ CONST_ONE, CONST_ONE,-CONST_ONE,-CONST_ONE, 0, 0, 0, 0}  // Z Mix
+	{ 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0}, // F Mix
+	{-1.0f, 1.0f, 1.0f,-1.0f, 0.0f, 0.0f, 0.0f, 0}, // X Mix
+	{ 1.0f,-1.0f,-1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0}, // Y Mix
+	{ 1.0f, 1.0f,-1.0f,-1.0f, 0.0f, 0.0f, 0.0f, 0}  // Z Mix
 };
 
 static mixer_t *mixer_to_use;
@@ -183,12 +179,13 @@ void mixer_output() {
 								+ (_control_output.y * mixer_to_use.z[i]);
 			prescaled_outputs[i] = (int32_t)(thrust_calc * 1000.0f);
 			*/
+			/*
 			fix16_t thrust_calc = fix16_add(fix16_mul(_control_output.T, mixer_to_use->T[i]),
 								  fix16_add(fix16_mul(_control_output.r, mixer_to_use->x[i]),
 								  fix16_add(fix16_mul(_control_output.p, mixer_to_use->y[i]),
 								  fix16_mul(_control_output.y, mixer_to_use->z[i]))));
-			prescaled_outputs[i] = fix16_to_int(fix16_mul(thrust_calc, CONST_ONE_K));
-
+			prescaled_outputs[i] = fix16_to_int(fix16_mul(thrust_calc, 1.0f_K));
+			*/
 			//Note: Negitive PWM values can be calculated here, but will be saturated to 0pwm later
 
 			if( (mixer_to_use->output_type[i] == M) && ( prescaled_outputs[i] > max_output ) )

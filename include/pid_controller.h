@@ -7,29 +7,29 @@ extern "C" {
 #include "fix16.h"
 
 typedef struct {
-	fix16_t kp;
-	fix16_t ki;
-	fix16_t kd;
-	fix16_t tau;
+	float kp;
+	float ki;
+	float kd;
+	float tau;
 
-	fix16_t x;
-	fix16_t x_dot;
-	fix16_t setpoint;
-	fix16_t output;
+	float x;
+	float x_dot;
+	float setpoint;
+	float output;
 
-	fix16_t max;
-	fix16_t min;
+	float max;
+	float min;
 
-	fix16_t integrator;
-	fix16_t prev_x;
+	float integrator;
+	float prev_x;
 	uint32_t prev_time;
 } pid_controller_t;
 
-void pid_reset(pid_controller_t *pid, fix16_t prev_x);
-void pid_set_gains(pid_controller_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t tau);
-void pid_set_min_max(pid_controller_t *pid, fix16_t min, fix16_t max);
-void pid_init(pid_controller_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t tau, fix16_t initial_x, fix16_t initial_x_dot, fix16_t initial_setpoint, fix16_t initial_output, fix16_t min, fix16_t max);
-fix16_t pid_step(pid_controller_t *pid, uint32_t time_now, fix16_t sp, fix16_t x, fix16_t x_dot, bool use_x_dot);
+void pid_reset(pid_controller_t *pid, float prev_x);
+void pid_set_gains(pid_controller_t *pid, float kp, float ki, float kd, float tau);
+void pid_set_min_max(pid_controller_t *pid, float min, float max);
+void pid_init(pid_controller_t *pid, float kp, float ki, float kd, float tau, float initial_x, float initial_x_dot, float initial_setpoint, float initial_output, float min, float max);
+float pid_step(pid_controller_t *pid, uint32_t time_now, float sp, float x, float x_dot, bool use_x_dot);
 
 
 #ifdef __cplusplus

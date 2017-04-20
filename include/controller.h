@@ -7,8 +7,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "fix16.h"
-#include "fixquat.h"
+#include "math_types.h"
 
 #include "params.h"
 #include "pid_controller.h"
@@ -21,19 +20,19 @@ extern "C" {
 #define CMD_IN_IGNORE_ATTITUDE		(uint8_t)128	//0b10000000
 
 typedef struct {
-	fix16_t r;
-	fix16_t p;
-	fix16_t y;
-	qf16 q;
-	fix16_t T;
+	float r;
+	float p;
+	float y;
+	quaternion_t q;
+	float T;
 	uint8_t input_mask; //Mappings set with the defines above, setting a bit will cause that input to be ignored during operation
 } command_input_t;
 
 typedef struct {
-	fix16_t r;
-	fix16_t p;
-	fix16_t y;
-	fix16_t T;
+	float r;
+	float p;
+	float y;
+	float T;
 } control_output_t;
 
 extern command_input_t _command_input;

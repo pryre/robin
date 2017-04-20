@@ -7,23 +7,21 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "fix16.h"
-#include "fixvector3d.h"
-#include "fixquat.h"
+#include "math_types.h"
 
 typedef struct {
-  fix16_t p;		//Roll Rate
-  fix16_t q;		//Pitch Rate
-  fix16_t r;		//Yaw Rate
+  float p;		//Roll Rate
+  float q;		//Pitch Rate
+  float r;		//Yaw Rate
 //  fix16_t phi;		//Roll
 //  fix16_t theta;	//Pitch
 //  fix16_t psi;		//Yaw
-  fix16_t altitude;
-  qf16 attitude;
+  float altitude;
+  quaternion_t attitude;
 } state_t;
 
 extern state_t _state_estimator;	//_current_state
-extern v3d _adaptive_gyro_bias;
+extern vector3_t _adaptive_gyro_bias;
 
 
 //TODO: Redo these stats

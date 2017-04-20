@@ -10,8 +10,7 @@
 #include "drivers/mpu.h"
 #include "gpio.h"
 
-#include "fix16.h"
-#include "fixvector3d.h"
+#include "math_types.h"
 
 //Number of itterations of averaging to use with IMU calibrations
 #define SENSOR_CAL_IMU_PASSES 1000
@@ -97,11 +96,11 @@ void sensors_init(void) {
     mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_int(PARAM_BOARD_REVISION));
 	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
 
-	_sensors.imu.accel_scale = fix16_div(CONST_GRAVITY, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
-	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
+	_sensors.imu.accel_scale = CONST_GRAVITY / _sensor_cal_data.accel.acc1G;	//Get the m/s scale (raw->g's->m/s/s)
+	_sensors.imu.gyro_scale = MPU_GYRO_SCALE;	//Get radians scale (raw->rad/s)
 
-	_sensor_cal_data.accel.temp_scale = fix16_from_float(340.0f);
-	_sensor_cal_data.accel.temp_shift = fix16_from_float(36.53f);
+	_sensor_cal_data.accel.temp_scale = 340.0f;
+	_sensor_cal_data.accel.temp_shift = 36.53f;
 
 	_sensor_cal_data.gyro.count = 0;
 	_sensor_cal_data.gyro.sum_x = 0;
@@ -180,7 +179,7 @@ int64_t sensors_clock_smooth_time_skew(int64_t tc, int64_t tn) {
 	 * average updates in response to new offset samples.
 	 */
 	//Do this in floating point as fix16_t does not have an easy interface for uint64_t
-	float alpha = fix16_to_float( get_param_fix16( PARAM_TIMESYNC_ALPHA ) );
+	float alpha = get_param_float( PARAM_TIMESYNC_ALPHA );
 	return (int64_t)( alpha * tn ) + (int64_t)( ( 1.0f - alpha ) * tc );
 }
 
@@ -189,7 +188,7 @@ float sensors_clock_smooth_time_drift(float tc, float tn) {
 	 * average updates in response to new offset samples.
 	 */
 	//Do this in floating point as fix16_t does not have an easy interface for uint64_t
-	float alpha = fix16_to_float( get_param_fix16( PARAM_TIMESYNC_ALPHA ) );
+	float alpha = get_param_float( PARAM_TIMESYNC_ALPHA );
 	return (int64_t)( alpha * tn ) + (int64_t)( ( 1.0f - alpha ) * tc );
 }
 
@@ -202,6 +201,7 @@ uint32_t sensors_clock_imu_int_get(void) {
 }
 
 bool sensors_update(uint32_t time_us) {
+	/*
 	//bool update_success = false;
 	//TODO: Remember not to expect all sensors to be ready
 
@@ -258,7 +258,7 @@ bool sensors_update(uint32_t time_us) {
 	}
 
 	_sensors.safety_button.state_db = safety_button_reading;
-
+	*/
 	//TODO: This should be aware of failures
 	return true;
 }

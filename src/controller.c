@@ -5,11 +5,6 @@ extern "C" {
 #include <stdbool.h>
 
 #include "breezystm32.h"
-#include "fix16.h"
-#include "fixvector3d.h"
-#include "fixmatrix.h"
-#include "fixquat.h"
-#include "fixextra.h"
 
 #include "params.h"
 #include "estimator.h"
@@ -60,40 +55,40 @@ void controller_init(void) {
            -1.0f*get_param_int(PARAM_MAX_COMMAND)/2.0f);
 */
 pid_init(&_pid_roll_rate,
-		 get_param_int(PARAM_PID_ROLL_RATE_P),
-		 get_param_int(PARAM_PID_ROLL_RATE_I),
-		 get_param_int(PARAM_PID_ROLL_RATE_D),
-		 get_param_int(PARAM_PID_TAU),
+		 get_param_float(PARAM_PID_ROLL_RATE_P),
+		 get_param_float(PARAM_PID_ROLL_RATE_I),
+		 get_param_float(PARAM_PID_ROLL_RATE_D),
+		 get_param_float(PARAM_PID_TAU),
 		 _state_estimator.p,
 		 0,
 		 0,
 		 0,
-		 -get_param_int(PARAM_MAX_ROLL_RATE),
-		 get_param_int(PARAM_MAX_ROLL_RATE));
+		 -get_param_float(PARAM_MAX_ROLL_RATE),
+		 get_param_float(PARAM_MAX_ROLL_RATE));
 
 pid_init(&_pid_pitch_rate,
-		 get_param_int(PARAM_PID_PITCH_RATE_P),
-		 get_param_int(PARAM_PID_PITCH_RATE_I),
-		 get_param_int(PARAM_PID_PITCH_RATE_D),
-		 get_param_int(PARAM_PID_TAU),
+		 get_param_float(PARAM_PID_PITCH_RATE_P),
+		 get_param_float(PARAM_PID_PITCH_RATE_I),
+		 get_param_float(PARAM_PID_PITCH_RATE_D),
+		 get_param_float(PARAM_PID_TAU),
 		 _state_estimator.q,
 		 0,
 		 0,
 		 0,
-		 -get_param_int(PARAM_MAX_PITCH_RATE),
-		 get_param_int(PARAM_MAX_PITCH_RATE));
+		 -get_param_float(PARAM_MAX_PITCH_RATE),
+		 get_param_float(PARAM_MAX_PITCH_RATE));
 
 pid_init(&_pid_yaw_rate,
-		 get_param_int(PARAM_PID_YAW_RATE_P),
-		 get_param_int(PARAM_PID_YAW_RATE_I),
-		 get_param_int(PARAM_PID_YAW_RATE_D),
-		 get_param_int(PARAM_PID_TAU),
+		 get_param_float(PARAM_PID_YAW_RATE_P),
+		 get_param_float(PARAM_PID_YAW_RATE_I),
+		 get_param_float(PARAM_PID_YAW_RATE_D),
+		 get_param_float(PARAM_PID_TAU),
 		 _state_estimator.r,
 		 0,
 		 0,
 		 0,
-		 -get_param_int(PARAM_MAX_YAW_RATE),
-		 get_param_int(PARAM_MAX_YAW_RATE));
+		 -get_param_float(PARAM_MAX_YAW_RATE),
+		 get_param_float(PARAM_MAX_YAW_RATE));
 /*
   pid_init(&pid_altitude,
            PARAM_PID_ALT_P,
@@ -110,10 +105,10 @@ pid_init(&_pid_yaw_rate,
 	_command_input.r = 0;
 	_command_input.p = 0;
 	_command_input.y = 0;
-	_command_input.q.a = 1;
-	_command_input.q.b = 0;
-	_command_input.q.c = 0;
-	_command_input.q.d = 0;
+	_command_input.q.w = 1;
+	_command_input.q.x = 0;
+	_command_input.q.y = 0;
+	_command_input.q.z = 0;
 	_command_input.T = 0;
 	_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
 
@@ -127,16 +122,16 @@ void controller_set_input_failsafe(void) {
 	_command_input.r = 0;
 	_command_input.p = 0;
 	_command_input.y = 0;
-	_command_input.q.a = 1;
-	_command_input.q.b = 0;
-	_command_input.q.c = 0;
-	_command_input.q.d = 0;
-	_command_input.T = get_param_fix16(PARAM_FAILSAFE_THROTTLE);
+	_command_input.q.w = 1;
+	_command_input.q.x = 0;
+	_command_input.q.y = 0;
+	_command_input.q.z = 0;
+	_command_input.T = get_param_float(PARAM_FAILSAFE_THROTTLE);
 	_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
 }
 
-static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
-		mf16 I;
+static vector3_t rate_goals_from_attitude(const quaternion_t *q_sp, const quaternion_t *q_current) {
+/*		mf16 I;
 		I.rows = 3;
 		I.columns = 3;
 		I.data[0][0] = CONST_ONE;
@@ -297,19 +292,23 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		rates_sp_sat.z = fix16_constrain(rates_sp.z, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
 
 		return rates_sp_sat;
+*/
+
+	vector3_t empty;
+	return empty;
 }
 
 void controller_run( uint32_t time_now ) {
 	//Variables that store the computed attitude goal rates
-	fix16_t goal_r = 0;
-	fix16_t goal_p = 0;
-	fix16_t goal_y = 0;
-	fix16_t goal_throttle = 0;
+	float goal_r = 0;
+	float goal_p = 0;
+	float goal_y = 0;
+	float goal_throttle = 0;
 
 	//==-- Attitude Control
 	//If we should listen to attitude input
 	if( !(_command_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
-		v3d rates_sp = rate_goals_from_attitude(&_command_input.q, &_state_estimator.attitude);
+		vector3_t rates_sp = rate_goals_from_attitude(&_command_input.q, &_state_estimator.attitude);
 
 		goal_r = rates_sp.x;
 		goal_p = rates_sp.y;

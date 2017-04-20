@@ -5,8 +5,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "fix16.h"
-
 //#include "mavlink.h"
 
 //This needs to be 1 less, as we need to allow space for '\n'
@@ -195,7 +193,7 @@ int32_t get_param_int(param_id_t id);
  * @param id The ID of the parameter
  * @return The value of the parameter
  */
-fix16_t get_param_fix16(param_id_t id);
+float get_param_float(param_id_t id);
 
 /**
  * @brief Get the name of a parameter
@@ -233,7 +231,7 @@ bool set_param_uint(param_id_t id, uint32_t value);
  * @param value The new value
  * @return  True if a parameter was changed, false otherwise
  */
-bool set_param_fix16(param_id_t id, fix16_t value);
+bool set_param_float(param_id_t id, float value);
 
 /**
  * @brief Sets the value of a parameter by name and calls the parameter change callback
@@ -257,4 +255,4 @@ bool set_param_by_name_int(const char name[PARAMS_NAME_LENGTH], int32_t value);
  * @param value The new value
  * @return True if a parameter value was changed, false otherwise
  */
-bool set_param_by_name_fix16(const char name[PARAMS_NAME_LENGTH], fix16_t value);
+bool set_param_by_name_float(const char name[PARAMS_NAME_LENGTH], float value);

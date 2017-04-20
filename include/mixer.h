@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "fix16.h"
 #include "controller.h"
 
 //TODO: Need to add support later for more mixing types
@@ -23,10 +22,10 @@ typedef enum {
 
 typedef struct {
 	output_type_t output_type[8];
-	fix16_t T[8];
-	fix16_t x[8];
-	fix16_t y[8];
-	fix16_t z[8];
+	float T[8];
+	float x[8];
+	float y[8];
+	float z[8];
 } mixer_t;
 
 extern int32_t _GPIO_outputs[8];

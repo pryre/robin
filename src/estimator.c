@@ -11,47 +11,34 @@ extern "C" {
 #include "params.h"
 #include "estimator.h"
 
-#include "fix16.h"
-#include "fixvector3d.h"
-#include "fixquat.h"	//TODO: Make a docs about quaternion a,b,c,d
-#include "fixextra.h"
-
-//Quick defines of reused fix16 numbers
-#define CONST_ZERO_ZERO_EIGHT_THREE_REC 0x00001555	//0.083333
-#define CONST_ZERO_FOUR_SIX_REC			0x00006AAA	//0.083333
-#define CONST_ZERO_FIVE					0x00008000	//0.5
-#define CONST_ZERO_SIX_REC				0x0000AAAA	//0.66666
-#define CONST_ZERO_EIGHT_FIVE			0x0000D999	//0.85
-#define CONST_ONE						0x00010000	//1
-#define CONST_ONE_ONE_FIVE				0x00012666	//1.15
-#define CONST_TWO						0x00020000	//2
+#include "math_types.h"
 
 state_t _state_estimator;
-v3d _adaptive_gyro_bias;	//TODO: extern
+vector3_t _adaptive_gyro_bias;	//TODO: extern
 sensor_readings_t _sensors;
 
-static const v3d g = {0, 0, CONST_ONE};	//These were floats, but having them as int might be more accurate
+static const vector3_t g = {0, 0, 1.0f};	//These were floats, but having them as int might be more accurate
 
-static v3d w1;
-static v3d w2;
-static v3d wbar;
-static v3d wfinal;
-static v3d w_acc;
-static v3d b;
-static qf16 q_tilde;
-static qf16 q_hat;
+static vector3_t w1;
+static vector3_t w2;
+static vector3_t wbar;
+static vector3_t wfinal;
+static vector3_t w_acc;
+static vector3_t b;
+static quaternion_t q_tilde;
+static quaternion_t q_hat;
 static uint32_t time_last;
 
 static bool mat_exp;
 static bool quad_int;
 static bool use_acc;
 
-static fix16_t kp_;
-static fix16_t ki_;
+static float kp_;
+static float ki_;
 static uint32_t init_time;
 
-static v3d _accel_LPF;
-static v3d _gyro_LPF;
+static vector3_t _accel_LPF;
+static vector3_t _gyro_LPF;
 
 void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration, bool use_accelerometer) {
 	_state_estimator.p = 0;
@@ -60,20 +47,20 @@ void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration,
 	//_state_estimator.phi = 0;
 	//_state_estimator.theta = 0;
 	//_state_estimator.psi = 0;
-	_state_estimator.attitude.a = 1;
-	_state_estimator.attitude.b = 0;
-	_state_estimator.attitude.c = 0;
-	_state_estimator.attitude.d = 0;
+	_state_estimator.attitude.w = 1;
+	_state_estimator.attitude.x = 0;
+	_state_estimator.attitude.y = 0;
+	_state_estimator.attitude.z = 0;
 
-	q_hat.a = CONST_ONE;
-	q_hat.b = 0;
-	q_hat.c = 0;
-	q_hat.d = 0;
+	q_hat.w = 1.0f;
+	q_hat.x = 0;
+	q_hat.y = 0;
+	q_hat.z = 0;
 
-	q_tilde.a = CONST_ONE;
-	q_tilde.b = 0;
-	q_tilde.c = 0;
-	q_tilde.d = 0;
+	q_tilde.w = 1.0f;
+	q_tilde.x = 0;
+	q_tilde.y = 0;
+	q_tilde.z = 0;
 
 	w1.x = 0;
 	w1.y = 0;
@@ -103,8 +90,8 @@ void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration,
 	_gyro_LPF.y = 0;
 	_gyro_LPF.z = 0;
 
-	kp_ = get_param_fix16(PARAM_FILTER_KP);
-	ki_ = get_param_fix16(PARAM_FILTER_KI);
+	kp_ = get_param_float(PARAM_FILTER_KP);
+	ki_ = get_param_float(PARAM_FILTER_KI);
 	init_time = get_param_int(PARAM_INIT_TIME)*1000;	//nano->microseconds
 
 	mat_exp = use_matrix_exponential;
@@ -116,6 +103,7 @@ void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration,
 
 void lpf_update() {
 	//value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
+	/*
 	fix16_t alpha_acc = get_param_fix16(PARAM_ACC_ALPHA);
 	_accel_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_acc), _sensors.imu.accel.x), fix16_smul(alpha_acc, _accel_LPF.x));
 	_accel_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_acc), _sensors.imu.accel.y), fix16_smul(alpha_acc, _accel_LPF.y));;
@@ -125,18 +113,19 @@ void lpf_update() {
 	_gyro_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.x), fix16_smul(alpha_gyro, _gyro_LPF.x));
 	_gyro_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.y), fix16_smul(alpha_gyro, _gyro_LPF.y));
 	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
+	*/
 }
 
 void estimator_update(uint32_t time_now) {
-	fix16_t kp;
-	fix16_t ki;
+	float kp;
+	float ki;
 
 	//TODO: This will exit on the first loop, not a nice way of doing it though
 	if (time_last == 0) {
 		time_last = time_now;
 		return;
 	}
-
+	/*
 	//Converts dt from micros to secs
 	fix16_t dt = fix16_sdiv((time_now - time_last), 1e6f);
 	time_last = time_now;
@@ -289,14 +278,14 @@ void estimator_update(uint32_t time_now) {
 			//XXX: Even with caching turned off, this should give a good performance increase (hopefully around 25%)
 			fix16_t t1 = fix16_cos(fix16_div(fix16_mul(norm_w, dt), CONST_TWO));
 			fix16_t t2 = fix16_mul(fix16_div(CONST_ONE, norm_w), fix16_sin(fix16_div(fix16_mul(norm_w, dt), CONST_TWO)));
-
+	*/
 			/*
 			qhat_np1.w = t1*q_hat.w   + t2*(          - p*q_hat.x - q*q_hat.y - r*q_hat.z);
 			qhat_np1.x = t1*q_hat.x   + t2*(p*q_hat.w             + r*q_hat.y - q*q_hat.z);
 			qhat_np1.y = t1*q_hat.y   + t2*(q*q_hat.w - r*q_hat.x             + p*q_hat.z);
 			qhat_np1.z = t1*q_hat.z   + t2*(r*q_hat.w + q*q_hat.x - p*q_hat.y);
 			*/
-
+	/*
 			//qdot.w = t2*(((-p*q_hat.x) + (-q*q_hat.y)) + (-r*q_hat.z)
 			qdot.a = fix16_mul(t2, fix16_add(fix16_add(fix16_mul(-p, q_hat.b), fix16_mul(-q, q_hat.c)), fix16_mul(-r, q_hat.d)));
 			qdot.b = fix16_mul(t2, fix16_add(fix16_add(fix16_mul(p, q_hat.a), fix16_mul(r, q_hat.c)), fix16_mul(-q, q_hat.d)));
@@ -311,6 +300,7 @@ void estimator_update(uint32_t time_now) {
 
 			qf16_normalize(&q_hat, &q_hat_temp);
 		} else {
+	*/
 			// Euler Integration
 			// (Eq. 47a Mahoney Paper), but this is pretty straight-forward
 			/*
@@ -320,7 +310,7 @@ void estimator_update(uint32_t time_now) {
 							     0.5f * ( r*q_hat.w + q*q_hat.x - p*q_hat.y            )
 							    };
 			*/
-
+	/*
 			qdot.a = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(-p, q_hat.b), fix16_add(fix16_mul(-q, q_hat.c), fix16_mul(-r, q_hat.d))));
 			qdot.b = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(p, q_hat.a), fix16_add(fix16_mul(r, q_hat.c), fix16_mul(-q, q_hat.d))));
 			qdot.c = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(q, q_hat.a), fix16_add(fix16_mul(-r, q_hat.b), fix16_mul(p, q_hat.d))));
@@ -353,6 +343,7 @@ void estimator_update(uint32_t time_now) {
 	_adaptive_gyro_bias.y = b.y;
 	_adaptive_gyro_bias.z = 0.0;	//TODO: Until we have MAG support, the z-bias is totally meaningless
 									//TODO: Need to enable this when yaw_c is implemented
+	*/
 }
 
 #ifdef __cplusplus
