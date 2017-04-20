@@ -4,7 +4,8 @@
 extern "C" {
 #endif
 
-#include "fix16.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef struct {
 	float kp;

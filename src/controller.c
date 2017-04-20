@@ -3,6 +3,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "breezystm32.h"
 

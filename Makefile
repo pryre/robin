@@ -17,8 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this code.  If not, see <http://www.gnu.org/licenses/>.
 
-ARCH_FLAGS	 = -mthumb \
-               -DFIXMATH_NO_CACHE
+ARCH_FLAGS	 = -mthumb
 
 # Change this to wherever you put BreezySTM32
 BREEZY_DIR = $(HERE)/lib/BreezySTM32
@@ -78,8 +77,6 @@ DO_FLASH  = stm32flash -w $(TARGET_HEX) -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEV
 
 # Source files common to all targets
 $(PROJECT_NAME)_SRC = $(PROJECT_SRC_FILES) \
-					  $(PROJECT_SRC_LIBFIXMATH) \
-					  $(PROJECT_SRC_LIBFIXMATRIX) \
 					  $(PROJECT_BREEZY_FILES) \
 					  $(F1_DIR)/system.c \
 					  $(F1_DIR)/serial.c \
@@ -113,8 +110,6 @@ OBJCOPY	 = arm-none-eabi-objcopy
 #
 INCLUDE_DIRS = ./include \
 			   ./lib \
-			   $(PROJECT_DIR_LIBFIXMATH) \
-			   $(PROJECT_DIR_LIBFIXMATRIX) \
 			   $(BREEZY_DIR) \
 			   $(F1_DIR) \
 			   $(STDPERIPH_DIR)/inc \

@@ -21,23 +21,3 @@ PROJECT_SRC_FILES = ./src/main.c \
 PROJECT_BREEZY_FILES = $(F1_DIR)/i2c_stm32f10x.c \
 					   $(F1_DIR)/drivers/mpu.c \
 					   $(F1_DIR)/pwm.c
-
-# Math Libs.
-PROJECT_DIR_LIBFIXMATH = ./lib/libfixmath/libfixmath
-PROJECT_DIR_LIBFIXMATRIX = ./lib/libfixmatrix
-
-PROJECT_SRC_LIBFIXMATH = $(PROJECT_DIR_LIBFIXMATH)/fix16.c \
-							$(PROJECT_DIR_LIBFIXMATH)/fix16_exp.c \
-							$(PROJECT_DIR_LIBFIXMATH)/fix16_sqrt.c \
-							$(PROJECT_DIR_LIBFIXMATH)/fix16_str.c \
-							$(PROJECT_DIR_LIBFIXMATH)/fix16_trig.c \
-							$(PROJECT_DIR_LIBFIXMATH)/fract32.c \
-							$(PROJECT_DIR_LIBFIXMATH)/uint32.c
-
-
-PROJECT_SRC_LIBFIXMATRIX = $(PROJECT_DIR_LIBFIXMATRIX)/fixarray.c \
-							$(PROJECT_DIR_LIBFIXMATRIX)/fixmatrix.c \
-							$(PROJECT_DIR_LIBFIXMATRIX)/fixquat.c \
-							$(PROJECT_DIR_LIBFIXMATRIX)/fixstring.c \
-							$(PROJECT_DIR_LIBFIXMATRIX)/fixvector2d.c \
-							$(PROJECT_DIR_LIBFIXMATRIX)/fixvector3d.c

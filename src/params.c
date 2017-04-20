@@ -5,7 +5,6 @@
 #include "flash.h"
 #include "params.h"
 #include "mixer.h"
-#include "fix16.h"
 
 // global variable definitions
 params_t _params;
@@ -65,7 +64,7 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_VERSION_SOFTWARE, "SW_VERSION", 1);
 	init_param_int(PARAM_BAUD_RATE_0, "BAUD_RATE_0", 921600);	//Set baud rate to 0 to disable a comm port
 	init_param_int(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//Set baud rate to 0 to disable a comm port
-	init_param_int(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));
+	init_param_int(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", 0.8f);
 
 	//==-- Mavlink
 	init_param_int(PARAM_SYSTEM_ID, "SYS_ID", 1);
