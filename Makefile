@@ -212,18 +212,19 @@ $(OBJECT_DIR)/$(TARGET)/%.o: %.S
 clean:
 	rm -rf *.o obj $(TARGET_HEX) $(TARGET_ELF) $(TARGET_OBJS) $(TARGET_MAP)
 
-reflash:
-	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb -ixon
-	echo -en '\xfe\x21\x3c\x01\xf0\x4c\x00\x00\x40\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x01\x01\x00\x03\x79' > $(SERIAL_DEVICE)
-
-	flash
-
 flash: flash_$(TARGET)
 
 flash_$(TARGET): $(TARGET_IMG)
 	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb -ixon
 #	echo -n 'R' >$(SERIAL_DEVICE)
 #	sleep 1
+	$(DO_FLASH)
+
+reflash:
+	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb
+	sleep 0.5
+	echo -en '\xfe\x21\x3c\x01\xf0\x4c\x00\x00\x40\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x01\x01\x00\x03\x79' > $(SERIAL_DEVICE)
+	sleep 0.5
 	$(DO_FLASH)
 
 unbrick: unbrick_$(TARGET)
