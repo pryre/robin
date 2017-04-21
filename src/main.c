@@ -134,7 +134,8 @@ void loop(void) {
 	if(_system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY) {
 		//Handle failsafes
 		if(_system_status.state == MAV_STATE_EMERGENCY)
-				controller_set_input_failsafe();	//Cut to hold angle and failsafe throttle
+			controller_set_input_failsafe();	//Cut to hold angle and failsafe throttle
+			//TODO: Seems there's an issue re-arming after this takes over in emergency
 
 		//==-- Update Controller
 		controller_run( sensors_clock_imu_int_get() );	//Apply the current commands and update the PID controllers

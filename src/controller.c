@@ -33,6 +33,11 @@ void controller_reset(void) {
 	pid_reset(&_pid_roll_rate, _state_estimator.p);
 	pid_reset(&_pid_pitch_rate, _state_estimator.q);
 	pid_reset(&_pid_yaw_rate, _state_estimator.r);
+
+	_control_output.r = 0;
+	_control_output.p = 0;
+	_control_output.y = 0;
+	_control_output.T = 0;
 }
 
 void controller_init(void) {
