@@ -9,9 +9,12 @@ extern "C" {
 #include "params.h"
 #include "safety.h"
 #include "sensors.h"
+#include "controller.h"
 
 system_status_t _system_status;
 sensor_readings_t _sensors;
+command_input_t _command_input;
+control_output_t _control_output;
 
 static status_led_t _status_led_green;
 static status_led_t _status_led_red;
@@ -72,28 +75,45 @@ void safety_init() {
 bool safety_request_arm(void) {
 	bool result = false;
 	bool base_systems_health = false;
+	bool throttle_check = false;
 
 	if( ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) &&
-		( _system_status.mavlink.offboard_control.health == SYSTEM_HEALTH_OK ) &&
+		( _system_status.mavlink.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
 		( _system_status.mavlink.offboard_control.health == SYSTEM_HEALTH_OK ) )
 		base_systems_health = true;
 		//TODO: Should there be any other checks here?
 		//	Check to see if all inputs are good to go
 
+	if( ( _control_output.T == 0 ) &&
+		( ( _command_input.T == 0 ) ||
+		  _command_input.input_mask & CMD_IN_IGNORE_THROTTLE) )
+		throttle_check = true;
 
+	if(	throttle_check &&
+		base_systems_health &&
+	    _system_status.safety_button_status &&
+	    ( _system_status.state == MAV_STATE_STANDBY ) ) {
 
-	if(	base_systems_health &&
-		_system_status.safety_button_status &&
-		( _system_status.state == MAV_STATE_STANDBY ) ) {
 		_system_status.mode |= MAV_MODE_FLAG_SAFETY_ARMED;	//ARM!
-
 		_system_status.state = MAV_STATE_ACTIVE;
 
-		//TODO: Make success system beep here
+		mavlink_queue_broadcast_notice("[SAFETY] Mav armed!");
+
+		//TODO: Make success beep here
 
 		result = true;
 	} else {
-		//TODO: Make success system failure here
+		//TODO: Make failure beep here
+
+		if( _system_status.state != MAV_STATE_STANDBY ) {
+			mavlink_queue_broadcast_error("[SAFETY] Arming denied: mav not in standby state");
+		} else if( !_system_status.safety_button_status) {
+			mavlink_queue_broadcast_error("[SAFETY] Arming denied: safety engaged");
+		} else if( !base_systems_health ) {
+			mavlink_queue_broadcast_error("[SAFETY] Arming denied: sensor error");
+		} else if( !throttle_check ) {
+			mavlink_queue_broadcast_error("[SAFETY] Arming denied: high throttle");
+		}
 	}
 
 	return result;
@@ -104,6 +124,8 @@ bool safety_request_disarm(void) {
 
 	_system_status.mode &= !MAV_MODE_FLAG_SAFETY_ARMED;	//DISARM!
 	_system_status.state = MAV_STATE_STANDBY;
+
+	mavlink_queue_broadcast_notice("[SAFETY] Mav disarmed!");
 
 	//TODO: Make system beep here as well
 

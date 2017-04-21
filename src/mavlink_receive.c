@@ -222,13 +222,16 @@ static void communication_decode(uint8_t port, uint8_t c) {
 							case 1:
 								_system_operation_control = SYSTEM_OPERATION_REBOOT;
 								command_result = MAV_RESULT_ACCEPTED;
+
 								break;
 							case 3:
 								_system_operation_control = SYSTEM_OPERATION_REBOOT_BOOTLOADER;
 								command_result = MAV_RESULT_ACCEPTED;
+
 								break;
 							default:
 								command_result = MAV_RESULT_UNSUPPORTED;
+
 								break;
 						}
 

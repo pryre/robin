@@ -113,8 +113,7 @@ static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) 
 //1000 <= value <= 2000
 //value_disarm (for motors) should be 1000
 void write_output_pwm(uint8_t index, int32_t value, int32_t value_disarm) {
-	if( (_system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY) &&
-		(_system_status.mode == MAV_STATE_ACTIVE) ) {
+	if( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY ) {
 		_pwm_output[index] = int32_constrain(value, 1000, 2000);
 	} else {
 		_pwm_output[index] = value_disarm;
