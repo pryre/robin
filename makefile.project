@@ -14,7 +14,7 @@ PROJECT_SRC_FILES = ./src/main.c \
 					./src/sensors.c \
 					./src/estimator.c \
 					./src/pid_controller.c \
-					./src/controller.c \
+					./src/controller.cpp \
 					./src/mixer.c
 
 # Drivers, etc.

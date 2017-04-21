@@ -6,6 +6,7 @@ extern "C" {
 #include <stdint.h>
 
 #include "breezystm32.h"
+#include "math_types.h"
 
 #include "params.h"
 #include "estimator.h"

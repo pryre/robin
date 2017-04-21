@@ -113,7 +113,8 @@ INCLUDE_DIRS = ./include \
 			   $(BREEZY_DIR) \
 			   $(F1_DIR) \
 			   $(STDPERIPH_DIR)/inc \
-			   $(DEVICE_INCLUDES)
+			   $(DEVICE_INCLUDES) \
+			   $(MATRIX_DIR)
 
 
 ifeq ($(DEBUG),GDB)
