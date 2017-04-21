@@ -13,3 +13,6 @@
 [submodule "lib/libfixmatrix"]
 	path = lib/libfixmatrix
 	url = https://github.com/PetteriAimonen/libfixmatrix
+[submodule "lib/Matrix"]
+	path = lib/Matrix
+	url = https://github.com/PX4/Matrix
