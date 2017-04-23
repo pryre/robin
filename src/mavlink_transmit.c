@@ -52,8 +52,8 @@ void communication_transmit(uint32_t time_us) {
 	// otherwise we risk overloading the serial buffer. This
 	// will also offset the message streams so they are all staggered
 	//Disable checking for outputs if port disabled
-	bool message_sent_comm_0 = ( get_param_int(PARAM_BAUD_RATE_0) == 0 );
-	bool message_sent_comm_1 = ( get_param_int(PARAM_BAUD_RATE_1) == 0 );
+	bool message_sent_comm_0 = ( get_param_uint(PARAM_BAUD_RATE_0) == 0 );
+	bool message_sent_comm_1 = ( get_param_uint(PARAM_BAUD_RATE_1) == 0 );
 
 	for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
 

@@ -59,18 +59,19 @@ void init_params(void) {
 }
 
 //TODO: Still need to clean up int and uint parameters
+//		Should make an automated script for checking correct usages!
 void set_param_defaults(void) {
 	//==-- System
-	init_param_int(PARAM_BOARD_REVISION, "BOARD_REV", 5);
-	init_param_int(PARAM_VERSION_FIRMWARE, "FW_VERSION", 1);
-	init_param_int(PARAM_VERSION_SOFTWARE, "SW_VERSION", 1);
-	init_param_int(PARAM_BAUD_RATE_0, "BAUD_RATE_0", 921600);	//Set baud rate to 0 to disable a comm port
-	init_param_int(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//Set baud rate to 0 to disable a comm port
-	init_param_int(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));
+	init_param_uint(PARAM_BOARD_REVISION, "BOARD_REV", 5);
+	init_param_uint(PARAM_VERSION_FIRMWARE, "FW_VERSION", 1);
+	init_param_uint(PARAM_VERSION_SOFTWARE, "SW_VERSION", 1);
+	init_param_uint(PARAM_BAUD_RATE_0, "BAUD_RATE_0", 921600);	//Set baud rate to 0 to disable a comm port
+	init_param_uint(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//Set baud rate to 0 to disable a comm port
+	init_param_fix16(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));
 
 	//==-- Mavlink
-	init_param_int(PARAM_SYSTEM_ID, "SYS_ID", 1);
-	init_param_int(PARAM_COMPONENT_ID, "COMP_ID", 1);
+	init_param_uint(PARAM_SYSTEM_ID, "SYS_ID", 1);
+	init_param_uint(PARAM_COMPONENT_ID, "COMP_ID", 1);
 
 	init_param_uint(PARAM_STREAM_RATE_HEARTBEAT_0, "STRM0_HRTBT", 1000000);
 	init_param_uint(PARAM_STREAM_RATE_SYS_STATUS_0, "STRM0_SYS_STAT", 5000000);
@@ -95,10 +96,10 @@ void set_param_defaults(void) {
 	//==-- Sensors
 	//All params here in us
 	//TODO: Double check which is used here
-	init_param_int(PARAM_SENSOR_DIFF_PRESS_UPDATE, "UPDATE_DIFF_P", 0);
-	init_param_int(PARAM_SENSOR_BARO_UPDATE, "UPDATE_BARO", 0);
-	init_param_int(PARAM_SENSOR_SONAR_UPDATE, "UPDATE_SONAR", 0);
-	init_param_int(PARAM_SENSOR_MAG_UPDATE, "UPDATE_MAG", 0);
+	init_param_uint(PARAM_SENSOR_DIFF_PRESS_UPDATE, "UPDATE_DIFF_P", 0);
+	init_param_uint(PARAM_SENSOR_BARO_UPDATE, "UPDATE_BARO", 0);
+	init_param_uint(PARAM_SENSOR_SONAR_UPDATE, "UPDATE_SONAR", 0);
+	init_param_uint(PARAM_SENSOR_MAG_UPDATE, "UPDATE_MAG", 0);
 
 	init_param_uint(PARAM_SENSOR_IMU_TIMEOUT, "TIMEOUT_IMU", 2000);
 	init_param_uint(PARAM_SENSOR_DIFF_PRESS_TIMEOUT, "TIMEOUT_DIFF_P", 20000);
@@ -109,15 +110,15 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_OFFB_CTRL_TIMEOUT, "TIMEOUT_OB_CTRL", 50000);
 
 	//==-- Estimator
-	init_param_int(PARAM_INIT_TIME, "FILTER_INIT_T", 3000); // ms
-	init_param_int(PARAM_EST_USE_ACC_COR, "EST_ACC_COR", 1); // 1=true; 0=false
-	init_param_int(PARAM_EST_USE_MAT_EXP, "EST_MAT_EXP", 1); // 1=true; 0=false
-	init_param_int(PARAM_EST_USE_QUAD_INT, "EST_QUAD_INT", 1); // 1=true; 0=false
+	init_param_uint(PARAM_INIT_TIME, "FILTER_INIT_T", 3000); // ms
+	init_param_uint(PARAM_EST_USE_ACC_COR, "EST_ACC_COR", 1); // 1=true; 0=false
+	init_param_uint(PARAM_EST_USE_MAT_EXP, "EST_MAT_EXP", 1); // 1=true; 0=false
+	init_param_uint(PARAM_EST_USE_QUAD_INT, "EST_QUAD_INT", 1); // 1=true; 0=false
 	init_param_fix16(PARAM_FILTER_KP, "FILTER_KP", fix16_from_float(1.0f));
 	init_param_fix16(PARAM_FILTER_KI, "FILTER_KI", fix16_from_float(0.05f));
 	init_param_fix16(PARAM_GYRO_ALPHA, "GYRO_LPF_ALPHA", fix16_from_float(0.6f));
 	init_param_fix16(PARAM_ACC_ALPHA, "ACC_LPF_ALPHA", fix16_from_float(0.6f));
-	init_param_int(PARAM_STREAM_ADJUSTED_GYRO, "STRM_ADJST_GYRO", 0);
+	init_param_int(PARAM_STREAM_ADJUSTED_GYRO, "STRM_ADJST_GYRO", 0);	//TODO: This variable is unused
 	init_param_int(PARAM_GYRO_X_BIAS, "GYRO_X_BIAS", 0);
 	init_param_int(PARAM_GYRO_Y_BIAS, "GYRO_Y_BIAS", 0);
 	init_param_int(PARAM_GYRO_Z_BIAS, "GYRO_Z_BIAS", 0);
@@ -156,14 +157,14 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_MAX_COMMAND, "PARAM_MAX_CMD", 1000);
 
 	//==-- Output
-	init_param_int(PARAM_MOTOR_PWM_SEND_RATE, "MOTOR_PWM_RATE", 400);
-	init_param_int(PARAM_MOTOR_PWM_IDLE, "MOTOR_PWM_IDLE", 1150);
-	init_param_int(PARAM_MOTOR_PWM_MIN, "MOTOR_PWM_MIN", 1000);
-	init_param_int(PARAM_MOTOR_PWM_MAX, "MOTOR_PWM_MAX", 2000);
+	init_param_uint(PARAM_MOTOR_PWM_SEND_RATE, "MOTOR_PWM_RATE", 400);
+	init_param_uint(PARAM_MOTOR_PWM_IDLE, "MOTOR_PWM_IDLE", 1150);
+	init_param_uint(PARAM_MOTOR_PWM_MIN, "MOTOR_PWM_MIN", 1000);
+	init_param_uint(PARAM_MOTOR_PWM_MAX, "MOTOR_PWM_MAX", 2000);
 
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, "FAILSAFE_THRTL", fix16_from_float(0.25f));
 
-	init_param_int(PARAM_MIXER, "MIXER", MIXER_QUADCOPTER_X);
+	init_param_uint(PARAM_MIXER, "MIXER", MIXER_QUADCOPTER_X);
 }
 
 bool read_params(void) {

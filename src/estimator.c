@@ -42,10 +42,6 @@ static qf16 q_tilde;
 static qf16 q_hat;
 static uint32_t time_last;
 
-static bool mat_exp;
-static bool quad_int;
-static bool use_acc;
-
 static fix16_t kp_;
 static fix16_t ki_;
 static uint32_t init_time;
@@ -53,13 +49,10 @@ static uint32_t init_time;
 static v3d _accel_LPF;
 static v3d _gyro_LPF;
 
-void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration, bool use_accelerometer) {
+void estimator_init( void ) {
 	_state_estimator.p = 0;
 	_state_estimator.q = 0;
 	_state_estimator.r = 0;
-	//_state_estimator.phi = 0;
-	//_state_estimator.theta = 0;
-	//_state_estimator.psi = 0;
 	_state_estimator.attitude.a = 1;
 	_state_estimator.attitude.b = 0;
 	_state_estimator.attitude.c = 0;
@@ -103,18 +96,14 @@ void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration,
 	_gyro_LPF.y = 0;
 	_gyro_LPF.z = 0;
 
-	kp_ = get_param_fix16(PARAM_FILTER_KP);
-	ki_ = get_param_fix16(PARAM_FILTER_KI);
-	init_time = get_param_int(PARAM_INIT_TIME)*1000;	//nano->microseconds
-
-	mat_exp = use_matrix_exponential;
-	quad_int = use_quadratic_integration;
-	use_acc = use_accelerometer;
+	kp_ = get_param_fix16( PARAM_FILTER_KP );
+	ki_ = get_param_fix16( PARAM_FILTER_KI );
+	init_time = get_param_uint( PARAM_INIT_TIME ) * 1000;	//nano->microseconds
 
 	time_last = 0;
 }
 
-void lpf_update() {
+static void lpf_update(void) {
 	//value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
 	fix16_t alpha_acc = get_param_fix16(PARAM_ACC_ALPHA);
 	_accel_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_acc), _sensors.imu.accel.x), fix16_smul(alpha_acc, _accel_LPF.x));
@@ -127,24 +116,24 @@ void lpf_update() {
 	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
 }
 
-void estimator_update(uint32_t time_now) {
+void estimator_update( uint32_t time_now ) {
 	fix16_t kp;
 	fix16_t ki;
 
 	//TODO: This will exit on the first loop, not a nice way of doing it though
-	if (time_last == 0) {
+	if ( time_last == 0 ) {
 		time_last = time_now;
 		return;
 	}
 
 	//Converts dt from micros to secs
-	fix16_t dt = fix16_sdiv((time_now - time_last), 1e6f);
+	fix16_t dt = fix16_sdiv( ( time_now - time_last ), 1e6f );
 	time_last = time_now;
 
 	//Crank up the gains for the first few seconds for quick convergence
-	if (time_now < init_time) {
-		kp = fix16_smul(kp_, fix16_from_float(10.0f));
-		ki = fix16_smul(ki_, fix16_from_float(10.0f));
+	if ( time_now < init_time ) {
+		kp = fix16_smul( kp_, fix16_from_float( 10.0f ) );
+		ki = fix16_smul( ki_, fix16_from_float( 10.0f ) );
 	} else {
 		kp = kp_;
 		ki = ki_;
@@ -155,12 +144,12 @@ void estimator_update(uint32_t time_now) {
 
 	//Add in accelerometer
 	//a_sqrd_norm = x^2 + y^2 + z^2
-	fix16_t a_sqrd_norm = v3d_sq_norm(&_accel_LPF);//fix16_add(fix16_add(fix16_sq(_accel_LPF.x), fix16_sq(_accel_LPF.y)), fix16_sq(_accel_LPF.z));
+	fix16_t a_sqrd_norm = v3d_sq_norm( &_accel_LPF );//fix16_add(fix16_add(fix16_sq(_accel_LPF.x), fix16_sq(_accel_LPF.y)), fix16_sq(_accel_LPF.z));
 
 	//If we should use accelerometer compensation, and the reading is reasonably small
-	if ((use_acc) &&
-		(a_sqrd_norm < fix16_mul(fix16_sq(CONST_ONE_ONE_FIVE), fix16_sq(CONST_GRAVITY))) &&
-		(a_sqrd_norm > fix16_mul(fix16_sq(CONST_ZERO_EIGHT_FIVE), fix16_sq(CONST_GRAVITY)))) {
+	if( ( get_param_uint( PARAM_EST_USE_ACC_COR ) ) &&
+	  (a_sqrd_norm < fix16_mul( fix16_sq( CONST_ONE_ONE_FIVE ), fix16_sq( CONST_GRAVITY ) ) ) &&
+	  (a_sqrd_norm > fix16_mul( fix16_sq( CONST_ZERO_EIGHT_FIVE ), fix16_sq( CONST_GRAVITY ) ) ) ) {
 
 		// Get error estimated by accelerometer measurement
 		v3d a;
@@ -232,7 +221,7 @@ void estimator_update(uint32_t time_now) {
 	}
 
 	// Pull out Gyro measurements
-	if (quad_int) {
+	if( get_param_uint( PARAM_EST_USE_QUAD_INT ) ) {
 		// Quadratic Integration (Eq. 14 Casey Paper)
 		// this integration step adds 12 us on the STM32F10x chips
 		//wbar = ((-1.0f / 12.0f) * w2) + ((8.0f / 12.0f) * w1) + ((5.0f / 12.0f) * _gyro_LPF);
@@ -242,14 +231,14 @@ void estimator_update(uint32_t time_now) {
 		v3d w_sum_temp;
 		v3d gyro_temp;
 
-		v3d_mul_s(&w1_temp, &w1, CONST_ZERO_SIX_REC);
-		v3d_mul_s(&w2_temp, &w2, -CONST_ZERO_ZERO_EIGHT_THREE_REC);
+		v3d_mul_s( &w1_temp, &w1, CONST_ZERO_SIX_REC );
+		v3d_mul_s( &w2_temp, &w2, -CONST_ZERO_ZERO_EIGHT_THREE_REC );
 
-		v3d_add(&w_sum_temp, &w1_temp, &w2_temp);
+		v3d_add( &w_sum_temp, &w1_temp, &w2_temp );
 
-		v3d_mul_s(&gyro_temp, &_gyro_LPF, CONST_ZERO_FOUR_SIX_REC);
+		v3d_mul_s( &gyro_temp, &_gyro_LPF, CONST_ZERO_FOUR_SIX_REC );
 
-		v3d_add(&wbar, &w_sum_temp, &gyro_temp);
+		v3d_add( &wbar, &w_sum_temp, &gyro_temp );
 
 		w2 = w1;
 		w1 = _gyro_LPF;
@@ -263,14 +252,14 @@ void estimator_update(uint32_t time_now) {
 	v3d wfinal_temp_scale;
 	v3d wfinal_temp_sub;
 
-	v3d_mul_s(&wfinal_temp_scale, &w_acc, kp);
-	v3d_sub(&wfinal_temp_sub, &wbar, &b);
-	v3d_add(&wfinal, &wfinal_temp_sub, &wfinal_temp_scale);
+	v3d_mul_s( &wfinal_temp_scale, &w_acc, kp );
+	v3d_sub( &wfinal_temp_sub, &wbar, &b );
+	v3d_add( &wfinal, &wfinal_temp_sub, &wfinal_temp_scale );
 
 	//Propagate Dynamics (only if we've moved)
-	fix16_t sqrd_norm_w = v3d_sq_norm(&wfinal);
+	fix16_t sqrd_norm_w = v3d_sq_norm( &wfinal );
 
-	if (sqrd_norm_w > 0) {
+	if( sqrd_norm_w > 0 ) {
 		fix16_t p = wfinal.x;	//Roll Rate
 		fix16_t q = wfinal.y;	//Pitch Rate
 		fix16_t r = wfinal.z;	//Yaw Rate
@@ -278,12 +267,12 @@ void estimator_update(uint32_t time_now) {
 		qf16 q_hat_temp;
 		qf16 qdot;
 
-		if (mat_exp) {
+		if( get_param_uint( PARAM_EST_USE_MAT_EXP ) ) {
 			// Matrix Exponential Approximation (From Attitude Representation and Kinematic
 			// Propagation for Low-Cost UAVs by Robert T. Casey)
 			// (Eq. 12 Casey Paper)
 			// This adds 90 us on STM32F10x chips
-			fix16_t norm_w = fix16_sqrt(sqrd_norm_w);
+			fix16_t norm_w = fix16_sqrt( sqrd_norm_w );
 
 			//This is can cause some serious RAM issues if either caching or lookup tables are enabled
 			//XXX: Even with caching turned off, this should give a good performance increase (hopefully around 25%)
@@ -342,7 +331,7 @@ void estimator_update(uint32_t time_now) {
 
 	// Save off adjust gyro measurements with estimated biases for control
 	v3d wbar_old = wbar;
-	v3d_sub(&wbar, &wbar_old, &b);
+	v3d_sub( &wbar, &wbar_old, &b );
 
 	_state_estimator.p = _gyro_LPF.x - _adaptive_gyro_bias.x;
 	_state_estimator.q = _gyro_LPF.y - _adaptive_gyro_bias.y;

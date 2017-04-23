@@ -46,8 +46,8 @@ int32_t _pwm_output[8];
 static const uint8_t blank_array[8] = {0,0,0,0,0,0,0,0};
 
 void communications_system_init(void) {
-	mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID); // System ID, 1-255
-	mavlink_system.compid = get_param_int(PARAM_COMPONENT_ID); // Component/Subsystem ID, 1-255
+	mavlink_system.sysid = get_param_uint(PARAM_SYSTEM_ID); // System ID, 1-255
+	mavlink_system.compid = get_param_uint(PARAM_COMPONENT_ID); // Component/Subsystem ID, 1-255
 
 	_lpq_port_0.port = MAVLINK_COMM_0;
 	_lpq_port_0.position = 0;
@@ -187,7 +187,7 @@ void mavlink_stream_low_priority(uint8_t port) {
 
 void mavlink_stream_heartbeat(uint8_t port) {
 
-	uint8_t mav_type = get_param_int(PARAM_MIXER);
+	uint8_t mav_type = get_param_uint(PARAM_MIXER);
 	uint8_t mav_type_reported = MAV_TYPE_GENERIC;
 
 	if( ( mav_type == MIXER_QUADCOPTER_PLUS ) || ( mav_type == MIXER_QUADCOPTER_X ) ) {
@@ -363,10 +363,10 @@ void mavlink_queue_broadcast_notice(char* text) {
 	mavlink_message_t msg;
 	mavlink_prepare_statustext(&msg, MAV_SEVERITY_NOTICE, text);
 
-	if(get_param_int(PARAM_BAUD_RATE_0) > 0)
+	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
 		lpq_queue_msg(MAVLINK_COMM_0, &msg);
 
-	if(get_param_int(PARAM_BAUD_RATE_1) > 0)
+	if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
 		lpq_queue_msg(MAVLINK_COMM_1, &msg);
 
 }
@@ -376,10 +376,10 @@ void mavlink_queue_broadcast_error(char* text) {
 	mavlink_message_t msg;
 	mavlink_prepare_statustext(&msg, MAV_SEVERITY_ERROR, text);
 
-	if(get_param_int(PARAM_BAUD_RATE_0) > 0)
+	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
 		lpq_queue_msg(MAVLINK_COMM_0, &msg);
 
-	if(get_param_int(PARAM_BAUD_RATE_1) > 0)
+	if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
 		lpq_queue_msg(MAVLINK_COMM_1, &msg);
 
 }
@@ -413,10 +413,10 @@ void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 									   mavlink_system.compid,
 									   msg,
 									   capabilities,
-									   get_param_int(PARAM_VERSION_SOFTWARE),
+									   get_param_uint(PARAM_VERSION_SOFTWARE),
 									   0,
-									   get_param_int(PARAM_VERSION_FIRMWARE),
-									   get_param_int(PARAM_BOARD_REVISION),
+									   get_param_uint(PARAM_VERSION_FIRMWARE),
+									   get_param_uint(PARAM_BOARD_REVISION),
 									   &blank_array[0],
 									   &blank_array[0],
 									   &blank_array[0],

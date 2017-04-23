@@ -55,7 +55,7 @@ static mixer_t mixer_quadcopter_x = {
 static mixer_t *mixer_to_use;
 
 void mixer_init() {
-	switch( get_param_int(PARAM_MIXER) ) {
+	switch( get_param_uint(PARAM_MIXER) ) {
 		case MIXER_QUADCOPTER_PLUS: {
 			mixer_to_use = &mixer_quadcopter_plus;
 
@@ -68,12 +68,7 @@ void mixer_init() {
 		}
 		default: {
 			mixer_to_use = &mixer_none;
-
-			if( get_param_int(PARAM_BAUD_RATE_0) > 0 )
-				mavlink_send_statustext_notice(MAVLINK_COMM_0, MAV_SEVERITY_ERROR, "[MIX] Unknown mixer! Disabling!");
-
-			if( get_param_int(PARAM_BAUD_RATE_1) > 0 )
-				mavlink_send_statustext_notice(MAVLINK_COMM_1, MAV_SEVERITY_ERROR, "[MIX] Unknown mixer! Disabling!");
+			mavlink_queue_broadcast_error("[MIX] Unknown mixer! Disabling!");
 
 			break;
 		}
@@ -95,7 +90,7 @@ void pwm_init() {
 		useCPPM = true;
 	*/
 
-	int16_t motor_refresh_rate = get_param_int(PARAM_MOTOR_PWM_SEND_RATE);
+	int16_t motor_refresh_rate = get_param_uint(PARAM_MOTOR_PWM_SEND_RATE);
 	int16_t pwm_disarm = 1000;	//TODO? get_param_int(PARAM_MOTOR_PWM_MIN);
 	pwmInit(useCPPM, false, false, motor_refresh_rate, pwm_disarm);
 }
@@ -123,10 +118,10 @@ void write_motor(uint8_t index, int32_t value) {
 	value = int32_constrain(value, 0, 1000) + 1000;
 
 	//If there is an idle set
-	if( value < get_param_int(PARAM_MOTOR_PWM_IDLE) )
-		value = get_param_int(PARAM_MOTOR_PWM_IDLE);
+	if( value < get_param_uint(PARAM_MOTOR_PWM_IDLE) )
+		value = get_param_uint(PARAM_MOTOR_PWM_IDLE);
 
-	write_output_pwm(index, value, get_param_int(PARAM_MOTOR_PWM_MIN));
+	write_output_pwm(index, value, get_param_uint(PARAM_MOTOR_PWM_MIN));
 }
 
 //TODO: Is this even needed? (Tricopters)

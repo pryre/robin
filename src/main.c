@@ -40,11 +40,11 @@ int main(void) {
 	//This means we can send ~115 bytes per loop without any risk of a buffer overflow
 	//As mavlink can have max messages of 250+ bytes, we want to send as little as possible each loop to allow catchup
 
-	if(get_param_int(PARAM_BAUD_RATE_0) > 0)
-		Serial1 = uartOpen(USART1, NULL, get_param_int(PARAM_BAUD_RATE_0), MODE_RXTX, SERIAL_NOT_INVERTED);
+	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
+		Serial1 = uartOpen(USART1, NULL, get_param_uint(PARAM_BAUD_RATE_0), MODE_RXTX, SERIAL_NOT_INVERTED);
 
-	if(get_param_int(PARAM_BAUD_RATE_1) > 0)
-		Serial2 = uartOpen(USART2, NULL, get_param_int(PARAM_BAUD_RATE_1), MODE_RXTX, SERIAL_NOT_INVERTED);
+	if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
+		Serial2 = uartOpen(USART2, NULL, get_param_uint(PARAM_BAUD_RATE_1), MODE_RXTX, SERIAL_NOT_INVERTED);
 
 	safety_request_state( MAV_STATE_STANDBY );
 
@@ -63,7 +63,7 @@ void setup(void) {
 
 	communications_system_init();
 
-	estimator_init((bool)get_param_int(PARAM_EST_USE_MAT_EXP), (bool)get_param_int(PARAM_EST_USE_QUAD_INT), (bool)get_param_int(PARAM_EST_USE_ACC_COR));
+	estimator_init();
 
 	safety_init();
 

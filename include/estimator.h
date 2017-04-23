@@ -30,7 +30,7 @@ extern v3d _adaptive_gyro_bias;
 // mat_exp <- greater accuracy, but adds ~90 us
 // quadratic_integration <- some additional accuracy, adds ~20 us
 // accelerometer correction <- if using angle mode, this is required, adds ~70 us
-void estimator_init(bool use_matrix_exponential, bool use_quadratic_integration, bool use_accelerometer);
+void estimator_init();
 void estimator_update(uint32_t now);
 
 #ifdef __cplusplus
