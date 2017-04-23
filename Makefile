@@ -220,12 +220,13 @@ flash_$(TARGET): $(TARGET_IMG)
 #	sleep 1
 	$(DO_FLASH)
 
-reflash:
+mavlink_bootloader:
 	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb
 	sleep 0.5
 	echo -en '\xfe\x21\x3c\x01\xf0\x4c\x00\x00\x40\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x01\x01\x00\x03\x79' > $(SERIAL_DEVICE)
 	sleep 0.5
-	$(DO_FLASH)
+
+reflash: mavlink_bootloader flash
 
 unbrick: unbrick_$(TARGET)
 

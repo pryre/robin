@@ -11,10 +11,13 @@ extern "C" {
 #include "sensors.h"
 #include "controller.h"
 
+#include <stdio.h>
+
 system_status_t _system_status;
 sensor_readings_t _sensors;
 command_input_t _command_input;
 control_output_t _control_output;
+char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
 
 static status_led_t _status_led_green;
 static status_led_t _status_led_red;
@@ -67,33 +70,59 @@ void safety_init() {
 
 	status_led_init();
 
+	strncpy( mav_mode_names[0], "CUSTOM", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[1], "TEST", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[2], "AUTO", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[3], "GUIDED", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[4], "STABILIZE", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[5], "HIL", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[6], "MANUAL", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[7], "ERROR!", MAV_MODE_NAME_LEN);
+
 	//TODO:
 		//Barometer
 		//Diff Pressure
+}
+
+static void system_state_check() {
+
+}
+
+static void system_mode_check() {
+
 }
 
 bool safety_request_arm(void) {
 	bool result = false;
 	bool base_systems_health = false;
 	bool throttle_check = false;
+	bool mode_check = false;
 
+	//TODO: Use the system_state_check() functions here!
 	if( ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) &&
-		( _system_status.mavlink.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
-		( _system_status.mavlink.offboard_control.health == SYSTEM_HEALTH_OK ) )
+	  ( _system_status.mavlink.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
+	  ( _system_status.mavlink.offboard_control.health == SYSTEM_HEALTH_OK ) )
 		base_systems_health = true;
 		//TODO: Should there be any other checks here?
 		//	Check to see if all inputs are good to go
 
-	if( ( _control_output.T == 0 ) &&
-		( ( _command_input.T == 0 ) ||
-		  _command_input.input_mask & CMD_IN_IGNORE_THROTTLE) )
+	//Make sure the system is in the correct mode
+	//TODO: May need more cases here to
+	//TODO: Use the system_state_check() functions here!
+	if( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_GUIDED )
+		mode_check = true;
+
+	//Make sure low throttle is being provided
+	if( ( ( _command_input.T == 0 ) ||
+	  ( _command_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) &&
+	  ( _control_output.T == 0 ) )
 		throttle_check = true;
 
-	if(	throttle_check &&
-		base_systems_health &&
-	    _system_status.safety_button_status &&
-	    ( _system_status.state == MAV_STATE_STANDBY ) ) {
-
+	if(	( throttle_check ) &&
+	  ( mode_check ) &&
+	  ( base_systems_health ) &&
+	  ( _system_status.safety_button_status ) &&
+	  ( _system_status.state == MAV_STATE_STANDBY ) ) {	//TODO: Don't rely on a straight check here, use the functions
 		_system_status.mode |= MAV_MODE_FLAG_SAFETY_ARMED;	//ARM!
 		_system_status.state = MAV_STATE_ACTIVE;
 
@@ -103,17 +132,42 @@ bool safety_request_arm(void) {
 
 		result = true;
 	} else {
+		char text_error[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] Arming denied: ";
+		char text_reason[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
 		//TODO: Make failure beep here
-
-		if( _system_status.state != MAV_STATE_STANDBY ) {
-			mavlink_queue_broadcast_error("[SAFETY] Arming denied: mav not in standby state");
-		} else if( !_system_status.safety_button_status) {
-			mavlink_queue_broadcast_error("[SAFETY] Arming denied: safety engaged");
+		if( !_system_status.safety_button_status) {
+			strncpy(text_reason,
+					 "safety engaged",
+					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 		} else if( !base_systems_health ) {
-			mavlink_queue_broadcast_error("[SAFETY] Arming denied: sensor error");
+			strncpy(text_reason,
+					 "sensor error",
+					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			//TODO: Feedback on specific sensor
+		} else if( _system_status.state != MAV_STATE_STANDBY ) {
+			strncpy(text_reason,
+					 "mav not in standby state",
+					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+		} else if( !mode_check) {	//TODO: Check this error message works correctly
+			strncpy(text_reason,
+					 "cannot arm in mode: ",
+					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+
+			int i = 0;
+			for(i = 0; i < MAV_MODE_NUM_MODES; i++) {
+				if( _system_status.mode & ( 1 << i) )
+					break;
+			}
+
+			strncat(text_reason,
+					mav_mode_names[i],
+					MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 		} else if( !throttle_check ) {
-			mavlink_queue_broadcast_error("[SAFETY] Arming denied: high throttle");
+			strncpy(text_reason, "high throttle", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 		}
+
+		strncat(text_error, text_reason, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+		mavlink_queue_broadcast_error(text_error);
 	}
 
 	return result;
@@ -214,6 +268,14 @@ static void safety_check( timeout_status_t *sensor, uint32_t time_now, uint32_t 
 	}
 }
 
+static void system_state_update() {
+	//TODO: Use the system_state_check() functions here!
+}
+
+static void system_mode_update() {
+	//TODO: Use the system_mode_check() functions here!
+}
+
 void safety_run( uint32_t time_now ) {
 	safety_check( &_system_status.sensors.imu, time_now, get_param_uint(PARAM_SENSOR_IMU_TIMEOUT) );
 
@@ -223,6 +285,9 @@ void safety_run( uint32_t time_now ) {
 	safety_switch_update(time_now);
 
 	status_led_update();
+
+	system_state_update();
+	system_mode_update();
 
 	//TODO: Need to do more checks here!
 }

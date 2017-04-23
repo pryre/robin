@@ -18,7 +18,6 @@
 
 #include <stdio.h>
 
-
 /* Struct that stores the communication settings of this system.
    you can also define / alter these settings elsewhere, as long
    as they're included BEFORE mavlink.h.

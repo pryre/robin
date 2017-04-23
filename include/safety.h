@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include "mavlink/mavlink_types.h"
 
-//This will contain functions and variables to keep track of critical system status'
-//as well as making sure that if a failure occurs, it is handled correctly
+#define MAV_MODE_NUM_MODES 8
+#define MAV_MODE_NAME_LEN 10
 
 //General UAV health status
 typedef enum {
@@ -53,7 +53,7 @@ typedef struct {
 	//TODO: Make sure this is fully implemented
 	//Note:
 		//Boot: MAV_MODE_PREFLIGHT
-		//Standby/Failsafe/Emergency: MAV_MODE_STABILIZE_DISARMED/MAV_MODE_STABILIZE_ARMED
+		//Standby/Failsafe/Emergency: MAV_MODE_AUTO_DISARMED/MAV_MODE_AUTO_ARMED
 		//Active: MAV_MODE_GUIDED_DISARMED/MAV_MODE_GUIDED_ARMED
 	uint8_t mode;	//Set with MAV_MODE_FLAG	//TODO: Must be implemented
 	bool parameters;
@@ -78,6 +78,8 @@ typedef struct {
 	uint32_t length_us;
 	uint32_t last_pulse;
 } status_led_t;
+
+extern char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
 
 extern system_status_t _system_status;
 extern uint8_t _system_operation_control;
