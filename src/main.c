@@ -24,13 +24,13 @@ command_input_t _command_input;
 
 int main(void) {
 	_system_status.state = MAV_STATE_UNINIT;
+	_system_status.mode = MAV_MODE_PREFLIGHT;
 
     SetSysClock(false);
 
     systemInit();
 
-	_system_status.state = MAV_STATE_BOOT;
-	_system_status.mode = MAV_MODE_PREFLIGHT;
+	safety_request_state( MAV_STATE_BOOT );
 
     setup();
 
@@ -46,8 +46,7 @@ int main(void) {
 	if(get_param_int(PARAM_BAUD_RATE_1) > 0)
 		Serial2 = uartOpen(USART2, NULL, get_param_int(PARAM_BAUD_RATE_1), MODE_RXTX, SERIAL_NOT_INVERTED);
 
-	_system_status.state = MAV_STATE_STANDBY;
-	_system_status.mode = MAV_MODE_STABILIZE_DISARMED;
+	safety_request_state( MAV_STATE_STANDBY );
 
     while (true)
         loop();
@@ -56,7 +55,7 @@ int main(void) {
 void setup(void) {
 	init_params();
 
-	delay(500);	//Wait for i2c devices to boot properly
+	//delay(500);	//Wait for i2c devices to boot properly
 
     i2cInit(I2CDEV);
 
@@ -72,8 +71,13 @@ void setup(void) {
 
 	mixer_init();
 
-	//TODO: Could do motor calibration logic here
 	pwm_init();
+
+	//TODO: Could do motor calibration logic here
+		//Set PWM high
+		//Set delay 1000 (?)
+		//Set PWM low
+		//Clear motor cal parameter
 
 	//Wait here for the first imu message (probably not really neaded)
 	while( !sensors_read() );
@@ -91,7 +95,7 @@ void loop(void) {
 						//TODO: This should alert sensors_read() somhow to let it know there's more data to wait for
 
 	//==-- Check Serial
-	communication_receive();	//TODO: Can this be moved to a UART callback?
+	communication_receive();	//TODO: Can this be moved to a UART callback? Maybe safer here as state won't be changed out of order?
 
 	//==-- Send Serial
 	//Check to see if a message has been sent this loop, then see if a message should be sent
@@ -101,58 +105,25 @@ void loop(void) {
 	//==-- Update Sensor Data
 	sensors_update( micros() );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
 
-	//==-- Calibrations
-	if( _system_status.state == MAV_STATE_CALIBRATING ) {	//If any calibration is in progress
-		if( sensors_calibrate() )	//Run the rest of the calibration logic
-			_system_status.state = MAV_STATE_STANDBY;	//TODO: Make sure this is in state logic
-	}
-
 	//==-- Timeout Checks
 	safety_run( micros() );
-	//TODO: Set MAV_STATE in this function
-	//TODO: Read for safety button here
-	//TODO: Check timeouts for:
-		//Accellerometer
-		//Gyroscope
-		//Compass
-		//External Attitude Input
-		//Command Input
-		//External System Heartbeats
-		//Offboard control
-		//Anything else?
-	//TODO: Deal with emergency modes
-	//TODO: Arming timeout
-
-	if( ( _system_status.state == MAV_STATE_ACTIVE ) &&
-		( _system_status.mavlink.offboard_control.health != SYSTEM_HEALTH_OK ) )
-		_system_status.state = MAV_STATE_EMERGENCY;
 
 	//==-- Update Estimator
     estimator_update( sensors_clock_imu_int_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 
-	//Only run the controller if the mav is armed
-	if(_system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY) {
-		//Handle failsafes
-		if(_system_status.state == MAV_STATE_EMERGENCY)
-			controller_set_input_failsafe();	//Cut to hold angle and failsafe throttle
-			//TODO: Seems there's an issue re-arming after this takes over in emergency
+	//TODO: Arming timeout
 
+	//Only run the controller if the mav is armed
+	if( ( safety_is_armed() ) && ( _system_status.state != MAV_STATE_EMERGENCY ) ) {
 		//==-- Update Controller
 		controller_run( sensors_clock_imu_int_get() );	//Apply the current commands and update the PID controllers
 	} else {
-		controller_reset();
+		//==-- Reset Controller
+		controller_reset();	//Reset the PIDs and output flat 0s for control
 	}
 
 	//==-- Send Motor Commands
 	mixer_output();	//Convert outputs to correct layout and send PWM (and considers failsafes)
-
-	//==-- Boot Control	//TODO: Might be a better way to organize this
-	if( _system_operation_control != SYSTEM_OPERATION_RUN ) {
-		if( _system_operation_control == SYSTEM_OPERATION_REBOOT_BOOTLOADER )
-			systemResetToBootloader();
-		//Could be potentially more options here but just leave this as an error fallback
-		systemReset();
-	}
 
     //==-- loop time calculation
 	sensors_clock_update( micros() );

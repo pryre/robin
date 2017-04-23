@@ -3,7 +3,9 @@
 #include <stdbool.h>
 #include "mavlink/mavlink_types.h"
 
-#define MAV_MODE_NUM_MODES 8
+#define MAV_STATE_NUM_STATES (8 + 1)
+#define MAV_STATE_NAME_LEN 10
+#define MAV_MODE_NUM_MODES (7 + 1)
 #define MAV_MODE_NAME_LEN 10
 
 //General UAV health status
@@ -23,14 +25,11 @@ typedef struct {
 } timeout_status_t;
 
 typedef struct {
-	timeout_status_t offboard_heartbeat;
-	timeout_status_t offboard_control;
-} mavlink_stream_status_t;
-
-typedef struct {
 	timeout_status_t imu;
 	timeout_status_t mag;
 	timeout_status_t sonar;
+	timeout_status_t offboard_heartbeat;
+	timeout_status_t offboard_control;
 } safety_sensor_status_t;
 
 //List of failures
@@ -48,17 +47,15 @@ typedef struct {
 		//MAV_STATE_CRITICAL:		Something is giving errors, should be attempting graceful failsafe maneouvres
 		//MAV_STATE_EMERGENCY:		System failure, should be attempting hard failsafe maneouvres, keep comms up, but should not allow recover without reboot
 		//MAV_STATE_POWEROFF:		Shutting down (write EEPROM/SD card logs, alert GCS?)
-	uint8_t state;	//Set with MAV_STATE		//TODO: Must be implemented
+	uint8_t state;	//Set with MAV_STATE
 
-	//TODO: Make sure this is fully implemented
 	//Note:
-		//Boot: MAV_MODE_PREFLIGHT
-		//Standby/Failsafe/Emergency: MAV_MODE_AUTO_DISARMED/MAV_MODE_AUTO_ARMED
-		//Active: MAV_MODE_GUIDED_DISARMED/MAV_MODE_GUIDED_ARMED
-	uint8_t mode;	//Set with MAV_MODE_FLAG	//TODO: Must be implemented
+		//Boot/Standby: MAV_MODE_PREFLIGHT
+		//Failsafe/Emergency: MAV_MODE_AUTO/MAV_MODE_AUTO
+		//Active: MAV_MODE_GUIDED/MAV_MODE_GUIDED
+	uint8_t mode;
 	bool parameters;
 	bool safety_button_status;	//Safety button to engage and disengage motor output
-	mavlink_stream_status_t mavlink;
 	safety_sensor_status_t sensors;
 } system_status_t;
 
@@ -79,13 +76,17 @@ typedef struct {
 	uint32_t last_pulse;
 } status_led_t;
 
+extern char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
 extern char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
 
 extern system_status_t _system_status;
 extern uint8_t _system_operation_control;
 
 void safety_init( void );
+bool safety_is_armed( void );
+bool safety_request_state( uint8_t req_state );
 bool safety_request_arm( void );
 bool safety_request_disarm( void );
 void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count);
+bool safety_mode_set(uint8_t req_mode);
 void safety_run( uint32_t time_now );

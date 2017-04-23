@@ -12,10 +12,12 @@ extern "C" {
 #include "fixextra.h"
 
 #include "params.h"
+#include "safety.h"
 #include "estimator.h"
 #include "controller.h"
 #include "pid_controller.h"
 
+system_status_t _system_status;
 state_t _state_estimator;
 command_input_t _command_input;
 control_output_t _control_output;
@@ -128,7 +130,7 @@ pid_init(&_pid_yaw_rate,
 	_control_output.T = 0;
 }
 
-void controller_set_input_failsafe(void) {
+static void controller_set_input_failsafe(void) {
 	_command_input.r = 0;
 	_command_input.p = 0;
 	_command_input.y = 0;
@@ -310,6 +312,10 @@ void controller_run( uint32_t time_now ) {
 	fix16_t goal_p = 0;
 	fix16_t goal_y = 0;
 	fix16_t goal_throttle = 0;
+
+	//Handle failsafes
+	if(_system_status.state == MAV_STATE_CRITICAL)
+		controller_set_input_failsafe();	//Hold angle and failsafe throttle
 
 	//==-- Attitude Control
 	//If we should listen to attitude input

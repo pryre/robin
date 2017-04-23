@@ -58,6 +58,7 @@ void init_params(void) {
 	*/
 }
 
+//TODO: Still need to clean up int and uint parameters
 void set_param_defaults(void) {
 	//==-- System
 	init_param_int(PARAM_BOARD_REVISION, "BOARD_REV", 5);
@@ -162,7 +163,7 @@ void set_param_defaults(void) {
 
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, "FAILSAFE_THRTL", fix16_from_float(0.25f));
 
-	init_param_int(PARAM_MIXER, "MIXER", QUADCOPTER_X);
+	init_param_int(PARAM_MIXER, "MIXER", MIXER_QUADCOPTER_X);
 }
 
 bool read_params(void) {

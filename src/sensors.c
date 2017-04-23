@@ -90,18 +90,8 @@ static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
 	status->time_read = 0;
 }
 
-void sensors_init(void) {
-	//==-- IMU-MPU6050
-	//TODO: Set IMU to be calibrated if not already
-	sensor_status_init(&_sensors.imu.status, true);
-    mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_int(PARAM_BOARD_REVISION));
-	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
-
-	_sensors.imu.accel_scale = fix16_div(CONST_GRAVITY, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
-	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
-
-	_sensor_cal_data.accel.temp_scale = fix16_from_float(340.0f);
-	_sensor_cal_data.accel.temp_shift = fix16_from_float(36.53f);
+static void sensors_cal_init(void) {
+	_sensor_calibration = SENSOR_CAL_NONE;
 
 	_sensor_cal_data.gyro.count = 0;
 	_sensor_cal_data.gyro.sum_x = 0;
@@ -113,6 +103,22 @@ void sensors_init(void) {
 	_sensor_cal_data.accel.sum_y = 0;
 	_sensor_cal_data.accel.sum_z = 0;
 	_sensor_cal_data.accel.sum_t = 0;
+
+	_sensor_cal_data.accel.temp_scale = fix16_from_float(340.0f);
+	_sensor_cal_data.accel.temp_shift = fix16_from_float(36.53f);
+}
+
+void sensors_init(void) {
+	//==-- IMU-MPU6050
+	//TODO: Set IMU to be calibrated if not already
+	sensor_status_init(&_sensors.imu.status, true);
+    mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_int(PARAM_BOARD_REVISION));
+	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
+
+	_sensors.imu.accel_scale = fix16_div(CONST_GRAVITY, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
+	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
+
+	sensors_cal_init();
 
 	//==-- Safety button
 	sensor_status_init(&_sensors.safety_button.status, true);
@@ -201,73 +207,11 @@ uint32_t sensors_clock_imu_int_get(void) {
 	return _sensors.clock.imu_time_read;
 }
 
-bool sensors_update(uint32_t time_us) {
-	//bool update_success = false;
-	//TODO: Remember not to expect all sensors to be ready
-
-	//==-- Update IMU
-
-    // convert temperature SI units (degC, m/s^2, rad/s)
-    // convert to NED (first of braces)
-	//Correct for biases and temperature (second braces)
-	//TODO: Calibration has to be done without biases and temp factored in
-
-	//TODO: Perhaps X is being calculated in revearse?
-	//TODO:Something about the frame of reference (NED/ENU) isn't quite right
-
-	//==-- Temperature in degC
-	//value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
-	_sensors.imu.temperature = fix16_add(fix16_div(fix16_from_int(_sensors.imu.temp_raw), _sensor_cal_data.accel.temp_scale), _sensor_cal_data.accel.temp_shift);
-
-	//==-- Accel in NED
-	//TODO: value = (raw - BIAS - (EMP_COMP * TEMP)) * scale
-	// value = (raw - BIAS) * scale
-	_sensors.imu.accel.x = fix16_mul(fix16_from_int(-(_sensors.imu.accel_raw[0] - get_param_int(PARAM_ACC_X_BIAS))), _sensors.imu.accel_scale);
-	_sensors.imu.accel.y = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[1] - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
-	_sensors.imu.accel.z = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[2] - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
-
-	//==-- Gyro in NED
-	// value = (raw - BIAS) * scale
-	_sensors.imu.gyro.x = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw[0] - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
-	_sensors.imu.gyro.y = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[1] - get_param_int(PARAM_GYRO_Y_BIAS))), _sensors.imu.gyro_scale);
-	_sensors.imu.gyro.z = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[2] - get_param_int(PARAM_GYRO_Z_BIAS))), _sensors.imu.gyro_scale);
-
-	_sensors.imu.status.time_read = sensors_clock_imu_int_get();
-	_sensors.imu.status.new_data = true;
-
-	safety_update_sensor(&_system_status.sensors.imu, 1000);	//TODO: Use params here
-
-	//==-- Safety Button
-	bool safety_button_reading = false;
-
-	safety_button_reading = digitalIn(_sensors.safety_button.gpio_p, _sensors.safety_button.pin);
-
-	if(safety_button_reading != _sensors.safety_button.state_db )
-		_sensors.safety_button.time_db_read = time_us;
-
-	if( ( time_us - _sensors.safety_button.time_db_read ) > _sensors.safety_button.period_db_us ) {
-		if(safety_button_reading != _sensors.safety_button.state) {	//The reading has changed
-			_sensors.safety_button.state = safety_button_reading;
-
-			_sensors.safety_button.status.time_read = time_us;
-			_sensors.safety_button.status.new_data = true;
-
-			//if(!_sensors.safety_button.state)
-			//	LED1_TOGGLE;
-		}
-	}
-
-	_sensors.safety_button.state_db = safety_button_reading;
-
-	//TODO: This should be aware of failures
-	return true;
-}
-
 //TODO: This does not take into account temperature
 //TODO: These parameters are not being written to EEPROM (Check to see if mavlink has a "save params" command)
 //TODO: This calibration method is very basic, doesn't take into acount very much...mabye?
 //Returns true if all calibrations are complete
-bool sensors_calibrate(void) {
+static bool sensors_calibrate(void) {
 	if(_sensor_calibration & SENSOR_CAL_GYRO) {
 		_sensor_cal_data.gyro.sum_x += _sensors.imu.gyro_raw[0];
 		_sensor_cal_data.gyro.sum_y += _sensors.imu.gyro_raw[1];
@@ -326,5 +270,76 @@ bool sensors_calibrate(void) {
 	}
 
 	return !_sensor_calibration;
+}
+
+bool sensors_update(uint32_t time_us) {
+	//bool update_success = false;
+	//TODO: Remember not to expect all sensors to be ready
+
+	//==-- Update IMU
+
+    // convert temperature SI units (degC, m/s^2, rad/s)
+    // convert to NED (first of braces)
+	//Correct for biases and temperature (second braces)
+	//TODO: Calibration has to be done without biases and temp factored in
+
+	//TODO: Perhaps X is being calculated in revearse?
+	//TODO:Something about the frame of reference (NED/ENU) isn't quite right
+
+	//==-- Temperature in degC
+	//value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
+	_sensors.imu.temperature = fix16_add(fix16_div(fix16_from_int(_sensors.imu.temp_raw), _sensor_cal_data.accel.temp_scale), _sensor_cal_data.accel.temp_shift);
+
+	//==-- Accel in NED
+	//TODO: value = (raw - BIAS - (EMP_COMP * TEMP)) * scale
+	// value = (raw - BIAS) * scale
+	_sensors.imu.accel.x = fix16_mul(fix16_from_int(-(_sensors.imu.accel_raw[0] - get_param_int(PARAM_ACC_X_BIAS))), _sensors.imu.accel_scale);
+	_sensors.imu.accel.y = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[1] - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
+	_sensors.imu.accel.z = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[2] - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
+
+	//==-- Gyro in NED
+	// value = (raw - BIAS) * scale
+	_sensors.imu.gyro.x = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw[0] - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
+	_sensors.imu.gyro.y = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[1] - get_param_int(PARAM_GYRO_Y_BIAS))), _sensors.imu.gyro_scale);
+	_sensors.imu.gyro.z = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[2] - get_param_int(PARAM_GYRO_Z_BIAS))), _sensors.imu.gyro_scale);
+
+	_sensors.imu.status.time_read = sensors_clock_imu_int_get();
+	_sensors.imu.status.new_data = true;
+
+	safety_update_sensor(&_system_status.sensors.imu, 1000);	//TODO: Use params here
+
+	//==-- Safety Button
+	bool safety_button_reading = false;
+
+	safety_button_reading = digitalIn(_sensors.safety_button.gpio_p, _sensors.safety_button.pin);
+
+	if(safety_button_reading != _sensors.safety_button.state_db )
+		_sensors.safety_button.time_db_read = time_us;
+
+	if( ( time_us - _sensors.safety_button.time_db_read ) > _sensors.safety_button.period_db_us ) {
+		if(safety_button_reading != _sensors.safety_button.state) {	//The reading has changed
+			_sensors.safety_button.state = safety_button_reading;
+
+			_sensors.safety_button.status.time_read = time_us;
+			_sensors.safety_button.status.new_data = true;
+
+			//if(!_sensors.safety_button.state)
+			//	LED1_TOGGLE;
+		}
+	}
+
+	_sensors.safety_button.state_db = safety_button_reading;
+
+
+	//==-- Calibrations
+	if( _system_status.state == MAV_STATE_CALIBRATING ) {	//If any calibration is in progress
+		//Run the rest of the calibration logic
+		if( sensors_calibrate() )
+			if( safety_request_state( MAV_STATE_STANDBY ) )
+				sensors_cal_init();
+	}
+
+	//TODO: This should be aware of failures
+	return true;
 }
 

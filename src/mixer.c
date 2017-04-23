@@ -53,20 +53,15 @@ static mixer_t mixer_quadcopter_x = {
 };
 
 static mixer_t *mixer_to_use;
-/*
-static mixer_t *array_of_mixers[NUM_MIXERS] = {
-	&quadcopter_plus_mixing,
-	&quadcopter_x_mixing
-};
-*/
+
 void mixer_init() {
-	switch(get_param_int(PARAM_MIXER)) {
-		case QUADCOPTER_PLUS: {
+	switch( get_param_int(PARAM_MIXER) ) {
+		case MIXER_QUADCOPTER_PLUS: {
 			mixer_to_use = &mixer_quadcopter_plus;
 
 			break;
 		}
-		case QUADCOPTER_X: {
+		case MIXER_QUADCOPTER_X: {
 			mixer_to_use = &mixer_quadcopter_x;
 
 			break;
@@ -113,7 +108,7 @@ static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) 
 //1000 <= value <= 2000
 //value_disarm (for motors) should be 1000
 void write_output_pwm(uint8_t index, int32_t value, int32_t value_disarm) {
-	if( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY ) {
+	if( safety_is_armed() ) {
 		_pwm_output[index] = int32_constrain(value, 1000, 2000);
 	} else {
 		_pwm_output[index] = value_disarm;

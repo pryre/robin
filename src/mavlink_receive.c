@@ -30,7 +30,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				//LED0_TOGGLE;
 				// E.g. read GCS heartbeat and go into
 				// comm lost mode if timer times out
-				safety_update_sensor(&_system_status.mavlink.offboard_heartbeat, 2);	//TODO: Use params here
+				safety_update_sensor(&_system_status.sensors.offboard_heartbeat, 2);	//TODO: Use params here
 
 				break;
 			}
@@ -142,9 +142,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 				switch(command) {
 					case MAV_CMD_PREFLIGHT_CALIBRATION: {
-						if(_system_status.state == MAV_STATE_STANDBY) {
-							_system_status.state = MAV_STATE_CALIBRATING;
-
+						if( safety_request_state( MAV_STATE_CALIBRATING ) ) {
 							if((int)mavlink_msg_command_long_get_param1(&msg))
 								_sensor_calibration |= SENSOR_CAL_GYRO;
 
@@ -217,22 +215,21 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN: {
 						need_ack = true;
 
-						//TODO: Make sure mav is in preflight mode
-						switch((int)mavlink_msg_command_long_get_param1(&msg)) {
-							case 1:
-								_system_operation_control = SYSTEM_OPERATION_REBOOT;
-								command_result = MAV_RESULT_ACCEPTED;
+						if( _system_status.state == MAV_STATE_STANDBY ) {
+							switch( (int)mavlink_msg_command_long_get_param1(&msg) ) {
+								case 1:
+									systemReset();
 
-								break;
-							case 3:
-								_system_operation_control = SYSTEM_OPERATION_REBOOT_BOOTLOADER;
-								command_result = MAV_RESULT_ACCEPTED;
+									break;
+								case 3:
+									systemResetToBootloader();
 
-								break;
-							default:
-								command_result = MAV_RESULT_UNSUPPORTED;
+									break;
+								default:
+									command_result = MAV_RESULT_UNSUPPORTED;
 
-								break;
+									break;
+							}
 						}
 
 						break;
@@ -287,7 +284,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 					_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
 
-					safety_update_sensor(&_system_status.mavlink.offboard_control, 100);	//TODO: Use params here
+					safety_update_sensor(&_system_status.sensors.offboard_control, 100);	//TODO: Use params here
 				}
 
 				break;

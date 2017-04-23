@@ -186,24 +186,19 @@ void mavlink_stream_low_priority(uint8_t port) {
 }
 
 void mavlink_stream_heartbeat(uint8_t port) {
-	/*
-	//TODO: Document mode meanings
-	if( (_system_status.state & SYSTEM_MODE_OFFBOARD) ||
-		(_system_status.state & SYSTEM_MODE_OFFBOARD) { //This is the "main" mode
-			mav_base_mode |= MAV_MODE_FLAG_GUIDED_ENABLED;
-	} else if( (_system_status.mode == SYSTEM_MODE_STANDBY) ||
-			   (_system_status.mode == SYSTEM_MODE_FAILSAFE)) {
-			mav_base_mode |= MAV_MODE_FLAG_STABILIZE_ENABLED;
-	} //Other modes will show as 0, and should be cause for alarm if they are seen anyway, and thus unique
-	*/
 
-	//We don't use custom_mode
-	//TODO: MAV_TYPE should be dynamically set
+	uint8_t mav_type = get_param_int(PARAM_MIXER);
+	uint8_t mav_type_reported = MAV_TYPE_GENERIC;
+
+	if( ( mav_type == MIXER_QUADCOPTER_PLUS ) || ( mav_type == MIXER_QUADCOPTER_X ) ) {
+		mav_type_reported = MAV_TYPE_QUADROTOR;
+	}	//else if () ...
+
 	mavlink_msg_heartbeat_send(port,
-							   MAV_TYPE_QUADROTOR,
+							   mav_type_reported,
 							   MAV_AUTOPILOT_GENERIC,
 							   _system_status.mode,
-							   0,
+							   0,	//We don't use custom_mode
 							   _system_status.state);
 }
 

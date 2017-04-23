@@ -174,7 +174,6 @@ uint64_t sensors_clock_rt_get(void);	//Get the current time syncronized real tim
 uint32_t sensors_clock_imu_int_get(void);	//Get the time of the latest imu interrupt
 
 bool sensors_update(uint32_t time_us);
-bool sensors_calibrate(void);
 
 //bool calibrate_acc(void);
 //bool calibrate_gyro(void);
