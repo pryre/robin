@@ -55,7 +55,7 @@ int main(void) {
 void setup(void) {
 	init_params();
 
-	//delay(500);	//Wait for i2c devices to boot properly
+	delay(500);	//Wait for i2c devices to boot properly
 
     i2cInit(I2CDEV);
 
