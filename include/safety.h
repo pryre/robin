@@ -49,13 +49,10 @@ typedef struct {
 		//MAV_STATE_POWEROFF:		Shutting down (write EEPROM/SD card logs, alert GCS?)
 	uint8_t state;	//Set with MAV_STATE
 
-	//Note:
-		//Boot/Standby: MAV_MODE_PREFLIGHT
-		//Failsafe/Emergency: MAV_MODE_AUTO/MAV_MODE_AUTO
-		//Active: MAV_MODE_GUIDED/MAV_MODE_GUIDED
-	uint8_t mode;
+	uint8_t mode;	//Purely for reporting to gcs, no actual use
 	bool parameters;
 	bool safety_button_status;	//Safety button to engage and disengage motor output
+	bool arm_status;	//Safety button to engage and disengage motor output
 	safety_sensor_status_t sensors;
 } system_status_t;
 
@@ -77,7 +74,6 @@ typedef struct {
 } status_led_t;
 
 extern char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
-extern char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
 
 extern system_status_t _system_status;
 extern uint8_t _system_operation_control;

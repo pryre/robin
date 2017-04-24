@@ -11,6 +11,7 @@
 typedef enum {
 	MIXER_QUADCOPTER_PLUS,
 	MIXER_QUADCOPTER_X,
+	MIXER_PLANE_BASIC,
 	NUM_MIXERS
 } mixer_type_t;
 
@@ -38,8 +39,8 @@ extern int32_t _pwm_output[8];
 void pwm_init();
 void mixer_init();
 
-void write_output_pwm(uint8_t index, int32_t value, int32_t value_disarm);
-void write_motor(uint8_t index, int32_t value);
+void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disarm);
+void write_motor(uint8_t index, uint32_t value);
 void write_servo(uint8_t index, int32_t value);
 
 void mixer_output();

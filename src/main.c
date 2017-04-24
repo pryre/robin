@@ -128,7 +128,6 @@ void loop(void) {
     //==-- loop time calculation
 	sensors_clock_update( micros() );
 
-
 	//==-- Read sensors for next loop
 	// IMU interrupt can cappen halfway through the processing loop
 	//  but the only things that can change are the raw imu/gyro values

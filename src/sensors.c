@@ -234,6 +234,22 @@ static bool sensors_calibrate(void) {
 		}
 	}
 
+
+	if(_sensor_calibration & SENSOR_CAL_MAG) {
+		//TODO
+		_sensor_calibration ^= SENSOR_CAL_MAG;
+	}
+
+	if(_sensor_calibration & SENSOR_CAL_BARO) {
+		//TODO
+		_sensor_calibration ^= SENSOR_CAL_BARO;
+	}
+
+	if(_sensor_calibration & SENSOR_CAL_RC) {
+		//TODO
+		_sensor_calibration ^= SENSOR_CAL_RC;
+	}
+
 	if(_sensor_calibration & SENSOR_CAL_ACCEL) {
 		//Compensate for the gravity in Z axis, that way bias can be relative to 0
 		_sensor_cal_data.accel.sum_x += _sensors.imu.accel_raw[0];
@@ -260,6 +276,11 @@ static bool sensors_calibrate(void) {
 			_sensor_calibration ^= SENSOR_CAL_ACCEL;	//Turn off SENSOR_CAL_ACCEL bit
 			//TODO: "we could do some sanity checking here if we wanted to."
 		}
+	}
+
+	if(_sensor_calibration & SENSOR_CAL_INTER) {
+		//TODO
+		_sensor_calibration ^= SENSOR_CAL_INTER;
 	}
 
 	//If there are no longer any sensors to calibrate

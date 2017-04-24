@@ -52,6 +52,17 @@ static mixer_t mixer_quadcopter_x = {
 	{ CONST_ONE, CONST_ONE,-CONST_ONE,-CONST_ONE, 0, 0, 0, 0}  // Z Mix
 };
 
+static mixer_t mixer_plane_basic = {
+	{M, S, S, S, NONE, NONE, NONE, NONE}, // output_type
+
+	{ CONST_ONE, 0, 0, 0, 0, 0, 0, 0}, // F Mix
+	{ 0, CONST_ONE, 0, 0, 0, 0, 0, 0}, // X Mix
+	{ 0, 0, CONST_ONE, 0, 0, 0, 0, 0}, // Y Mix
+	{ 0, 0, 0, CONST_ONE, 0, 0, 0, 0}  // Z Mix
+
+	//TODO: Should double check this, but it would allow stabilize control with motor throughput and a servo out for ailerons, elevator and rudder
+};
+
 static mixer_t *mixer_to_use;
 
 void mixer_init() {
@@ -63,6 +74,11 @@ void mixer_init() {
 		}
 		case MIXER_QUADCOPTER_X: {
 			mixer_to_use = &mixer_quadcopter_x;
+
+			break;
+		}
+		case MIXER_PLANE_BASIC: {
+			mixer_to_use = &mixer_plane_basic;
 
 			break;
 		}
@@ -102,7 +118,7 @@ static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) 
 //Direct write to the motor with failsafe checks
 //1000 <= value <= 2000
 //value_disarm (for motors) should be 1000
-void write_output_pwm(uint8_t index, int32_t value, int32_t value_disarm) {
+void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disarm) {
 	if( safety_is_armed() ) {
 		_pwm_output[index] = int32_constrain(value, 1000, 2000);
 	} else {
@@ -114,7 +130,7 @@ void write_output_pwm(uint8_t index, int32_t value, int32_t value_disarm) {
 
 //TODO: Maybe this logic should be checked elsewhere?
 //Write a pwm value to the motor channel, value should be between 0 and 1000
-void write_motor(uint8_t index, int32_t value) {
+void write_motor(uint8_t index, uint32_t value) {
 	value = int32_constrain(value, 0, 1000) + 1000;
 
 	//If there is an idle set

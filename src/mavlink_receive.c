@@ -267,23 +267,31 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					(mavlink_msg_set_attitude_target_get_target_system(&msg) == mavlink_system.compid) ) {
 
 					//TODO: Check timestamp was recent
+
+					//Input Mask
 					_command_input.input_mask = mavlink_msg_set_attitude_target_get_type_mask(&msg);
 
+					//Rates
 					_command_input.r = fix16_from_float(mavlink_msg_set_attitude_target_get_body_roll_rate(&msg));
 					_command_input.p = fix16_from_float(mavlink_msg_set_attitude_target_get_body_pitch_rate(&msg));
 					_command_input.y = fix16_from_float(mavlink_msg_set_attitude_target_get_body_yaw_rate(&msg));
 
-					//TODO: Check this is correct
-					float qt[4];
-					if(mavlink_msg_set_attitude_target_get_q(&msg, &qt[0]) == 4) {
-						_command_input.q.a = fix16_from_float(qt[0]);
-						_command_input.q.b = fix16_from_float(qt[1]);
-						_command_input.q.c = fix16_from_float(qt[2]);
-						_command_input.q.d = fix16_from_float(qt[3]);
-					}
+					//Attitude
+					float qt_float[4];
+					qf16 qt_fix;
+					mavlink_msg_set_attitude_target_get_q(&msg, &qt_float[0]);
 
+					qt_fix.a = fix16_from_float(qt_float[0]);
+					qt_fix.b = fix16_from_float(qt_float[1]);
+					qt_fix.c = fix16_from_float(qt_float[2]);
+					qt_fix.d = fix16_from_float(qt_float[3]);
+
+					qf16_normalize(&_command_input.q, &qt_fix);
+
+					//Trottle
 					_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
 
+					//Update Sensor
 					safety_update_sensor(&_system_status.sensors.offboard_control, 100);	//TODO: Use params here
 				}
 

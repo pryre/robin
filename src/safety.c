@@ -71,15 +71,6 @@ void safety_init() {
 
 	status_led_init();
 
-	strncpy( mav_mode_names[0], "CUSTOM", MAV_MODE_NAME_LEN);
-	strncpy( mav_mode_names[1], "TEST", MAV_MODE_NAME_LEN);
-	strncpy( mav_mode_names[2], "AUTO", MAV_MODE_NAME_LEN);
-	strncpy( mav_mode_names[3], "GUIDED", MAV_MODE_NAME_LEN);
-	strncpy( mav_mode_names[4], "STABILIZE", MAV_MODE_NAME_LEN);
-	strncpy( mav_mode_names[5], "HIL", MAV_MODE_NAME_LEN);
-	strncpy( mav_mode_names[6], "MANUAL", MAV_MODE_NAME_LEN);
-	strncpy( mav_mode_names[7], "ERROR!", MAV_MODE_NAME_LEN);
-
 	strncpy( mav_state_names[0], "UNINIT", MAV_STATE_NAME_LEN);
 	strncpy( mav_state_names[1], "BOOT", MAV_STATE_NAME_LEN);
 	strncpy( mav_state_names[2], "CALIBRATE", MAV_STATE_NAME_LEN);
@@ -96,7 +87,7 @@ void safety_init() {
 }
 
 bool safety_is_armed(void) {
-	return _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY;
+	return _system_status.arm_status;
 }
 
 bool safety_request_state(uint8_t req_state) {
@@ -142,10 +133,10 @@ bool safety_request_state(uint8_t req_state) {
 
 			break;
 		}
-		case MAV_STATE_EMERGENCY: {
-			if( ( _system_status.state == MAV_STATE_ACTIVE ) ||
-			  ( _system_status.state == MAV_STATE_CRITICAL ) )
-				change_state = true;
+		case MAV_STATE_EMERGENCY: {	//Allow any request to put the mav into emergency mode
+			//if( ( _system_status.state == MAV_STATE_ACTIVE ) ||
+			//  ( _system_status.state == MAV_STATE_CRITICAL ) )
+			change_state = true;
 
 			break;
 		}
@@ -165,26 +156,19 @@ bool safety_request_state(uint8_t req_state) {
 bool safety_request_arm(void) {
 	bool result = false;
 	bool throttle_check = false;
-	bool mode_check = false;
-
-	//Make sure the system is in the correct mode
-	//TODO: May need more cases here to
-	//TODO: Use the system_state_check() functions here!
-	if( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_GUIDED )
-		mode_check = true;
 
 	//Make sure low throttle is being provided
-	if( ( ( _command_input.T == 0 ) ||
-	  ( _command_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) &&
-	  ( _control_output.T == 0 ) )
+	if( ( _control_output.T == 0 ) &&
+	  ( ( _command_input.T == 0 ) ||
+	    ( _command_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) )
 		throttle_check = true;
 
-	if(	( throttle_check ) &&
-	  ( mode_check ) &&
-	  ( _system_status.safety_button_status ) &&
+	if(	( _system_status.safety_button_status ) &&
 	  ( _system_status.health == SYSTEM_HEALTH_OK ) &&
+	  ( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_GUIDED ) &&
+	  ( throttle_check ) &&
 	  ( safety_request_state( MAV_STATE_ACTIVE ) ) ) {
-		_system_status.mode |= MAV_MODE_FLAG_SAFETY_ARMED;	//ARM!
+		_system_status.arm_status = true;	//ARM!
 
 		mavlink_queue_broadcast_notice("[SAFETY] Mav armed!");
 
@@ -213,20 +197,10 @@ bool safety_request_arm(void) {
 			strncat(text_reason,
 					mav_state_names[_system_status.state],
 					MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-		} else if( !mode_check) {	//TODO: Check this error message works correctly
+		} else if( !( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_GUIDED ) ) {	//TODO: Check this error message works correctly
 			strncpy(text_reason,
-					 "cannot arm in mode: ",
+					 "no guidance input: ",
 					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-
-			int i = 0;
-			for(i = 0; i < MAV_MODE_NUM_MODES; i++) {
-				if( _system_status.mode & ( 1 << i) )
-					break;
-			}
-
-			strncat(text_reason,
-					mav_mode_names[i],
-					MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 		} else if( !throttle_check ) {
 			strncpy(text_reason, "high throttle", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 		}
@@ -243,7 +217,7 @@ bool safety_request_arm(void) {
 bool safety_request_disarm(void) {
 	bool result = false;
 
-	_system_status.mode &= ( 0xff ^ MAV_MODE_FLAG_SAFETY_ARMED );	//DISARM!
+	_system_status.arm_status = false;	//DISARM!
 
 	mavlink_queue_broadcast_notice("[SAFETY] Mav disarmed!");
 
@@ -339,51 +313,70 @@ static void safety_check_sensor( timeout_status_t *sensor, uint32_t time_now, ui
 	}
 }
 
-bool safety_mode_set(uint8_t req_mode) {
-	bool success = false;
-
-	//Quick check to make sure the request is a valid supported mode
-	if( ( req_mode == MAV_MODE_PREFLIGHT ) ||
-	  ( req_mode == MAV_MODE_FLAG_STABILIZE_ENABLED ) ||
-	  ( req_mode == MAV_MODE_FLAG_GUIDED_ENABLED ) ||
-	  ( req_mode == MAV_MODE_FLAG_AUTO_ENABLED ) ) {
-		_system_status.mode = req_mode | ( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_SAFETY );
-		success = true;
-	}
-	return success;
-}
-
 void safety_check_failsafe(void) {
 	if( _system_status.health != SYSTEM_HEALTH_OK ) {
 		//If flight-critical systems are down
 		if( ( _system_status.sensors.imu.health != SYSTEM_HEALTH_OK ) ) {	//Emergency //TODO: More?
 			safety_request_state( MAV_STATE_EMERGENCY );
-			safety_request_disarm();
 		} else {	//Critical
 			safety_request_state( MAV_STATE_CRITICAL );
 		}
-
-		//Put the system into failsafe mode
-		safety_mode_set(MAV_MODE_FLAG_AUTO_ENABLED);
 	}
 }
 
 //TODO: Document state machine
-static void system_mode_update(void) {
-	//==-- System Mode State Machine
-	if( _system_status.mode == MAV_MODE_PREFLIGHT ) {
-		if ( _system_status.health == SYSTEM_HEALTH_OK )
-			safety_mode_set( MAV_MODE_FLAG_GUIDED_ENABLED );
-	} else if( _system_status.mode == MAV_MODE_GUIDED_DISARMED ) {
-		if( _system_status.health != SYSTEM_HEALTH_OK )
-			safety_mode_set( MAV_MODE_PREFLIGHT );
-	} else if( _system_status.mode == MAV_MODE_GUIDED_ARMED ) {
+static void system_state_update(void) {
+	//==-- System State Machine
+	switch( _system_status.state ) {
+		case MAV_STATE_UNINIT: {
+			break;
+		}
+		case MAV_STATE_BOOT: {
+			break;
+		}
+		case MAV_STATE_CALIBRATING: {
+			break;
+		}
+		case MAV_STATE_STANDBY: {
+			break;
+		}
+		case MAV_STATE_ACTIVE: {
 			safety_check_failsafe();	//Check if system should failsafe
-	} else if( _system_status.mode == MAV_MODE_AUTO_DISARMED ) {
-		safety_mode_set( MAV_MODE_PREFLIGHT );	//Failsafe mode has been resolved
-	} else if( _system_status.mode == MAV_MODE_AUTO_ARMED ) {
-		//TODO: Something? Panic?
+
+			break;
+		}
+		case MAV_STATE_CRITICAL: {
+			break;
+		}
+		case MAV_STATE_EMERGENCY: {
+			safety_request_disarm();
+
+			break;
+		}
+		default: {
+			safety_request_state(MAV_STATE_EMERGENCY);
+
+			mavlink_queue_broadcast_error("[SAFETY] Emergency! Mav entered unknown state!");
+
+			break;
+		}
 	}
+
+	//==-- System Mode Reporting
+	_system_status.mode = MAV_MODE_PREFLIGHT;
+
+	//Report if armed
+	if( safety_is_armed() )
+		_system_status.mode |= MAV_MODE_FLAG_SAFETY_ARMED;
+
+	//Report if mav is controlling itself
+	if( _system_status.state == MAV_STATE_CRITICAL )
+		_system_status.mode |= MAV_MODE_FLAG_AUTO_ENABLED;
+
+	//Report offboard input status
+	if( ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
+	  ( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) )
+		_system_status.mode |= MAV_MODE_FLAG_GUIDED_ENABLED;
 }
 
 static void safety_health_update(uint32_t time_now) {
@@ -413,7 +406,7 @@ void safety_run( uint32_t time_now ) {
 	safety_switch_update(time_now);
 
 	//Make sure current system state and mode are valid, and handle changes
-	system_mode_update();
+	system_state_update();
 
 	//Update LED flashes to match system state
 	status_led_update();
