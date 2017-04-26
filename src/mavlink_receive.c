@@ -64,7 +64,6 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 						mavlink_message_t msg_out;
 						mavlink_prepare_param_value(&msg_out, index);
-
 						lpq_queue_msg(port, &msg_out);
 					}
 				} //Else this message is for someone else
