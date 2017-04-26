@@ -64,6 +64,13 @@ typedef enum {
 	SYSTEM_OPERATION_REBOOT_BOOTLOADER
 } system_operation_t;
 
+typedef enum {
+	STATUS_BUZZER_QUIET,
+	STATUS_BUZZER_SUCCESS,
+	STATUS_BUZZER_FAILURE,
+	STATUS_BUZZER_FAILSAFE
+} status_buzzer_modes_t;
+
 typedef struct {
 	GPIO_TypeDef *gpio_p;
 	uint16_t pin;
@@ -73,16 +80,36 @@ typedef struct {
 	uint32_t last_pulse;
 } status_led_t;
 
+typedef struct {
+	GPIO_TypeDef *gpio_p;
+	uint16_t pin;
+
+	status_buzzer_modes_t mode;
+	bool state;
+	uint8_t beep_steps;
+	uint32_t period_high_us;
+	uint32_t period_low_us;
+	uint32_t length_us;
+	uint32_t last_pulse;
+	uint32_t last_beep;
+} status_buzzer_t;
+
 extern char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
 
 extern system_status_t _system_status;
 extern uint8_t _system_operation_control;
 
 void safety_init( void );
+
 bool safety_is_armed( void );
 bool safety_request_state( uint8_t req_state );
 bool safety_request_arm( void );
 bool safety_request_disarm( void );
+
+void status_buzzer_success( void );
+void status_buzzer_failure( void );
+
 void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count);
-bool safety_mode_set(uint8_t req_mode);
+
 void safety_run( uint32_t time_now );
+

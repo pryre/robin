@@ -13,6 +13,8 @@ extern "C" {
 
 #include <stdio.h>
 
+#define NUM_STATUS_BEEP_STEPS 4	//Number of beeps x2
+
 system_status_t _system_status;
 sensor_readings_t _sensors;
 command_input_t _command_input;
@@ -22,6 +24,7 @@ char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
 
 static status_led_t _status_led_green;
 static status_led_t _status_led_red;
+static status_buzzer_t _status_buzzer;
 
 static uint32_t _time_safety_button_pressed;
 static bool _new_safety_button_press;
@@ -38,6 +41,29 @@ static void status_led_init() {
 	_status_led_red.period_us = 500000;
 	_status_led_red.length_us = 250000;
 	_status_led_red.last_pulse = 0;
+}
+
+static void status_buzzer_init() {
+	//Buzzer
+	_status_buzzer.gpio_p = GPIOA;
+	_status_buzzer.pin = Pin_12;
+
+	gpio_config_t safety_buzzer_cfg;
+    safety_buzzer_cfg.pin = _status_buzzer.pin;
+    safety_buzzer_cfg.mode = Mode_Out_PP;
+    safety_buzzer_cfg.speed = Speed_2MHz;
+    gpioInit(_status_buzzer.gpio_p, &safety_buzzer_cfg);
+
+	_status_buzzer.mode = STATUS_BUZZER_QUIET;
+	_status_buzzer.state = false;
+	_status_buzzer.beep_steps = 0;			//Number of beeps to make
+	_status_buzzer.period_high_us = 1912;	//C Major
+	_status_buzzer.period_low_us = 3830;	//C Minor
+	_status_buzzer.length_us = 200000;		//200ms beep length
+	_status_buzzer.last_pulse = 0;			//Time last pulse started
+	_status_buzzer.last_beep = 0;			//Time last pulse started
+
+    digitalLo( _status_buzzer.gpio_p, _status_buzzer.pin );
 }
 
 void safety_init() {
@@ -69,7 +95,6 @@ void safety_init() {
 	_new_safety_button_press = false;
 	_time_safety_button_pressed = 0;
 
-	status_led_init();
 
 	strncpy( mav_state_names[0], "UNINIT", MAV_STATE_NAME_LEN);
 	strncpy( mav_state_names[1], "BOOT", MAV_STATE_NAME_LEN);
@@ -81,9 +106,96 @@ void safety_init() {
 	strncpy( mav_state_names[7], "POWEROFF", MAV_STATE_NAME_LEN);
 	strncpy( mav_state_names[8], "ERROR!", MAV_STATE_NAME_LEN);
 
+	status_led_init();
+
+	status_buzzer_init();
+
 	//TODO:
 		//Barometer
 		//Diff Pressure
+}
+
+void status_buzzer_success(void) {
+	_status_buzzer.mode = STATUS_BUZZER_SUCCESS;
+	_status_buzzer.beep_steps = NUM_STATUS_BEEP_STEPS;
+}
+
+void status_buzzer_failure(void) {
+	_status_buzzer.mode = STATUS_BUZZER_FAILURE;
+	_status_buzzer.beep_steps = NUM_STATUS_BEEP_STEPS;
+}
+
+static void status_buzzer_update(void) {
+	//If the system is in a failsafe mode, and the buzzer isn't set to make a different beep
+	if( (_system_status.state == MAV_STATE_CRITICAL ) ||
+	  (_system_status.state == MAV_STATE_EMERGENCY ) ) {
+		//Not waiting for the delay makes a funky beep pattern, but it is unique
+		if( _status_buzzer.mode == STATUS_BUZZER_QUIET ) {
+			_status_buzzer.mode = STATUS_BUZZER_FAILSAFE;
+			_status_buzzer.beep_steps = NUM_STATUS_BEEP_STEPS;
+			_status_buzzer.last_beep = 0;
+			_status_buzzer.last_pulse = 0;
+		}
+	}
+
+	if( _status_buzzer.last_beep == 0 ) {
+		//This is a fresh beep
+		_status_buzzer.last_beep = micros();
+	} else if( ( micros() - _status_buzzer.last_beep ) > _status_buzzer.length_us ) {
+		_status_buzzer.beep_steps--;
+		_status_buzzer.last_beep = micros();
+	}
+
+	if(_status_buzzer.beep_steps == 0) {
+		_status_buzzer.mode = STATUS_BUZZER_QUIET;
+		_status_buzzer.last_beep = 0;
+		_status_buzzer.last_pulse = 0;
+	}
+
+	uint32_t beep_step_us = 0;
+
+	switch(_status_buzzer.mode) {
+		case STATUS_BUZZER_SUCCESS: {
+			if(_status_buzzer.beep_steps == 4) {
+				beep_step_us = _status_buzzer.period_low_us;
+			} else if(_status_buzzer.beep_steps == 2) {
+				beep_step_us = _status_buzzer.period_high_us;
+			}
+
+			break;
+		}
+		case STATUS_BUZZER_FAILURE: {
+			if(_status_buzzer.beep_steps == 4) {
+				beep_step_us = _status_buzzer.period_high_us;
+			} else if(_status_buzzer.beep_steps == 2) {
+				beep_step_us = _status_buzzer.period_low_us;
+			}
+
+			break;
+		}
+		case STATUS_BUZZER_FAILSAFE: {
+			if(_status_buzzer.beep_steps % 2)
+				beep_step_us = _status_buzzer.period_low_us;
+
+			break;
+		}
+		default: {
+			break;
+		}
+	}
+
+	if( beep_step_us > 0 ) {
+		if( ( micros() - _status_buzzer.last_pulse ) > beep_step_us ) {
+			_status_buzzer.state = !_status_buzzer.state;
+			_status_buzzer.last_pulse = micros();
+		}
+
+		if(_status_buzzer.state) {
+			digitalHi(_status_buzzer.gpio_p, _status_buzzer.pin);
+		} else {
+			digitalLo(_status_buzzer.gpio_p, _status_buzzer.pin);
+		}
+	}
 }
 
 bool safety_is_armed(void) {
@@ -174,8 +286,7 @@ bool safety_request_arm(void) {
 
 		result = true;
 
-		//TODO: Make success beep here
-
+		status_buzzer_success();
 	} else {
 		char text_error[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] Arming denied: ";
 		char text_reason[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
@@ -208,7 +319,7 @@ bool safety_request_arm(void) {
 		strncat(text_error, text_reason, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 		mavlink_queue_broadcast_error(text_error);
 
-		//TODO: Make failure beep here
+		status_buzzer_failure();
 	}
 
 	return result;
@@ -227,7 +338,7 @@ bool safety_request_disarm(void) {
 		mavlink_queue_broadcast_error("[SAFETY] Unable to return to standby state!");
 	}
 
-	//TODO: Make success beep here
+	status_buzzer_success();
 
 	result = true;
 
@@ -257,6 +368,8 @@ static void safety_switch_update(uint32_t time_now) {
 		if( !_system_status.safety_button_status && safety_is_armed() ) {
 			safety_request_disarm();
 		}
+
+		status_buzzer_success();
 	}
 }
 
@@ -324,7 +437,6 @@ void safety_check_failsafe(void) {
 	}
 }
 
-//TODO: Document state machine
 static void system_state_update(void) {
 	//==-- System State Machine
 	switch( _system_status.state ) {
@@ -410,6 +522,9 @@ void safety_run( uint32_t time_now ) {
 
 	//Update LED flashes to match system state
 	status_led_update();
+
+	//Update buzzer to see if it should be making any noise
+	status_buzzer_update();
 }
 
 #ifdef __cplusplus

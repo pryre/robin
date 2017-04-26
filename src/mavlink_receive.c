@@ -262,6 +262,12 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					mavlink_message_t msg_out;
 					mavlink_prepare_command_ack(&msg_out, command, command_result);
 					lpq_queue_msg(port, &msg_out);
+
+					if( command_result == MAV_RESULT_ACCEPTED ) {
+						status_buzzer_success();
+					} else {
+						status_buzzer_failure();
+					}
 				}
 
 				break;

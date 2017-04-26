@@ -137,19 +137,6 @@ void sensors_init(void) {
 	_sensors.safety_button.period_db_us = 50000;	//50ms debounce period
 	_sensors.safety_button.state_db = false;
 
-	//Buzzer
-	sensor_status_init(&_sensors.safety_buzzer.status, true);
-	_sensors.safety_buzzer.gpio_p = GPIOA;
-	_sensors.safety_buzzer.pin = Pin_12;
-
-	gpio_config_t safety_buzzer_cfg;
-    safety_buzzer_cfg.pin = _sensors.safety_buzzer.pin;
-    safety_buzzer_cfg.mode = Mode_Out_PP;
-    safety_buzzer_cfg.speed = Speed_2MHz;
-    gpioInit(_sensors.safety_buzzer.gpio_p, &safety_buzzer_cfg);
-
-    digitalHi(_sensors.safety_buzzer.gpio_p, _sensors.safety_buzzer.pin);
-
 	//==-- Timer
 	clock_init();
 }

@@ -98,26 +98,11 @@ typedef struct {
 } sensor_readings_safety_button_t;
 
 typedef struct {
-	sensor_status_t status;
-
-	GPIO_TypeDef *gpio_p;
-	uint16_t pin;
-
-	bool state;			//Measured state
-	uint32_t period_us;	//Measured range
-
-	uint32_t time_db_read;	//Initial dounce read time
-	uint32_t period_db_us;	//Debounce period
-	bool state_db;			//State at debounce read
-} sensor_readings_safety_buzzer_t;	//TODO: HERE! Should be in safety!
-
-typedef struct {
 	sensor_readings_clock_t clock;
 	sensor_readings_imu_t imu;
 	sensor_readings_barometer_t baro;
 	sensor_readings_sonar_t sonar;
 	sensor_readings_safety_button_t safety_button;
-	sensor_readings_safety_buzzer_t safety_buzzer;
 } sensor_readings_t;
 
 typedef enum {
