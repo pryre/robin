@@ -76,12 +76,12 @@ static void sonar_init(void) {
 }*/
 
 static void sensors_imu_poll(void) {
-		//==-- Timing setup get loop time
-		_imu_time_read = micros();
+	//==-- Timing setup get loop time
+	_imu_time_read = micros();
 
-		mpu6050_request_async_accel_read(_sensors.imu.accel_raw, &accel_status);
-		mpu6050_request_async_gyro_read(_sensors.imu.gyro_raw, &gyro_status);
-		mpu6050_request_async_temp_read(&(_sensors.imu.temp_raw), &temp_status);
+	mpu6050_request_async_accel_read(_sensors.imu.accel_raw, &accel_status);
+	mpu6050_request_async_gyro_read(_sensors.imu.gyro_raw, &gyro_status);
+	mpu6050_request_async_temp_read(&(_sensors.imu.temp_raw), &temp_status);
 }
 
 static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
@@ -152,7 +152,6 @@ bool sensors_read(void) {
 		temp_status = I2C_JOB_DEFAULT;
 
 		_sensors.clock.imu_time_read = _imu_time_read;
-		//TODO: Maybe the imu data should be aggregated so it can be called at a lower Hz?
 	}
 
 	//TODO: Check other status

@@ -36,7 +36,8 @@ void comm_send_ch(mavlink_channel_t chan, uint8_t ch);
 #include "mavlink/common/mavlink.h"
 
 //==-- On-demand messages
-void mavlink_send_statustext_notice(uint8_t port, uint8_t severity, char* text);
+void mavlink_send_statustext(uint8_t port, uint8_t severity, char* text);
+void mavlink_send_broadcast_statustext(uint8_t severity, char* text);
 void mavlink_send_timesync(uint8_t port, uint64_t tc1, uint64_t ts1);
 
 //==-- Low priority message queue
@@ -56,6 +57,7 @@ extern mavlink_queue_t _lpq_port_0;
 extern mavlink_queue_t _lpq_port_1;
 
 bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg);
+void lpq_queue_broadcast_msg(mavlink_message_t *msg);
 
 //==-- Streams
 void mavlink_stream_low_priority(uint8_t port);

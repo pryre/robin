@@ -77,10 +77,19 @@ void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 }
 
 //==-- On-demand messages
-void mavlink_send_statustext_notice(uint8_t port, uint8_t severity, char* text) {
+void mavlink_send_statustext(uint8_t port, uint8_t severity, char* text) {
 	mavlink_msg_statustext_send(port,
 								severity,
 								&text[0]);
+}
+
+void mavlink_send_broadcast_statustext(uint8_t severity, char* text) {
+
+	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
+		mavlink_send_statustext(MAVLINK_COMM_0, severity, text);
+
+	if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
+		mavlink_send_statustext(MAVLINK_COMM_1, severity, text);
 }
 
 void mavlink_send_timesync(uint8_t port, uint64_t tc1, uint64_t ts1) {
@@ -135,7 +144,7 @@ bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg) {
 		success = true;
 	} else {
 		if( micros() - queue->timer_warn_full > 1000000) {	//XXX: Only outout the error at 1/s maximum otherwise buffer will never catch up
-			mavlink_send_statustext_notice(queue->port, MAV_SEVERITY_ERROR, "[COMMS] LPQ message dropped!");
+			mavlink_send_statustext(queue->port, MAV_SEVERITY_ERROR, "[COMMS] LPQ message dropped!");
 			queue->timer_warn_full = micros();
 		}
 	}
@@ -155,6 +164,14 @@ static void lpq_queue_all_params(mavlink_queue_t* queue) {
 			queue->request_all_params = -1;
 		}
 	}
+}
+
+void lpq_queue_broadcast_msg(mavlink_message_t *msg) {
+	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
+		lpq_queue_msg(MAVLINK_COMM_0, msg);
+
+	if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
+		lpq_queue_msg(MAVLINK_COMM_1, msg);
 }
 
 void lpq_send(mavlink_queue_t* queue) {
@@ -363,12 +380,7 @@ void mavlink_queue_broadcast_notice(char* text) {
 	mavlink_message_t msg;
 	mavlink_prepare_statustext(&msg, MAV_SEVERITY_NOTICE, text);
 
-	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
-		lpq_queue_msg(MAVLINK_COMM_0, &msg);
-
-	if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
-		lpq_queue_msg(MAVLINK_COMM_1, &msg);
-
+	lpq_queue_broadcast_msg(&msg);
 }
 
 //Broadcasts an error to all open comm channels
@@ -376,12 +388,7 @@ void mavlink_queue_broadcast_error(char* text) {
 	mavlink_message_t msg;
 	mavlink_prepare_statustext(&msg, MAV_SEVERITY_ERROR, text);
 
-	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
-		lpq_queue_msg(MAVLINK_COMM_0, &msg);
-
-	if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
-		lpq_queue_msg(MAVLINK_COMM_1, &msg);
-
+	lpq_queue_broadcast_msg(&msg);
 }
 
 //Sends a debug parameter

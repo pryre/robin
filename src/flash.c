@@ -37,7 +37,7 @@ static bool validEEPROM(void) {
 
 bool readEEPROM(void) {
 	// Sanity check
-	if (!validEEPROM())
+	if ( !validEEPROM() )
 		return false;
 
 	// Read flash
@@ -84,16 +84,6 @@ bool writeEEPROM(void) {
 	if (status != FLASH_COMPLETE || !validEEPROM()) {
 		return false;
 	}
-
-	//TODO: Make this async
-	/*
-	for (uint8_t i=0; i < 3; i++) {
-		LED0_TOGGLE;
-		delay(100);
-		LED0_TOGGLE;
-		delay(50);
-	}
-	*/
 
 	return true;
 }

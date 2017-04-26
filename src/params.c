@@ -47,7 +47,7 @@ static void init_param_fix16(param_id_t id, const char name[PARAMS_NAME_LENGTH],
 void init_params(void) {
 	initEEPROM();
 
-	if (!read_params())	{
+	if ( !read_params() )	{
 		set_param_defaults();
 		write_params();
 	}

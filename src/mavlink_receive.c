@@ -122,13 +122,13 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						} else {
 							mavlink_queue_broadcast_error("[PARAM] Paramater type mismatch!");
 						}
-
 					}
 
 					if(set_complete) {
 						mavlink_message_t msg_out;
 						mavlink_prepare_param_value(&msg_out, index);
-						lpq_queue_msg(port, &msg_out);
+
+						lpq_queue_broadcast_msg(&msg_out);
 					}
 				} //Else this message is for someone else
 
@@ -178,36 +178,41 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					case MAV_CMD_PREFLIGHT_STORAGE: {
 						need_ack = true;
 
-						switch((int)mavlink_msg_command_long_get_param1(&msg)) {
-							case 0:	//Read from flash
-								if( read_params() ) {
+						if( _system_status.state == MAV_STATE_STANDBY) {
+							switch( (int)mavlink_msg_command_long_get_param1(&msg) ) {
+								case 0:		//Read from flash
+									if( read_params() ) {
+										command_result = MAV_RESULT_ACCEPTED;
+									} else {
+										command_result = MAV_RESULT_FAILED;
+									}
+
+									break;
+								case 1:	//Write to flash
+									if( write_params() ) {
+										command_result = MAV_RESULT_ACCEPTED;
+
+										//XXX: System will freeze after eeprom write (not 100% sure why, but something to do with interrupts), so reboot here
+										//TODO: Maybe this can be fixed?
+										mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[PARAM] EEPROM written, mav will now reboot");
+										delay(500);
+										systemReset();
+									} else {
+										command_result = MAV_RESULT_FAILED;
+									}
+
+									break;
+								case 2:		//Reset to defaults
+									set_param_defaults();
 									command_result = MAV_RESULT_ACCEPTED;
-								} else {
-									command_result = MAV_RESULT_FAILED;
-								}
 
-								break;
-
-							//TODO: Writing to EEPROM doesn't really work after boot
-							/*
-							case 1:	//Write to flash
-
-								if(write_params()) {
-									command_result = MAV_RESULT_ACCEPTED;
-								} else {
-									command_result = MAV_RESULT_FAILED;
-								}
-
-								break;
-							*/
-							case 2:	//Reset to defaults
-								set_param_defaults();
-								command_result = MAV_RESULT_ACCEPTED;
-
-								break;
-							default://Not supported
-								command_result = MAV_RESULT_UNSUPPORTED;
-								break;
+									break;
+								default:	//Not supported
+									command_result = MAV_RESULT_UNSUPPORTED;
+									break;
+							}
+						} else {
+							command_result = MAV_RESULT_TEMPORARILY_REJECTED;
 						}
 
 						break;
