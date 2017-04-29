@@ -35,9 +35,8 @@ typedef struct {
 //List of failures
 //True means system is OK
 typedef struct {
-	uint8_t health;	//Set with safety_health_t	//TODO: Must be implemented
+	uint8_t health;	//Set with safety_health_t
 
-	//TODO: Make sure this is fully implemented
 	//Note: Mirrors MAVLINK configuration
 		//MAV_STATE_UNINIT:			System start
 		//MAV_STATE_BOOT:			System booting/initializing
@@ -55,14 +54,6 @@ typedef struct {
 	bool arm_status;	//Safety button to engage and disengage motor output
 	safety_sensor_status_t sensors;
 } system_status_t;
-
-//TODO: This could almost be merged with mav_state
-typedef enum {
-	SYSTEM_OPERATION_RUN,
-	SYSTEM_OPERATION_SHUTDOWN,
-	SYSTEM_OPERATION_REBOOT,
-	SYSTEM_OPERATION_REBOOT_BOOTLOADER
-} system_operation_t;
 
 typedef enum {
 	STATUS_BUZZER_QUIET,

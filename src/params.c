@@ -7,6 +7,11 @@
 #include "mixer.h"
 #include "fix16.h"
 
+ //TODO: Only in here because of eeprom write problems
+#include "safety.h"
+#include "mavlink_system.h"
+
+
 // global variable definitions
 params_t _params;
 
@@ -162,6 +167,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_MOTOR_PWM_MIN, "MOTOR_PWM_MIN", 1000);
 	init_param_uint(PARAM_MOTOR_PWM_MAX, "MOTOR_PWM_MAX", 2000);
 
+	init_param_uint(PARAM_DO_ESC_CAL, "DO_ESC_CAL", 0); // 1=true; 0=false
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, "FAILSAFE_THRTL", fix16_from_float(0.25f));
 
 	init_param_uint(PARAM_MIXER, "MIXER", MIXER_QUADCOPTER_X);
@@ -172,7 +178,21 @@ bool read_params(void) {
 }
 
 bool write_params(void) {
-	return writeEEPROM();
+	bool success = false;
+
+	//XXX: System will freeze after eeprom write (not 100% sure why, but something to do with interrupts), so reboot here
+	//TODO: Maybe this can be fixed?
+	if( safety_request_state( MAV_STATE_POWEROFF ) ) {
+		success = writeEEPROM();
+
+		mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[PARAM] EEPROM written, mav will now reboot");
+		delay(500);
+		systemReset();
+	} else {
+		mavlink_queue_broadcast_error("[SAFETY] Unable poweroff to write params!");
+	}
+
+	return success;
 }
 
 

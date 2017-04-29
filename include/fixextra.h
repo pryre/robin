@@ -3,7 +3,7 @@
 #include "fix16.h"
 #include "fixvector3d.h"
 #include "fixmatrix.h"
-#include "fixquat.h"	//TODO: Make a note about quaternion a,b,c,d
+#include "fixquat.h"
 
 //Quaternion layout
 //q.a -> q.w
@@ -87,7 +87,7 @@ static inline void qf16_from_shortest_path(qf16 *dest, const v3d *v1, const v3d 
 	}
 }
 
-//TODO: Should use the mavlink conversions as a base if possible
+//TODO: Should use the mavlink conversions as a base if we move to float
 static inline void euler_from_quat(qf16 *q, fix16_t *phi, fix16_t *theta, fix16_t *psi) {
   *phi = fix16_atan2(fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->a, q->b), fix16_mul(q->c, q->d))),
                       fix16_sub(CONST_ONE, fix16_mul(CONST_TWO, fix16_add(fix16_mul(q->b, q->b), fix16_mul(q->c, q->c)))));

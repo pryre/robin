@@ -26,11 +26,6 @@ pid_controller_t _pid_roll_rate;
 pid_controller_t _pid_pitch_rate;
 pid_controller_t _pid_yaw_rate;
 
-//pid_controller_t pid_roll;
-//pid_controller_t pid_pitch;
-//pid_controller_t pid_yaw;
-//pid_controller_t pid_altitude;
-
 void controller_reset(void) {
 	pid_reset(&_pid_roll_rate, _state_estimator.p);
 	pid_reset(&_pid_pitch_rate, _state_estimator.q);
@@ -43,76 +38,41 @@ void controller_reset(void) {
 }
 
 void controller_init(void) {
-/*
-  pid_init(&pid_roll,
-           PARAM_PID_ROLL_ANGLE_P,
-           PARAM_PID_ROLL_ANGLE_I,
-           PARAM_PID_ROLL_ANGLE_D,
-           _current_state.phi,
-           _current_state.p,
-           _combined_control.x.value,
-           _command.x,
-           get_param_int(PARAM_MAX_COMMAND)/2.0f,
-           -1.0f*get_param_int(PARAM_MAX_COMMAND)/2.0f);
+	pid_init(&_pid_roll_rate,
+			 get_param_fix16(PARAM_PID_ROLL_RATE_P),
+			 get_param_fix16(PARAM_PID_ROLL_RATE_I),
+			 get_param_fix16(PARAM_PID_ROLL_RATE_D),
+			 get_param_fix16(PARAM_PID_TAU),
+			 _state_estimator.p,
+			 0,
+			 0,
+			 0,
+			 -get_param_fix16(PARAM_MAX_ROLL_RATE),
+			 get_param_fix16(PARAM_MAX_ROLL_RATE));
 
-  pid_init(&pid_pitch,
-           PARAM_PID_PITCH_ANGLE_P,
-           PARAM_PID_PITCH_ANGLE_I,
-           PARAM_PID_PITCH_ANGLE_D,
-           &_current_state.theta,
-           &_current_state.q,
-           &_combined_control.y.value,
-           &_command.y,
-           get_param_int(PARAM_MAX_COMMAND)/2.0f,
-           -1.0f*get_param_int(PARAM_MAX_COMMAND)/2.0f);
-*/
-pid_init(&_pid_roll_rate,
-		 get_param_fix16(PARAM_PID_ROLL_RATE_P),
-		 get_param_fix16(PARAM_PID_ROLL_RATE_I),
-		 get_param_fix16(PARAM_PID_ROLL_RATE_D),
-		 get_param_fix16(PARAM_PID_TAU),
-		 _state_estimator.p,
-		 0,
-		 0,
-		 0,
-		 -get_param_fix16(PARAM_MAX_ROLL_RATE),
-		 get_param_fix16(PARAM_MAX_ROLL_RATE));
+	pid_init(&_pid_pitch_rate,
+			 get_param_fix16(PARAM_PID_PITCH_RATE_P),
+			 get_param_fix16(PARAM_PID_PITCH_RATE_I),
+			 get_param_fix16(PARAM_PID_PITCH_RATE_D),
+			 get_param_fix16(PARAM_PID_TAU),
+			 _state_estimator.q,
+			 0,
+			 0,
+			 0,
+			 -get_param_fix16(PARAM_MAX_PITCH_RATE),
+			 get_param_fix16(PARAM_MAX_PITCH_RATE));
 
-pid_init(&_pid_pitch_rate,
-		 get_param_fix16(PARAM_PID_PITCH_RATE_P),
-		 get_param_fix16(PARAM_PID_PITCH_RATE_I),
-		 get_param_fix16(PARAM_PID_PITCH_RATE_D),
-		 get_param_fix16(PARAM_PID_TAU),
-		 _state_estimator.q,
-		 0,
-		 0,
-		 0,
-		 -get_param_fix16(PARAM_MAX_PITCH_RATE),
-		 get_param_fix16(PARAM_MAX_PITCH_RATE));
-
-pid_init(&_pid_yaw_rate,
-		 get_param_fix16(PARAM_PID_YAW_RATE_P),
-		 get_param_fix16(PARAM_PID_YAW_RATE_I),
-		 get_param_fix16(PARAM_PID_YAW_RATE_D),
-		 get_param_fix16(PARAM_PID_TAU),
-		 _state_estimator.r,
-		 0,
-		 0,
-		 0,
-		 -get_param_fix16(PARAM_MAX_YAW_RATE),
-		 get_param_fix16(PARAM_MAX_YAW_RATE));
-/*
-  pid_init(&pid_altitude,
-           PARAM_PID_ALT_P,
-           PARAM_PID_ALT_I,
-           PARAM_PID_ALT_D,
-           &_current_state.altitude,
-           NULL,
-           &_combined_control.F.value,
-           &_command.F,
-           get_param_int(PARAM_MAX_COMMAND),
-           0.0f);
-*/
+	pid_init(&_pid_yaw_rate,
+			 get_param_fix16(PARAM_PID_YAW_RATE_P),
+			 get_param_fix16(PARAM_PID_YAW_RATE_I),
+			 get_param_fix16(PARAM_PID_YAW_RATE_D),
+			 get_param_fix16(PARAM_PID_TAU),
+			 _state_estimator.r,
+			 0,
+			 0,
+			 0,
+			 -get_param_fix16(PARAM_MAX_YAW_RATE),
+			 get_param_fix16(PARAM_MAX_YAW_RATE));
 
 	_command_input.r = 0;
 	_command_input.p = 0;
@@ -190,7 +150,7 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		e_R.z = e_R_mat.data[2][0];
 
 		fix16_t e_R_z_sin = v3d_norm(&e_R);
-		fix16_t e_R_z_cos = v3d_dot(&R_z, &R_sp_z);	//TODO: make sure "float e_R_z_cos = R_z * R_sp_z;" means dot product
+		fix16_t e_R_z_cos = v3d_dot(&R_z, &R_sp_z);	//XXX: "float e_R_z_cos = R_z * R_sp_z;" means dot product(?)
 
 		//px4: calculate weight for yaw control
 		fix16_t yaw_w = R_sp.data[2][2] * R_sp.data[2][2];
@@ -353,7 +313,6 @@ void controller_run( uint32_t time_now ) {
 	_control_output.y = pid_step(&_pid_yaw_rate, time_now, goal_y, _state_estimator.r, 0, false);
 
 	//==-- Throttle Control
-	//TODO: Could do something here for altitude hold mode if enabled
 
 	//Trottle
 	if( !(_command_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) {

@@ -6,28 +6,6 @@
 #include "fixvector3d.h"
 #include "breezystm32.h"
 
-//TODO: Common header file for defines like this
-//#define BOARD_REV 2
-
-// global variable declarations
-//extern vector_t _accel;
-//extern vector_t _gyro;
-//extern float _imu_temperature;
-//extern uint32_t _imu_time;
-//extern bool _imu_ready;
-
-//extern bool _diff_pressure_present;
-//extern int16_t _diff_pressure;
-//extern int16_t _temperature;
-
-//extern bool _baro_present;
-//extern int16_t _baro_pressure;
-//extern int16_t _baro_temperature;
-
-//extern bool _sonar_present;
-//extern int16_t _sonar_range;
-//extern uint32_t _sonar_time;
-
 typedef struct {
 	bool present;		//If the sensor is plugged in or not
 	bool new_data;	//If there is new data ready
@@ -141,10 +119,6 @@ typedef struct {
 	uint16_t acc1G;
 	fix16_t temp_scale;
 	fix16_t temp_shift;
-//	fix16_t sum_x;
-//	fix16_t sum_y;
-//	fix16_t sum_z;
-//	fix16_t sum_t;
 } sensor_calibration_accel_data_t;
 
 typedef struct {
@@ -174,6 +148,3 @@ uint64_t sensors_clock_rt_get(void);	//Get the current time syncronized real tim
 uint32_t sensors_clock_imu_int_get(void);	//Get the time of the latest imu interrupt
 
 bool sensors_update(uint32_t time_us);
-
-//bool calibrate_acc(void);
-//bool calibrate_gyro(void);

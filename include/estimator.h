@@ -15,21 +15,17 @@ typedef struct {
   fix16_t p;		//Roll Rate
   fix16_t q;		//Pitch Rate
   fix16_t r;		//Yaw Rate
-//  fix16_t phi;		//Roll
-//  fix16_t theta;	//Pitch
-//  fix16_t psi;		//Yaw
-  fix16_t altitude;
-  qf16 attitude;
+  qf16 attitude;	//Attitude Quaternion
 } state_t;
 
-extern state_t _state_estimator;	//_current_state
-extern v3d _adaptive_gyro_bias;
+extern state_t _state_estimator;	//Current state estimation
+extern v3d _adaptive_gyro_bias;		//TODO: Implement
 
 
 //TODO: Redo these stats
-// mat_exp <- greater accuracy, but adds ~90 us
-// quadratic_integration <- some additional accuracy, adds ~20 us
-// accelerometer correction <- if using angle mode, this is required, adds ~70 us
+// PARAM_EST_USE_ACC_COR <- if using angle mode, this is required, adds ~70 us
+// PARAM_EST_USE_MAT_EXP <- greater accuracy, but adds ~90 us
+// PARAM_EST_USE_QUAD_INT <- some additional accuracy, adds ~20 us
 void estimator_init();
 void estimator_update(uint32_t now);
 

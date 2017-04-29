@@ -147,7 +147,7 @@ static void status_buzzer_update(void) {
 	}
 
 	if(_status_buzzer.beep_steps == 0) {
-		_status_buzzer.mode = STATUS_BUZZER_QUIET;
+		_status_buzzer.mode = STATUS_BUZZER_QUIET;	//No need to reset state, as it only makes noise when it changes, not when high
 		_status_buzzer.last_beep = 0;
 		_status_buzzer.last_pulse = 0;
 	}
@@ -203,7 +203,6 @@ bool safety_is_armed(void) {
 }
 
 bool safety_request_state(uint8_t req_state) {
-	bool success = false;
 	bool change_state = false;
 
 	switch( req_state ) {
@@ -252,17 +251,23 @@ bool safety_request_state(uint8_t req_state) {
 
 			break;
 		}
-		default: {//MAV_STATE_UNINIT, MAV_STATE_BOOT, or MAV_STATE_POWEROFF should always hold state
+		case MAV_STATE_POWEROFF: {	//Allows the mav to check it is safe to poweroff/reboot
+			if( (_system_status.state == MAV_STATE_UNINIT) ||
+			  (_system_status.state == MAV_STATE_BOOT) ||
+			  (_system_status.state == MAV_STATE_STANDBY) )
+				change_state = true;
+
+			break;
+		}
+		default: {	// Other states cannot be requested
 			break;
 		}
 	}
 
-	if( change_state ) {
+	if( change_state )
 		_system_status.state = req_state;
-		success = true;
-	}
 
-	return success;
+	return change_state;
 }
 
 bool safety_request_arm(void) {
@@ -353,9 +358,6 @@ static void safety_switch_update(uint32_t time_now) {
 		} else {
 			_new_safety_button_press = false;
 		}
-
-		//if( ( time_safety_button_released - time_safety_button_pressed ) > 1000000 )
-		//	_system_status.safety_button_status = !_system_status.safety_button_status;	//Toggle arming safety
 
 		_sensors.safety_button.status.new_data = false;
 	}

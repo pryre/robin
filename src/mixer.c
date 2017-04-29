@@ -99,16 +99,34 @@ void mixer_init() {
 }
 
 void pwm_init() {
-	bool useCPPM = true;	//XXX: Frees up the ports for telem2 and safety switch
-
-	/*TODO: Put this back in?
+	bool useCPPM = true;
+	/* XXX: Frees up the ports for telem2 and safety switch
 	if(get_param_int(PARAM_RC_TYPE) == 1)
 		useCPPM = true;
 	*/
 
 	int16_t motor_refresh_rate = get_param_uint(PARAM_MOTOR_PWM_SEND_RATE);
-	int16_t pwm_disarm = 1000;	//TODO? get_param_int(PARAM_MOTOR_PWM_MIN);
+	int16_t pwm_disarm = get_param_uint(PARAM_MOTOR_PWM_MIN);
 	pwmInit(useCPPM, false, false, motor_refresh_rate, pwm_disarm);
+
+	//XXX: Not sure if first write of pwm_disarm will invalidate this with some ESCs
+	if( get_param_uint( PARAM_DO_ESC_CAL ) ) {
+		for (uint8_t i = 0; i < 8; i++)
+			if (mixer_to_use->output_type[i] != M)
+				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MAX ) );
+
+		delay(2000);
+
+		for (uint8_t i = 0; i < 8; i++)
+			if (mixer_to_use->output_type[i] != M)
+				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MIN ) );
+
+		delay(2000);
+
+		set_param_uint( PARAM_DO_ESC_CAL, 0);
+
+		write_params();
+	}
 }
 
 static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) {

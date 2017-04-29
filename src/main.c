@@ -34,12 +34,6 @@ int main(void) {
 
     setup();
 
-	//We really need to consider how the baud affects Comms
-	//A baud rate of 921600 will get us a data rate of 115200 bytes/sec
-	//This is assuming we don't use stop bits
-	//This means we can send ~115 bytes per loop without any risk of a buffer overflow
-	//As mavlink can have max messages of 250+ bytes, we want to send as little as possible each loop to allow catchup
-
 	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
 		Serial1 = uartOpen(USART1, NULL, get_param_uint(PARAM_BAUD_RATE_0), MODE_RXTX, SERIAL_NOT_INVERTED);
 
@@ -72,12 +66,6 @@ void setup(void) {
 	mixer_init();
 
 	pwm_init();
-
-	//TODO: Could do motor calibration logic here
-		//Set PWM high
-		//Set delay 1000 (?)
-		//Set PWM low
-		//Clear motor cal parameter
 
 	//Wait here for the first imu message (probably not really neaded)
 	while( !sensors_read() );

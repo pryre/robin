@@ -7,7 +7,6 @@
 #include "controller.h"
 
 //TODO: Need to add support later for more mixing types
-//TODO: Need to make notes on how to wire up
 typedef enum {
 	MIXER_QUADCOPTER_PLUS,
 	MIXER_QUADCOPTER_X,

@@ -190,12 +190,6 @@ static void communication_decode(uint8_t port, uint8_t c) {
 								case 1:	//Write to flash
 									if( write_params() ) {
 										command_result = MAV_RESULT_ACCEPTED;
-
-										//XXX: System will freeze after eeprom write (not 100% sure why, but something to do with interrupts), so reboot here
-										//TODO: Maybe this can be fixed?
-										mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[PARAM] EEPROM written, mav will now reboot");
-										delay(500);
-										systemReset();
 									} else {
 										command_result = MAV_RESULT_FAILED;
 									}
@@ -219,7 +213,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN: {
 						need_ack = true;
 
-						if( _system_status.state == MAV_STATE_STANDBY ) {
+						if( safety_request_state( MAV_STATE_POWEROFF ) ) {
 							switch( (int)mavlink_msg_command_long_get_param1(&msg) ) {
 								case 1:
 									systemReset();
@@ -234,6 +228,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 									break;
 							}
+						} else {
+							mavlink_queue_broadcast_error("[SAFETY] Unable to enter poweroff state!");
 						}
 
 						break;

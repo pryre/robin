@@ -13,7 +13,7 @@ extern "C" {
 
 #include "fix16.h"
 #include "fixvector3d.h"
-#include "fixquat.h"	//TODO: Make a docs about quaternion a,b,c,d
+#include "fixquat.h"
 #include "fixextra.h"
 
 //Quick defines of reused fix16 numbers
@@ -27,7 +27,7 @@ extern "C" {
 #define CONST_TWO						0x00020000	//2
 
 state_t _state_estimator;
-v3d _adaptive_gyro_bias;	//TODO: extern
+v3d _adaptive_gyro_bias;
 sensor_readings_t _sensors;
 
 static const v3d g = {0, 0, CONST_ONE};	//These were floats, but having them as int might be more accurate

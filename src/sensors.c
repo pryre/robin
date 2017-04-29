@@ -17,15 +17,7 @@
 #define SENSOR_CAL_IMU_PASSES 1000
 
 //==-- Local Variables
-
-//static int32_t last_check_imu = 0;
-/*static float accel_scale; // converts to units of m/s^2
-
-static int16_t accel_data[3];
-static int16_t gyro_data[3];
-static int16_t temp_data;
-*/
-static volatile uint32_t _imu_time_read = 0;
+int32_t _imu_time_read = 0;
 static volatile uint8_t accel_status = 0;
 static volatile uint8_t gyro_status = 0;
 static volatile uint8_t temp_status = 0;
@@ -58,15 +50,7 @@ static void clock_init(void) {
 	_sensors.clock.rt_sync_last = 0;
 }
 
-/*
-static void imu_init(void) {
-	_sensors.imu.present = true;
-	_sensors.imu.temperature = 0;
-	uint32_t time;		//Time measured
-	float accel_scale;	//Scale to correct raw accel data
-	float gyro_scale;	//Scale to correct raw gyro data
-}
-
+/* TODO:
 static void baro_init(void) {
 	_sensor_baro.present = false;
 }
@@ -110,7 +94,6 @@ static void sensors_cal_init(void) {
 
 void sensors_init(void) {
 	//==-- IMU-MPU6050
-	//TODO: Set IMU to be calibrated if not already
 	sensor_status_init(&_sensors.imu.status, true);
     mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
 	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
@@ -342,9 +325,6 @@ bool sensors_update(uint32_t time_us) {
 
 			_sensors.safety_button.status.time_read = time_us;
 			_sensors.safety_button.status.new_data = true;
-
-			//if(!_sensors.safety_button.state)
-			//	LED1_TOGGLE;
 		}
 	}
 

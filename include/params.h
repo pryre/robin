@@ -110,10 +110,11 @@ typedef enum {
 
 	//==-- Output
 	PARAM_MOTOR_PWM_SEND_RATE,
-	PARAM_MOTOR_PWM_IDLE,			//TODO: Note that this should be set to 0 to disable
+	PARAM_MOTOR_PWM_IDLE,
 	PARAM_MOTOR_PWM_MIN,
 	PARAM_MOTOR_PWM_MAX,
 
+	PARAM_DO_ESC_CAL,
 	PARAM_FAILSAFE_THROTTLE,
 
 	PARAM_MIXER,
