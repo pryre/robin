@@ -44,14 +44,13 @@ static mixer_t mixer_quadcopter_plus = {
 	{ FC_1, FC_1,-FC_1,-FC_1, 0, 0, 0, 0}  // Z Mix
 };
 
-//TODO: Double check
 static mixer_t mixer_quadcopter_x = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
 	{ FC_1, FC_1, FC_1, FC_1, 0, 0, 0, 0}, // F Mix
 	{-FC_1, FC_1, FC_1,-FC_1, 0, 0, 0, 0}, // X Mix
-	{ FC_1,-FC_1,-FC_1, FC_1, 0, 0, 0, 0}, // Y Mix
-	{ FC_1, FC_1,-FC_1,-FC_1, 0, 0, 0, 0}  // Z Mix
+	{ FC_1,-FC_1, FC_1,-FC_1, 0, 0, 0, 0}, // Y Mix
+	{-FC_1,-FC_1, FC_1, FC_1, 0, 0, 0, 0}  // Z Mix
 };
 
 static mixer_t mixer_plane_basic = {
@@ -211,7 +210,7 @@ void mixer_output() {
 			fix16_t thrust_calc = fix16_add(fix16_mul(_control_output.T, mixer_to_use->T[i]),
 								  fix16_add(fix16_mul(_control_output.r, mixer_to_use->x[i]),
 								  fix16_add(fix16_mul(_control_output.p, mixer_to_use->y[i]),
-								  fix16_mul(_control_output.y, mixer_to_use->z[i]))));
+											fix16_mul(_control_output.y, mixer_to_use->z[i]))));
 			prescaled_outputs[i] = fix16_to_int(fix16_mul(thrust_calc, _fc_1000));
 
 			//Note: Negitive PWM values can be calculated here, but will be saturated to 0pwm later

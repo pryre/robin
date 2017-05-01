@@ -100,8 +100,8 @@ fix16_t pid_step(pid_controller_t *pid, uint32_t time_now, fix16_t sp, fix16_t x
 	}
 
 	//TODO: May have to be "- d_term"
-	//Sum three terms: u = p_term + i_term + d_term
-	fix16_t u = fix16_add( p_term, fix16_add( i_term, d_term ) );
+	//Sum three terms: u = p_term + i_term - d_term
+	fix16_t u = fix16_add( p_term, fix16_sub( i_term, d_term ) );
 
 	//Output Saturation
 	fix16_t u_sat = (u > pid->max) ? pid->max : (u < pid->min) ? pid->min : u;
