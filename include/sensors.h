@@ -130,8 +130,6 @@ extern uint8_t _sensor_calibration;
 extern sensor_readings_t _sensors;
 extern sensor_calibration_data_t _sensor_cal_data;
 
-static const fix16_t CONST_GRAVITY = 0x0009CE80; //Is equal to 9.80665 (Positive!) in Q16.16
-
 // function declarations
 void sensors_init(void);
 bool sensors_read(void);

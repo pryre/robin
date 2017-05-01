@@ -21,7 +21,6 @@ typedef struct {
 extern state_t _state_estimator;	//Current state estimation
 extern v3d _adaptive_gyro_bias;		//TODO: Implement
 
-
 //TODO: Redo these stats
 // PARAM_EST_USE_ACC_COR <- if using angle mode, this is required, adds ~70 us
 // PARAM_EST_USE_MAT_EXP <- greater accuracy, but adds ~90 us

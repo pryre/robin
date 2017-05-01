@@ -16,21 +16,11 @@ extern "C" {
 #include "fixquat.h"
 #include "fixextra.h"
 
-//Quick defines of reused fix16 numbers
-#define CONST_ZERO_ZERO_EIGHT_THREE_REC 0x00001555	//0.083333
-#define CONST_ZERO_FOUR_SIX_REC			0x00006AAA	//0.083333
-#define CONST_ZERO_FIVE					0x00008000	//0.5
-#define CONST_ZERO_SIX_REC				0x0000AAAA	//0.66666
-#define CONST_ZERO_EIGHT_FIVE			0x0000D999	//0.85
-#define CONST_ONE						0x00010000	//1
-#define CONST_ONE_ONE_FIVE				0x00012666	//1.15
-#define CONST_TWO						0x00020000	//2
-
 state_t _state_estimator;
 v3d _adaptive_gyro_bias;
 sensor_readings_t _sensors;
 
-static const v3d g = {0, 0, CONST_ONE};	//These were floats, but having them as int might be more accurate
+static v3d g;	//Gravity vector
 
 static v3d w1;
 static v3d w2;
@@ -58,15 +48,19 @@ void estimator_init( void ) {
 	_state_estimator.attitude.c = 0;
 	_state_estimator.attitude.d = 0;
 
-	q_hat.a = CONST_ONE;
+	q_hat.a = _fc_1;
 	q_hat.b = 0;
 	q_hat.c = 0;
 	q_hat.d = 0;
 
-	q_tilde.a = CONST_ONE;
+	q_tilde.a = _fc_1;
 	q_tilde.b = 0;
 	q_tilde.c = 0;
 	q_tilde.d = 0;
+
+	g.x = 0;
+	g.y = 0;
+	g.z = _fc_1;
 
 	w1.x = 0;
 	w1.y = 0;
@@ -90,7 +84,7 @@ void estimator_init( void ) {
 
 	_accel_LPF.x = 0;
 	_accel_LPF.y = 0;
-	_accel_LPF.z = CONST_GRAVITY;
+	_accel_LPF.z = _fc_gravity;
 
 	_gyro_LPF.x = 0;
 	_gyro_LPF.y = 0;
@@ -106,14 +100,14 @@ void estimator_init( void ) {
 static void lpf_update(void) {
 	//value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
 	fix16_t alpha_acc = get_param_fix16(PARAM_ACC_ALPHA);
-	_accel_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_acc), _sensors.imu.accel.x), fix16_smul(alpha_acc, _accel_LPF.x));
-	_accel_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_acc), _sensors.imu.accel.y), fix16_smul(alpha_acc, _accel_LPF.y));;
-	_accel_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_acc), _sensors.imu.accel.z), fix16_smul(alpha_acc, _accel_LPF.z));;
+	_accel_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _sensors.imu.accel.x), fix16_smul(alpha_acc, _accel_LPF.x));
+	_accel_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _sensors.imu.accel.y), fix16_smul(alpha_acc, _accel_LPF.y));;
+	_accel_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _sensors.imu.accel.z), fix16_smul(alpha_acc, _accel_LPF.z));;
 
 	fix16_t alpha_gyro = get_param_fix16(PARAM_GYRO_ALPHA);
-	_gyro_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.x), fix16_smul(alpha_gyro, _gyro_LPF.x));
-	_gyro_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.y), fix16_smul(alpha_gyro, _gyro_LPF.y));
-	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(CONST_ONE, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
+	_gyro_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _sensors.imu.gyro.x), fix16_smul(alpha_gyro, _gyro_LPF.x));
+	_gyro_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _sensors.imu.gyro.y), fix16_smul(alpha_gyro, _gyro_LPF.y));
+	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
 }
 
 void estimator_update( uint32_t time_now ) {
@@ -132,8 +126,8 @@ void estimator_update( uint32_t time_now ) {
 
 	//Crank up the gains for the first few seconds for quick convergence
 	if ( time_now < init_time ) {
-		kp = fix16_smul( kp_, fix16_from_float( 10.0f ) );
-		ki = fix16_smul( ki_, fix16_from_float( 10.0f ) );
+		kp = fix16_smul( kp_, _fc_10 );
+		ki = fix16_smul( ki_, _fc_10 );
 	} else {
 		kp = kp_;
 		ki = ki_;
@@ -148,8 +142,8 @@ void estimator_update( uint32_t time_now ) {
 
 	//If we should use accelerometer compensation, and the reading is reasonably small
 	if( ( get_param_uint( PARAM_EST_USE_ACC_COR ) ) &&
-	  (a_sqrd_norm < fix16_mul( fix16_sq( CONST_ONE_ONE_FIVE ), fix16_sq( CONST_GRAVITY ) ) ) &&
-	  (a_sqrd_norm > fix16_mul( fix16_sq( CONST_ZERO_EIGHT_FIVE ), fix16_sq( CONST_GRAVITY ) ) ) ) {
+	  (a_sqrd_norm < fix16_mul( fix16_sq( _fc_1_15 ), fix16_sq( _fc_gravity ) ) ) &&
+	  (a_sqrd_norm > fix16_mul( fix16_sq( _fc_0_85 ), fix16_sq( _fc_gravity ) ) ) ) {
 
 		// Get error estimated by accelerometer measurement
 		v3d a;
@@ -174,7 +168,7 @@ void estimator_update( uint32_t time_now ) {
 		v3d body_y;
 		v3d body_z;
 		yaw_c.x = 0;
-		yaw_c.y = CONST_ONE;	//TODO: This should be aligned with Compass North: yaw_c = [-sin(yaw), cos(yaw), 0.0f];
+		yaw_c.y = _fc_1;	//TODO: This should be aligned with Compass North: yaw_c = [-sin(yaw), cos(yaw), 0.0f];
 		yaw_c.z = 0;
 		body_z.x = rot_mat.data[2][0];
 		body_z.y = rot_mat.data[2][1];
@@ -203,9 +197,9 @@ void estimator_update( uint32_t time_now ) {
 
 		// Correction Term of Eq. 47a and 47b Mahoney Paper
 		// w_acc = -2*s_tilde*v_tilde
-		w_acc.x = fix16_mul(-CONST_TWO, fix16_mul(q_tilde.a, q_tilde.b));
-		w_acc.y = fix16_mul(-CONST_TWO, fix16_mul(q_tilde.a, q_tilde.c));
-		w_acc.z = 0;	//This is unobservable from accelerometer: w_acc.z = fix16_mul(-CONST_TWO, fix16_mul(q_tilde.a, q_tilde.d));
+		w_acc.x = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.b));
+		w_acc.y = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.c));
+		w_acc.z = 0;	//This is unobservable from accelerometer: w_acc.z = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.d));
 						//TODO: Need to enable this when yaw_c is implemented
 
 		// integrate biases from accelerometer feedback
@@ -231,12 +225,12 @@ void estimator_update( uint32_t time_now ) {
 		v3d w_sum_temp;
 		v3d gyro_temp;
 
-		v3d_mul_s( &w1_temp, &w1, CONST_ZERO_SIX_REC );
-		v3d_mul_s( &w2_temp, &w2, -CONST_ZERO_ZERO_EIGHT_THREE_REC );
+		v3d_mul_s( &w1_temp, &w1, _fc_0_6_ );
+		v3d_mul_s( &w2_temp, &w2, -_fc_0_083_ );
 
 		v3d_add( &w_sum_temp, &w1_temp, &w2_temp );
 
-		v3d_mul_s( &gyro_temp, &_gyro_LPF, CONST_ZERO_FOUR_SIX_REC );
+		v3d_mul_s( &gyro_temp, &_gyro_LPF, _fc_0_46_ );
 
 		v3d_add( &wbar, &w_sum_temp, &gyro_temp );
 
@@ -276,8 +270,8 @@ void estimator_update( uint32_t time_now ) {
 
 			//This is can cause some serious RAM issues if either caching or lookup tables are enabled
 			//XXX: Even with caching turned off, this should give a good performance increase (hopefully around 25%)
-			fix16_t t1 = fix16_cos(fix16_div(fix16_mul(norm_w, dt), CONST_TWO));
-			fix16_t t2 = fix16_mul(fix16_div(CONST_ONE, norm_w), fix16_sin(fix16_div(fix16_mul(norm_w, dt), CONST_TWO)));
+			fix16_t t1 = fix16_cos(fix16_div(fix16_mul(norm_w, dt), _fc_2));
+			fix16_t t2 = fix16_mul(fix16_div(_fc_1, norm_w), fix16_sin(fix16_div(fix16_mul(norm_w, dt), _fc_2)));
 
 			/*
 			qhat_np1.w = t1*q_hat.w   + t2*(          - p*q_hat.x - q*q_hat.y - r*q_hat.z);
@@ -310,10 +304,10 @@ void estimator_update( uint32_t time_now ) {
 							    };
 			*/
 
-			qdot.a = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(-p, q_hat.b), fix16_add(fix16_mul(-q, q_hat.c), fix16_mul(-r, q_hat.d))));
-			qdot.b = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(p, q_hat.a), fix16_add(fix16_mul(r, q_hat.c), fix16_mul(-q, q_hat.d))));
-			qdot.c = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(q, q_hat.a), fix16_add(fix16_mul(-r, q_hat.b), fix16_mul(p, q_hat.d))));
-			qdot.d = fix16_mul(CONST_ZERO_FIVE, fix16_add(fix16_mul(r, q_hat.a), fix16_add(fix16_mul(q, q_hat.b), fix16_mul(-p, q_hat.c))));
+			qdot.a = fix16_mul(_fc_0_5, fix16_add(fix16_mul(-p, q_hat.b), fix16_add(fix16_mul(-q, q_hat.c), fix16_mul(-r, q_hat.d))));
+			qdot.b = fix16_mul(_fc_0_5, fix16_add(fix16_mul(p, q_hat.a), fix16_add(fix16_mul(r, q_hat.c), fix16_mul(-q, q_hat.d))));
+			qdot.c = fix16_mul(_fc_0_5, fix16_add(fix16_mul(q, q_hat.a), fix16_add(fix16_mul(-r, q_hat.b), fix16_mul(p, q_hat.d))));
+			qdot.d = fix16_mul(_fc_0_5, fix16_add(fix16_mul(r, q_hat.a), fix16_add(fix16_mul(q, q_hat.b), fix16_mul(-p, q_hat.c))));
 
 			q_hat_temp.a = fix16_add(q_hat.a, fix16_mul(qdot.a, dt));
 			q_hat_temp.b = fix16_add(q_hat.b, fix16_mul(qdot.b, dt));

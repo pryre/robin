@@ -106,9 +106,9 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		mf16 I;
 		I.rows = 3;
 		I.columns = 3;
-		I.data[0][0] = CONST_ONE;
-		I.data[1][1] = CONST_ONE;
-		I.data[2][2] = CONST_ONE;
+		I.data[0][0] = _fc_1;
+		I.data[1][1] = _fc_1;
+		I.data[2][2] = _fc_1;
 
 		//Method derived from px4 attitude controller:
 		//DCM from for state and setpoint
@@ -187,7 +187,7 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 
 			mf16_mul_s(&e_R_cp_z_sin, &e_R_cp, e_R_z_sin);
 			mf16_mul(&e_R_cp_2, &e_R_cp, &e_R_cp);
-			mf16_mul_s(&e_R_cp_2, &e_R_cp_2, fix16_sub(CONST_ONE, e_R_z_cos));
+			mf16_mul_s(&e_R_cp_2, &e_R_cp_2, fix16_sub(_fc_1, e_R_z_cos));
 
 			mf16_add(&e_R_add_temp, &I, &e_R_cp_z_sin);
 			mf16_add(&e_R_add_temp, &e_R_add_temp, &e_R_cp_2);
@@ -229,21 +229,21 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 				temp_vec.y = q_error.c;
 				temp_vec.z = q_error.d;
 
-				v3d_mul_s(&e_R_d, &temp_vec, CONST_TWO);
+				v3d_mul_s(&e_R_d, &temp_vec, _fc_2);
 			} else {
 				v3d temp_vec;
 				temp_vec.x = -q_error.b;
 				temp_vec.y = -q_error.c;
 				temp_vec.z = -q_error.d;
 
-				v3d_mul_s(&e_R_d, &temp_vec, CONST_TWO);
+				v3d_mul_s(&e_R_d, &temp_vec, _fc_2);
 			}
 
 			//px4: use fusion of Z axis based rotation and direct rotation
 			fix16_t direct_w = fix16_mul(fix16_mul(e_R_z_cos, e_R_z_cos), yaw_w);
 
 			//px4: e_R = e_R * (1.0f - direct_w) + e_R_d * direct_w;
-			v3d_mul_s(&e_R, &e_R, fix16_sub(CONST_ONE, direct_w));
+			v3d_mul_s(&e_R, &e_R, fix16_sub(_fc_1, direct_w));
 			v3d_mul_s(&e_R_d, &e_R_d, direct_w);
 			v3d_add(&e_R, &e_R, &e_R_d);
 		}

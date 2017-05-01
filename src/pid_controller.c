@@ -51,7 +51,7 @@ fix16_t pid_step(pid_controller_t *pid, uint32_t time_now, fix16_t sp, fix16_t x
 	fix16_t dt = fix16_from_float((float)(time_now - pid->prev_time) * 1e-6);	//Delta time in milliseconds
 	pid->prev_time = time_now;
 
-	if(dt > CONST_ZERO_ZERO_ONE) {
+	if(dt > _fc_0_01) {
 		// This means that this is a ''stale'' controller and needs to be reset.
 		// This would happen if we have been operating in a different mode for a while
 		// and will result in some enormous integrator.
@@ -81,7 +81,7 @@ fix16_t pid_step(pid_controller_t *pid, uint32_t time_now, fix16_t sp, fix16_t x
 			if(!use_x_dot) {
 				//The dirty derivative is a sort of low-pass filtered version of the derivative.
 				// pid.x_dot = ((2.0f * pid.tau - dt) / (2.0f * pid.tau + dt) * pid.x_dot) + (2.0f / (2.0f * pid.tau + dt) * (pid.x - pid.prev_x));
-				pid->x_dot = fix16_add(fix16_mul(fix16_div(fix16_sub(fix16_mul(CONST_TWO, pid->tau), dt), fix16_add(fix16_mul(CONST_TWO, pid->tau), dt)), pid->x_dot), fix16_mul(fix16_div(CONST_TWO, fix16_add(fix16_mul(CONST_TWO, pid->tau), dt)), fix16_sub(pid->x, pid->prev_x)));
+				pid->x_dot = fix16_add(fix16_mul(fix16_div(fix16_sub(fix16_mul(_fc_2, pid->tau), dt), fix16_add(fix16_mul(_fc_2, pid->tau), dt)), pid->x_dot), fix16_mul(fix16_div(_fc_2, fix16_add(fix16_mul(_fc_2, pid->tau), dt)), fix16_sub(pid->x, pid->prev_x)));
 			} else {
 				pid->x_dot = x_dot;
 			}

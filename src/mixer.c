@@ -15,6 +15,8 @@
 #include "safety.h"
 #include "controller.h"
 
+#define FC_1 0x00010000
+
 control_output_t _control_output;
 system_status_t _system_status;
 
@@ -36,29 +38,29 @@ static mixer_t mixer_none = {
 static mixer_t mixer_quadcopter_plus = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
-	{ CONST_ONE, CONST_ONE, CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // F Mix
-	{-CONST_ONE, CONST_ONE, 0,         0,         0, 0, 0, 0}, // X Mix
-	{ 0,         0,        -CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // Y Mix
-	{ CONST_ONE, CONST_ONE,-CONST_ONE,-CONST_ONE, 0, 0, 0, 0}  // Z Mix
+	{ FC_1, FC_1, FC_1, FC_1, 0, 0, 0, 0}, // F Mix
+	{-FC_1, FC_1, 0,    0,    0, 0, 0, 0}, // X Mix
+	{ 0,    0,   -FC_1, FC_1, 0, 0, 0, 0}, // Y Mix
+	{ FC_1, FC_1,-FC_1,-FC_1, 0, 0, 0, 0}  // Z Mix
 };
 
 //TODO: Double check
 static mixer_t mixer_quadcopter_x = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
-	{ CONST_ONE, CONST_ONE, CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // F Mix
-	{-CONST_ONE, CONST_ONE, CONST_ONE,-CONST_ONE, 0, 0, 0, 0}, // X Mix
-	{ CONST_ONE,-CONST_ONE,-CONST_ONE, CONST_ONE, 0, 0, 0, 0}, // Y Mix
-	{ CONST_ONE, CONST_ONE,-CONST_ONE,-CONST_ONE, 0, 0, 0, 0}  // Z Mix
+	{ FC_1, FC_1, FC_1, FC_1, 0, 0, 0, 0}, // F Mix
+	{-FC_1, FC_1, FC_1,-FC_1, 0, 0, 0, 0}, // X Mix
+	{ FC_1,-FC_1,-FC_1, FC_1, 0, 0, 0, 0}, // Y Mix
+	{ FC_1, FC_1,-FC_1,-FC_1, 0, 0, 0, 0}  // Z Mix
 };
 
 static mixer_t mixer_plane_basic = {
 	{M, S, S, S, NONE, NONE, NONE, NONE}, // output_type
 
-	{ CONST_ONE, 0, 0, 0, 0, 0, 0, 0}, // F Mix
-	{ 0, CONST_ONE, 0, 0, 0, 0, 0, 0}, // X Mix
-	{ 0, 0, CONST_ONE, 0, 0, 0, 0, 0}, // Y Mix
-	{ 0, 0, 0, CONST_ONE, 0, 0, 0, 0}  // Z Mix
+	{ FC_1, 0, 0, 0, 0, 0, 0, 0}, // F Mix
+	{ 0, FC_1, 0, 0, 0, 0, 0, 0}, // X Mix
+	{ 0, 0, FC_1, 0, 0, 0, 0, 0}, // Y Mix
+	{ 0, 0, 0, FC_1, 0, 0, 0, 0}  // Z Mix
 
 	//TODO: Should double check this, but it would allow stabilize control with motor throughput and a servo out for ailerons, elevator and rudder
 };
@@ -210,7 +212,7 @@ void mixer_output() {
 								  fix16_add(fix16_mul(_control_output.r, mixer_to_use->x[i]),
 								  fix16_add(fix16_mul(_control_output.p, mixer_to_use->y[i]),
 								  fix16_mul(_control_output.y, mixer_to_use->z[i]))));
-			prescaled_outputs[i] = fix16_to_int(fix16_mul(thrust_calc, CONST_ONE_K));
+			prescaled_outputs[i] = fix16_to_int(fix16_mul(thrust_calc, _fc_1000));
 
 			//Note: Negitive PWM values can be calculated here, but will be saturated to 0pwm later
 

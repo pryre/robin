@@ -12,6 +12,7 @@
 
 #include "fix16.h"
 #include "fixvector3d.h"
+#include "fixextra.h"
 
 //Number of itterations of averaging to use with IMU calibrations
 #define SENSOR_CAL_IMU_PASSES 1000
@@ -98,7 +99,7 @@ void sensors_init(void) {
     mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
 	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
 
-	_sensors.imu.accel_scale = fix16_div(CONST_GRAVITY, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
+	_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
 	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 
 	sensors_cal_init();
