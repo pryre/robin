@@ -16,3 +16,4 @@ To Do:
    - This is assuming we don't use stop bits
    - This means we can send ~115 bytes per loop without any risk of a buffer overflow
    - As mavlink can have max messages of 250+ bytes, we want to send as little as possible each loop to allow catchup
+ - Note about how mavesp8266 does not work well in AP mode (too many dropped packets)
