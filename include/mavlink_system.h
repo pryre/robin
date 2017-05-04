@@ -1,7 +1,7 @@
 #pragma once
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
-#define LOW_PRIORITY_QUEUE_SIZE 8
+#define LOW_PRIORITY_QUEUE_SIZE 16
 
 #include "breezystm32.h"
 #include "serial.h"
@@ -20,7 +20,7 @@
    Lines also in your main.c, e.g. by reading these parameter from EEPROM.
  */
 
-extern serialPort_t * Serial2;
+//extern serialPort_t * Serial2;
 extern mavlink_system_t mavlink_system;
 
 void communications_system_init(void);
@@ -54,7 +54,7 @@ typedef struct {
 } mavlink_queue_t;
 
 extern mavlink_queue_t _lpq_port_0;
-extern mavlink_queue_t _lpq_port_1;
+//extern mavlink_queue_t _lpq_port_1;
 
 bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg);
 void lpq_queue_broadcast_msg(mavlink_message_t *msg);

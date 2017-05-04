@@ -29,9 +29,9 @@
    Lines also in your main.c, e.g. by reading these parameter from EEPROM.
  */
 
-serialPort_t * Serial2;
+//serialPort_t * Serial2;
 mavlink_queue_t _lpq_port_0;
-mavlink_queue_t _lpq_port_1;
+//mavlink_queue_t _lpq_port_1;
 
 mavlink_system_t mavlink_system;
 system_status_t _system_status;
@@ -55,11 +55,13 @@ void communications_system_init(void) {
 	_lpq_port_0.request_all_params = -1;
 	_lpq_port_0.timer_warn_full = 0;
 
+	/*
 	_lpq_port_1.port = MAVLINK_COMM_1;
 	_lpq_port_1.position = 0;
 	_lpq_port_1.length = 0;
 	_lpq_port_1.request_all_params = -1;
 	_lpq_port_1.timer_warn_full = 0;
+	*/
 }
 
 /**
@@ -71,8 +73,8 @@ void communications_system_init(void) {
 void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 	if (chan == MAVLINK_COMM_0) {
 		serialWrite(Serial1, ch);
-	} else if (chan == MAVLINK_COMM_1) {
-		serialWrite(Serial2, ch);
+	//} else if (chan == MAVLINK_COMM_1) {
+	//	serialWrite(Serial2, ch);
 	}
 }
 
@@ -88,8 +90,8 @@ void mavlink_send_broadcast_statustext(uint8_t severity, char* text) {
 	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
 		mavlink_send_statustext(MAVLINK_COMM_0, severity, text);
 
-	if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
-		mavlink_send_statustext(MAVLINK_COMM_1, severity, text);
+	//if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
+	//	mavlink_send_statustext(MAVLINK_COMM_1, severity, text);
 }
 
 void mavlink_send_timesync(uint8_t port, uint64_t tc1, uint64_t ts1) {
@@ -132,8 +134,8 @@ bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg) {
 
 	if( port == _lpq_port_0.port ) {
 		queue = &_lpq_port_0;
-	} else if( port == _lpq_port_1.port ) {
-		queue = &_lpq_port_1;
+	//} else if( port == _lpq_port_1.port ) {
+	//	queue = &_lpq_port_1;
 	}
 
 	if( check_lpq_space_free( queue ) && ( queue != NULL) ) {
@@ -170,8 +172,8 @@ void lpq_queue_broadcast_msg(mavlink_message_t *msg) {
 	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
 		lpq_queue_msg(MAVLINK_COMM_0, msg);
 
-	if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
-		lpq_queue_msg(MAVLINK_COMM_1, msg);
+	//if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
+	//	lpq_queue_msg(MAVLINK_COMM_1, msg);
 }
 
 void lpq_send(mavlink_queue_t* queue) {
@@ -194,11 +196,11 @@ void mavlink_stream_low_priority(uint8_t port) {
 			lpq_queue_all_params(&_lpq_port_0);
 
 		lpq_send(&_lpq_port_0);
-	} else if( port == _lpq_port_1.port ) {
-		if( _lpq_port_1.request_all_params >= 0 )
-			lpq_queue_all_params(&_lpq_port_1);
-
-		lpq_send(&_lpq_port_1);
+	//} else if( port == _lpq_port_1.port ) {
+	//	if( _lpq_port_1.request_all_params >= 0 )
+	//		lpq_queue_all_params(&_lpq_port_1);
+	//
+	//	lpq_send(&_lpq_port_1);
 	}
 }
 
@@ -232,7 +234,7 @@ void mavlink_stream_sys_status(uint8_t port) {
 	uint16_t drop_rate_comm = 0;
 	uint16_t errors_comm = 0;
 	uint16_t errors_count1 = _lpq_port_0.length;
-	uint16_t errors_count2 = _lpq_port_1.length;
+	uint16_t errors_count2 = 0;//_lpq_port_1.length;
 	uint16_t errors_count3 = _sensors.clock.min;
 	uint16_t errors_count4 = _sensors.clock.max;
 

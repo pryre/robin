@@ -372,11 +372,12 @@ void communication_receive(void) {
 		while( serialTotalRxBytesWaiting( Serial1 ) && ( (micros() - time_start_read ) < time_read_max ) )
 				communication_decode( MAVLINK_COMM_0, serialRead(Serial1) );
 
-	time_start_read = micros();
+	/*time_start_read = micros();
 
 	if( get_param_uint(PARAM_BAUD_RATE_1) > 0 )
 		while( serialTotalRxBytesWaiting( Serial2 ) && ( (micros() - time_start_read ) < time_read_max ) )
 				communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
+	*/
 
 	//TODO: Update global packet drops counter
 	//packet_drops += status.packet_rx_drop_count;

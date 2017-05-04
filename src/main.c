@@ -15,7 +15,7 @@
 #include "mavlink_transmit.h"
 
 serialPort_t * Serial1;
-serialPort_t * Serial2;
+//serialPort_t * Serial2;
 extern void SetSysClock(bool overclock);
 uint8_t _system_operation_control;
 
@@ -37,8 +37,8 @@ int main(void) {
 	if(get_param_uint(PARAM_BAUD_RATE_0) > 0)
 		Serial1 = uartOpen(USART1, NULL, get_param_uint(PARAM_BAUD_RATE_0), MODE_RXTX, SERIAL_NOT_INVERTED);
 
-	if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
-		Serial2 = uartOpen(USART2, NULL, get_param_uint(PARAM_BAUD_RATE_1), MODE_RXTX, SERIAL_NOT_INVERTED);
+	//if(get_param_uint(PARAM_BAUD_RATE_1) > 0)
+	//	Serial2 = uartOpen(USART2, NULL, get_param_uint(PARAM_BAUD_RATE_1), MODE_RXTX, SERIAL_NOT_INVERTED);
 
 	safety_request_state( MAV_STATE_STANDBY );
 

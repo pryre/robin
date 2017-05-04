@@ -71,7 +71,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_VERSION_FIRMWARE, "FW_VERSION", 1);
 	init_param_uint(PARAM_VERSION_SOFTWARE, "SW_VERSION", 1);
 	init_param_uint(PARAM_BAUD_RATE_0, "BAUD_RATE_0", 921600);	//Set baud rate to 0 to disable a comm port
-	init_param_uint(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//Set baud rate to 0 to disable a comm port
+	//init_param_uint(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//Set baud rate to 0 to disable a comm port
 	init_param_fix16(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));
 
 	//==-- Mavlink
@@ -87,7 +87,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0, "STRM0_SRV_OUT", 100000);
 	init_param_uint(PARAM_STREAM_RATE_TIMESYNC_0, "STRM0_TIMESYNC", 100000);
 	init_param_uint(PARAM_STREAM_RATE_LOW_PRIORITY_0, "STRM0_LPQ", 10000);
-
+	/*
 	init_param_uint(PARAM_STREAM_RATE_HEARTBEAT_1, "STRM1_HRTBT", 1000000);
 	init_param_uint(PARAM_STREAM_RATE_SYS_STATUS_1, "STRM1_SYS_STAT", 5000000);
 	init_param_uint(PARAM_STREAM_RATE_HIGHRES_IMU_1, "STRM1_HR_IMU", 10000);
@@ -97,7 +97,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1, "STRM1_SRV_OUT", 100000);
 	init_param_uint(PARAM_STREAM_RATE_TIMESYNC_1, "STRM1_TIMESYNC", 100000);
 	init_param_uint(PARAM_STREAM_RATE_LOW_PRIORITY_1, "STRM1_LPQ", 10000);
-
+	*/
 	//==-- Sensors
 	//All params here in us
 	//TODO: Double check which is used here
