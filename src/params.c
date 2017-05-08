@@ -7,6 +7,9 @@
 #include "mixer.h"
 #include "fix16.h"
 
+#include "controller.h"
+#include "pid_controller.h"
+
  //TODO: Only in here because of eeprom write problems
 #include "safety.h"
 #include "mavlink_system.h"
@@ -112,7 +115,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_SONAR_TIMEOUT, "TIMEOUT_SONAR", 20000);
 	init_param_uint(PARAM_SENSOR_MAG_TIMEOUT, "TIMEOUT_MAG", 20000);
 	init_param_uint(PARAM_SENSOR_OFFB_HRBT_TIMEOUT, "UPDATE_OB_HRBT", 5000000);
-	init_param_uint(PARAM_SENSOR_OFFB_CTRL_TIMEOUT, "TIMEOUT_OB_CTRL", 50000);
+	init_param_uint(PARAM_SENSOR_OFFB_CTRL_TIMEOUT, "TIMEOUT_OB_CTRL", 200000);
 
 	//==-- Estimator
 	init_param_uint(PARAM_INIT_TIME, "FILTER_INIT_T", 3000); // ms
@@ -195,47 +198,108 @@ bool write_params(void) {
 	return success;
 }
 
-
-void param_change_callback(param_id_t id)
-{
-	/* //TODO: Live update parameters
- switch (id)
- {
- case PARAM_SYSTEM_ID:
-  mavlink_system.sysid = get_param_int(PARAM_SYSTEM_ID);
-  break;
- case PARAM_STREAM_HEARTBEAT_RATE:
-  mavlink_stream_set_rate(MAVLINK_STREAM_ID_HEARTBEAT, get_param_int(PARAM_STREAM_HEARTBEAT_RATE));
-  break;
-
- case PARAM_STREAM_ATTITUDE_RATE:
-  mavlink_stream_set_rate(MAVLINK_STREAM_ID_ATTITUDE, get_param_int(PARAM_STREAM_ATTITUDE_RATE));
-  break;
-
- case PARAM_STREAM_IMU_RATE:
-  mavlink_stream_set_rate(MAVLINK_STREAM_ID_IMU, get_param_int(PARAM_STREAM_IMU_RATE));
-  break;
- case PARAM_STREAM_AIRSPEED_RATE:
-  mavlink_stream_set_rate(MAVLINK_STREAM_ID_DIFF_PRESSURE, get_param_int(PARAM_STREAM_AIRSPEED_RATE));
-  break;
- case PARAM_STREAM_SONAR_RATE:
-  mavlink_stream_set_rate(MAVLINK_STREAM_ID_SONAR, get_param_int(PARAM_STREAM_SONAR_RATE));
-  break;
- case PARAM_STREAM_BARO_RATE:
-  mavlink_stream_set_rate(MAVLINK_STREAM_ID_BARO, get_param_int(PARAM_STREAM_BARO_RATE));
-  break;
-
- case PARAM_STREAM_SERVO_OUTPUT_RAW_RATE:
-  mavlink_stream_set_rate(MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW, get_param_int(PARAM_STREAM_SERVO_OUTPUT_RAW_RATE));
-  break;
- case PARAM_STREAM_RC_RAW_RATE:
-  mavlink_stream_set_rate(MAVLINK_STREAM_ID_RC_RAW, get_param_int(PARAM_STREAM_RC_RAW_RATE));
-  break;
- default:
-  // no action needed for this parameter
-  break;
- }
-*/
+//TODO: Any more params need a callback to update?
+void param_change_callback(param_id_t id) {
+	switch(id) {
+		case PARAM_PID_ROLL_RATE_P:
+			pid_set_gains(&_pid_roll_rate,
+						  get_param_fix16(PARAM_PID_ROLL_RATE_P),
+						  get_param_fix16(PARAM_PID_ROLL_RATE_I),
+						  get_param_fix16(PARAM_PID_ROLL_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_PID_ROLL_RATE_I:
+			pid_set_gains(&_pid_roll_rate,
+						  get_param_fix16(PARAM_PID_ROLL_RATE_P),
+						  get_param_fix16(PARAM_PID_ROLL_RATE_I),
+						  get_param_fix16(PARAM_PID_ROLL_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_PID_ROLL_RATE_D:
+			pid_set_gains(&_pid_roll_rate,
+						  get_param_fix16(PARAM_PID_ROLL_RATE_P),
+						  get_param_fix16(PARAM_PID_ROLL_RATE_I),
+						  get_param_fix16(PARAM_PID_ROLL_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_PID_PITCH_RATE_P:
+			pid_set_gains(&_pid_pitch_rate,
+						  get_param_fix16(PARAM_PID_PITCH_RATE_P),
+						  get_param_fix16(PARAM_PID_PITCH_RATE_I),
+						  get_param_fix16(PARAM_PID_PITCH_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_PID_PITCH_RATE_I:
+			pid_set_gains(&_pid_pitch_rate,
+						  get_param_fix16(PARAM_PID_PITCH_RATE_P),
+						  get_param_fix16(PARAM_PID_PITCH_RATE_I),
+						  get_param_fix16(PARAM_PID_PITCH_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_PID_PITCH_RATE_D:
+			pid_set_gains(&_pid_pitch_rate,
+						  get_param_fix16(PARAM_PID_PITCH_RATE_P),
+						  get_param_fix16(PARAM_PID_PITCH_RATE_I),
+						  get_param_fix16(PARAM_PID_PITCH_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_PID_YAW_RATE_P:
+			pid_set_gains(&_pid_yaw_rate,
+						  get_param_fix16(PARAM_PID_YAW_RATE_P),
+						  get_param_fix16(PARAM_PID_YAW_RATE_I),
+						  get_param_fix16(PARAM_PID_YAW_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_PID_YAW_RATE_I:
+			pid_set_gains(&_pid_yaw_rate,
+						  get_param_fix16(PARAM_PID_YAW_RATE_P),
+						  get_param_fix16(PARAM_PID_YAW_RATE_I),
+						  get_param_fix16(PARAM_PID_YAW_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_PID_YAW_RATE_D:
+			pid_set_gains(&_pid_yaw_rate,
+						  get_param_fix16(PARAM_PID_YAW_RATE_P),
+						  get_param_fix16(PARAM_PID_YAW_RATE_I),
+						  get_param_fix16(PARAM_PID_YAW_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_PID_TAU:
+			pid_set_gains(&_pid_roll_rate,
+						  get_param_fix16(PARAM_PID_ROLL_RATE_P),
+						  get_param_fix16(PARAM_PID_ROLL_RATE_I),
+						  get_param_fix16(PARAM_PID_ROLL_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gains(&_pid_pitch_rate,
+						  get_param_fix16(PARAM_PID_PITCH_RATE_P),
+						  get_param_fix16(PARAM_PID_PITCH_RATE_I),
+						  get_param_fix16(PARAM_PID_PITCH_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gains(&_pid_yaw_rate,
+						  get_param_fix16(PARAM_PID_YAW_RATE_P),
+						  get_param_fix16(PARAM_PID_YAW_RATE_I),
+						  get_param_fix16(PARAM_PID_YAW_RATE_D),
+						  get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_MAX_ROLL_RATE:
+			pid_set_min_max(&_pid_roll_rate,
+							-get_param_fix16(PARAM_MAX_ROLL_RATE),
+							get_param_fix16(PARAM_MAX_ROLL_RATE));
+			break;
+		case PARAM_MAX_PITCH_RATE:
+			pid_set_min_max(&_pid_pitch_rate,
+							-get_param_fix16(PARAM_MAX_PITCH_RATE),
+							get_param_fix16(PARAM_MAX_PITCH_RATE));
+			break;
+		case PARAM_MAX_YAW_RATE:
+			pid_set_min_max(&_pid_yaw_rate,
+							-get_param_fix16(PARAM_MAX_YAW_RATE),
+							get_param_fix16(PARAM_MAX_YAW_RATE));
+			break;
+		default:
+			// no action needed for this parameter
+			break;
+	}
 }
 
 param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]) {
