@@ -207,17 +207,22 @@ void mixer_output() {
 								+ (_control_output.y * mixer_to_use.z[i]);
 			prescaled_outputs[i] = (int32_t)(thrust_calc * 1000.0f);
 			*/
-			fix16_t thrust_calc = fix16_mul(fix16_mul(_control_output.T, mixer_to_use->T[i]),
-											fix16_add(_fc_1,
-											fix16_add(fix16_mul(_control_output.r, mixer_to_use->x[i]),
-											fix16_add(fix16_mul(_control_output.p, mixer_to_use->y[i]),
-													  fix16_mul(_control_output.y, mixer_to_use->z[i])))));
+			fix16_t thrust_calc = fix16_add(fix16_mul(_control_output.T, mixer_to_use->T[i]),
+								  fix16_add(fix16_mul(_control_output.r, mixer_to_use->x[i]),
+								  fix16_add(fix16_mul(_control_output.p, mixer_to_use->y[i]),
+											fix16_mul(_control_output.y, mixer_to_use->z[i]))));
+
 			prescaled_outputs[i] = fix16_to_int(fix16_mul(thrust_calc, _fc_1000));
+			//Note: Negitive PWM values could be calculated here, but will be saturated to 0pwm later
 
-			//Note: Negitive PWM values can be calculated here, but will be saturated to 0pwm later
+			if( mixer_to_use->output_type[i] == M ) {
+				if( prescaled_outputs[i] > max_output )
+					max_output = prescaled_outputs[i];
 
-			if( (mixer_to_use->output_type[i] == M) && ( prescaled_outputs[i] > max_output ) )
-				max_output = prescaled_outputs[i];
+				//If the thrust is 0, zero motor outputs, as we don't want any thrust at all for safety
+				if( _control_output.T <= 0 )
+					prescaled_outputs[i] = 0;
+			}
 		}
 	}
 
