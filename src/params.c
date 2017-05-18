@@ -109,6 +109,14 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_SONAR_UPDATE, "UPDATE_SONAR", 0);
 	init_param_uint(PARAM_SENSOR_MAG_UPDATE, "UPDATE_MAG", 0);
 
+	init_param_uint(PARAM_SENSOR_IMU_STRM_COUNT, "STRM_NUM_IMU", 1000);
+	init_param_uint(PARAM_SENSOR_DIFF_PRESS_STRM_COUNT, "STRM_NUM_PRESS", 50);
+	init_param_uint(PARAM_SENSOR_BARO_STRM_COUNT, "STRM_NUM_BARO", 50);
+	init_param_uint(PARAM_SENSOR_SONAR_STRM_COUNT, "STRM_NUM_SONAR", 50);
+	init_param_uint(PARAM_SENSOR_MAG_STRM_COUNT, "STRM_NUM_MAG", 50);
+	init_param_uint(PARAM_SENSOR_OFFB_HRBT_STRM_COUNT, "STRM_NUM_OB_H", 2);
+	init_param_uint(PARAM_SENSOR_OFFB_CTRL_STRM_COUNT, "STRM_NUM_OB_C", 100);
+
 	init_param_uint(PARAM_SENSOR_IMU_TIMEOUT, "TIMEOUT_IMU", 2000);
 	init_param_uint(PARAM_SENSOR_DIFF_PRESS_TIMEOUT, "TIMEOUT_DIFF_P", 20000);
 	init_param_uint(PARAM_SENSOR_BARO_TIMEOUT, "TIMEOUT_BARO", 20000);
@@ -126,7 +134,6 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_FILTER_KI, "FILTER_KI", fix16_from_float(0.05f));
 	init_param_fix16(PARAM_GYRO_ALPHA, "GYRO_LPF_ALPHA", fix16_from_float(0.6f));
 	init_param_fix16(PARAM_ACC_ALPHA, "ACC_LPF_ALPHA", fix16_from_float(0.6f));
-	init_param_int(PARAM_STREAM_ADJUSTED_GYRO, "STRM_ADJST_GYRO", 0);	//TODO: This variable is unused
 	init_param_int(PARAM_GYRO_X_BIAS, "GYRO_X_BIAS", 0);
 	init_param_int(PARAM_GYRO_Y_BIAS, "GYRO_Y_BIAS", 0);
 	init_param_int(PARAM_GYRO_Z_BIAS, "GYRO_Z_BIAS", 0);
@@ -138,14 +145,14 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_ACC_Z_TEMP_COMP, "ACC_Z_TEMP_COMP", fix16_from_float(0.0f));
 
 	//==-- Control
-	init_param_fix16(PARAM_PID_ROLL_RATE_P, "PID_ROLL_R_P", fix16_from_float(0.15f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_I, "PID_ROLL_R_I", fix16_from_float(0.05f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_D, "PID_ROLL_R_D", fix16_from_float(0.003f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_P, "PID_ROLL_R_P", fix16_from_float(0.05f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_I, "PID_ROLL_R_I", fix16_from_float(0.0f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_D, "PID_ROLL_R_D", fix16_from_float(0.005f));
 	init_param_fix16(PARAM_MAX_ROLL_RATE, "MAX_ROLL_R", fix16_from_float(3.14159f));
 
-	init_param_fix16(PARAM_PID_PITCH_RATE_P, "PID_PITCH_R_P", fix16_from_float(0.15f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_I, "PID_PITCH_R_I", fix16_from_float(0.05f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_D, "PID_PITCH_R_D", fix16_from_float(0.003f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_P, "PID_PITCH_R_P", fix16_from_float(0.05f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_I, "PID_PITCH_R_I", fix16_from_float(0.00f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_D, "PID_PITCH_R_D", fix16_from_float(0.005f));
 	init_param_fix16(PARAM_MAX_PITCH_RATE, "MAX_PITCH_R", fix16_from_float(3.14159f));
 
 	init_param_fix16(PARAM_PID_YAW_RATE_P, "PID_YAW_R_P", fix16_from_float(0.2f));
@@ -202,84 +209,36 @@ bool write_params(void) {
 void param_change_callback(param_id_t id) {
 	switch(id) {
 		case PARAM_PID_ROLL_RATE_P:
-			pid_set_gains(&_pid_roll_rate,
-						  get_param_fix16(PARAM_PID_ROLL_RATE_P),
-						  get_param_fix16(PARAM_PID_ROLL_RATE_I),
-						  get_param_fix16(PARAM_PID_ROLL_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));
 			break;
 		case PARAM_PID_ROLL_RATE_I:
-			pid_set_gains(&_pid_roll_rate,
-						  get_param_fix16(PARAM_PID_ROLL_RATE_P),
-						  get_param_fix16(PARAM_PID_ROLL_RATE_I),
-						  get_param_fix16(PARAM_PID_ROLL_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_i(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_I));
 			break;
 		case PARAM_PID_ROLL_RATE_D:
-			pid_set_gains(&_pid_roll_rate,
-						  get_param_fix16(PARAM_PID_ROLL_RATE_P),
-						  get_param_fix16(PARAM_PID_ROLL_RATE_I),
-						  get_param_fix16(PARAM_PID_ROLL_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));
 			break;
 		case PARAM_PID_PITCH_RATE_P:
-			pid_set_gains(&_pid_pitch_rate,
-						  get_param_fix16(PARAM_PID_PITCH_RATE_P),
-						  get_param_fix16(PARAM_PID_PITCH_RATE_I),
-						  get_param_fix16(PARAM_PID_PITCH_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));
 			break;
 		case PARAM_PID_PITCH_RATE_I:
-			pid_set_gains(&_pid_pitch_rate,
-						  get_param_fix16(PARAM_PID_PITCH_RATE_P),
-						  get_param_fix16(PARAM_PID_PITCH_RATE_I),
-						  get_param_fix16(PARAM_PID_PITCH_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_i(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_I));
 			break;
 		case PARAM_PID_PITCH_RATE_D:
-			pid_set_gains(&_pid_pitch_rate,
-						  get_param_fix16(PARAM_PID_PITCH_RATE_P),
-						  get_param_fix16(PARAM_PID_PITCH_RATE_I),
-						  get_param_fix16(PARAM_PID_PITCH_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));
 			break;
 		case PARAM_PID_YAW_RATE_P:
-			pid_set_gains(&_pid_yaw_rate,
-						  get_param_fix16(PARAM_PID_YAW_RATE_P),
-						  get_param_fix16(PARAM_PID_YAW_RATE_I),
-						  get_param_fix16(PARAM_PID_YAW_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_p(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_P));
 			break;
 		case PARAM_PID_YAW_RATE_I:
-			pid_set_gains(&_pid_yaw_rate,
-						  get_param_fix16(PARAM_PID_YAW_RATE_P),
-						  get_param_fix16(PARAM_PID_YAW_RATE_I),
-						  get_param_fix16(PARAM_PID_YAW_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_i(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_I));
 			break;
 		case PARAM_PID_YAW_RATE_D:
-			pid_set_gains(&_pid_yaw_rate,
-						  get_param_fix16(PARAM_PID_YAW_RATE_P),
-						  get_param_fix16(PARAM_PID_YAW_RATE_I),
-						  get_param_fix16(PARAM_PID_YAW_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_d(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_D));
 			break;
 		case PARAM_PID_TAU:
-			pid_set_gains(&_pid_roll_rate,
-						  get_param_fix16(PARAM_PID_ROLL_RATE_P),
-						  get_param_fix16(PARAM_PID_ROLL_RATE_I),
-						  get_param_fix16(PARAM_PID_ROLL_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
-			pid_set_gains(&_pid_pitch_rate,
-						  get_param_fix16(PARAM_PID_PITCH_RATE_P),
-						  get_param_fix16(PARAM_PID_PITCH_RATE_I),
-						  get_param_fix16(PARAM_PID_PITCH_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
-			pid_set_gains(&_pid_yaw_rate,
-						  get_param_fix16(PARAM_PID_YAW_RATE_P),
-						  get_param_fix16(PARAM_PID_YAW_RATE_I),
-						  get_param_fix16(PARAM_PID_YAW_RATE_D),
-						  get_param_fix16(PARAM_PID_TAU));
+				pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));
+				pid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));
+				pid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));
 			break;
 		case PARAM_MAX_ROLL_RATE:
 			pid_set_min_max(&_pid_roll_rate,

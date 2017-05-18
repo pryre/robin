@@ -70,26 +70,36 @@ void safety_init() {
 	_system_status.sensors.imu.health = SYSTEM_HEALTH_UNKNOWN;
 	_system_status.sensors.imu.last_read = 0;
 	_system_status.sensors.imu.count = 0;
+	_system_status.sensors.imu.param_stream_count = PARAM_SENSOR_IMU_STRM_COUNT;
+	_system_status.sensors.imu.param_timeout = PARAM_SENSOR_IMU_TIMEOUT;
 	strncpy(_system_status.sensors.imu.name, "IMU", 24);
 
 	_system_status.sensors.mag.health = SYSTEM_HEALTH_UNKNOWN;
 	_system_status.sensors.mag.last_read = 0;
 	_system_status.sensors.mag.count = 0;
+	_system_status.sensors.mag.param_stream_count = PARAM_SENSOR_MAG_STRM_COUNT;
+	_system_status.sensors.mag.param_timeout = PARAM_SENSOR_MAG_TIMEOUT;
 	strncpy(_system_status.sensors.mag.name, "Magnatometer", 24);
 
 	_system_status.sensors.sonar.health = SYSTEM_HEALTH_UNKNOWN;
 	_system_status.sensors.sonar.last_read = 0;
 	_system_status.sensors.sonar.count = 0;
+	_system_status.sensors.sonar.param_stream_count = PARAM_SENSOR_SONAR_STRM_COUNT;
+	_system_status.sensors.sonar.param_timeout = PARAM_SENSOR_SONAR_TIMEOUT;
 	strncpy(_system_status.sensors.sonar.name, "Sonar", 24);
 
 	_system_status.sensors.offboard_heartbeat.health = SYSTEM_HEALTH_UNKNOWN;
 	_system_status.sensors.offboard_heartbeat.last_read = 0;
 	_system_status.sensors.offboard_heartbeat.count = 0;
+	_system_status.sensors.offboard_heartbeat.param_stream_count = PARAM_SENSOR_OFFB_HRBT_STRM_COUNT;
+	_system_status.sensors.offboard_heartbeat.param_timeout = PARAM_SENSOR_OFFB_HRBT_TIMEOUT;
 	strncpy(_system_status.sensors.offboard_heartbeat.name, "Offboard Heartbeat", 24);
 
 	_system_status.sensors.offboard_control.health = SYSTEM_HEALTH_UNKNOWN;
 	_system_status.sensors.offboard_control.last_read = 0;
 	_system_status.sensors.offboard_control.count = 0;
+	_system_status.sensors.offboard_control.param_stream_count = PARAM_SENSOR_OFFB_CTRL_STRM_COUNT;
+	_system_status.sensors.offboard_control.param_timeout = PARAM_SENSOR_OFFB_CTRL_TIMEOUT;
 	strncpy(_system_status.sensors.offboard_control.name, "Offboard Control", 24);
 
 	_new_safety_button_press = false;
@@ -304,7 +314,32 @@ bool safety_request_arm(void) {
 			strncpy(text_reason,
 					 "sensor error",
 					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			//TODO: Feedback on specific sensor
+
+			if(!_sensors.imu.status.present || (_system_status.sensors.imu.health != SYSTEM_HEALTH_OK) ){
+				strncpy(text_reason,
+						 " (IMU)",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else if(!_sensors.mag.status.present || (_system_status.sensors.mag.health != SYSTEM_HEALTH_OK) ) {
+				strncpy(text_reason,
+						 " (mag)",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else if(!_sensors.sonar.status.present || (_system_status.sensors.sonar.health != SYSTEM_HEALTH_OK) ) {
+				strncpy(text_reason,
+						 " (sonar)",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else if(_system_status.sensors.offboard_heartbeat.health != SYSTEM_HEALTH_OK) {
+				strncpy(text_reason,
+						 " (offb_hrbt)",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else if(_system_status.sensors.offboard_control.health != SYSTEM_HEALTH_OK) {
+				strncpy(text_reason,
+						 " (offb_ctrl)",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else {
+				strncpy(text_reason,
+						 " (unkown)",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			}
 		} else if( _system_status.state != MAV_STATE_STANDBY ) {
 			strncpy(text_reason,
 					 "mav cannot arm in current state: ",
@@ -400,11 +435,11 @@ static void status_led_update(void) {
 	status_led_do_pulse(&_status_led_green);
 }
 
-void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count ) {
+void safety_update_sensor( timeout_status_t *sensor ) {
 	sensor->last_read = micros();
 	sensor->count++;
 
-	if( ( sensor->health == SYSTEM_HEALTH_TIMEOUT ) && ( sensor->count > stream_count ) ) {
+	if( ( sensor->health == SYSTEM_HEALTH_TIMEOUT ) && ( sensor->count > get_param_uint(sensor->param_stream_count) ) ) {
 		sensor->health = SYSTEM_HEALTH_OK;
 
 		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Connected: ";
@@ -416,8 +451,8 @@ void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count ) {
 	}
 }
 
-static void safety_check_sensor( timeout_status_t *sensor, uint32_t time_now, uint32_t timeout ) {
-	if( ( sensor->health == SYSTEM_HEALTH_OK ) && ( ( time_now - sensor->last_read ) > timeout ) ) {
+static void safety_check_sensor( timeout_status_t *sensor, uint32_t time_now ) {
+	if( ( sensor->health == SYSTEM_HEALTH_OK ) && ( ( time_now - sensor->last_read ) > get_param_uint(sensor->param_timeout) ) ) {
 		sensor->health = SYSTEM_HEALTH_TIMEOUT;
 		sensor->count = 0;
 
@@ -494,7 +529,9 @@ static void system_state_update(void) {
 }
 
 static void safety_health_update(uint32_t time_now) {
-	if( ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) &&
+	if( ( !_sensors.imu.status.present || ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) ) &&
+	  ( !_sensors.mag.status.present || ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) ) &&
+	  ( !_sensors.sonar.status.present || ( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) ) &&
 	  ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
 	  ( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) ) {
 		_system_status.health = SYSTEM_HEALTH_OK;
@@ -505,13 +542,11 @@ static void safety_health_update(uint32_t time_now) {
 
 void safety_run( uint32_t time_now ) {
 	//Check sensors to ensure they are operating correctly
-	safety_check_sensor( &_system_status.sensors.imu, time_now, get_param_uint(PARAM_SENSOR_IMU_TIMEOUT) );
-	safety_check_sensor( &_system_status.sensors.offboard_heartbeat, time_now, get_param_uint(PARAM_SENSOR_OFFB_HRBT_TIMEOUT) );
-	safety_check_sensor( &_system_status.sensors.offboard_control, time_now, get_param_uint(PARAM_SENSOR_OFFB_CTRL_TIMEOUT) );
-	//TODO: Check timeouts for:
-		//Compass
-		//Sonar
-		//Anything else?
+	safety_check_sensor( &_system_status.sensors.imu, time_now );
+	safety_check_sensor( &_system_status.sensors.mag, time_now );
+	safety_check_sensor( &_system_status.sensors.sonar, time_now );
+	safety_check_sensor( &_system_status.sensors.offboard_heartbeat, time_now );
+	safety_check_sensor( &_system_status.sensors.offboard_control, time_now );
 
 	//Update the overall system health based on the individual sensors
 	safety_health_update(time_now);

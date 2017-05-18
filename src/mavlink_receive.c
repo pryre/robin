@@ -26,11 +26,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 		// Handle message
 		switch(msg.msgid) {
 			case MAVLINK_MSG_ID_HEARTBEAT: {
-				//TODO: Log to make keep track of connected systems status'
-				//LED0_TOGGLE;
-				// E.g. read GCS heartbeat and go into
-				// comm lost mode if timer times out
-				safety_update_sensor(&_system_status.sensors.offboard_heartbeat, 2);	//TODO: Use params here
+				safety_update_sensor(&_system_status.sensors.offboard_heartbeat);
 
 				break;
 			}
@@ -80,8 +76,6 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					mavlink_msg_param_set_get_param_id(&msg, param_id);
 					param_id_t index = lookup_param_id(param_id);
 
-					//TODO: Remember to mention in docs that the sent dat is entered as the type, regardless of what type it should be
-					//TODO: Should probably have a safetly check for this though
 					if(index < PARAMS_COUNT) { //If the ID is valid
 						if( mavlink_msg_param_set_get_param_type(&msg) == get_param_type(index) ) {
 							switch(mavlink_msg_param_set_get_param_type(&msg)) {
@@ -119,6 +113,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 									break;
 							}
 						} else {
+							//XXX: This may be caused if a GCS sends a UINT32 param as INT32
 							mavlink_queue_broadcast_error("[PARAM] Paramater type mismatch!");
 						}
 					}
@@ -141,28 +136,33 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 				switch(command) {
 					case MAV_CMD_PREFLIGHT_CALIBRATION: {
-						if( safety_request_state( MAV_STATE_CALIBRATING ) ) {
-							if((int)mavlink_msg_command_long_get_param1(&msg))
+						if(_system_status.state == MAV_STATE_CALIBRATING) {	//XXX: Only allow one calibration request at a time
+							command_result = MAV_RESULT_TEMPORARILY_REJECTED;
+						} else if( safety_request_state( MAV_STATE_CALIBRATING ) ) {
+							if( (int)mavlink_msg_command_long_get_param1(&msg) )
 								_sensor_calibration |= SENSOR_CAL_GYRO;
 
-							if((int)mavlink_msg_command_long_get_param2(&msg))
+							if( (int)mavlink_msg_command_long_get_param2(&msg) )
 								_sensor_calibration |= SENSOR_CAL_MAG;
 
-							if((int)mavlink_msg_command_long_get_param3(&msg))
+							if( (int)mavlink_msg_command_long_get_param3(&msg) )
 								_sensor_calibration |= SENSOR_CAL_BARO;
 
-							if((int)mavlink_msg_command_long_get_param4(&msg))
+							if( (int)mavlink_msg_command_long_get_param4(&msg) )
 								_sensor_calibration |= SENSOR_CAL_RC;
 
-							if((int)mavlink_msg_command_long_get_param5(&msg))
+							if( (int)mavlink_msg_command_long_get_param5(&msg) )
 								_sensor_calibration |= SENSOR_CAL_ACCEL;
 
-							if((int)mavlink_msg_command_long_get_param6(&msg))
+							if( (int)mavlink_msg_command_long_get_param6(&msg) )
 								_sensor_calibration |= SENSOR_CAL_INTER;
+
+							command_result = MAV_RESULT_ACCEPTED;
 						} else {	//We send the denied immidiately if we can't do it now
 							command_result = MAV_RESULT_DENIED;
-							need_ack = true;
 						}
+
+						need_ack = true;
 
 
 						break;
@@ -272,7 +272,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				if( (mavlink_msg_set_attitude_target_get_target_system(&msg) == mavlink_system.sysid) &&
 					(mavlink_msg_set_attitude_target_get_target_system(&msg) == mavlink_system.compid) ) {
 
-					//TODO: Check timestamp was recent
+					//TODO: Check timestamp was recent before accepting
 
 					//Input Mask
 					_command_input.input_mask = mavlink_msg_set_attitude_target_get_type_mask(&msg);
@@ -298,7 +298,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
 
 					//Update Sensor
-					safety_update_sensor(&_system_status.sensors.offboard_control, 100);	//TODO: Use params here
+					safety_update_sensor(&_system_status.sensors.offboard_control);
 				}
 
 				break;

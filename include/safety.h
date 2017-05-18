@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include "mavlink/mavlink_types.h"
+#include "params.h"
 
 #define MAV_STATE_NUM_STATES (8 + 1)
 #define MAV_STATE_NAME_LEN 10
@@ -21,6 +22,8 @@ typedef struct {
 	uint8_t health;	//Set with safety_health_t
 	uint32_t last_read;
 	uint32_t count;
+	param_id_t param_stream_count;
+	param_id_t param_timeout;
 	char name[25];
 } timeout_status_t;
 
@@ -100,7 +103,7 @@ bool safety_request_disarm( void );
 void status_buzzer_success( void );
 void status_buzzer_failure( void );
 
-void safety_update_sensor( timeout_status_t *sensor, uint32_t stream_count);
+void safety_update_sensor( timeout_status_t *sensor);
 
 void safety_run( uint32_t time_now );
 

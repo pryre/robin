@@ -266,11 +266,14 @@ static bool sensors_calibrate(void) {
 		_sensor_calibration ^= SENSOR_CAL_INTER;
 	}
 
+
+	//TODO: HERE!
+	//TODO: Need to broadcast where calibration starts and when it ends
 	//If there are no longer any sensors to calibrate
 	if(_sensor_calibration == SENSOR_CAL_NONE) {
 		mavlink_message_t msg;
 		mavlink_prepare_command_ack(&msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_ACCEPTED);
-		lpq_queue_msg(MAVLINK_COMM_0, &msg);	//TODO: Select correct port
+		lpq_queue_broadcast_msg(&msg);
 	}
 
 	return !_sensor_calibration;
@@ -310,7 +313,7 @@ bool sensors_update(uint32_t time_us) {
 	_sensors.imu.status.time_read = sensors_clock_imu_int_get();
 	_sensors.imu.status.new_data = true;
 
-	safety_update_sensor(&_system_status.sensors.imu, 1000);	//TODO: Use params here
+	safety_update_sensor(&_system_status.sensors.imu);
 
 	//==-- Safety Button
 	bool safety_button_reading = false;

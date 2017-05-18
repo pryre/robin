@@ -13,11 +13,27 @@ void pid_reset(pid_controller_t *pid, fix16_t prev_x) {
 	pid->prev_x = prev_x;
 }
 
-void pid_set_gains(pid_controller_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t tau) {
+void pid_set_gain_p(pid_controller_t *pid, fix16_t kp) {
 	pid->kp = kp;
+}
+
+void pid_set_gain_i(pid_controller_t *pid, fix16_t ki) {
 	pid->ki = ki;
+}
+
+void pid_set_gain_d(pid_controller_t *pid, fix16_t kd) {
 	pid->kd = kd;
+}
+
+void pid_set_gain_tau(pid_controller_t *pid, fix16_t tau) {
 	pid->tau = tau;
+}
+
+void pid_set_gains(pid_controller_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t tau) {
+	pid_set_gain_p(pid, kp);
+	pid_set_gain_i(pid, ki);
+	pid_set_gain_d(pid, kd);
+	pid_set_gain_tau(pid, tau);
 }
 
 void pid_set_min_max(pid_controller_t *pid, fix16_t min, fix16_t max) {
@@ -99,7 +115,6 @@ fix16_t pid_step(pid_controller_t *pid, uint32_t time_now, fix16_t sp, fix16_t x
 		}
 	}
 
-	//TODO: May have to be "- d_term"
 	//Sum three terms: u = p_term + i_term - d_term
 	fix16_t u = fix16_add( p_term, fix16_sub( i_term, d_term ) );
 

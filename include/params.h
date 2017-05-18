@@ -53,6 +53,14 @@ typedef enum {
 	PARAM_SENSOR_SONAR_UPDATE,
 	PARAM_SENSOR_MAG_UPDATE,
 
+	PARAM_SENSOR_IMU_STRM_COUNT,
+	PARAM_SENSOR_DIFF_PRESS_STRM_COUNT,
+	PARAM_SENSOR_BARO_STRM_COUNT,
+	PARAM_SENSOR_SONAR_STRM_COUNT,
+	PARAM_SENSOR_MAG_STRM_COUNT,
+	PARAM_SENSOR_OFFB_HRBT_STRM_COUNT,
+	PARAM_SENSOR_OFFB_CTRL_STRM_COUNT,
+
 	PARAM_SENSOR_IMU_TIMEOUT,
 	PARAM_SENSOR_DIFF_PRESS_TIMEOUT,
 	PARAM_SENSOR_BARO_TIMEOUT,
@@ -70,7 +78,6 @@ typedef enum {
 	PARAM_FILTER_KI,
 	PARAM_GYRO_ALPHA,
 	PARAM_ACC_ALPHA,
-	PARAM_STREAM_ADJUSTED_GYRO,
 	PARAM_GYRO_X_BIAS,
 	PARAM_GYRO_Y_BIAS,
 	PARAM_GYRO_Z_BIAS,
@@ -141,121 +148,25 @@ typedef struct {
 extern params_t _params;
 
 // function declarations
-
-/**
- * @brief Initialize parameter values
- */
 void init_params(void);
-
-/**
- * @brief Set all parameters to default values
- */
 void set_param_defaults(void);
 
-/**
- * @brief Read parameter values from non-volatile memory
- * @return True if successful, false otherwise
- */
 bool read_params(void);
-
-/**
- * @brief Write current parameter values to non-volatile memory
- * @return True if successful, false otherwise
- */
 bool write_params(void);
-
-/**
- * @brief Callback for executing actions that need to be taken when a parameter value changes
- * @param id The ID of the parameter that was changed
- */
 void param_change_callback(param_id_t id);
 
-/**
- * @brief Gets the id of a parameter from its name
- * @param name The name of the parameter
- * @return The ID of the parameter if the name is valid, PARAMS_COUNT otherwise (invalid ID)
- */
+mavlink_message_type_t get_param_type(param_id_t id);
+void get_param_name(param_id_t id, char *name);
 param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]);
 
-/**
- * @brief Get the value of an integer parameter by id
- * @param id The ID of the parameter
- * @return The value of the parameter
- */
 uint32_t get_param_uint(param_id_t id);
-
-/**
- * @brief Get the value of an integer parameter by id
- * @param id The ID of the parameter
- * @return The value of the parameter
- */
 int32_t get_param_int(param_id_t id);
-
-/**
- * @brief Get the value of a fixed point parameter by id
- * @param id The ID of the parameter
- * @return The value of the parameter
- */
 fix16_t get_param_fix16(param_id_t id);
 
-/**
- * @brief Get the name of a parameter
- * @param id The ID of the parameter
- * @return The name of the parameter
- */
-void get_param_name(param_id_t id, char *name);
-
-/**
- * @brief Get the type of a parameter
- * @param id The ID of the parameter
- * @return The type of the parameter
- */
-mavlink_message_type_t get_param_type(param_id_t id);
-
-/**
- * @brief Sets the value of a parameter by ID and calls the parameter change callback
- * @param id The ID of the parameter
- * @param value The new value
- * @return True if a parameter value was changed, false otherwise
- */
-bool set_param_int(param_id_t id, int32_t value);
-
-/**
- * @brief Sets the value of a parameter by ID and calls the parameter change callback
- * @param id The ID of the parameter
- * @param value The new value
- * @return True if a parameter value was changed, false otherwise
- */
 bool set_param_uint(param_id_t id, uint32_t value);
-
-/**
- * @brief Sets the value of a fixed point parameter by ID and calls the parameter callback
- * @param id The ID of the parameter
- * @param value The new value
- * @return  True if a parameter was changed, false otherwise
- */
+bool set_param_int(param_id_t id, int32_t value);
 bool set_param_fix16(param_id_t id, fix16_t value);
 
-/**
- * @brief Sets the value of a parameter by name and calls the parameter change callback
- * @param name The name of the parameter
- * @param value The new value
- * @return True if a parameter value was changed, false otherwise
- */
 bool set_param_by_name_uint(const char name[PARAMS_NAME_LENGTH], uint32_t value);
-
-/**
- * @brief Sets the value of a parameter by name and calls the parameter change callback
- * @param name The name of the parameter
- * @param value The new value
- * @return True if a parameter value was changed, false otherwise
- */
 bool set_param_by_name_int(const char name[PARAMS_NAME_LENGTH], int32_t value);
-
-/**
- * @brief Sets the value of a fixed point parameter by name and calls the parameter change callback
- * @param name The name of the parameter
- * @param value The new value
- * @return True if a parameter value was changed, false otherwise
- */
 bool set_param_by_name_fix16(const char name[PARAMS_NAME_LENGTH], fix16_t value);
