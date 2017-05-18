@@ -82,6 +82,13 @@ void safety_init() {
 	_system_status.sensors.mag.param_timeout = PARAM_SENSOR_MAG_TIMEOUT;
 	strncpy(_system_status.sensors.mag.name, "Magnatometer", 24);
 
+	_system_status.sensors.baro.health = SYSTEM_HEALTH_UNKNOWN;
+	_system_status.sensors.baro.last_read = 0;
+	_system_status.sensors.baro.count = 0;
+	_system_status.sensors.baro.param_stream_count = PARAM_SENSOR_BARO_STRM_COUNT;
+	_system_status.sensors.baro.param_timeout = PARAM_SENSOR_BARO_TIMEOUT;
+	strncpy(_system_status.sensors.baro.name, "Barometer", 24);
+
 	_system_status.sensors.sonar.health = SYSTEM_HEALTH_UNKNOWN;
 	_system_status.sensors.sonar.last_read = 0;
 	_system_status.sensors.sonar.count = 0;
@@ -551,6 +558,17 @@ static void safety_health_update(uint32_t time_now) {
 	}
 }
 
+static void safety_arm_throttle_timeout( uint32_t time_now ) {
+	if( _time_safety_arm_throttle_timeout ) {	//If the timeout is active
+		if( _command_input.T > 0 ) {
+			_time_safety_arm_throttle_timeout = 0;	//We have recieved throttle input, disable timeout
+		} else if( ( time_now - _time_safety_arm_throttle_timeout) > get_param_uint(PARAM_THROTTLE_TIMEOUT) ) {
+			mavlink_queue_broadcast_error("[SAFETY] Throttle timeout, disarming!");
+			safety_request_disarm();
+		}
+	}
+}
+
 void safety_run( uint32_t time_now ) {
 	//Check sensors to ensure they are operating correctly
 	safety_check_sensor( &_system_status.sensors.imu, time_now );
@@ -576,14 +594,7 @@ void safety_run( uint32_t time_now ) {
 	status_buzzer_update();
 
 	//Auto throttle timeout
-	if( _time_safety_arm_throttle_timeout ) {	//If the timeout is active
-		if( _command_input.T > 0 ) {
-			_time_safety_arm_throttle_timeout = 0;	//We have recieved throttle input, disable timeout
-		} else if( ( time_now - _time_safety_arm_throttle_timeout) > get_param_uint(PARAM_THROTTLE_TIMEOUT) ) {
-			mavlink_queue_broadcast_error("[SAFETY] Throttle timeout, disarming!");
-			safety_request_disarm();
-		}
-	}
+	safety_arm_throttle_timeout(time_now);
 }
 
 #ifdef __cplusplus

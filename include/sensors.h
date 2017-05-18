@@ -51,15 +51,15 @@ typedef struct {
 typedef struct {
 	sensor_status_t status;
 
-	int16_t pressure;		//Barometer reading
-	int16_t temperature;	//Sensor temperature reading
-} sensor_readings_barometer_t;
+	fix16_t bearing;		//Magnometer reading
+} sensor_readings_magnometer_t;
 
 typedef struct {
 	sensor_status_t status;
 
-	fix16_t bearing;		//Magnometer reading
-} sensor_readings_magnometer_t;
+	int16_t pressure;		//Barometer reading
+	int16_t temperature;	//Sensor temperature reading
+} sensor_readings_barometer_t;
 
 typedef struct {
 	sensor_status_t status;
