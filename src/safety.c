@@ -26,6 +26,7 @@ static status_led_t _status_led_green;
 static status_led_t _status_led_red;
 static status_buzzer_t _status_buzzer;
 
+static uint32_t _time_safety_arm_throttle_timeout;
 static uint32_t _time_safety_button_pressed;
 static bool _new_safety_button_press;
 
@@ -102,9 +103,10 @@ void safety_init() {
 	_system_status.sensors.offboard_control.param_timeout = PARAM_SENSOR_OFFB_CTRL_TIMEOUT;
 	strncpy(_system_status.sensors.offboard_control.name, "Offboard Control", 24);
 
+	_time_safety_arm_throttle_timeout = 0;
+
 	_new_safety_button_press = false;
 	_time_safety_button_pressed = 0;
-
 
 	strncpy( mav_state_names[0], "UNINIT", MAV_STATE_NAME_LEN);
 	strncpy( mav_state_names[1], "BOOT", MAV_STATE_NAME_LEN);
@@ -297,6 +299,8 @@ bool safety_request_arm(void) {
 	  ( safety_request_state( MAV_STATE_ACTIVE ) ) ) {
 		_system_status.arm_status = true;	//ARM!
 
+		_time_safety_arm_throttle_timeout = micros();	//Record down the arm time for throttle timeout
+
 		mavlink_queue_broadcast_notice("[SAFETY] Mav armed!");
 
 		result = true;
@@ -322,6 +326,10 @@ bool safety_request_arm(void) {
 			} else if(!_sensors.mag.status.present || (_system_status.sensors.mag.health != SYSTEM_HEALTH_OK) ) {
 				strncpy(text_reason,
 						 " (mag)",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else if(!_sensors.baro.status.present || (_system_status.sensors.baro.health != SYSTEM_HEALTH_OK) ) {
+				strncpy(text_reason,
+						 " (baro)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			} else if(!_sensors.sonar.status.present || (_system_status.sensors.sonar.health != SYSTEM_HEALTH_OK) ) {
 				strncpy(text_reason,
@@ -370,6 +378,8 @@ bool safety_request_disarm(void) {
 
 	_system_status.arm_status = false;	//DISARM!
 
+	_time_safety_arm_throttle_timeout = 0;
+
 	mavlink_queue_broadcast_notice("[SAFETY] Mav disarmed!");
 
 	if( safety_request_state( MAV_STATE_STANDBY ) ) {
@@ -380,7 +390,7 @@ bool safety_request_disarm(void) {
 
 	status_buzzer_success();
 
-	result = true;
+	result = true;	//XXX: Never fail a disarm request
 
 	return result;
 }
@@ -531,6 +541,7 @@ static void system_state_update(void) {
 static void safety_health_update(uint32_t time_now) {
 	if( ( !_sensors.imu.status.present || ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) ) &&
 	  ( !_sensors.mag.status.present || ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) ) &&
+	  ( !_sensors.baro.status.present || ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) ) &&
 	  ( !_sensors.sonar.status.present || ( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) ) &&
 	  ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
 	  ( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) ) {
@@ -544,6 +555,7 @@ void safety_run( uint32_t time_now ) {
 	//Check sensors to ensure they are operating correctly
 	safety_check_sensor( &_system_status.sensors.imu, time_now );
 	safety_check_sensor( &_system_status.sensors.mag, time_now );
+	safety_check_sensor( &_system_status.sensors.baro, time_now );
 	safety_check_sensor( &_system_status.sensors.sonar, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_heartbeat, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_control, time_now );
@@ -562,6 +574,16 @@ void safety_run( uint32_t time_now ) {
 
 	//Update buzzer to see if it should be making any noise
 	status_buzzer_update();
+
+	//Auto throttle timeout
+	if( _time_safety_arm_throttle_timeout ) {	//If the timeout is active
+		if( _command_input.T > 0 ) {
+			_time_safety_arm_throttle_timeout = 0;	//We have recieved throttle input, disable timeout
+		} else if( ( time_now - _time_safety_arm_throttle_timeout) > get_param_uint(PARAM_THROTTLE_TIMEOUT) ) {
+			mavlink_queue_broadcast_error("[SAFETY] Throttle timeout, disarming!");
+			safety_request_disarm();
+		}
+	}
 }
 
 #ifdef __cplusplus

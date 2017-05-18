@@ -58,6 +58,12 @@ typedef struct {
 typedef struct {
 	sensor_status_t status;
 
+	fix16_t bearing;		//Magnometer reading
+} sensor_readings_magnometer_t;
+
+typedef struct {
+	sensor_status_t status;
+
 	int16_t range;	//Measured range
 } sensor_readings_sonar_t;
 
@@ -78,6 +84,7 @@ typedef struct {
 typedef struct {
 	sensor_readings_clock_t clock;
 	sensor_readings_imu_t imu;
+	sensor_readings_magnometer_t mag;
 	sensor_readings_barometer_t baro;
 	sensor_readings_sonar_t sonar;
 	sensor_readings_safety_button_t safety_button;

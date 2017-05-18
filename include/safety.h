@@ -30,6 +30,7 @@ typedef struct {
 typedef struct {
 	timeout_status_t imu;
 	timeout_status_t mag;
+	timeout_status_t baro;
 	timeout_status_t sonar;
 	timeout_status_t offboard_heartbeat;
 	timeout_status_t offboard_control;

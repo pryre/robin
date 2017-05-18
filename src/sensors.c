@@ -51,15 +51,6 @@ static void clock_init(void) {
 	_sensors.clock.rt_sync_last = 0;
 }
 
-/* TODO:
-static void baro_init(void) {
-	_sensor_baro.present = false;
-}
-
-static void sonar_init(void) {
-	_sensor_sonar.present = false;
-}*/
-
 static void sensors_imu_poll(void) {
 	//==-- Timing setup get loop time
 	_imu_time_read = micros();
@@ -103,6 +94,15 @@ void sensors_init(void) {
 	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 
 	sensors_cal_init();
+
+	//==-- Mag
+	sensor_status_init(&_sensors.mag.status, false);	//TODO: Params
+
+	//==-- Baro
+	sensor_status_init(&_sensors.baro.status, false);	//TODO: Params
+
+	//==-- Sonar
+	sensor_status_init(&_sensors.sonar.status, false);	//TODO: Params
 
 	//==-- Safety button
 	sensor_status_init(&_sensors.safety_button.status, true);

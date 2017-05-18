@@ -83,7 +83,7 @@ void loop(void) {
 						//TODO: This should alert sensors_read() somhow to let it know there's more data to wait for
 
 	//==-- Check Serial
-	communication_receive();	//TODO: Can this be moved to a UART callback? Maybe safer here as state won't be changed out of order?
+	communication_receive();	//XXX: Could be moved to a UART callback, but may cause issues with async I2C
 
 	//==-- Send Serial
 	//Check to see if a message has been sent this loop, then see if a message should be sent
@@ -91,7 +91,7 @@ void loop(void) {
 	communication_transmit( micros() );
 
 	//==-- Update Sensor Data
-	sensors_update( micros() );	//XXX: This takes ~230us with just IMU //TODO: Should double check this figure
+	sensors_update( micros() );	//XXX: This takes ~230us with just IMU //TODO: Recalc
 
 	//==-- Timeout Checks
 	safety_run( micros() );
