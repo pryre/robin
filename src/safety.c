@@ -224,67 +224,71 @@ bool safety_is_armed(void) {
 bool safety_request_state(uint8_t req_state) {
 	bool change_state = false;
 
-	switch( req_state ) {
-		case MAV_STATE_BOOT: {
-			if(_system_status.state == MAV_STATE_UNINIT)
-				change_state = true;
+	if(_system_status.state == req_state) {	//XXX: State request to same state, just say OK
+		change_state = true;
+	} else {
+		switch( req_state ) {
+			case MAV_STATE_BOOT: {
+				if(_system_status.state == MAV_STATE_UNINIT)
+					change_state = true;
 
-			break;
-		}
-		case MAV_STATE_CALIBRATING: {
-			if(_system_status.state == MAV_STATE_STANDBY)
-				change_state = true;
-
-			break;
-		}
-		case MAV_STATE_STANDBY: {
-			if( !safety_is_armed() &&
-			  ( ( _system_status.state == MAV_STATE_ACTIVE ) ||
-			    ( _system_status.state == MAV_STATE_CRITICAL ) ||
-			    ( _system_status.state == MAV_STATE_EMERGENCY ) ) ) {
-				change_state = true;
-			} else if ( _system_status.state == MAV_STATE_CALIBRATING ) {
-				change_state = true;
-			} else if ( _system_status.state == MAV_STATE_BOOT ) {
-				change_state = true;
+				break;
 			}
+			case MAV_STATE_CALIBRATING: {
+				if(_system_status.state == MAV_STATE_STANDBY)
+					change_state = true;
 
-			break;
-		}
-		case MAV_STATE_ACTIVE: {
-			if(_system_status.state == MAV_STATE_STANDBY)
+				break;
+			}
+			case MAV_STATE_STANDBY: {
+				if( !safety_is_armed() &&
+				  ( ( _system_status.state == MAV_STATE_ACTIVE ) ||
+					( _system_status.state == MAV_STATE_CRITICAL ) ||
+					( _system_status.state == MAV_STATE_EMERGENCY ) ) ) {
+					change_state = true;
+				} else if ( _system_status.state == MAV_STATE_CALIBRATING ) {
+					change_state = true;
+				} else if ( _system_status.state == MAV_STATE_BOOT ) {
+					change_state = true;
+				}
+
+				break;
+			}
+			case MAV_STATE_ACTIVE: {
+				if(_system_status.state == MAV_STATE_STANDBY)
+					change_state = true;
+
+				break;
+			}
+			case MAV_STATE_CRITICAL: {
+				if(_system_status.state == MAV_STATE_ACTIVE)
+					change_state = true;
+
+				break;
+			}
+			case MAV_STATE_EMERGENCY: {	//Allow any request to put the mav into emergency mode
+				//if( ( _system_status.state == MAV_STATE_ACTIVE ) ||
+				//  ( _system_status.state == MAV_STATE_CRITICAL ) )
 				change_state = true;
 
-			break;
-		}
-		case MAV_STATE_CRITICAL: {
-			if(_system_status.state == MAV_STATE_ACTIVE)
-				change_state = true;
+				break;
+			}
+			case MAV_STATE_POWEROFF: {	//Allows the mav to check it is safe to poweroff/reboot
+				if( (_system_status.state == MAV_STATE_UNINIT) ||
+				  (_system_status.state == MAV_STATE_BOOT) ||
+				  (_system_status.state == MAV_STATE_STANDBY) )
+					change_state = true;
 
-			break;
+				break;
+			}
+			default: {	// Other states cannot be requested
+				break;
+			}
 		}
-		case MAV_STATE_EMERGENCY: {	//Allow any request to put the mav into emergency mode
-			//if( ( _system_status.state == MAV_STATE_ACTIVE ) ||
-			//  ( _system_status.state == MAV_STATE_CRITICAL ) )
-			change_state = true;
 
-			break;
-		}
-		case MAV_STATE_POWEROFF: {	//Allows the mav to check it is safe to poweroff/reboot
-			if( (_system_status.state == MAV_STATE_UNINIT) ||
-			  (_system_status.state == MAV_STATE_BOOT) ||
-			  (_system_status.state == MAV_STATE_STANDBY) )
-				change_state = true;
-
-			break;
-		}
-		default: {	// Other states cannot be requested
-			break;
-		}
+		if( change_state )
+			_system_status.state = req_state;
 	}
-
-	if( change_state )
-		_system_status.state = req_state;
 
 	return change_state;
 }
@@ -323,55 +327,55 @@ bool safety_request_arm(void) {
 					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 		} else if( _system_status.health != SYSTEM_HEALTH_OK ) {
 			strncpy(text_reason,
-					 "sensor error",
+					 "sensor error ",
 					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 
 			if(!_sensors.imu.status.present || (_system_status.sensors.imu.health != SYSTEM_HEALTH_OK) ){
 				strncpy(text_reason,
-						 " (IMU)",
+						 "(IMU)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			} else if(!_sensors.mag.status.present || (_system_status.sensors.mag.health != SYSTEM_HEALTH_OK) ) {
 				strncpy(text_reason,
-						 " (mag)",
+						 "(mag)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			} else if(!_sensors.baro.status.present || (_system_status.sensors.baro.health != SYSTEM_HEALTH_OK) ) {
 				strncpy(text_reason,
-						 " (baro)",
+						 "(baro)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			} else if(!_sensors.sonar.status.present || (_system_status.sensors.sonar.health != SYSTEM_HEALTH_OK) ) {
 				strncpy(text_reason,
-						 " (sonar)",
+						 "(sonar)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			} else if(_system_status.sensors.offboard_heartbeat.health != SYSTEM_HEALTH_OK) {
 				strncpy(text_reason,
-						 " (offb_hrbt)",
+						 "(offb_hrbt)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			} else if(_system_status.sensors.offboard_control.health != SYSTEM_HEALTH_OK) {
 				strncpy(text_reason,
-						 " (offb_ctrl)",
+						 "(offb_ctrl)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			} else {
 				strncpy(text_reason,
-						 " (unkown)",
+						 "(unkown)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			}
 		} else if( _system_status.state != MAV_STATE_STANDBY ) {
 			strncpy(text_reason,
-					 "mav cannot arm in current state: ",
+					 "state: ",
 					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 
 			strncat(text_reason,
 					mav_state_names[_system_status.state],
-					MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+					MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);	//XXX: Stops string overflow warnings
 		} else if( !( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_GUIDED ) ) {	//TODO: Check this error message works correctly
 			strncpy(text_reason,
-					 "no guidance input: ",
+					 "no guidance input",
 					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 		} else if( !throttle_check ) {
 			strncpy(text_reason, "high throttle", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 		}
 
-		strncat(text_error, text_reason, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+		strncat(text_error, text_reason, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);	//XXX: Stops string overflow errors
 		mavlink_queue_broadcast_error(text_error);
 
 		status_buzzer_failure();

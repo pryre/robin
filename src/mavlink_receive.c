@@ -164,7 +164,6 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 						need_ack = true;
 
-
 						break;
 					}
 					case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES: {
@@ -245,6 +244,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 							if( safety_request_disarm() )
 								command_result = MAV_RESULT_ACCEPTED;
 						}
+
+						break;
 					}
 					//TODO: Handle other cases?
 					default: {

@@ -167,8 +167,8 @@ void estimator_update( uint32_t time_now ) {
 		v3d body_x;
 		v3d body_y;
 		v3d body_z;
-		yaw_c.x = 0;
-		yaw_c.y = _fc_1;	//TODO: This should be aligned with Compass North: yaw_c = [-sin(yaw), cos(yaw), 0.0f];
+		yaw_c.x = 0;	//TODO: This should be aligned with NED and Compass North: yaw_c = [-sin(yaw), cos(yaw), 0.0f] XXX: MAYBE!;
+		yaw_c.y = _fc_1;
 		yaw_c.z = 0;
 		body_z.x = rot_mat.data[2][0];
 		body_z.y = rot_mat.data[2][1];
@@ -318,12 +318,48 @@ void estimator_update( uint32_t time_now ) {
 		}
 	}
 
+	//======== Body Frame Lock ========//
+
+	mf16 dr_rot_mat;
+	qf16_to_matrix(&dr_rot_mat, &q_hat);
+
+	v3d dr_yaw_c;
+	v3d dr_body_x;
+	v3d dr_body_y;
+	v3d dr_body_z;
+	dr_yaw_c.x = _fc_1;
+	dr_yaw_c.y = 0;
+	dr_yaw_c.z = 0;
+	dr_body_z.x = dr_rot_mat.data[2][0];
+	dr_body_z.y = dr_rot_mat.data[2][1];
+	dr_body_z.z = dr_rot_mat.data[2][2];
+
+	v3d_cross(&dr_body_x, &dr_yaw_c, &dr_body_z);
+	v3d_normalize(&dr_body_x, &dr_body_x);
+	v3d_cross(&dr_body_y, &dr_body_z, &dr_body_x);
+	v3d_normalize(&dr_body_y, &dr_body_y);
+
+	dr_rot_mat.data[0][0] = dr_body_x.x;
+	dr_rot_mat.data[0][1] = dr_body_x.y;
+	dr_rot_mat.data[0][2] = dr_body_x.z;
+	dr_rot_mat.data[1][0] = dr_body_y.x;
+	dr_rot_mat.data[1][1] = dr_body_y.y;
+	dr_rot_mat.data[1][2] = dr_body_y.z;
+	dr_rot_mat.data[2][0] = dr_body_z.x;
+	dr_rot_mat.data[2][1] = dr_body_z.y;
+	dr_rot_mat.data[2][2] = dr_body_z.z;
+
+	matrix_to_qf16(&_state_estimator.attitude, &dr_rot_mat);
+	qf16_normalize(&_state_estimator.attitude, &_state_estimator.attitude);
+
+	//======== End Body Frame Lock ========//
+
 	//q_hat is given as z-down, rotate to NED
-	_state_estimator.attitude = q_hat;
+	//XXX:_state_estimator.attitude = q_hat;
 	// Extract Euler Angles for controller
 	//euler_from_quat(&q_hat, &_state_estimator.phi, &_state_estimator.theta, &_state_estimator.psi);
 
-	// Save off adjust gyro measurements with estimated biases for control
+	// Save old adjust gyro measurements with estimated biases for control
 	v3d wbar_old = wbar;
 	v3d_sub( &wbar, &wbar_old, &b );
 

@@ -50,7 +50,7 @@ static mixer_t mixer_quadcopter_x = {
 	{ FC_1, FC_1, FC_1, FC_1, 0, 0, 0, 0}, // F Mix
 	{-FC_1, FC_1, FC_1,-FC_1, 0, 0, 0, 0}, // X Mix
 	{ FC_1,-FC_1, FC_1,-FC_1, 0, 0, 0, 0}, // Y Mix
-	{-FC_1,-FC_1, FC_1, FC_1, 0, 0, 0, 0}  // Z Mix
+	{ FC_1, FC_1,-FC_1,-FC_1, 0, 0, 0, 0}  // Z Mix
 };
 
 static mixer_t mixer_plane_basic = {

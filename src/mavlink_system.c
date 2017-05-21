@@ -491,7 +491,7 @@ void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index) {
 		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PARAM] Unknown paramater type found: ";
 		char bad_param_id[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
 		itoa(index, bad_param_id, 10);
-		strncat(text, bad_param_id, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+		strncat(text, bad_param_id, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1); //XXX: Stops overflow warnings
 		mavlink_queue_broadcast_error(text);
 	}
 }
