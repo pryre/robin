@@ -280,8 +280,108 @@ void controller_run( uint32_t time_now ) {
 	//==-- Attitude Control
 	//If we should listen to attitude input
 	if( !(_command_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
-		v3d rates_sp = rate_goals_from_attitude(&_command_input.q, &_state_estimator.attitude);
+		//======== Body Frame Lock ========//
+		//XXX: Very important!
+		//TODO: Make a very clear note about this
+		//The control method use here (px4 method) uses a method that allows
+		// say a pitch of 20 Deg, and a yaw of 180 Deg, which will cause the
+		// mav to pitch first, then rotate around to meet that angle, adjusting
+		// for a pitch of -20 Deg and at first while the yaw rotates to the
+		// correct angle.
+		//Because of this, if there is a control request to override a specic
+		// rotation body, and tell it that
+		// we assume that the attitude message sent up was in the body frame
 
+		mf16 rot_mat;
+		qf16_to_matrix(&rot_mat, &_state_estimator.attitude);
+
+		v3d body_x;
+		v3d body_y;
+		v3d body_z;
+
+		//Poulate rotation vectors
+		body_x.x = rot_mat.data[0][0];
+		body_x.y = rot_mat.data[0][1];
+		body_x.z = rot_mat.data[0][2];
+		body_y.x = rot_mat.data[1][0];
+		body_y.y = rot_mat.data[1][1];
+		body_y.z = rot_mat.data[1][2];
+		body_z.x = rot_mat.data[2][0];
+		body_z.y = rot_mat.data[2][1];
+		body_z.z = rot_mat.data[2][2];
+
+		qf16 q_body_lock;
+
+		//Roll control will be overriden
+		if( !(_command_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
+			//Use Z axis as a reference
+			v3d body_c;
+			body_c.x = 0;
+			body_c.y = 0;
+			body_c.z = _fc_1;
+
+			//Find Y Rotation
+			v3d_cross(&body_y, &body_c, &body_x);
+			v3d_normalize(&body_y, &body_y);
+
+			//Find Z Rotation
+			v3d_cross(&body_z, &body_x, &body_y);
+			v3d_normalize(&body_z, &body_z);
+		}
+
+		//Pitch control will be overriden
+		if( !(_command_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
+			//Use X axis as a reference
+			v3d body_c;
+			body_c.x = _fc_1;
+			body_c.y = 0;
+			body_c.z = 0;
+
+			//Find Z Rotation
+			v3d_cross(&body_z, &body_c, &body_y);
+			v3d_normalize(&body_z, &body_z);
+
+			//Find X Rotation
+			v3d_cross(&body_x, &body_y, &body_z);
+			v3d_normalize(&body_x, &body_x);
+		}
+
+		//Yaw control will be overriden
+		if( !(_command_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
+			//Use Y axis as a reference
+			v3d body_c;
+			body_c.x = 0;
+			body_c.y = _fc_1;
+			body_c.z = 0;
+
+			//Find X Rotation
+			v3d_cross(&body_x, &body_c, &body_z);
+			v3d_normalize(&body_x, &body_x);
+
+			//Find Y Rotation
+			v3d_cross(&body_y, &body_z, &body_x);
+			v3d_normalize(&body_y, &body_y);
+		}
+
+		//Re-poulate rotation matrix
+		rot_mat.data[0][0] = body_x.x;
+		rot_mat.data[0][1] = body_x.y;
+		rot_mat.data[0][2] = body_x.z;
+		rot_mat.data[1][0] = body_y.x;
+		rot_mat.data[1][1] = body_y.y;
+		rot_mat.data[1][2] = body_y.z;
+		rot_mat.data[2][0] = body_z.x;
+		rot_mat.data[2][1] = body_z.y;
+		rot_mat.data[2][2] = body_z.z;
+
+		matrix_to_qf16(&q_body_lock, &rot_mat);
+		qf16_normalize(&q_body_lock, &q_body_lock);
+		//======== End Body Frame Lock ========//
+
+		//Caclulate goal body rotations
+		v3d rates_sp = rate_goals_from_attitude(&_command_input.q, &q_body_lock);
+
+		//Set goal rates
 		goal_r = rates_sp.x;
 		goal_p = rates_sp.y;
 		goal_y = rates_sp.z;
