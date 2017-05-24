@@ -128,10 +128,6 @@ void safety_init() {
 	status_led_init();
 
 	status_buzzer_init();
-
-	//TODO:
-		//Barometer
-		//Diff Pressure
 }
 
 void status_buzzer_success(void) {
@@ -330,19 +326,19 @@ bool safety_request_arm(void) {
 					 "sensor error ",
 					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 
-			if(!_sensors.imu.status.present || (_system_status.sensors.imu.health != SYSTEM_HEALTH_OK) ){
+			if(_sensors.imu.status.present && (_system_status.sensors.imu.health != SYSTEM_HEALTH_OK) ){
 				strncpy(text_reason,
 						 "(IMU)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			} else if(!_sensors.mag.status.present || (_system_status.sensors.mag.health != SYSTEM_HEALTH_OK) ) {
+			} else if(_sensors.mag.status.present && (_system_status.sensors.mag.health != SYSTEM_HEALTH_OK) ) {
 				strncpy(text_reason,
 						 "(mag)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			} else if(!_sensors.baro.status.present || (_system_status.sensors.baro.health != SYSTEM_HEALTH_OK) ) {
+			} else if(_sensors.baro.status.present && (_system_status.sensors.baro.health != SYSTEM_HEALTH_OK) ) {
 				strncpy(text_reason,
 						 "(baro)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			} else if(!_sensors.sonar.status.present || (_system_status.sensors.sonar.health != SYSTEM_HEALTH_OK) ) {
+			} else if(_sensors.sonar.status.present && (_system_status.sensors.sonar.health != SYSTEM_HEALTH_OK) ) {
 				strncpy(text_reason,
 						 "(sonar)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);

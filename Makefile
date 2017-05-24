@@ -17,13 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this code.  If not, see <http://www.gnu.org/licenses/>.
 
-ARCH_FLAGS	 = -mthumb \
-               -DFIXMATH_NO_CACHE
+ARCH_FLAGS	= -mthumb \
+			  -DFIXMATH_NO_CACHE
 
 # Change this to wherever you put BreezySTM32
-BREEZY_DIR = $(HERE)/lib/BreezySTM32
+BREEZY_DIR	= $(HERE)/lib/BreezySTM32
 
-F1_DIR = $(BREEZY_DIR)/f1
+F1_DIR		= $(BREEZY_DIR)/f1
 
 include makefile.project
 
@@ -33,7 +33,7 @@ TARGET		?= $(PROJECT_NAME)
 OPTIONS		?=
 
 # Debugger optons, must be empty or GDB
-DEBUG ?=
+DEBUG		?=
 
 ###############################################################################
 # Things that need to be maintained as the source changes
@@ -143,8 +143,8 @@ CFLAGS	 = $(ARCH_FLAGS) \
 		   -DUSE_STDPERIPH_DRIVER \
 		   -D$(TARGET) \
 		   -Wno-unused-parameter \
-		   -DGIT_VERSION_FLIGHT=\"$(GIT_VERSION_FLIGHT)\" \
-		   -DGIT_VERSION_OS=\"$(GIT_VERSION_OS)\"
+		   -DGIT_VERSION_FLIGHT_STR=\"$(GIT_VERSION_FLIGHT)\" \
+		   -DGIT_VERSION_OS_STR=\"$(GIT_VERSION_OS)\"
 
 ASFLAGS		 = $(ARCH_FLAGS) \
 		   -x assembler-with-cpp \

@@ -59,11 +59,6 @@ void init_params(void) {
 		set_param_defaults();
 		write_params();
 	}
-
-	/* TODO: More to do with the live params
-	for (uint16_t id = 0; id < PARAMS_COUNT; id++)
-		param_change_callback((param_id_t) id);
-	*/
 }
 
 //TODO: Still need to clean up int and uint parameters
@@ -71,8 +66,8 @@ void init_params(void) {
 void set_param_defaults(void) {
 	//==-- System
 	init_param_uint(PARAM_BOARD_REVISION, "BOARD_REV", 5);
-	init_param_uint(PARAM_VERSION_FIRMWARE, "FW_VERSION", 1);
-	init_param_uint(PARAM_VERSION_SOFTWARE, "SW_VERSION", 1);
+	init_param_uint(PARAM_VERSION_FIRMWARE, "FW_VERSION", strtoll(GIT_VERSION_FLIGHT_STR, NULL, 16));
+	init_param_uint(PARAM_VERSION_SOFTWARE, "SW_VERSION", strtoll(GIT_VERSION_OS_STR, NULL, 16));
 	init_param_uint(PARAM_BAUD_RATE_0, "BAUD_RATE_0", 921600);	//Set baud rate to 0 to disable a comm port
 	//init_param_uint(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//Set baud rate to 0 to disable a comm port
 	init_param_fix16(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));

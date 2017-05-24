@@ -185,6 +185,8 @@ static void pwm_output() {
 			write_servo(i, _pwm_output_requested[i]);
 		} else if (output_type == M) {
 			write_motor(i, _pwm_output_requested[i]);
+		} else if (output_type == G) {
+			write_servo(i, _pwm_output_requested[i]);	//XXX: Could have another function here to handle GPIO cases
 		}
 	}
 }

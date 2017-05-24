@@ -221,8 +221,6 @@ void mavlink_stream_heartbeat(uint8_t port) {
 							   _system_status.state);
 }
 
-//TODO: Quite a lot here
-//TODO: Make an alert to say if the UART overflows
 void mavlink_stream_sys_status(uint8_t port) {
 	uint32_t onboard_control_sensors_present = 0;
 	uint32_t onboard_control_sensors_enabled = 0;
@@ -232,9 +230,9 @@ void mavlink_stream_sys_status(uint8_t port) {
 	uint16_t current_battery = 0;
 	uint8_t battery_remaining = 0;
 	uint16_t drop_rate_comm = 0;
-	uint16_t errors_comm = 0;
+	uint16_t errors_comm = 0;	//TODO: Make an alert to say if the UART overflows
 	uint16_t errors_count1 = _lpq_port_0.length;
-	uint16_t errors_count2 = 0;//_lpq_port_1.length;
+	uint16_t errors_count2 = 0;
 	uint16_t errors_count3 = _sensors.clock.min;
 	uint16_t errors_count4 = _sensors.clock.max;
 
@@ -245,22 +243,50 @@ void mavlink_stream_sys_status(uint8_t port) {
 	_sensors.clock.max = 0;
 	_sensors.clock.min = 1000;
 
-	//TODO: This should be dynamic, probably in safety.h or sensors.h
-	onboard_control_sensors_present = MAV_SYS_STATUS_SENSOR_3D_GYRO |
-									  MAV_SYS_STATUS_SENSOR_3D_ACCEL |
-									  MAV_SYS_STATUS_SENSOR_3D_MAG |
-									  MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
+	//==-- Sensors Present
+	if(_sensors.imu.status.present) {
+		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
+		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
+	}
+
+	if(_sensors.mag.status.present)
+		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_MAG;
+
+	if(_sensors.baro.status.present)
+		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
+
+	onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS;
+	onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL;
+	onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
+
+	//TODO: We should have params for enabling specific sensors
+	//==-- Sensors Present
 	onboard_control_sensors_enabled = MAV_SYS_STATUS_SENSOR_3D_GYRO |
 									  MAV_SYS_STATUS_SENSOR_3D_ACCEL |
 									  MAV_SYS_STATUS_SENSOR_3D_MAG |
-									  MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
-	onboard_control_sensors_health = MAV_SYS_STATUS_SENSOR_3D_GYRO |
-									 MAV_SYS_STATUS_SENSOR_3D_ACCEL |
-									 MAV_SYS_STATUS_SENSOR_3D_MAG |
-									 MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
+									  MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE |
+									  MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS |
+									  MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL |
+									  MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
 
+	//==-- Sensor Health
+	if(_sensors.imu.health == SYSTEM_HEALTH_OK) {
+		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
+		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
+	}
 
-	//TODO: The rest of the sensors
+	if(_sensors.imu.health == SYSTEM_HEALTH_OK)
+		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_MAG;
+
+	if(_sensors.imu.health == SYSTEM_HEALTH_OK)
+		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
+
+	onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS;
+	onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL;
+	onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
+
+	//TODO: Other sensors?
+	// MAV_SYS_STATUS_SENSOR_BATTERY, MAV_SYS_STATUS_SENSOR_OPTICAL_FLOW, MAV_SYS_STATUS_SENSOR_VISION_POSITION ...?
 
 	//mavlink_msg_sys_status_send(MAVLINK_COMM_0, uint32_t onboard_control_sensors_present, uint32_t onboard_control_sensors_enabled, uint32_t onboard_control_sensors_health, uint16_t load, uint16_t voltage_battery, int16_t current_battery, int8_t battery_remaining, uint16_t drop_rate_comm, uint16_t errors_comm, uint16_t errors_count1, uint16_t errors_count2, uint16_t errors_count3, uint16_t errors_count4)
 	mavlink_msg_sys_status_send(port,
@@ -280,9 +306,8 @@ void mavlink_stream_sys_status(uint8_t port) {
 }
 
 //==-- Sends the latest IMU reading
-//TODO: neaten, and make a proper define for the updated_data field
-//TODO: GYRO DOES NOT WORK?
 void mavlink_stream_highres_imu(uint8_t port) {
+	//TODO: Need to add temp, pressure measurements
 	mavlink_msg_highres_imu_send(port,
 								 _sensors.imu.status.time_read,
 								 fix16_to_float(_sensors.imu.accel.x),
@@ -417,14 +442,13 @@ void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 								  MAV_PROTOCOL_CAPABILITY_SET_ACTUATOR_TARGET +
 								  MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION;
 
-	//TODO: Use GIT_VERSION_FLIGHT and GIT_VERSION_OS
 	mavlink_msg_autopilot_version_pack(mavlink_system.sysid,
 									   mavlink_system.compid,
 									   msg,
 									   capabilities,
-									   get_param_uint(PARAM_VERSION_SOFTWARE),
-									   0,
 									   get_param_uint(PARAM_VERSION_FIRMWARE),
+									   0,
+									   get_param_uint(PARAM_VERSION_SOFTWARE),
 									   get_param_uint(PARAM_BOARD_REVISION),
 									   &blank_array[0],
 									   &blank_array[0],
