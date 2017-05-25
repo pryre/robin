@@ -14,6 +14,10 @@
 #include "fixvector3d.h"
 #include "fixextra.h"
 
+//TODO: REMOVE!
+#include <stdio.h>
+//TODO: REMOVE!
+
 //Number of itterations of averaging to use with IMU calibrations
 #define SENSOR_CAL_IMU_PASSES 1000
 
@@ -28,7 +32,6 @@ uint8_t _sensor_calibration;
 sensor_calibration_data_t _sensor_cal_data;
 
 system_status_t _system_status;
-
 
 //==-- Functions
 static void clock_init(void) {
@@ -232,7 +235,7 @@ static bool sensors_calibrate(void) {
 				_sensor_calibration ^= SENSOR_CAL_GYRO;	//Turn off SENSOR_CAL_GYRO bit
 				//TODO: "we could do some sanity checking here if we wanted to."
 
-				mavlink_queue_broadcast_error("[SENSOR] Gyro calibration complete!");
+				mavlink_queue_broadcast_notice("[SENSOR] Gyro calibration complete!");
 			}
 
 			break;
@@ -280,12 +283,22 @@ static bool sensors_calibrate(void) {
 					fix16_t accel_z_down_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.z_down_av - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
 					fix16_t accel_z_up_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.z_up_av - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
 
-					set_param_fix16( PARAM_ACC_X_SCALE_POS, _fc_gravity / accel_x_down_1g );
-					set_param_fix16( PARAM_ACC_X_SCALE_NEG, _fc_gravity / accel_x_up_1g );
-					set_param_fix16( PARAM_ACC_Y_SCALE_POS, _fc_gravity / accel_y_down_1g );
-					set_param_fix16( PARAM_ACC_Y_SCALE_NEG, _fc_gravity / accel_y_up_1g );
-					set_param_fix16( PARAM_ACC_Z_SCALE_POS, _fc_gravity / accel_z_down_1g );
-					set_param_fix16( PARAM_ACC_Z_SCALE_NEG, _fc_gravity / accel_z_up_1g );
+					set_param_fix16( PARAM_ACC_X_SCALE_POS, fix16_div( _fc_gravity, accel_x_down_1g ) );
+					set_param_fix16( PARAM_ACC_X_SCALE_NEG, fix16_div( -_fc_gravity, accel_x_up_1g ) );
+					set_param_fix16( PARAM_ACC_Y_SCALE_POS, fix16_div( _fc_gravity, accel_y_down_1g ) );
+					set_param_fix16( PARAM_ACC_Y_SCALE_NEG, fix16_div( -_fc_gravity, accel_y_up_1g ) );
+					set_param_fix16( PARAM_ACC_Z_SCALE_POS, fix16_div( _fc_gravity, accel_z_down_1g ) );
+					set_param_fix16( PARAM_ACC_Z_SCALE_NEG, fix16_div( -_fc_gravity, accel_z_up_1g ) );
+
+					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+					snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[CAL]:%0.4f,%0.4f,%0.4f,%0.4f,%0.4f,%0.4f",
+							 fix16_to_float(get_param_fix16(PARAM_ACC_X_SCALE_POS)),
+							 fix16_to_float(get_param_fix16(PARAM_ACC_X_SCALE_NEG)),
+							 fix16_to_float(get_param_fix16(PARAM_ACC_Y_SCALE_POS)),
+							 fix16_to_float(get_param_fix16(PARAM_ACC_Y_SCALE_NEG)),
+							 fix16_to_float(get_param_fix16(PARAM_ACC_Z_SCALE_POS)),
+							 fix16_to_float(get_param_fix16(PARAM_ACC_Z_SCALE_NEG)));
+					mavlink_queue_broadcast_error(text);
 
 					_sensor_calibration ^= SENSOR_CAL_ACCEL;	//Turn off SENSOR_CAL_ACCEL bit
 					//TODO: "we could do some sanity checking here if we wanted to."
