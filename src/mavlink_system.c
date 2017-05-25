@@ -270,15 +270,15 @@ void mavlink_stream_sys_status(uint8_t port) {
 									  MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
 
 	//==-- Sensor Health
-	if(_sensors.imu.health == SYSTEM_HEALTH_OK) {
+	if(_system_status.sensors.imu.health == SYSTEM_HEALTH_OK) {
 		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
 		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
 	}
 
-	if(_sensors.imu.health == SYSTEM_HEALTH_OK)
+	if(_system_status.sensors.mag.health == SYSTEM_HEALTH_OK)
 		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_MAG;
 
-	if(_sensors.imu.health == SYSTEM_HEALTH_OK)
+	if(_system_status.sensors.baro.health == SYSTEM_HEALTH_OK)
 		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
 
 	onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS;
@@ -437,6 +437,7 @@ void mavlink_prepare_debug(mavlink_message_t *msg, uint32_t stamp, uint8_t index
 
 //Sends the autopilot version details
 void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
+	//TODO: Update capabilities
 	const uint64_t capabilities = MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT +
 								  MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET +
 								  MAV_PROTOCOL_CAPABILITY_SET_ACTUATOR_TARGET +

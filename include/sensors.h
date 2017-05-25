@@ -110,14 +110,31 @@ typedef struct {
 
 typedef struct {
 	uint16_t count;
+
+	int32_t x_flat_sum;
+	int32_t x_up_sum;
+	int32_t x_down_sum;
+	int32_t x_flat_av;
+	int32_t x_up_av;
+	int32_t x_down_av;
+
+	int32_t y_flat_sum;
+	int32_t y_up_sum;
+	int32_t y_down_sum;
+	int32_t y_flat_av;
+	int32_t y_up_av;
+	int32_t y_down_av;
+
+	int32_t z_flat_sum;
 	int32_t z_up_sum;
 	int32_t z_down_sum;
-	int16_t z_up_av;
-	int16_t z_down_av;
+	int32_t z_flat_av;
+	int32_t z_up_av;
+	int32_t z_down_av;
 } sensor_calibration_gravity_data_t;
 
 typedef struct {
-	uint16_t count;
+	uint32_t count;
 	int32_t sum_x;
 	int32_t sum_y;
 	int32_t sum_z;

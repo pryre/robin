@@ -138,24 +138,20 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					case MAV_CMD_PREFLIGHT_CALIBRATION: {
 						if(_system_status.state == MAV_STATE_CALIBRATING) {	//XXX: Only allow one calibration request at a time
 							command_result = MAV_RESULT_TEMPORARILY_REJECTED;
-						} else if( safety_request_state( MAV_STATE_CALIBRATING ) ) {
-							if( (int)mavlink_msg_command_long_get_param1(&msg) )
+						} else if( safety_request_state( MAV_STATE_CALIBRATING ) && ( _sensor_calibration == SENSOR_CAL_NONE ) ) { //TODO: Note about only doing 1 calibration at a time
+							if( (int)mavlink_msg_command_long_get_param1(&msg) ) {
 								_sensor_calibration |= SENSOR_CAL_GYRO;
-
-							if( (int)mavlink_msg_command_long_get_param2(&msg) )
+							} else 	if( (int)mavlink_msg_command_long_get_param2(&msg) ) {
 								_sensor_calibration |= SENSOR_CAL_MAG;
-
-							if( (int)mavlink_msg_command_long_get_param3(&msg) )
+							} else if( (int)mavlink_msg_command_long_get_param3(&msg) ) {
 								_sensor_calibration |= SENSOR_CAL_BARO;
-
-							if( (int)mavlink_msg_command_long_get_param4(&msg) )
+							} else if( (int)mavlink_msg_command_long_get_param4(&msg) ) {
 								_sensor_calibration |= SENSOR_CAL_RC;
-
-							if( (int)mavlink_msg_command_long_get_param5(&msg) )
+							} else if( (int)mavlink_msg_command_long_get_param5(&msg) ) {
 								_sensor_calibration |= SENSOR_CAL_ACCEL;
-
-							if( (int)mavlink_msg_command_long_get_param6(&msg) )
+							} else if( (int)mavlink_msg_command_long_get_param6(&msg) ) {
 								_sensor_calibration |= SENSOR_CAL_INTER;
+							}	//TODO: Make sure these are all up to date (some have different values now!)
 
 							command_result = MAV_RESULT_ACCEPTED;
 						} else {	//We send the denied immidiately if we can't do it now

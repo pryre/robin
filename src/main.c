@@ -74,6 +74,8 @@ void setup(void) {
 
 //XXX: Measured CPU load when armed and running: 51.4%
 void loop(void) {
+	//TODO: XXX: There will be a timer rollover at ~70 minutes of operation, will cause some issues
+
 	//Take note of when this loop starts
 	sensors_clock_ls_set( micros() );
 

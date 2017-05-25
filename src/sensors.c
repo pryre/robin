@@ -195,82 +195,96 @@ uint32_t sensors_clock_imu_int_get(void) {
 //TODO: This calibration method is very basic, doesn't take into acount very much...mabye?
 //Returns true if all calibrations are complete
 static bool sensors_calibrate(void) {
-	if(_sensor_calibration & SENSOR_CAL_GYRO) {
-		_sensor_cal_data.gyro.sum_x += _sensors.imu.gyro_raw[0];
-		_sensor_cal_data.gyro.sum_y += _sensors.imu.gyro_raw[1];
-		_sensor_cal_data.gyro.sum_z += _sensors.imu.gyro_raw[2];
+	bool cal_mode_error = false;
 
-		_sensor_cal_data.gyro.count++;
+	switch(_sensor_calibration) {
+		case SENSOR_CAL_GYRO: {
+			_sensor_cal_data.gyro.sum_x += _sensors.imu.gyro_raw[0];
+			_sensor_cal_data.gyro.sum_y += _sensors.imu.gyro_raw[1];
+			_sensor_cal_data.gyro.sum_z += _sensors.imu.gyro_raw[2];
 
-		if (_sensor_cal_data.gyro.count >= SENSOR_CAL_IMU_PASSES) {
-			set_param_int(PARAM_GYRO_X_BIAS, (_sensor_cal_data.gyro.sum_x / _sensor_cal_data.gyro.count));
-			set_param_int(PARAM_GYRO_Y_BIAS, (_sensor_cal_data.gyro.sum_y / _sensor_cal_data.gyro.count));
-			set_param_int(PARAM_GYRO_Z_BIAS, (_sensor_cal_data.gyro.sum_z / _sensor_cal_data.gyro.count));
+			_sensor_cal_data.gyro.count++;
 
-			_sensor_cal_data.gyro.count = 0;
-			_sensor_cal_data.gyro.sum_x = 0;
-			_sensor_cal_data.gyro.sum_y = 0;
-			_sensor_cal_data.gyro.sum_z = 0;
+			if (_sensor_cal_data.gyro.count >= SENSOR_CAL_IMU_PASSES) {
+				set_param_int(PARAM_GYRO_X_BIAS, (_sensor_cal_data.gyro.sum_x / _sensor_cal_data.gyro.count));
+				set_param_int(PARAM_GYRO_Y_BIAS, (_sensor_cal_data.gyro.sum_y / _sensor_cal_data.gyro.count));
+				set_param_int(PARAM_GYRO_Z_BIAS, (_sensor_cal_data.gyro.sum_z / _sensor_cal_data.gyro.count));
 
-			_sensor_calibration ^= SENSOR_CAL_GYRO;	//Turn off SENSOR_CAL_GYRO bit
-			//TODO: "we could do some sanity checking here if we wanted to."
+				_sensor_cal_data.gyro.count = 0;
+				_sensor_cal_data.gyro.sum_x = 0;
+				_sensor_cal_data.gyro.sum_y = 0;
+				_sensor_cal_data.gyro.sum_z = 0;
+
+				_sensor_calibration ^= SENSOR_CAL_GYRO;	//Turn off SENSOR_CAL_GYRO bit
+				//TODO: "we could do some sanity checking here if we wanted to."
+			}
+
+			break;
+		}
+		case SENSOR_CAL_MAG: {
+			//TODO
+			_sensor_calibration ^= SENSOR_CAL_MAG;
+
+			break;
+		}
+		case SENSOR_CAL_BARO: {
+			//TODO
+			_sensor_calibration ^= SENSOR_CAL_BARO;
+
+			break;
+		}
+		case SENSOR_CAL_RC: {
+			//TODO
+			_sensor_calibration ^= SENSOR_CAL_RC;
+
+			break;
+		}
+		case SENSOR_CAL_ACCEL: {
+			//Compensate for the gravity in Z axis, that way bias can be relative to 0
+			_sensor_cal_data.accel.sum_x += _sensors.imu.accel_raw[0];
+			_sensor_cal_data.accel.sum_y += _sensors.imu.accel_raw[1];
+			_sensor_cal_data.accel.sum_z += _sensors.imu.accel_raw[2] - _sensor_cal_data.accel.acc1G;
+			_sensor_cal_data.accel.sum_t += _sensors.imu.temp_raw;
+
+			_sensor_cal_data.accel.count++;
+
+			if (_sensor_cal_data.accel.count >= SENSOR_CAL_IMU_PASSES) {
+				//==-- bias = sum / count
+				//==-- //TODO: bias = (sum - (temp_comp*temp_sum)) / count
+
+				set_param_int(PARAM_ACC_X_BIAS, (_sensor_cal_data.accel.sum_x / _sensor_cal_data.accel.count));
+				set_param_int(PARAM_ACC_Y_BIAS, (_sensor_cal_data.accel.sum_y / _sensor_cal_data.accel.count));
+				set_param_int(PARAM_ACC_Z_BIAS, (_sensor_cal_data.accel.sum_z / _sensor_cal_data.accel.count));
+
+				_sensor_cal_data.accel.count = 0;
+				_sensor_cal_data.accel.sum_x = 0;
+				_sensor_cal_data.accel.sum_y = 0;
+				_sensor_cal_data.accel.sum_z = 0;
+				_sensor_cal_data.accel.sum_t = 0;
+
+				_sensor_calibration ^= SENSOR_CAL_ACCEL;	//Turn off SENSOR_CAL_ACCEL bit
+				//TODO: "we could do some sanity checking here if we wanted to."
+			}
+
+			break;
+		}
+		case SENSOR_CAL_INTER: {
+			//TODO
+			_sensor_calibration ^= SENSOR_CAL_INTER;
+
+			break;
+		}
+		default: {
+			sensors_cal_init();
+			cal_mode_error = true;
+			mavlink_queue_broadcast_error("[SENSOR] Invalid calibration mode, clearing");
+
+			break;
 		}
 	}
 
-
-	if(_sensor_calibration & SENSOR_CAL_MAG) {
-		//TODO
-		_sensor_calibration ^= SENSOR_CAL_MAG;
-	}
-
-	if(_sensor_calibration & SENSOR_CAL_BARO) {
-		//TODO
-		_sensor_calibration ^= SENSOR_CAL_BARO;
-	}
-
-	if(_sensor_calibration & SENSOR_CAL_RC) {
-		//TODO
-		_sensor_calibration ^= SENSOR_CAL_RC;
-	}
-
-	if(_sensor_calibration & SENSOR_CAL_ACCEL) {
-		//Compensate for the gravity in Z axis, that way bias can be relative to 0
-		_sensor_cal_data.accel.sum_x += _sensors.imu.accel_raw[0];
-		_sensor_cal_data.accel.sum_y += _sensors.imu.accel_raw[1];
-		_sensor_cal_data.accel.sum_z += _sensors.imu.accel_raw[2] - _sensor_cal_data.accel.acc1G;
-		_sensor_cal_data.accel.sum_t += _sensors.imu.temp_raw;
-
-		_sensor_cal_data.accel.count++;
-
-		if (_sensor_cal_data.accel.count >= SENSOR_CAL_IMU_PASSES) {
-			//==-- bias = sum / count
-			//==-- //TODO: bias = (sum - (temp_comp*temp_sum)) / count
-
-			set_param_int(PARAM_ACC_X_BIAS, (_sensor_cal_data.accel.sum_x / _sensor_cal_data.accel.count));
-			set_param_int(PARAM_ACC_Y_BIAS, (_sensor_cal_data.accel.sum_y / _sensor_cal_data.accel.count));
-			set_param_int(PARAM_ACC_Z_BIAS, (_sensor_cal_data.accel.sum_z / _sensor_cal_data.accel.count));
-
-			_sensor_cal_data.accel.count = 0;
-			_sensor_cal_data.accel.sum_x = 0;
-			_sensor_cal_data.accel.sum_y = 0;
-			_sensor_cal_data.accel.sum_z = 0;
-			_sensor_cal_data.accel.sum_t = 0;
-
-			_sensor_calibration ^= SENSOR_CAL_ACCEL;	//Turn off SENSOR_CAL_ACCEL bit
-			//TODO: "we could do some sanity checking here if we wanted to."
-		}
-	}
-
-	if(_sensor_calibration & SENSOR_CAL_INTER) {
-		//TODO
-		_sensor_calibration ^= SENSOR_CAL_INTER;
-	}
-
-
-	//TODO: HERE!
-	//TODO: Need to broadcast where calibration starts and when it ends
 	//If there are no longer any sensors to calibrate
-	if(_sensor_calibration == SENSOR_CAL_NONE) {
+	if( !cal_mode_error && (_sensor_calibration == SENSOR_CAL_NONE ) ) {
 		mavlink_message_t msg;
 		mavlink_prepare_command_ack(&msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_ACCEPTED);
 		lpq_queue_broadcast_msg(&msg);
@@ -300,9 +314,16 @@ bool sensors_update(uint32_t time_us) {
 	//==-- Accel in NED
 	//TODO: value = (raw - BIAS - (EMP_COMP * TEMP)) * scale
 	// value = (raw - BIAS) * scale
-	_sensors.imu.accel.x = fix16_mul(fix16_from_int(-(_sensors.imu.accel_raw[0] - get_param_int(PARAM_ACC_X_BIAS))), _sensors.imu.accel_scale);
-	_sensors.imu.accel.y = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[1] - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
-	_sensors.imu.accel.z = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[2] - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
+
+	//Correct for measurement biases
+	fix16_t accel_x_tmp = fix16_mul(fix16_from_int(-(_sensors.imu.accel_raw[0] - get_param_int(PARAM_ACC_X_BIAS))), _sensors.imu.accel_scale);
+	fix16_t accel_y_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[1] - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
+	fix16_t accel_z_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[2] - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
+
+	//Scale the accelerometer to match 1G
+	_sensors.imu.accel.x = fix16_mul(accel_x_tmp, ( accel_x_tmp > 0 ) ? get_param_fix16(PARAM_ACC_X_SCALE_POS) : get_param_fix16(PARAM_ACC_X_SCALE_NEG) );
+	_sensors.imu.accel.y = fix16_mul(accel_y_tmp, ( accel_y_tmp > 0 ) ? get_param_fix16(PARAM_ACC_Y_SCALE_POS) : get_param_fix16(PARAM_ACC_Y_SCALE_NEG) );
+	_sensors.imu.accel.z = fix16_mul(accel_z_tmp, ( accel_z_tmp > 0 ) ? get_param_fix16(PARAM_ACC_Z_SCALE_POS) : get_param_fix16(PARAM_ACC_Z_SCALE_NEG) );
 
 	//==-- Gyro in NED
 	// value = (raw - BIAS) * scale
@@ -334,13 +355,12 @@ bool sensors_update(uint32_t time_us) {
 
 	_sensors.safety_button.state_db = safety_button_reading;
 
-
 	//==-- Calibrations
 	if( _system_status.state == MAV_STATE_CALIBRATING ) {	//If any calibration is in progress
 		//Run the rest of the calibration logic
-		if( sensors_calibrate() )
-			if( safety_request_state( MAV_STATE_STANDBY ) )
-				sensors_cal_init();
+		if( sensors_calibrate() )	//If calibration finished
+			if( safety_request_state( MAV_STATE_STANDBY ) )	//Return to standby
+				sensors_cal_init();	//Reset calibration data
 	}
 
 	//TODO: This should be aware of failures

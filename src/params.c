@@ -135,6 +135,12 @@ void set_param_defaults(void) {
 	init_param_int(PARAM_ACC_X_BIAS, "ACC_X_BIAS", 0);
 	init_param_int(PARAM_ACC_Y_BIAS, "ACC_Y_BIAS", 0);
 	init_param_int(PARAM_ACC_Z_BIAS, "ACC_Z_BIAS", 0);
+	init_param_int(PARAM_ACC_X_SCALE_POS, "ACC_X_S_POS", fix16_from_float(1.0f));
+	init_param_int(PARAM_ACC_X_SCALE_NEG, "ACC_X_S_NEG", fix16_from_float(1.0f));
+	init_param_int(PARAM_ACC_Y_SCALE_POS, "ACC_Y_S_POS", fix16_from_float(1.0f));
+	init_param_int(PARAM_ACC_Y_SCALE_NEG, "ACC_Y_S_NEG", fix16_from_float(1.0f));
+	init_param_int(PARAM_ACC_Z_SCALE_POS, "ACC_Z_S_POS", fix16_from_float(1.0f));
+	init_param_int(PARAM_ACC_Z_SCALE_NEG, "ACC_Z_S_NEG", fix16_from_float(1.0f));
 	init_param_fix16(PARAM_ACC_X_TEMP_COMP, "ACC_X_TEMP_COMP", fix16_from_float(0.0f));
 	init_param_fix16(PARAM_ACC_Y_TEMP_COMP, "ACC_Y_TEMP_COMP", fix16_from_float(0.0f));
 	init_param_fix16(PARAM_ACC_Z_TEMP_COMP, "ACC_Z_TEMP_COMP", fix16_from_float(0.0f));
