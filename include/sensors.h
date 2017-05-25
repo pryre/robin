@@ -108,37 +108,46 @@ typedef struct {
 	fix16_t sum_z;
 } sensor_calibration_gyro_data_t;
 
+typedef enum {
+	SENSOR_CAL_ACCEL_INIT = 0,
+	SENSOR_CAL_ACCEL_Z_DOWN,
+	SENSOR_CAL_ACCEL_Z_UP,
+	SENSOR_CAL_ACCEL_Y_DOWN,
+	SENSOR_CAL_ACCEL_Y_UP,
+	SENSOR_CAL_ACCEL_X_DOWN,
+	SENSOR_CAL_ACCEL_X_UP,
+	SENSOR_CAL_ACCEL_DONE
+} sensor_calibration_accel_rotations_t;
+
 typedef struct {
 	uint16_t count;
 
-	int32_t x_flat_sum;
-	int32_t x_up_sum;
-	int32_t x_down_sum;
-	int32_t x_flat_av;
+	int32_t t_sum;
+	int32_t x_sum;
+	int32_t y_sum;
+	int32_t z_sum;
+
+	int32_t t_av_sum;
+
+	int32_t x_flat_av_sum;
 	int32_t x_up_av;
 	int32_t x_down_av;
 
-	int32_t y_flat_sum;
-	int32_t y_up_sum;
-	int32_t y_down_sum;
-	int32_t y_flat_av;
+	int32_t y_flat_av_sum;
 	int32_t y_up_av;
 	int32_t y_down_av;
 
-	int32_t z_flat_sum;
-	int32_t z_up_sum;
-	int32_t z_down_sum;
-	int32_t z_flat_av;
+	int32_t z_flat_av_sum;
 	int32_t z_up_av;
 	int32_t z_down_av;
+
 } sensor_calibration_gravity_data_t;
 
 typedef struct {
-	uint32_t count;
-	int32_t sum_x;
-	int32_t sum_y;
-	int32_t sum_z;
-	int32_t sum_t;
+	sensor_calibration_accel_rotations_t accel_cal_step;
+	sensor_calibration_gravity_data_t data;
+
+	bool waiting;
 
 	uint16_t acc1G;
 	fix16_t temp_scale;

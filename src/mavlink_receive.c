@@ -137,7 +137,12 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				switch(command) {
 					case MAV_CMD_PREFLIGHT_CALIBRATION: {
 						if(_system_status.state == MAV_STATE_CALIBRATING) {	//XXX: Only allow one calibration request at a time
-							command_result = MAV_RESULT_TEMPORARILY_REJECTED;
+							if( (int)mavlink_msg_command_long_get_param5(&msg) && ( _sensor_calibration == SENSOR_CAL_ACCEL ) ) {
+								_sensor_cal_data.accel.waiting = false;
+								command_result = MAV_RESULT_ACCEPTED;
+							} else {
+								command_result = MAV_RESULT_TEMPORARILY_REJECTED;
+							}
 						} else if( safety_request_state( MAV_STATE_CALIBRATING ) && ( _sensor_calibration == SENSOR_CAL_NONE ) ) { //TODO: Note about only doing 1 calibration at a time
 							if( (int)mavlink_msg_command_long_get_param1(&msg) ) {
 								_sensor_calibration |= SENSOR_CAL_GYRO;
