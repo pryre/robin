@@ -34,11 +34,17 @@ typedef struct {
 } sensor_readings_clock_t;
 
 typedef struct {
+	int16_t x;
+	int16_t y;
+	int16_t z;
+} vector_int32_t;
+
+typedef struct {
 	sensor_status_t status;
 
-    int16_t accel_raw[3];
-    int16_t gyro_raw[3];
-    volatile int16_t temp_raw;
+    vector_int32_t accel_raw;
+    vector_int32_t gyro_raw;
+    int16_t temp_raw;
 
 	v3d accel;		//Vector of accel data
 	v3d gyro;		//Vector of gyro data

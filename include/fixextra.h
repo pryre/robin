@@ -12,20 +12,24 @@
 //q.d -> q.z
 
 //Quick defines of reused fix16 numbers
-#define _fc_0_01	0x0000028F	//0.01
-#define _fc_0_083_	0x00001555	//0.0833...
-#define _fc_0_46_	0x00006AAA	//0.466...
-#define _fc_0_5		0x00008000	//0.5
-#define _fc_0_6_	0x0000AAAA	//0.66...
-#define _fc_0_85	0x0000D999	//0.85
-#define _fc_1		0x00010000	//1.0
-#define _fc_1_15	0x00012666	//1.15
-#define _fc_2		0x00020000	//2.0
-#define _fc_10		0x000A0000	//10
-#define _fc_1000	0x03E80000	//1000
+#define _fc_0_01		0x0000028F	//0.01
+#define _fc_0_083_		0x00001555	//0.0833...
+#define _fc_0_46_		0x00006AAA	//0.466...
+#define _fc_0_5			0x00008000	//0.5
+#define _fc_0_6_		0x0000AAAA	//0.66...
+#define _fc_0_85		0x0000D999	//0.85
+#define _fc_1			0x00010000	//1.0
+#define _fc_1_15		0x00012666	//1.15
+#define _fc_2			0x00020000	//2.0
+#define _fc_10			0x000A0000	//10
+#define _fc_1000		0x03E80000	//1000
 
-#define _fc_epsilon	0x0000FFFF	//0.99...
-#define _fc_gravity	0x0009CE80	//Is equal to 9.80665 (Positive!) in Q16.16
+#define _fc_sqrt_0_5	0x0000B504	//0.70710754395 (slightly higher than sqrt 0.5)
+#define _fc_epsilon		0x0000FFFF	//0.99...
+#define _fc_gravity		0x0009CE80	//Is equal to 9.80665 (Positive!) in Q16.16
+
+static const qf16 NED_ENU_Q = {0, _fc_sqrt_0_5, -_fc_sqrt_0_5, 0};
+//static const qf16 NED_IMU_Q = {0, _fc_1, 0, 0};
 
 static inline fix16_t fix16_constrain(fix16_t i, const fix16_t min, const fix16_t max) {
 	return (i < min) ? min : (i > max) ? max : i;
@@ -137,4 +141,22 @@ static inline void matrix_to_qf16(qf16 *dest, const mf16 *mat) {
 	dest->b = temp[0];
 	dest->c = temp[1];
 	dest->d = temp[2];
+}
+
+//static inline v3d v3d_imu_to_ned(const v3d *imu) {
+//	v3d ned;
+//	qf16_rotate(&ned, &NED_IMU_Q, imu);
+//	return ned;
+//}
+
+static inline v3d v3d_enu_to_ned(const v3d *enu) {
+	v3d ned;
+	qf16_rotate(&ned, &NED_ENU_Q, enu);
+	return ned;
+}
+
+static inline v3d v3d_ned_to_enu(const v3d *ned) {
+	v3d enu;
+	qf16_rotate(&enu, &NED_ENU_Q, ned);
+	return enu;
 }

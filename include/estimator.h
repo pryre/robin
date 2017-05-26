@@ -19,7 +19,7 @@ typedef struct {
 } state_t;
 
 extern state_t _state_estimator;	//Current state estimation
-extern v3d _adaptive_gyro_bias;		//TODO: Implement
+extern v3d _adaptive_gyro_bias;		//Adds in an adaptive measurements for gyro
 
 //TODO: Redo these stats
 // PARAM_EST_USE_ACC_COR <- if using angle mode, this is required, adds ~70 us
@@ -27,6 +27,7 @@ extern v3d _adaptive_gyro_bias;		//TODO: Implement
 // PARAM_EST_USE_QUAD_INT <- some additional accuracy, adds ~20 us
 void estimator_init();
 void estimator_update(uint32_t now);
+void reset_adaptive_gyro_bias();
 
 #ifdef __cplusplus
 }

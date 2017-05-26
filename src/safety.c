@@ -299,7 +299,7 @@ bool safety_request_arm(void) {
 	    ( _command_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) )
 		throttle_check = true;
 
-	if(	( _system_status.safety_button_status ) &&
+	if(	( ( _system_status.safety_button_status ) || !_sensors.safety_button.status.present ) &&
 	  ( _system_status.health == SYSTEM_HEALTH_OK ) &&
 	  ( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_GUIDED ) &&
 	  ( throttle_check ) &&
@@ -317,7 +317,7 @@ bool safety_request_arm(void) {
 		char text_error[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] Arming denied: ";
 		char text_reason[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
 
-		if( !_system_status.safety_button_status) {
+		if( ( !_system_status.safety_button_status ) && ( _sensors.safety_button.status.present ) ) {
 			strncpy(text_reason,
 					 "safety engaged",
 					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);

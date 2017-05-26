@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "sensors.h"
+#include "estimator.h"
 #include "safety.h"
 #include "params.h"
 #include "mavlink_system.h"
@@ -14,9 +15,8 @@
 #include "fixvector3d.h"
 #include "fixextra.h"
 
-//TODO: REMOVE!
-#include <stdio.h>
-//TODO: REMOVE!
+
+#include "stdio.h"
 
 //Number of itterations of averaging to use with IMU calibrations
 #define SENSOR_CAL_IMU_PASSES 1000
@@ -26,6 +26,10 @@ int32_t _imu_time_read = 0;
 static volatile uint8_t accel_status = 0;
 static volatile uint8_t gyro_status = 0;
 static volatile uint8_t temp_status = 0;
+
+static int16_t read_accel_raw[3];
+static int16_t read_gyro_raw[3];
+static volatile int16_t read_temp_raw;
 
 sensor_readings_t _sensors;
 uint8_t _sensor_calibration;
@@ -58,9 +62,9 @@ static void sensors_imu_poll(void) {
 	//==-- Timing setup get loop time
 	_imu_time_read = micros();
 
-	mpu6050_request_async_accel_read(_sensors.imu.accel_raw, &accel_status);
-	mpu6050_request_async_gyro_read(_sensors.imu.gyro_raw, &gyro_status);
-	mpu6050_request_async_temp_read(&(_sensors.imu.temp_raw), &temp_status);
+	mpu6050_request_async_accel_read(read_accel_raw, &accel_status);
+	mpu6050_request_async_gyro_read(read_gyro_raw, &gyro_status);
+	mpu6050_request_async_temp_read(&(read_temp_raw), &temp_status);
 }
 
 static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
@@ -103,7 +107,7 @@ static void sensors_cal_init(void) {
 
 void sensors_init(void) {
 	//==-- IMU-MPU6050
-	sensor_status_init(&_sensors.imu.status, true);
+	sensor_status_init(&_sensors.imu.status, (bool)get_param_uint(PARAM_SENSOR_IMU_CBRK));
     mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
 	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
 
@@ -113,16 +117,16 @@ void sensors_init(void) {
 	sensors_cal_init();
 
 	//==-- Mag
-	sensor_status_init(&_sensors.mag.status, false);	//TODO: Params
+	sensor_status_init( &_sensors.mag.status, (bool)get_param_uint( PARAM_SENSOR_MAG_CBRK ) );
 
 	//==-- Baro
-	sensor_status_init(&_sensors.baro.status, false);	//TODO: Params
+	sensor_status_init( &_sensors.baro.status, (bool)get_param_uint( PARAM_SENSOR_BARO_CBRK ) );
 
 	//==-- Sonar
-	sensor_status_init(&_sensors.sonar.status, false);	//TODO: Params
+	sensor_status_init( &_sensors.sonar.status, (bool)get_param_uint( PARAM_SENSOR_SONAR_CBRK ) );
 
 	//==-- Safety button
-	sensor_status_init(&_sensors.safety_button.status, true);
+	sensor_status_init(&_sensors.safety_button.status, (bool)get_param_uint(PARAM_SENSOR_SAFETY_CBRK));
 	_sensors.safety_button.gpio_p = GPIOA;
 	_sensors.safety_button.pin = Pin_1;
 
@@ -153,10 +157,20 @@ bool sensors_read(void) {
 		temp_status = I2C_JOB_DEFAULT;
 
 		_sensors.clock.imu_time_read = _imu_time_read;
+
+		//XXX: Some values need to be inversed to be in the NED frame
+		_sensors.imu.accel_raw.x = -read_accel_raw[0];
+		_sensors.imu.accel_raw.y = read_accel_raw[1];
+		_sensors.imu.accel_raw.z = read_accel_raw[2];
+
+		_sensors.imu.gyro_raw.x = read_gyro_raw[0];
+		_sensors.imu.gyro_raw.y = -read_gyro_raw[1];
+		_sensors.imu.gyro_raw.z = -read_gyro_raw[2];
+
+		_sensors.imu.temp_raw = read_temp_raw;
 	}
 
 	//TODO: Check other status
-
 	//TODO: May need to offset these so they don't all check at once(?)
 
 	//Return the results
@@ -208,17 +222,15 @@ uint32_t sensors_clock_imu_int_get(void) {
 }
 
 //TODO: This does not take into account temperature
-//TODO: These parameters are not being written to EEPROM (Check to see if mavlink has a "save params" command)
-//TODO: This calibration method is very basic, doesn't take into acount very much...mabye?
 //Returns true if all calibrations are complete
 static bool sensors_calibrate(void) {
 	bool cal_mode_error = false;
 
 	switch(_sensor_calibration) {
 		case SENSOR_CAL_GYRO: {
-			_sensor_cal_data.gyro.sum_x += _sensors.imu.gyro_raw[0];
-			_sensor_cal_data.gyro.sum_y += _sensors.imu.gyro_raw[1];
-			_sensor_cal_data.gyro.sum_z += _sensors.imu.gyro_raw[2];
+			_sensor_cal_data.gyro.sum_x += _sensors.imu.gyro_raw.x;
+			_sensor_cal_data.gyro.sum_y += _sensors.imu.gyro_raw.y;
+			_sensor_cal_data.gyro.sum_z += _sensors.imu.gyro_raw.z;
 
 			_sensor_cal_data.gyro.count++;
 
@@ -232,16 +244,34 @@ static bool sensors_calibrate(void) {
 				_sensor_cal_data.gyro.sum_y = 0;
 				_sensor_cal_data.gyro.sum_z = 0;
 
+				reset_adaptive_gyro_bias();
+
 				_sensor_calibration ^= SENSOR_CAL_GYRO;	//Turn off SENSOR_CAL_GYRO bit
 				//TODO: "we could do some sanity checking here if we wanted to."
 
 				mavlink_queue_broadcast_notice("[SENSOR] Gyro calibration complete!");
+				status_buzzer_success();
 			}
 
 			break;
 		}
 		case SENSOR_CAL_MAG: {
 			//TODO
+
+			//======== TODO! REMOVE THIS LATER ========//
+			/*
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+			snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[CAL]:%0.4f,%0.4f,%0.4f,%0.4f,%0.4f,%0.4f",
+					 fix16_to_float(_sensors.imu.accel.x),
+					 fix16_to_float(_sensors.imu.accel.y),
+					 fix16_to_float(_sensors.imu.accel.z),
+					 fix16_to_float(_sensors.imu.gyro.x),
+					 fix16_to_float(_sensors.imu.gyro.y),
+					 fix16_to_float(_sensors.imu.gyro.z));
+			mavlink_queue_broadcast_error(text);
+			*/
+			//======== TODO! REMOVE THIS LATER ========//
+
 			_sensor_calibration ^= SENSOR_CAL_MAG;
 
 			break;
@@ -276,29 +306,19 @@ static bool sensors_calibrate(void) {
 					set_param_int( PARAM_ACC_Z_BIAS, z_bias );
 
 					//Correct for measurement biases
-					fix16_t accel_x_down_1g = fix16_mul(fix16_from_int(-(_sensor_cal_data.accel.data.x_down_av - get_param_int(PARAM_ACC_X_BIAS))), _sensors.imu.accel_scale);
-					fix16_t accel_x_up_1g = fix16_mul(fix16_from_int(-(_sensor_cal_data.accel.data.x_up_av - get_param_int(PARAM_ACC_X_BIAS))), _sensors.imu.accel_scale);
+					fix16_t accel_x_down_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.x_down_av - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
 					fix16_t accel_y_down_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.y_down_av - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
-					fix16_t accel_y_up_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.y_up_av - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
 					fix16_t accel_z_down_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.z_down_av - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
+					fix16_t accel_x_up_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.x_up_av - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
+					fix16_t accel_y_up_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.y_up_av - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
 					fix16_t accel_z_up_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.z_up_av - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
 
 					set_param_fix16( PARAM_ACC_X_SCALE_POS, fix16_div( _fc_gravity, accel_x_down_1g ) );
-					set_param_fix16( PARAM_ACC_X_SCALE_NEG, fix16_div( -_fc_gravity, accel_x_up_1g ) );
 					set_param_fix16( PARAM_ACC_Y_SCALE_POS, fix16_div( _fc_gravity, accel_y_down_1g ) );
-					set_param_fix16( PARAM_ACC_Y_SCALE_NEG, fix16_div( -_fc_gravity, accel_y_up_1g ) );
 					set_param_fix16( PARAM_ACC_Z_SCALE_POS, fix16_div( _fc_gravity, accel_z_down_1g ) );
+					set_param_fix16( PARAM_ACC_X_SCALE_NEG, fix16_div( -_fc_gravity, accel_x_up_1g ) );
+					set_param_fix16( PARAM_ACC_Y_SCALE_NEG, fix16_div( -_fc_gravity, accel_y_up_1g ) );
 					set_param_fix16( PARAM_ACC_Z_SCALE_NEG, fix16_div( -_fc_gravity, accel_z_up_1g ) );
-
-					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-					snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[CAL]:%0.4f,%0.4f,%0.4f,%0.4f,%0.4f,%0.4f",
-							 fix16_to_float(get_param_fix16(PARAM_ACC_X_SCALE_POS)),
-							 fix16_to_float(get_param_fix16(PARAM_ACC_X_SCALE_NEG)),
-							 fix16_to_float(get_param_fix16(PARAM_ACC_Y_SCALE_POS)),
-							 fix16_to_float(get_param_fix16(PARAM_ACC_Y_SCALE_NEG)),
-							 fix16_to_float(get_param_fix16(PARAM_ACC_Z_SCALE_POS)),
-							 fix16_to_float(get_param_fix16(PARAM_ACC_Z_SCALE_NEG)));
-					mavlink_queue_broadcast_error(text);
 
 					_sensor_calibration ^= SENSOR_CAL_ACCEL;	//Turn off SENSOR_CAL_ACCEL bit
 					//TODO: "we could do some sanity checking here if we wanted to."
@@ -306,9 +326,9 @@ static bool sensors_calibrate(void) {
 					mavlink_queue_broadcast_notice("[SENSOR] Accel calibration complete!");
 				} else {
 					_sensor_cal_data.accel.data.t_sum += _sensors.imu.temp_raw;
-					_sensor_cal_data.accel.data.x_sum += _sensors.imu.accel_raw[0];
-					_sensor_cal_data.accel.data.y_sum += _sensors.imu.accel_raw[1];
-					_sensor_cal_data.accel.data.z_sum += _sensors.imu.accel_raw[2];
+					_sensor_cal_data.accel.data.x_sum += _sensors.imu.accel_raw.x;
+					_sensor_cal_data.accel.data.y_sum += _sensors.imu.accel_raw.y;
+					_sensor_cal_data.accel.data.z_sum += _sensors.imu.accel_raw.z;
 
 					_sensor_cal_data.accel.data.count++;
 
@@ -383,9 +403,12 @@ static bool sensors_calibrate(void) {
 								mavlink_queue_broadcast_error("[SENSOR] Issue with accel cal, aborting");
 								sensors_cal_init();
 								cal_mode_error = true;
+								status_buzzer_failure();
 								break;
 							}
 						}
+
+						status_buzzer_success();
 
 						//Reset for the next calibration
 						_sensor_cal_data.accel.data.count = 0;
@@ -433,39 +456,34 @@ bool sensors_update(uint32_t time_us) {
 	//TODO: Remember not to expect all sensors to be ready
 
 	//==-- Update IMU
+    //Convert temperature SI units (degC, m/s^2, rad/s)
 
-    // convert temperature SI units (degC, m/s^2, rad/s)
-    // convert to NED (first of braces)
-	//Correct for biases and temperature (second braces)
-	//TODO: Calibration has to be done without biases and temp factored in
-
-	//TODO: Perhaps X is being calculated in revearse?
-	//TODO:Something about the frame of reference (NED/ENU) isn't quite right
-
-	//==-- Temperature in degC
-	//value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
+	//Temperature in degC
+	// value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
 	_sensors.imu.temperature = fix16_add(fix16_div(fix16_from_int(_sensors.imu.temp_raw), _sensor_cal_data.accel.temp_scale), _sensor_cal_data.accel.temp_shift);
 
-	//==-- Accel in NED
+	//Accel
 	//TODO: value = (raw - BIAS - (EMP_COMP * TEMP)) * scale
 	// value = (raw - BIAS) * scale
 
 	//Correct for measurement biases
-	fix16_t accel_x_tmp = fix16_mul(fix16_from_int(-(_sensors.imu.accel_raw[0] - get_param_int(PARAM_ACC_X_BIAS))), _sensors.imu.accel_scale);
-	fix16_t accel_y_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[1] - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
-	fix16_t accel_z_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw[2] - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
+	fix16_t accel_x_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.x - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
+	fix16_t accel_y_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.y - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
+	fix16_t accel_z_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.z - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
 
 	//Scale the accelerometer to match 1G
 	_sensors.imu.accel.x = fix16_mul(accel_x_tmp, ( accel_x_tmp > 0 ) ? get_param_fix16(PARAM_ACC_X_SCALE_POS) : get_param_fix16(PARAM_ACC_X_SCALE_NEG) );
 	_sensors.imu.accel.y = fix16_mul(accel_y_tmp, ( accel_y_tmp > 0 ) ? get_param_fix16(PARAM_ACC_Y_SCALE_POS) : get_param_fix16(PARAM_ACC_Y_SCALE_NEG) );
 	_sensors.imu.accel.z = fix16_mul(accel_z_tmp, ( accel_z_tmp > 0 ) ? get_param_fix16(PARAM_ACC_Z_SCALE_POS) : get_param_fix16(PARAM_ACC_Z_SCALE_NEG) );
 
-	//==-- Gyro in NED
+	//Gyro
 	// value = (raw - BIAS) * scale
-	_sensors.imu.gyro.x = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw[0] - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
-	_sensors.imu.gyro.y = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[1] - get_param_int(PARAM_GYRO_Y_BIAS))), _sensors.imu.gyro_scale);
-	_sensors.imu.gyro.z = fix16_mul(fix16_from_int(-(_sensors.imu.gyro_raw[2] - get_param_int(PARAM_GYRO_Z_BIAS))), _sensors.imu.gyro_scale);
+	_sensors.imu.gyro.x = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.x - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
+	_sensors.imu.gyro.y = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.y - get_param_int(PARAM_GYRO_Y_BIAS)), _sensors.imu.gyro_scale);
+	_sensors.imu.gyro.z = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.z - get_param_int(PARAM_GYRO_Z_BIAS)), _sensors.imu.gyro_scale);
 
+
+	//Other IMU updates
 	_sensors.imu.status.time_read = sensors_clock_imu_int_get();
 	_sensors.imu.status.new_data = true;
 

@@ -98,14 +98,18 @@ void set_param_defaults(void) {
 	*/
 	//==-- Sensors
 	//All params here in us
+	init_param_uint(PARAM_SENSOR_IMU_CBRK, "CBRK_IMU", 1);
+	init_param_uint(PARAM_SENSOR_MAG_CBRK, "CBRK_MAG", 0);
+	init_param_uint(PARAM_SENSOR_BARO_CBRK, "CBRK_BARO", 0);
+	init_param_uint(PARAM_SENSOR_SONAR_CBRK, "CBRK_SONAR", 0);
+	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, "CBRK_SAFETY", 1);
+
 	//TODO: Double check which is used here
-	init_param_uint(PARAM_SENSOR_DIFF_PRESS_UPDATE, "UPDATE_DIFF_P", 0);
 	init_param_uint(PARAM_SENSOR_BARO_UPDATE, "UPDATE_BARO", 0);
 	init_param_uint(PARAM_SENSOR_SONAR_UPDATE, "UPDATE_SONAR", 0);
 	init_param_uint(PARAM_SENSOR_MAG_UPDATE, "UPDATE_MAG", 0);
 
 	init_param_uint(PARAM_SENSOR_IMU_STRM_COUNT, "STRM_NUM_IMU", 1000);
-	init_param_uint(PARAM_SENSOR_DIFF_PRESS_STRM_COUNT, "STRM_NUM_PRESS", 50);
 	init_param_uint(PARAM_SENSOR_BARO_STRM_COUNT, "STRM_NUM_BARO", 50);
 	init_param_uint(PARAM_SENSOR_SONAR_STRM_COUNT, "STRM_NUM_SONAR", 50);
 	init_param_uint(PARAM_SENSOR_MAG_STRM_COUNT, "STRM_NUM_MAG", 50);
@@ -113,7 +117,6 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_OFFB_CTRL_STRM_COUNT, "STRM_NUM_OB_C", 100);
 
 	init_param_uint(PARAM_SENSOR_IMU_TIMEOUT, "TIMEOUT_IMU", 2000);
-	init_param_uint(PARAM_SENSOR_DIFF_PRESS_TIMEOUT, "TIMEOUT_DIFF_P", 20000);
 	init_param_uint(PARAM_SENSOR_BARO_TIMEOUT, "TIMEOUT_BARO", 20000);
 	init_param_uint(PARAM_SENSOR_SONAR_TIMEOUT, "TIMEOUT_SONAR", 20000);
 	init_param_uint(PARAM_SENSOR_MAG_TIMEOUT, "TIMEOUT_MAG", 20000);

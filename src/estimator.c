@@ -97,6 +97,13 @@ void estimator_init( void ) {
 	time_last = 0;
 }
 
+
+void reset_adaptive_gyro_bias() {
+	b.x = 0;
+	b.y = 0;
+	b.z = 0;
+}
+
 static void lpf_update(void) {
 	//value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
 	fix16_t alpha_acc = get_param_fix16(PARAM_ACC_ALPHA);
@@ -114,7 +121,7 @@ void estimator_update( uint32_t time_now ) {
 	fix16_t kp;
 	fix16_t ki;
 
-	//TODO: This will exit on the first loop, not a nice way of doing it though
+	//XXX: This will exit on the first loop, not a nice way of doing it though
 	if ( time_last == 0 ) {
 		time_last = time_now;
 		return;
@@ -135,10 +142,13 @@ void estimator_update( uint32_t time_now ) {
 
 	//Run LPF to reject a lot of noise
 	lpf_update();
+	reset_adaptive_gyro_bias();	//TODO: XXX: The adaptive bias' are good, but without proper mag support, they cause lasting errors if the mav is turned upside down
+						//Need to enable this when yaw_c is implemented
+						//This is unobservable from accelerometer: w_acc.z = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.d));
 
 	//Add in accelerometer
 	//a_sqrd_norm = x^2 + y^2 + z^2
-	fix16_t a_sqrd_norm = v3d_sq_norm( &_accel_LPF );//fix16_add(fix16_add(fix16_sq(_accel_LPF.x), fix16_sq(_accel_LPF.y)), fix16_sq(_accel_LPF.z));
+	fix16_t a_sqrd_norm = v3d_sq_norm( &_accel_LPF );
 
 	//If we should use accelerometer compensation, and the reading is reasonably small
 	if( ( get_param_uint( PARAM_EST_USE_ACC_COR ) ) &&
@@ -158,10 +168,19 @@ void estimator_update( uint32_t time_now ) {
 		qf16_inverse(&q_acc_inv, &q_acc);
 
 		// Get the error quaternion between observer and low-freq q
-		// First we been to take out the Z (Yaw) component as it is unobservable with just imu
+		// First we need to take out the Z (Yaw) component as it is unobservable with just imu
 		qf16 q_hat_acc;
 		mf16 rot_mat;
 		qf16_to_matrix(&rot_mat, &q_hat);
+
+		//======== HEADING ESTIMATE FEEDBACK ========//
+		fix16_t roll;
+		fix16_t pitch;
+		fix16_t yaw;
+
+		//Extract Euler Angles for controller
+		euler_from_quat(&_state_estimator.attitude, &roll, &pitch, &yaw);
+		//======== HEADING ESTIMATE FEEDBACK ========//
 
 		v3d yaw_c;
 		v3d body_x;
@@ -199,15 +218,13 @@ void estimator_update( uint32_t time_now ) {
 		// w_acc = -2*s_tilde*v_tilde
 		w_acc.x = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.b));
 		w_acc.y = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.c));
-		w_acc.z = 0;	//This is unobservable from accelerometer: w_acc.z = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.d));
-						//TODO: Need to enable this when yaw_c is implemented
+		w_acc.z = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.d));
 
 		// integrate biases from accelerometer feedback
 		// (eq 47b Mahoney Paper, using correction term w_acc found above)
 		b.x = fix16_sub(b.x, fix16_mul(ki, fix16_mul(w_acc.x, dt)));
 		b.y = fix16_sub(b.y, fix16_mul(ki, fix16_mul(w_acc.y, dt)));
-		b.z = 0;	//This is unobservable from accelerometer: b.z = fix16_sub(b.z, fix16_mul(ki, fix16_mul(w_acc.z, dt)));	// Don't integrate z bias, because it's unobservable
-					//TODO: Need to enable this when yaw_c is implemented
+		b.z = fix16_sub(b.z, fix16_mul(ki, fix16_mul(w_acc.z, dt)));
 	} else {
 		w_acc.x = 0;
 		w_acc.y = 0;
@@ -327,15 +344,14 @@ void estimator_update( uint32_t time_now ) {
 	v3d wbar_old = wbar;
 	v3d_sub( &wbar, &wbar_old, &b );
 
-	_state_estimator.p = _gyro_LPF.x - _adaptive_gyro_bias.x;
-	_state_estimator.q = _gyro_LPF.y - _adaptive_gyro_bias.y;
-	_state_estimator.r = _gyro_LPF.z;
+	_state_estimator.p = fix16_sub( _gyro_LPF.x, _adaptive_gyro_bias.x );
+	_state_estimator.q = fix16_sub( _gyro_LPF.y, _adaptive_gyro_bias.y );
+	_state_estimator.r = fix16_sub( _gyro_LPF.z, _adaptive_gyro_bias.z );
 
 	// Save gyro biases for streaming to computer
 	_adaptive_gyro_bias.x = b.x;
 	_adaptive_gyro_bias.y = b.y;
-	_adaptive_gyro_bias.z = 0.0;	//TODO: Until we have MAG support, the z-bias is totally meaningless
-									//TODO: Need to enable this when yaw_c is implemented
+	_adaptive_gyro_bias.z = b.z;
 }
 
 #ifdef __cplusplus
