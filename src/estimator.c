@@ -142,9 +142,6 @@ void estimator_update( uint32_t time_now ) {
 
 	//Run LPF to reject a lot of noise
 	lpf_update();
-	reset_adaptive_gyro_bias();	//TODO: XXX: The adaptive bias' are good, but without proper mag support, they cause lasting errors if the mav is turned upside down
-						//Need to enable this when yaw_c is implemented
-						//This is unobservable from accelerometer: w_acc.z = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.d));
 
 	//Add in accelerometer
 	//a_sqrd_norm = x^2 + y^2 + z^2
@@ -173,15 +170,6 @@ void estimator_update( uint32_t time_now ) {
 		mf16 rot_mat;
 		qf16_to_matrix(&rot_mat, &q_hat);
 
-		//======== HEADING ESTIMATE FEEDBACK ========//
-		fix16_t roll;
-		fix16_t pitch;
-		fix16_t yaw;
-
-		//Extract Euler Angles for controller
-		euler_from_quat(&_state_estimator.attitude, &roll, &pitch, &yaw);
-		//======== HEADING ESTIMATE FEEDBACK ========//
-
 		v3d yaw_c;
 		v3d body_x;
 		v3d body_y;
@@ -194,7 +182,16 @@ void estimator_update( uint32_t time_now ) {
 		body_z.z = rot_mat.data[2][2];
 
 		v3d_cross(&body_x, &yaw_c, &body_z);
+
+		//Invert the frame if the FCU is upside down
+		//if (body_z.z < 0) {
+		//		body_x.x = -body_x.x;
+		//		body_x.y = -body_x.y;
+		//		body_x.z = -body_x.z;
+		//}
+
 		v3d_normalize(&body_x, &body_x);
+
 		v3d_cross(&body_y, &body_z, &body_x);
 		v3d_normalize(&body_y, &body_y);
 
@@ -339,6 +336,9 @@ void estimator_update( uint32_t time_now ) {
 	_state_estimator.attitude = q_hat;
 	// Extract Euler Angles for controller
 	//euler_from_quat(&q_hat, &_state_estimator.phi, &_state_estimator.theta, &_state_estimator.psi);
+
+	if( !get_param_uint( PARAM_EST_USE_ADPT_BIAS ) )
+		reset_adaptive_gyro_bias();	//TODO: XXX: The adaptive bias' are good, but without proper mag support, they cause lasting errors if the mav is turned upside down
 
 	// Save old adjust gyro measurements with estimated biases for control
 	v3d wbar_old = wbar;

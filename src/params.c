@@ -128,6 +128,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_EST_USE_ACC_COR, "EST_ACC_COR", 1); // 1=true; 0=false
 	init_param_uint(PARAM_EST_USE_MAT_EXP, "EST_MAT_EXP", 1); // 1=true; 0=false
 	init_param_uint(PARAM_EST_USE_QUAD_INT, "EST_QUAD_INT", 1); // 1=true; 0=false
+	init_param_uint(PARAM_EST_USE_ADPT_BIAS, "EST_ADPT_BIAS", 0); // 1=true; 0=false
 	init_param_fix16(PARAM_FILTER_KP, "FILTER_KP", fix16_from_float(1.0f));
 	init_param_fix16(PARAM_FILTER_KI, "FILTER_KI", fix16_from_float(0.05f));
 	init_param_fix16(PARAM_GYRO_ALPHA, "GYRO_LPF_ALPHA", fix16_from_float(0.6f));
