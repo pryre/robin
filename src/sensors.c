@@ -297,9 +297,9 @@ static bool sensors_calibrate(void) {
 				} else if ( _sensor_cal_data.accel.accel_cal_step == SENSOR_CAL_ACCEL_DONE ) {
 					//==-- bias = sum / count
 					//==-- //TODO: bias = (sum - (temp_comp*temp_sum)) / count
-					int32_t x_bias = _sensor_cal_data.accel.data.x_flat_av_sum / 6;
-					int32_t y_bias = _sensor_cal_data.accel.data.y_flat_av_sum / 6;
-					int32_t z_bias = _sensor_cal_data.accel.data.z_flat_av_sum / 6;
+					int32_t x_bias = _sensor_cal_data.accel.data.x_flat_av_sum / 4;
+					int32_t y_bias = _sensor_cal_data.accel.data.y_flat_av_sum / 4;
+					int32_t z_bias = _sensor_cal_data.accel.data.z_flat_av_sum / 4;
 
 					set_param_int( PARAM_ACC_X_BIAS, x_bias );
 					set_param_int( PARAM_ACC_Y_BIAS, y_bias );
