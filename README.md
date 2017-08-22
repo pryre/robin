@@ -4,7 +4,7 @@ The ROS Offboard Integration for the Naze32 Rev.5 (or similar Naze32-based board
 ## Preperation
 ### Ubuntu
 ```sh
-sudo apt install gcc-arm-eabi-none stm32flash
+sudo apt install gcc-arm-none-eabi stm32flash
 mkdir -p ~/src
 cd ~/src
 git clone --recursive https://github.com/qutas/robin/
