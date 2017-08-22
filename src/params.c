@@ -52,12 +52,14 @@ static void init_param_fix16(param_id_t id, const char name[PARAMS_NAME_LENGTH],
 }
 
 // function definitions
-void init_params(void) {
+void params_init(void) {
 	initEEPROM();
 
 	if ( !read_params() )	{
 		set_param_defaults();
 		write_params();
+
+		digitalLo(LED0_GPIO, LED0_PIN);
 	}
 }
 
@@ -199,9 +201,12 @@ bool write_params(void) {
 	//XXX: System will freeze after eeprom write (not 100% sure why, but something to do with interrupts), so reboot here
 	//TODO: Maybe this can be fixed?
 	if( safety_request_state( MAV_STATE_POWEROFF ) ) {
-		success = writeEEPROM();
+		if( writeEEPROM() ) {
+			mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[PARAM] EEPROM written, mav will now reboot");
+		} else {
+			mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[PARAM] EEPROM write failed, mav will now reboot");
+		}
 
-		mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[PARAM] EEPROM written, mav will now reboot");
 		delay(500);
 		systemReset();
 	} else {

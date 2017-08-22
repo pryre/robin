@@ -159,7 +159,7 @@ typedef struct {
 extern params_t _params;
 
 // function declarations
-void init_params(void);
+void params_init(void);
 void set_param_defaults(void);
 
 bool read_params(void);
