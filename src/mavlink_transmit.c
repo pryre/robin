@@ -22,7 +22,6 @@ static mavlink_stream_t mavlink_stream_comm_0[MAVLINK_STREAM_COUNT] = {
 	{ .period_param = PARAM_STREAM_RATE_LOW_PRIORITY_0,			.last_time_us = 0, .send_function = mavlink_stream_low_priority }
 };
 
-/*
 static mavlink_stream_t mavlink_stream_comm_1[MAVLINK_STREAM_COUNT] = {
 	{ .period_param = PARAM_STREAM_RATE_HEARTBEAT_1,			.last_time_us = 0, .send_function = mavlink_stream_heartbeat },
 	{ .period_param = PARAM_STREAM_RATE_SYS_STATUS_1,			.last_time_us = 0, .send_function = mavlink_stream_sys_status },
@@ -34,7 +33,6 @@ static mavlink_stream_t mavlink_stream_comm_1[MAVLINK_STREAM_COUNT] = {
 	{ .period_param = PARAM_STREAM_RATE_TIMESYNC_1,				.last_time_us = 0, .send_function = mavlink_stream_timesync },
 	{ .period_param = PARAM_STREAM_RATE_LOW_PRIORITY_1,			.last_time_us = 0, .send_function = mavlink_stream_low_priority }
 };
-*/
 
 static bool transmit_stream(uint32_t time_us, uint8_t port, mavlink_stream_t *stream) {
 	bool sent_message = false;
@@ -54,19 +52,19 @@ void communication_transmit(uint32_t time_us) {
 	// otherwise we risk overloading the serial buffer. This
 	// will also offset the message streams so they are all staggered
 	//Disable checking for outputs if port disabled
-	bool message_sent_comm_0 = ( get_param_uint(PARAM_BAUD_RATE_0) == 0 );
-	//bool message_sent_comm_1 = ( get_param_uint(PARAM_BAUD_RATE_1) == 0 );
+	bool message_sent_comm_0 = !comm_is_open( COMM_CH_0 );
+	bool message_sent_comm_1 = !comm_is_open( COMM_CH_1 );
 
 	for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
 
 		if( !message_sent_comm_0 )
 			message_sent_comm_0 = transmit_stream(time_us, MAVLINK_COMM_0, &(mavlink_stream_comm_0[i]));
 
-		//if( !message_sent_comm_1 )
-		//	message_sent_comm_1 = transmit_stream(time_us, MAVLINK_COMM_1, &(mavlink_stream_comm_1[i]));
+		if( !message_sent_comm_1 )
+			message_sent_comm_1 = transmit_stream(time_us, MAVLINK_COMM_1, &(mavlink_stream_comm_1[i]));
 
 		//Break early if neither device will transmit again
-		if(message_sent_comm_0)// && message_sent_comm_1)
+		if(message_sent_comm_0 && message_sent_comm_1)
 			break;
 	}
 }

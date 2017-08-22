@@ -20,10 +20,18 @@
    Lines also in your main.c, e.g. by reading these parameter from EEPROM.
  */
 
-//extern serialPort_t * Serial2;
+#define COMM_CH_0 (uint8_t)0x01	//0b00000001
+#define COMM_CH_1 (uint8_t)0x02	//0b00000010
+
+serialPort_t* Serial1;
+serialPort_t* Serial2;
+
 extern mavlink_system_t mavlink_system;
 
 void communications_system_init(void);
+bool comm_is_open( uint8_t ch );
+bool comm_set_open( uint8_t ch );
+bool comm_set_closed( uint8_t ch );
 
 /**
  * @brief Send one char (uint8_t) over a comm channel
@@ -54,7 +62,7 @@ typedef struct {
 } mavlink_queue_t;
 
 extern mavlink_queue_t _lpq_port_0;
-//extern mavlink_queue_t _lpq_port_1;
+extern mavlink_queue_t _lpq_port_1;
 
 bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg);
 void lpq_queue_broadcast_msg(mavlink_message_t *msg);

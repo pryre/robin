@@ -271,8 +271,8 @@ bool safety_request_state(uint8_t req_state) {
 			}
 			case MAV_STATE_POWEROFF: {	//Allows the mav to check it is safe to poweroff/reboot
 				if( (_system_status.state == MAV_STATE_UNINIT) ||
-				  (_system_status.state == MAV_STATE_BOOT) ||
-				  (_system_status.state == MAV_STATE_STANDBY) )
+					(_system_status.state == MAV_STATE_BOOT) ||
+					(_system_status.state == MAV_STATE_STANDBY) )
 					change_state = true;
 
 				break;

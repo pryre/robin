@@ -10,7 +10,6 @@
 #include "controller.h"
 #include "pid_controller.h"
 
- //TODO: Only in here because of eeprom write problems
 #include "safety.h"
 #include "mavlink_system.h"
 
@@ -55,11 +54,30 @@ static void init_param_fix16(param_id_t id, const char name[PARAMS_NAME_LENGTH],
 void params_init(void) {
 	initEEPROM();
 
-	if ( !read_params() )	{
+	if ( !read_params() ) {
+		bool flasher = true;
+
+		for(uint32_t i=0; i<5; i++) {
+			if(flasher) {
+				digitalLo(LED0_GPIO, LED0_PIN);
+				digitalLo(LED1_GPIO, LED1_PIN);
+			} else {
+				digitalHi(LED0_GPIO, LED0_PIN);
+				digitalHi(LED1_GPIO, LED1_PIN);
+			}
+
+			flasher = !flasher;
+			delay(100);
+		}
+
+		digitalHi(LED0_GPIO, LED0_PIN);
+		digitalHi(LED1_GPIO, LED1_PIN);
+
 		set_param_defaults();
+
 		write_params();
 
-		digitalLo(LED0_GPIO, LED0_PIN);
+		systemReset();
 	}
 }
 
@@ -71,7 +89,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_VERSION_FIRMWARE, "FW_VERSION", strtoll(GIT_VERSION_FLIGHT_STR, NULL, 16));
 	init_param_uint(PARAM_VERSION_SOFTWARE, "SW_VERSION", strtoll(GIT_VERSION_OS_STR, NULL, 16));
 	init_param_uint(PARAM_BAUD_RATE_0, "BAUD_RATE_0", 921600);	//Set baud rate to 0 to disable a comm port
-	//init_param_uint(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//Set baud rate to 0 to disable a comm port
+	init_param_uint(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);	//Set baud rate to 0 to disable a comm port
 	init_param_fix16(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));
 
 	//==-- Mavlink
@@ -87,7 +105,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0, "STRM0_SRV_OUT", 100000);
 	init_param_uint(PARAM_STREAM_RATE_TIMESYNC_0, "STRM0_TIMESYNC", 100000);
 	init_param_uint(PARAM_STREAM_RATE_LOW_PRIORITY_0, "STRM0_LPQ", 10000);
-	/*
+
 	init_param_uint(PARAM_STREAM_RATE_HEARTBEAT_1, "STRM1_HRTBT", 1000000);
 	init_param_uint(PARAM_STREAM_RATE_SYS_STATUS_1, "STRM1_SYS_STAT", 5000000);
 	init_param_uint(PARAM_STREAM_RATE_HIGHRES_IMU_1, "STRM1_HR_IMU", 10000);
@@ -97,7 +115,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1, "STRM1_SRV_OUT", 100000);
 	init_param_uint(PARAM_STREAM_RATE_TIMESYNC_1, "STRM1_TIMESYNC", 100000);
 	init_param_uint(PARAM_STREAM_RATE_LOW_PRIORITY_1, "STRM1_LPQ", 10000);
-	*/
+
 	//==-- Sensors
 	//All params here in us
 	init_param_uint(PARAM_SENSOR_IMU_CBRK, "CBRK_IMU", 1);
@@ -199,18 +217,43 @@ bool write_params(void) {
 	bool success = false;
 
 	//XXX: System will freeze after eeprom write (not 100% sure why, but something to do with interrupts), so reboot here
-	//TODO: Maybe this can be fixed?
 	if( safety_request_state( MAV_STATE_POWEROFF ) ) {
+		bool flasher = true;
+		GPIO_TypeDef *gpio_led_p;
+		uint16_t led_pin;
+
 		if( writeEEPROM() ) {
+			//Write sucess
 			mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[PARAM] EEPROM written, mav will now reboot");
+
+			gpio_led_p = LED0_GPIO;
+			led_pin = LED0_PIN;
+
 		} else {
+			//Write failed
 			mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[PARAM] EEPROM write failed, mav will now reboot");
+
+			gpio_led_p = LED1_GPIO;
+			led_pin = LED1_PIN;
 		}
 
-		delay(500);
+		for(uint32_t i=0; i<5; i++) {
+			if(flasher) {
+				digitalLo(gpio_led_p, led_pin);
+			} else {
+				digitalHi(gpio_led_p, led_pin);
+			}
+
+			flasher = !flasher;
+			delay(100);
+		}
+
+		digitalHi(LED0_GPIO, LED0_PIN);
+		digitalHi(LED1_GPIO, LED1_PIN);
+
 		systemReset();
 	} else {
-		mavlink_queue_broadcast_error("[SAFETY] Unable poweroff to write params!");
+		mavlink_queue_broadcast_error("[SAFETY] Unable to poweroff, can't write params!");
 	}
 
 	return success;
@@ -270,6 +313,10 @@ void param_change_callback(param_id_t id) {
 			// no action needed for this parameter
 			break;
 	}
+
+	mavlink_message_t msg_out;
+	mavlink_prepare_param_value( &msg_out, id );
+	lpq_queue_broadcast_msg( &msg_out );
 }
 
 param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]) {

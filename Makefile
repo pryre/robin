@@ -18,7 +18,8 @@
 # along with this code.  If not, see <http://www.gnu.org/licenses/>.
 
 ARCH_FLAGS	= -mthumb \
-			  -DFIXMATH_NO_CACHE
+			  -DFIXMATH_NO_CACHE \
+			  -std=gnu11
 
 # Change this to wherever you put BreezySTM32
 BREEZY_DIR	= $(HERE)/lib/BreezySTM32
