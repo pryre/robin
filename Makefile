@@ -17,6 +17,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this code.  If not, see <http://www.gnu.org/licenses/>.
 
+###############################################################################
+SERIAL_DEVICE	?= /dev/ttyUSB0
+SERIAL_BAUD		?= 921600
+###############################################################################
+
 ARCH_FLAGS	= -mthumb \
 			  -DFIXMATH_NO_CACHE \
 			  -std=gnu11
@@ -49,9 +54,6 @@ BIN_DIR		 = $(HERE)/build
 CMSIS_DIR	 = $(BREEZY_DIR)/lib/CMSIS
 
 ARCH = 1
-
-SERIAL_DEVICE	?= /dev/ttyUSB0
-SERIAL_BAUD		?= 921600
 
 STDPERIPH_DIR = $(BREEZY_DIR)/lib/STM32F10x_StdPeriph_Driver
 
