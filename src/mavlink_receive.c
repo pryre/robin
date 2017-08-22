@@ -216,10 +216,18 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						if( safety_request_state( MAV_STATE_POWEROFF ) ) {
 							switch( (int)mavlink_msg_command_long_get_param1(&msg) ) {
 								case 1:
+									mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[SAFETY] Performing system reset!");
+
+									delay(500);
+
 									systemReset();
 
 									break;
 								case 3:
+									mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[SAFETY] Entering bootloader mode!");
+
+									delay(500);
+
 									systemResetToBootloader();
 
 									break;
