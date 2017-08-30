@@ -190,7 +190,7 @@ PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
 
 PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
-  type: "uint"
+  type: "float"
   name: "STRM0_SRV_OUT"
   description: "Communication update rate for commanded servo output in Hz (set to 0 to turn off stream)"
   reboot: false
@@ -280,7 +280,7 @@ PARAM_STREAM_RATE_ATTITUDE_TARGET_1:
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
 
 PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1:
-  type: "uint"
+  type: "float"
   name: "STRM1_SRV_OUT"
   description: "Communication update rate for commanded servo output in Hz (set to 0 to turn off stream)"
   reboot: false
@@ -355,8 +355,8 @@ PARAM_SENSOR_SAFETY_CBRK:
     default: 1
 
 PARAM_SENSOR_BARO_UPDATE_RATE:
-  type: "uint"
-  name: "CBRK_IMU"
+  type: "float"
+  name: "CHK_RATE_BARO"
   description: "Sensor update rate for barometer in Hz (TODO)"
   reboot: false
   value:
@@ -947,4 +947,4 @@ PARAM_MIXER:
   reboot: true
   value:
     option: "scalar"
-    default: MIXER_QUADCOPTER_X
+    default: 0
