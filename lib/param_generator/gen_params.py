@@ -20,7 +20,7 @@ with open("lib/param_generator/params.yaml", 'r') as fstream:
 
 	# Prepare file headers
 
-	str_md = "# Parameter File Reference\n\nName | Type | Description | Default | Unit | Options | Reboot\n--- | --- | --- | --- | --- | --- | ---\n"
+	str_md = "# Parameter File Reference\n\nName | Type | Description | Default | Unit | Options | Reboot\n--- | --- | --- | ---:| --- | --- | ---\n"
 
 	# Write file headers
 	param_gen_md.write(str_md)
@@ -79,7 +79,7 @@ with open("lib/param_generator/params.yaml", 'r') as fstream:
 
 			if p[1]["value"]["option"] == "scalar":
 				str_md += str(p[1]["value"]["default"])
-				str_md += " :| "
+				str_md += " | "
 				# TODO:
 				#str_md = p[1]["value"]["unit"]
 				str_md += " | "
@@ -87,7 +87,7 @@ with open("lib/param_generator/params.yaml", 'r') as fstream:
 				str_md += " | "
 			elif p[1]["value"]["option"] == "range":
 				str_md += str(p[1]["value"]["default"])
-				str_md += " :| "
+				str_md += " | "
 				#TODO:
 				#str_md = p[1]["value"]["unit"]
 				str_md += " | "
@@ -95,20 +95,14 @@ with open("lib/param_generator/params.yaml", 'r') as fstream:
 				str_md += " | "
 			elif p[1]["value"]["option"] == "list":
 				str_md += str(p[1]["value"]["list"][p[1]["value"]["default"]])
-				str_md += " :| "
+				str_md += " | "
 				#TODO:
 				#str_md = p[1]["value"]["unit"]
 				str_md += " | "
-				str_md += "[%s]" % str(p[1]["value"]["list"])
+				str_md += "%s" % str(p[1]["value"]["list"])
 				str_md += " | "
 			elif p[1]["value"]["option"] == "generated":
-				# TODO: More detail from default and unit values?
-				#str_md += str(p[1]["value"]["default"])
-				str_md += " | "
-				#str_md = p[1]["value"]["unit"]
-				str_md += " | "
-				str_md += "None"
-				str_md += " | "
+				str_md += " | | | "
 			else:
 				raise ValueError("%s: Unsupported value option (%s)" % (p[0], p[1]["value"]["option"]))
 

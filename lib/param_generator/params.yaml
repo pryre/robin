@@ -934,7 +934,7 @@ PARAM_FAILSAFE_THROTTLE:
 PARAM_THROTTLE_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_THRTL"
-  description: "Throttle timeout in (ms) to prevent accidentally leaving armed"
+  description: "Throttle timeout in (us) to prevent accidentally leaving armed"
   reboot: false
   value:
     option: "scalar"
