@@ -102,6 +102,7 @@ void mixer_init() {
 void pwm_init() {
 	bool useCPPM = true;
 	/* XXX: Frees up the ports for telem2 and safety switch
+	//In-case needed in future
 	if(get_param_int(PARAM_RC_TYPE) == 1)
 		useCPPM = true;
 	*/
@@ -110,7 +111,6 @@ void pwm_init() {
 	int16_t pwm_disarm = get_param_uint(PARAM_MOTOR_PWM_MIN);
 	pwmInit(useCPPM, false, false, motor_refresh_rate, pwm_disarm);
 
-	//XXX: Not sure if first write of pwm_disarm will invalidate this with some ESCs
 	if( get_param_uint( PARAM_DO_ESC_CAL ) ) {
 		for (uint8_t i = 0; i < 8; i++)
 			if (mixer_to_use->output_type[i] != M)

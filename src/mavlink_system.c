@@ -379,6 +379,8 @@ void mavlink_stream_attitude_target(uint8_t port) {
 				  fix16_to_float(_command_input.q.c),
 				  fix16_to_float(_command_input.q.d)};
 
+	//XXX: TODO: _control_output (r,p,y) are not the goal rates!
+
 	//Use the control output for some of these commands as they reflect the actual goals
 	// The input mask applied is included, but the information will still potentially be useful
 	// The timestamp used is the one that is used to generate the commands

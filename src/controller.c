@@ -48,7 +48,7 @@ void controller_init(void) {
 			 0,
 			 0,
 			 -get_param_fix16(PARAM_MAX_ROLL_RATE),
-			 get_param_fix16(PARAM_MAX_ROLL_RATE));
+			 get_param_fix16(PARAM_MAX_ROLL_RATE));	//TODO: This should be something else, percentage throttle maybe?
 
 	pid_init(&_pid_pitch_rate,
 			 get_param_fix16(PARAM_PID_PITCH_RATE_P),
@@ -60,7 +60,7 @@ void controller_init(void) {
 			 0,
 			 0,
 			 -get_param_fix16(PARAM_MAX_PITCH_RATE),
-			 get_param_fix16(PARAM_MAX_PITCH_RATE));
+			 get_param_fix16(PARAM_MAX_PITCH_RATE));	//TODO: This should be something else, percentage throttle maybe?
 
 	pid_init(&_pid_yaw_rate,
 			 get_param_fix16(PARAM_PID_YAW_RATE_P),
@@ -72,7 +72,7 @@ void controller_init(void) {
 			 0,
 			 0,
 			 -get_param_fix16(PARAM_MAX_YAW_RATE),
-			 get_param_fix16(PARAM_MAX_YAW_RATE));
+			 get_param_fix16(PARAM_MAX_YAW_RATE));	//TODO: This should be something else, percentage throttle maybe?
 
 	_command_input.r = 0;
 	_command_input.p = 0;
@@ -257,13 +257,7 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		//px4: feed forward yaw setpoint rate	//TODO:?
 		//rates_sp.z += _v_att_sp.yaw_sp_move_rate * yaw_w * _params.yaw_ff;
 
-		//px4: constrain rates to set params
-		v3d rates_sp_sat;
-		rates_sp_sat.x = fix16_constrain(rates_sp.x, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
-		rates_sp_sat.y = fix16_constrain(rates_sp.y, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
-		rates_sp_sat.z = fix16_constrain(rates_sp.z, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
-
-		return rates_sp_sat;
+		return rates_sp;
 }
 
 void controller_run( uint32_t time_now ) {
@@ -406,6 +400,12 @@ void controller_run( uint32_t time_now ) {
 		//Use the commanded yaw rate goal
 		goal_y = _command_input.y;
 	}
+
+
+	//Constrain rates to set params
+	goal_r = fix16_constrain(goal_r, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
+	goal_p = fix16_constrain(goal_p, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
+	goal_y = fix16_constrain(goal_y, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
 
 	//Rate PID Controllers
 	_control_output.r = pid_step(&_pid_roll_rate, time_now, goal_r, _state_estimator.p, 0, false);

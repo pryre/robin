@@ -1,0 +1,950 @@
+#PARAM_VALUE:
+#  type: "int"
+#  name: "EX_VALUE"
+#  description: "Example of an unbounded integer parameter"
+#  reboot: true
+#  value:
+#    option: "scalar"
+#    default: -3
+#
+#PARAM_UPDATE:
+#  type: "int"
+#  name: "EX_DYN_UPDT"
+#  description: "Example of a parameter that does not need to reboot to take effect"
+#  reboot: false
+#  value:
+#    option: "scalar"
+#    default: 1000
+#    function: "param_update(EX_DYN_UPDT);" # Some function or call
+#
+#PARAM_RANGE:
+#  type: "float"
+#  name: "EX_RANGE"
+#  description: "Example of a bounded floating point parameter"
+#  reboot: false
+#  value:
+#    option: "range"
+#    default: 0.0
+#    min: -1.0
+#    max: 1.0
+#
+#PARAM_GEN:
+#  type: "uint"
+#  name: "EX_GEN"
+#  description: "Example of a parameter that is generated at compile time or on run time"
+#  reboot: false
+#  value:
+#    option: "generated"
+#    function: "param_value_gen()" # Some function or call
+#
+#PARAM_LIST:
+#  type: "uint"
+#  name: "EX_LIST"
+#  description: "Example of a list of preset options"
+#  reboot: false
+#  value:
+#    option: "list"
+#    default: 3 #Default list position, not default value (index 3 -> 30 in this example)
+#    list: [0, 10, 20, 30, 40, 50]
+
+PARAM_BOARD_REVISION:
+  type: "uint"
+  name: "BOARD_REV"
+  description: "Selects what version of the board to setup sensors for"
+  reboot: true
+  value:
+    option: "range"
+    default: 5
+    min: 5
+    max: 5
+
+PARAM_VERSION_FIRMWARE:
+  type: "uint"
+  name: "FW_VERSION"
+  description: "A compile-time stamp for the flight firmware version"
+  reboot: false
+  value:
+    option: "generated"
+    function: "strtoll(GIT_VERSION_FLIGHT_STR, NULL, 16)"
+
+PARAM_VERSION_SOFTWARE:
+  type: "uint"
+  name: "SW_VERSION"
+  description: "A compile-time stamp for the OS firmware version"
+  reboot: false
+  value:
+    option: "generated"
+    function: "strtoll(GIT_VERSION_OS_STR, NULL, 16)"
+
+PARAM_BAUD_RATE_0:
+  type: "uint"
+  name: "BAUD_RATE_0"
+  description: "Baud rate for the the COMM_0 port - set to 0 to disable"
+  reboot: true
+  value:
+    option: "list"
+    default: 4
+    list: [0, 9600, 57600, 115200, 921600]
+
+PARAM_BAUD_RATE_1:
+  type: "uint"
+  name: "BAUD_RATE_1"
+  description: "Baud rate for the the COMM_1 port - set to 0 to disable"
+  reboot: true
+  value:
+    option: "list"
+    default: 0
+    list: [0, 9600, 57600, 115200, 921600]
+
+PARAM_TIMESYNC_ALPHA:
+  type: "float"
+  name: "TIMESYNC_ALPHA"
+  description: "TODO - also check min-max values"
+  reboot: false
+  value:
+    option: "range"
+    default: 0.8
+    min: 0
+    max: 1
+
+PARAM_SYSTEM_ID:
+  type: "uint"
+  name: "SYS_ID"
+  description: "Sets the MAVLINK System ID parameter for the message header"
+  reboot: true
+  value:
+    option: "range"
+    default: 1
+    min: 0
+    max: 255
+
+PARAM_COMPONENT_ID:
+  type: "uint"
+  name: "COMP_ID"
+  description: "Sets the MAVLINK Component ID parameter for the message header"
+  reboot: true
+  value:
+    option: "range"
+    default: 1
+    min: 0
+    max: 255
+
+PARAM_STREAM_RATE_HEARTBEAT_0:
+  type: "float"
+  name: "STRM0_HRTBT"
+  description: "Communication update rate for system heartbeat in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_HEARTBEAT);"
+
+PARAM_STREAM_RATE_SYS_STATUS_0:
+  type: "float"
+  name: "STRM0_SYS_STAT"
+  description: "Communication update rate for system status in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.2
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_SYS_STATUS);"
+
+PARAM_STREAM_RATE_HIGHRES_IMU_0:
+  type: "float"
+  name: "STRM0_HR_IMU"
+  description: "Communication update rate for IMU readings in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100.0
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_HIGHRES_IMU);"
+
+PARAM_STREAM_RATE_ATTITUDE_0:
+  type: "float"
+  name: "STRM0_ATT"
+  description: "Communication update rate for current attitude (RPY) in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE);"
+
+PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0:
+  type: "float"
+  name: "STRM0_ATT_Q"
+  description: "Communication update rate for current attitude (Quaternion) in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50.0
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
+
+PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
+  type: "float"
+  name: "STRM0_ATT_T"
+  description: "Communication update rate for current attitude target in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50.0
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
+
+PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
+  type: "uint"
+  name: "STRM0_SRV_OUT"
+  description: "Communication update rate for commanded servo output in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10.0
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
+
+PARAM_STREAM_RATE_TIMESYNC_0:
+  type: "float"
+  name: "STRM0_TIMESYNC"
+  description: "Communication update rate for timesync in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10.0
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_TIMESYNC);"
+
+PARAM_STREAM_RATE_LOW_PRIORITY_0:
+  type: "float"
+  name: "STRM0_LPQ"
+  description: "Communication update rate for all other messages in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100.0
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_LOW_PRIORITY);"
+
+PARAM_STREAM_RATE_HEARTBEAT_1:
+  type: "float"
+  name: "STRM1_HRTBT"
+  description: "Communication update rate for system heartbeat in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HEARTBEAT);"
+
+PARAM_STREAM_RATE_SYS_STATUS_1:
+  type: "float"
+  name: "STRM1_SYS_STAT"
+  description: "Communication update rate for system status in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.2
+    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SYS_STATUS);"
+
+PARAM_STREAM_RATE_HIGHRES_IMU_1:
+  type: "float"
+  name: "STRM1_HR_IMU"
+  description: "Communication update rate for IMU readings in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100.0
+    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HIGHRES_IMU);"
+
+PARAM_STREAM_RATE_ATTITUDE_1:
+  type: "float"
+  name: "STRM1_ATT"
+  description: "Communication update rate for current attitude (RPY) in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE);"
+
+PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1:
+  type: "float"
+  name: "STRM1_ATT_Q"
+  description: "Communication update rate for current attitude (Quaternion) in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50.0
+    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
+
+PARAM_STREAM_RATE_ATTITUDE_TARGET_1:
+  type: "float"
+  name: "STRM1_ATT_T"
+  description: "Communication update rate for current attitude target in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50.0
+    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
+
+PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1:
+  type: "uint"
+  name: "STRM1_SRV_OUT"
+  description: "Communication update rate for commanded servo output in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10.0
+    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
+
+PARAM_STREAM_RATE_TIMESYNC_1:
+  type: "float"
+  name: "STRM1_TIMESYNC"
+  description: "Communication update rate for timesync in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10.0
+    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_TIMESYNC);"
+
+PARAM_STREAM_RATE_LOW_PRIORITY_1:
+  type: "float"
+  name: "STRM1_LPQ"
+  description: "Communication update rate for all other messages in Hz (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100.0
+    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_LOW_PRIORITY);"
+
+PARAM_SENSOR_IMU_CBRK:
+  type: "uint"
+  name: "CBRK_IMU"
+  description: "Sensor circuit breaker arming check for IMU (set to 0 to disable checking device)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 1
+
+PARAM_SENSOR_MAG_CBRK:
+  type: "uint"
+  name: "CBRK_MAG"
+  description: "Sensor circuit breaker arming check for magnetometer (set to 0 to disable checking device)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_SENSOR_BARO_CBRK:
+  type: "uint"
+  name: "CBRK_BARO"
+  description: "Sensor circuit breaker arming check for barometer (set to 0 to disable checking device)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_SENSOR_SONAR_CBRK:
+  type: "uint"
+  name: "CBRK_SONAR"
+  description: "Sensor circuit breaker arming check for sonar (set to 0 to disable checking device)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_SENSOR_SAFETY_CBRK:
+  type: "uint"
+  name: "CBRK_SAFETY"
+  description: "Sensor circuit breaker arming check for safety devices (set to 0 to checking disable device)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 1
+
+PARAM_SENSOR_BARO_UPDATE_RATE:
+  type: "uint"
+  name: "CBRK_IMU"
+  description: "Sensor update rate for barometer in Hz (TODO)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+
+PARAM_SENSOR_SONAR_UPDATE_RATE:
+  type: "float"
+  name: "CHK_RATE_SONAR"
+  description: "Sensor update rate for sonar in Hz (TODO)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+
+PARAM_SENSOR_MAG_UPDATE_RATE:
+  type: "float"
+  name: "CHK_RATE_MAG"
+  description: "Sensor update rate for magnetometer in Hz (TODO)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+
+PARAM_SENSOR_IMU_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_IMU"
+  description: "Number of IMU readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+
+PARAM_SENSOR_BARO_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_BARO"
+  description: "Number of barometer readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50
+
+PARAM_SENSOR_SONAR_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_SONAR"
+  description: "Number of sonar readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50
+
+PARAM_SENSOR_MAG_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_MAG"
+  description: "Number of magnetometer readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50
+
+PARAM_SENSOR_OFFB_HRBT_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_OB_H"
+  description: "Number of offboard heartbeat messages that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2
+
+PARAM_SENSOR_OFFB_CTRL_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_OB_C"
+  description: "Number of offboard control messages that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100
+
+PARAM_SENSOR_IMU_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_IMU"
+  description: "Time (in us) that new data must be read before an IMU timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+
+PARAM_SENSOR_BARO_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_BARO"
+  description: "Time (in us) that new data must be read before a barometer timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 20000
+
+PARAM_SENSOR_SONAR_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_SONAR"
+  description: "Time (in us) that new data must be read before a sonar timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 20000
+
+PARAM_SENSOR_MAG_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_MAG"
+  description: "Time (in us) that new data must be read before a magnetometer timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 20000
+
+PARAM_SENSOR_OFFB_HRBT_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_OB_HRBT"
+  description: "Time (in us) that new data must be read before a off-board heartbeat timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 5000000
+
+PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_OB_CTRL"
+  description: "Time (in us) that new data must be read before a off-board control timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 200000
+
+PARAM_INIT_TIME:
+  type: "uint"
+  name: "FILTER_INIT_T"
+  description: "Time (in ms) from boot where the estimator will use quick convergence"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 3000
+
+PARAM_EST_USE_ACC_COR:
+  type: "uint"
+  name: "EST_ACC_COR"
+  description: "Toggle to enable accelerometer correction (required for angular control) in the attitude estimator (0:false,1:true)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1
+
+PARAM_EST_USE_MAT_EXP:
+  type: "uint"
+  name: "EST_ACC_COR"
+  description: "Toggle to enable matrix expotential approximation (adds decent estimation accuracy) in the attitude estimator (0:false,1:true)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1
+
+PARAM_EST_USE_QUAD_INT:
+  type: "uint"
+  name: "EST_ACC_COR"
+  description: "Toggle to enable quadratic integration (adds a small amount of additional accuracy) in the attitude estimator (0:false,1:true)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1
+
+PARAM_EST_USE_ADPT_BIAS:
+  type: "uint"
+  name: "EST_ADPT_BIAS"
+  description: "Toggle to enable adaptive bias estimation (accounts for some additional sensor fluctuations) in the attitude estimator (0:false,1:true)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_FILTER_KP:
+  type: "float"
+  name: "FILTER_KP"
+  description: "Adjusts the amount of proportional filtering done on the attitude estimation"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+
+PARAM_FILTER_KI:
+  type: "float"
+  name: "FILTER_KP"
+  description: "Adjusts the amount of integral filtering done on the attitude estimation"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+
+PARAM_GYRO_ALPHA:
+  type: "float"
+  name: "EST_LPF_GYRO_A"
+  description: "Alpha parameter for gyroscope measurement low pass filter (noise reduction)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.6
+
+PARAM_ACC_ALPHA:
+  type: "float"
+  name: "EST_LPF_ACC_A"
+  description: "Alpha parameter for gyroscope measurement low pass filter (noise reduction)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.6
+
+PARAM_GYRO_X_BIAS:
+  type: "int"
+  name: "GYRO_X_BIAS"
+  description: "Bias correction for gyroscope measurements (X axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_GYRO_Y_BIAS:
+  type: "int"
+  name: "GYRO_Y_BIAS"
+  description: "Bias correction for gyroscope measurements (Y axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_GYRO_Z_BIAS:
+  type: "int"
+  name: "GYRO_Z_BIAS"
+  description: "Bias correction for gyroscope measurements (Z axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_ACC_X_BIAS:
+  type: "int"
+  name: "ACC_X_BIAS"
+  description: "Bias correction for accelerometer measurements (X axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_ACC_Y_BIAS:
+  type: "int"
+  name: "ACC_Y_BIAS"
+  description: "Bias correction for accelerometer measurements (Y axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_ACC_Z_BIAS:
+  type: "int"
+  name: "ACC_Z_BIAS"
+  description: "Bias correction for accelerometer measurements (Z axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_ACC_X_SCALE_POS:
+  type: "float"
+  name: "ACC_X_S_POS"
+  description: "Scaling correction for accelerometer measurements (X positive axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+
+PARAM_ACC_X_SCALE_NEG:
+  type: "float"
+  name: "ACC_X_S_POS"
+  description: "Scaling correction for accelerometer measurements (X negative axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+
+PARAM_ACC_Y_SCALE_POS:
+  type: "float"
+  name: "ACC_Y_S_POS"
+  description: "Scaling correction for accelerometer measurements (Y positive axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+
+PARAM_ACC_Y_SCALE_NEG:
+  type: "float"
+  name: "ACC_Y_S_POS"
+  description: "Scaling correction for accelerometer measurements (Y negative axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+
+PARAM_ACC_Z_SCALE_POS:
+  type: "float"
+  name: "ACC_Z_S_POS"
+  description: "Scaling correction for accelerometer measurements (Z positive axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+
+PARAM_ACC_Z_SCALE_NEG:
+  type: "float"
+  name: "ACC_Z_S_POS"
+  description: "Scaling correction for accelerometer measurements (Z negative axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+
+PARAM_ACC_X_TEMP_COMP:
+  type: "float"
+  name: "ACC_X_TEMP_COMP"
+  description: "Temperature correction for accelerometer measurements (X axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+
+PARAM_ACC_Y_TEMP_COMP:
+  type: "float"
+  name: "ACC_Y_TEMP_COMP"
+  description: "Temperature correction for accelerometer measurements (Y axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+
+PARAM_ACC_Z_TEMP_COMP:
+  type: "float"
+  name: "ACC_Z_TEMP_COMP"
+  description: "Temperature correction for accelerometer measurements (Z axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+
+PARAM_PID_ROLL_RATE_P:
+  type: "float"
+  name: "PID_ROLL_R_P"
+  description: "Proportional gain for roll rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05
+    function: "pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));"
+
+PARAM_PID_ROLL_RATE_I:
+  type: "float"
+  name: "PID_ROLL_R_I"
+  description: "Integral gain for roll rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+    function: "pid_set_gain_i(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_I));"
+
+PARAM_PID_ROLL_RATE_D:
+  type: "float"
+  name: "PID_ROLL_R_D"
+  description: "Derivative gain for roll rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.005
+    function: "pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));"
+
+PARAM_MAX_ROLL_RATE:
+  type: "float"
+  name: "MAX_ROLL_R"
+  description: "Maximum allowed command for roll rate (TODO)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 3.14159
+
+PARAM_PID_PITCH_RATE_P:
+  type: "float"
+  name: "PID_PITCH_R_P"
+  description: "Proportional gain for pitch rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05
+    function: "pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));"
+
+PARAM_PID_PITCH_RATE_I:
+  type: "float"
+  name: "PID_PITCH_R_I"
+  description: "Integral gain for pitch rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+    function: "pid_set_gain_i(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_I));"
+
+PARAM_PID_PITCH_RATE_D:
+  type: "float"
+  name: "PID_PITCH_R_D"
+  description: "Derivative gain for pitch rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.005
+    function: "pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));"
+
+PARAM_MAX_PITCH_RATE:
+  type: "float"
+  name: "MAX_PITCH_R"
+  description: "Maximum allowed command for pitch rate (TODO)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 3.14159
+
+PARAM_PID_YAW_RATE_P:
+  type: "float"
+  name: "PID_YAW_R_P"
+  description: "Proportional gain for yaw rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.2
+    function: "pid_set_gain_p(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_P));"
+
+PARAM_PID_YAW_RATE_I:
+  type: "float"
+  name: "PID_YAW_R_I"
+  description: "Integral gain for yaw rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.1
+    function: "pid_set_gain_i(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_I));"
+
+PARAM_PID_YAW_RATE_D:
+  type: "float"
+  name: "PID_YAW_R_D"
+  description: "Derivative gain for yaw rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+    function: "pid_set_gain_d(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_D));"
+
+PARAM_MAX_YAW_RATE:
+  type: "float"
+  name: "MAX_YAW_R"
+  description: "Maximum allowed command for yaw rate (TODO)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.57079
+
+PARAM_PID_ROLL_ANGLE_P:
+  type: "float"
+  name: "PID_ROLL_ANG_P"
+  description: "Feed-forward gain for roll angle"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 6.5
+
+PARAM_MAX_ROLL_ANGLE:
+  type: "float"
+  name: "PID_ROLL_ANG_P"
+  description: "Maximum allowed command roll angle (TODO)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.786
+
+PARAM_PID_PITCH_ANGLE_P:
+  type: "float"
+  name: "PID_PITCH_ANG_P"
+  description: "Feed-forward gain for pitch angle"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 6.5
+
+PARAM_MAX_PITCH_ANGLE:
+  type: "float"
+  name: "PID_PITCH_ANG_P"
+  description: "Maximum allowed command pitch angle (TODO)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.786
+
+PARAM_PID_YAW_ANGLE_P:
+  type: "float"
+  name: "PID_PITCH_ANG_P"
+  description: "Feed-forward gain for yaw angle"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 6.5
+
+PARAM_PID_TAU:
+  type: "float"
+  name: "PID_TAU"
+  description: "Time parameter for PID controllers"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05
+    function: "pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));\npid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));\npid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));"
+
+PARAM_MOTOR_PWM_SEND_RATE:
+  type: "uint"
+  name: "MOTOR_PWM_RATE"
+  description: "Update rate for PWM outputs"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 400
+
+PARAM_MOTOR_PWM_IDLE:
+  type: "uint"
+  name: "MOTOR_PWM_IDLE"
+  description: "Idle PWM output for motors (when armed)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1150
+
+PARAM_MOTOR_PWM_MIN:
+  type: "uint"
+  name: "MOTOR_PWM_MIN"
+  description: "Minimum PWM output for motors"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+
+PARAM_MOTOR_PWM_MAX:
+  type: "uint"
+  name: "MOTOR_PWM_MAX"
+  description: "Maximum PWM output for motors"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+
+PARAM_DO_ESC_CAL:
+  type: "uint"
+  name: "DO_ESC_CAL"
+  description: "When set to true, a motor calibration will be performed on the next boot (False:0,True:1)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0
+
+PARAM_FAILSAFE_THROTTLE:
+  type: "float"
+  name: "FAILSAFE_THRTL"
+  description: "Throttle to output when in failsafe mode"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.25
+
+PARAM_THROTTLE_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_THRTL"
+  description: "Throttle timeout in (ms) to prevent accidentally leaving armed"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10000000
+
+PARAM_MIXER:
+  type: "uint"
+  name: "MIXER"
+  description: "Mixer type to use (see mixer_type_t enum)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: MIXER_QUADCOPTER_X

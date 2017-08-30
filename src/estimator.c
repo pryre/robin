@@ -32,8 +32,6 @@ static qf16 q_tilde;
 static qf16 q_hat;
 static uint32_t time_last;
 
-static fix16_t kp_;
-static fix16_t ki_;
 static uint32_t init_time;
 
 static v3d _accel_LPF;
@@ -90,8 +88,6 @@ void estimator_init( void ) {
 	_gyro_LPF.y = 0;
 	_gyro_LPF.z = 0;
 
-	kp_ = get_param_fix16( PARAM_FILTER_KP );
-	ki_ = get_param_fix16( PARAM_FILTER_KI );
 	init_time = get_param_uint( PARAM_INIT_TIME ) * 1000;	//nano->microseconds
 
 	time_last = 0;
@@ -118,8 +114,8 @@ static void lpf_update(void) {
 }
 
 void estimator_update( uint32_t time_now ) {
-	fix16_t kp;
-	fix16_t ki;
+	fix16_t kp = get_param_fix16( PARAM_FILTER_KP );
+	fix16_t ki = get_param_fix16( PARAM_FILTER_KI );
 
 	//XXX: This will exit on the first loop, not a nice way of doing it though
 	if ( time_last == 0 ) {
@@ -133,11 +129,8 @@ void estimator_update( uint32_t time_now ) {
 
 	//Crank up the gains for the first few seconds for quick convergence
 	if ( time_now < init_time ) {
-		kp = fix16_smul( kp_, _fc_10 );
-		ki = fix16_smul( ki_, _fc_10 );
-	} else {
-		kp = kp_;
-		ki = ki_;
+		kp = fix16_smul( kp, _fc_10 );
+		ki = fix16_smul( kp, _fc_10 );
 	}
 
 	//Run LPF to reject a lot of noise

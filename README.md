@@ -1,10 +1,10 @@
 # robin
-The ROS Offboard Integration for the Naze32 Rev.5 (or similar Naze32-based board that uses the MPU-6050). 
+The ROS Offboard Integration for the Naze32 Rev.5 (or similar Naze32-based board that uses the MPU-6050).
 
 ## Preperation
 ### Ubuntu
 ```sh
-sudo apt install gcc-arm-none-eabi stm32flash
+sudo apt install gcc-arm-none-eabi stm32flash python-yaml
 mkdir -p ~/src
 cd ~/src
 git clone --recursive https://github.com/qutas/robin/
