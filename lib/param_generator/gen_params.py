@@ -114,7 +114,6 @@ with open(path_params_yaml, 'r') as fstream:
 			else:
 				raise ValueError("%s: Unsupported value option (%s)" % (p[0], p[1]["value"]["option"]))
 
-
 			# Markdown generation
 			str_md = p[1]["name"]
 			str_md += " | "
@@ -131,21 +130,21 @@ with open(path_params_yaml, 'r') as fstream:
 			if p[1]["value"]["option"] == "scalar":
 				str_md += str(p[1]["value"]["default"])
 				str_md += " | "
-				str_md = unit_str
+				str_md += unit_str
 				str_md += " | "
 				str_md += "scalar"
 				str_md += " | "
 			elif p[1]["value"]["option"] == "range":
 				str_md += str(p[1]["value"]["default"])
 				str_md += " | "
-				str_md = unit_str
+				str_md += unit_str
 				str_md += " | "
 				str_md += "[min:%s, max:%s]" % (str(p[1]["value"]["min"]), str(p[1]["value"]["max"]))
 				str_md += " | "
 			elif p[1]["value"]["option"] == "list":
 				str_md += str(p[1]["value"]["list"][p[1]["value"]["default"]])
 				str_md += " | "
-				str_md = unit_str
+				str_md += unit_str
 				str_md += " | "
 				str_md += "%s" % str(p[1]["value"]["list"])
 				str_md += " | "
