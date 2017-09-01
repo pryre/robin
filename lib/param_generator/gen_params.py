@@ -102,14 +102,42 @@ with open(path_params_yaml, 'r') as fstream:
 				if raise_error_out_of_range:
 					raise ValueError("%s: Default not in set range: (%s <= %s <= %s)" % (p[0], str(param_min), str(param_val), str(param_max)))
 			elif p[1]["value"]["option"] == "list":
-				# TODO:
-				# default is a uint
-				# default is in size of list
-				# all list options are of param type
-				pass
+				raise_error_type_val = False
+				raise_error_type_list = False
+				raise_error_out_of_range = False
+
+				param_type = p[1]["type"]
+				param_val = p[1]["value"]["default"]
+				param_list = p[1]["value"]["list"]
+				param_val_type = type(param_val)
+
+				# Default is a uint for index
+				if (type(param_val) != int) or (param_val < 0):
+						raise_error_type_val = True
+
+				# Default is in size of list
+				if param_val >= len(param_list):
+					raise_error_out_of_range = True
+
+				# All list options are of param type
+				for l in param_list:
+					if param_type == "float":
+						if type(l) != float:
+							raise_error_type_list = True
+					elif param_type == "int":
+						if type(l) != int:
+							raise_error_type_list = True
+					elif param_type == "uint":
+						if (type(l) != int) or (l < 0):
+							raise_error_type_list = True
+
+				if raise_error_type_val:
+					raise ValueError("%s: Default value (%s) must be uint for index" % (p[0], str(param_val)))
+				if raise_error_type_val:
+					raise ValueError("%s: Default value (%s) exceeds number of items (%s)" % (p[0], str(param_val), str(len(param_list))))
+				if raise_error_type_list:
+					raise ValueError("%s: Type (%s) does not match all list values (%s)" % (p[0], str(param_type), str(param_list)))
 			elif p[1]["value"]["option"] == "generated":
-				# TODO:
-				# function is a str
 				pass
 			else:
 				raise ValueError("%s: Unsupported value option (%s)" % (p[0], p[1]["value"]["option"]))
