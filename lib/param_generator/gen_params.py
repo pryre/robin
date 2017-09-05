@@ -177,7 +177,7 @@ def gen_md(params, filepath):
 
 	try:
 		# Prepare file headers
-		str_md = "# Parameter File Reference\n\nparam_id | Type | Description | Default | Unit | Options | Reboot\n--- | --- | --- | ---:| --- | --- | ---\n"
+		str_md = "# Parameter File Reference\n\Name | Type | Description | Default | Unit | Options | Reboot\n--- | --- | --- | ---:| --- | --- | ---\n"
 		param_gen_md.write(str_md)
 
 		# Markdown generation
