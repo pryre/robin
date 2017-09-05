@@ -330,6 +330,7 @@ def main():
 
 	params = read_params(path_params_yaml)
 	
+	#TODO: Still need to check for unique names
 	if not check_params(params):
 		exit(1)
 			

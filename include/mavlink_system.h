@@ -30,8 +30,8 @@ extern mavlink_system_t mavlink_system;
 
 void communications_system_init(void);
 bool comm_is_open( uint8_t ch );
-bool comm_set_open( uint8_t ch );
-bool comm_set_closed( uint8_t ch );
+void comm_set_open( uint8_t ch );
+void comm_set_closed( uint8_t ch );
 
 /**
  * @brief Send one char (uint8_t) over a comm channel

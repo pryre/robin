@@ -42,7 +42,8 @@ void communication_calc_period_update(uint8_t comm_port, mavlink_stream_id_t str
 		if(rate == 0) {
 			mavlink_stream_comm_0[stream_id].period_update = 0;
 		} else {
-			mavlink_stream_comm_0[stream_id].period_update = 1000 * fix16_to_int(_fc_1000 / rate);
+			uint32_t val = fix16_to_int( fix16_div(_fc_1000, rate));
+			mavlink_stream_comm_0[stream_id].period_update = 1000 * val;
 		}
 	} else if(comm_port == COMM_CH_1) {
 		fix16_t rate = get_param_fix16(mavlink_stream_comm_1[stream_id].param_rate);
@@ -50,7 +51,8 @@ void communication_calc_period_update(uint8_t comm_port, mavlink_stream_id_t str
 		if(rate == 0) {
 			mavlink_stream_comm_1[stream_id].period_update = 0;
 		} else {
-			mavlink_stream_comm_1[stream_id].period_update = 1000 * fix16_to_int(_fc_1000 / rate);
+			uint32_t val = fix16_to_int(fix16_div(_fc_1000, rate));
+			mavlink_stream_comm_1[stream_id].period_update = 1000 * val;
 		}
 	}
 }

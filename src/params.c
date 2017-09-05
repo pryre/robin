@@ -80,8 +80,11 @@ void params_init(void) {
 
 		write_params();
 
-		systemReset();
+		//systemReset();
 	}
+	
+	//for(param_id_t i=0; i < PARAMS_COUNT; i++)
+	//	param_change_callback(i);
 }
 
 bool read_params(void) {

@@ -539,7 +539,7 @@ PARAM_EST_USE_ACC_COR:
 ---
 PARAM_EST_USE_MAT_EXP:
   type: "uint"
-  name: "EST_ACC_COR"
+  name: "EST_MAT_EXP"
   description: "Toggle to enable matrix expotential approximation (adds decent estimation accuracy) in the attitude estimator (0:false,1:true)"
   reboot: false
   value:
@@ -548,7 +548,7 @@ PARAM_EST_USE_MAT_EXP:
 ---
 PARAM_EST_USE_QUAD_INT:
   type: "uint"
-  name: "EST_ACC_COR"
+  name: "EST_QUAD_INT"
   description: "Toggle to enable quadratic integration (adds a small amount of additional accuracy) in the attitude estimator (0:false,1:true)"
   reboot: false
   value:
@@ -665,7 +665,7 @@ PARAM_ACC_X_SCALE_POS:
 ---
 PARAM_ACC_X_SCALE_NEG:
   type: "float"
-  name: "ACC_X_S_POS"
+  name: "ACC_X_S_NEG"
   description: "Scaling correction for accelerometer measurements (X negative axis)"
   reboot: false
   value:
@@ -683,7 +683,7 @@ PARAM_ACC_Y_SCALE_POS:
 ---
 PARAM_ACC_Y_SCALE_NEG:
   type: "float"
-  name: "ACC_Y_S_POS"
+  name: "ACC_Y_S_NEG"
   description: "Scaling correction for accelerometer measurements (Y negative axis)"
   reboot: false
   value:
@@ -701,7 +701,7 @@ PARAM_ACC_Z_SCALE_POS:
 ---
 PARAM_ACC_Z_SCALE_NEG:
   type: "float"
-  name: "ACC_Z_S_POS"
+  name: "ACC_Z_S_NEG"
   description: "Scaling correction for accelerometer measurements (Z negative axis)"
   reboot: false
   value:
@@ -743,9 +743,7 @@ PARAM_PID_ROLL_RATE_P:
   value:
     option: "scalar"
     default: 0.05
-    function: "pid_set_gain_p(&_pid_roll_rate, get_---
-PARAM_fix16(---
-PARAM_PID_ROLL_RATE_P));"
+    function: "pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));"
 ---
 PARAM_PID_ROLL_RATE_I:
   type: "float"
@@ -755,9 +753,7 @@ PARAM_PID_ROLL_RATE_I:
   value:
     option: "scalar"
     default: 0.0
-    function: "pid_set_gain_i(&_pid_roll_rate, get_---
-PARAM_fix16(---
-PARAM_PID_ROLL_RATE_I));"
+    function: "pid_set_gain_i(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_I));"
 ---
 PARAM_PID_ROLL_RATE_D:
   type: "float"
@@ -767,9 +763,7 @@ PARAM_PID_ROLL_RATE_D:
   value:
     option: "scalar"
     default: 0.005
-    function: "pid_set_gain_d(&_pid_roll_rate, get_---
-PARAM_fix16(---
-PARAM_PID_ROLL_RATE_D));"
+    function: "pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));"
 ---
 PARAM_MAX_ROLL_RATE:
   type: "float"
@@ -789,9 +783,7 @@ PARAM_PID_PITCH_RATE_P:
   value:
     option: "scalar"
     default: 0.05
-    function: "pid_set_gain_p(&_pid_pitch_rate, get_---
-PARAM_fix16(---
-PARAM_PID_PITCH_RATE_P));"
+    function: "pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));"
 ---
 PARAM_PID_PITCH_RATE_I:
   type: "float"
@@ -801,9 +793,7 @@ PARAM_PID_PITCH_RATE_I:
   value:
     option: "scalar"
     default: 0.0
-    function: "pid_set_gain_i(&_pid_pitch_rate, get_---
-PARAM_fix16(---
-PARAM_PID_PITCH_RATE_I));"
+    function: "pid_set_gain_i(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_I));"
 ---
 PARAM_PID_PITCH_RATE_D:
   type: "float"
@@ -813,9 +803,7 @@ PARAM_PID_PITCH_RATE_D:
   value:
     option: "scalar"
     default: 0.005
-    function: "pid_set_gain_d(&_pid_pitch_rate, get_---
-PARAM_fix16(---
-PARAM_PID_PITCH_RATE_D));"
+    function: "pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));"
 ---
 PARAM_MAX_PITCH_RATE:
   type: "float"
@@ -835,9 +823,7 @@ PARAM_PID_YAW_RATE_P:
   value:
     option: "scalar"
     default: 0.2
-    function: "pid_set_gain_p(&_pid_yaw_rate, get_---
-PARAM_fix16(---
-PARAM_PID_YAW_RATE_P));"
+    function: "pid_set_gain_p(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_P));"
 ---
 PARAM_PID_YAW_RATE_I:
   type: "float"
@@ -847,9 +833,7 @@ PARAM_PID_YAW_RATE_I:
   value:
     option: "scalar"
     default: 0.1
-    function: "pid_set_gain_i(&_pid_yaw_rate, get_---
-PARAM_fix16(---
-PARAM_PID_YAW_RATE_I));"
+    function: "pid_set_gain_i(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_I));"
 ---
 PARAM_PID_YAW_RATE_D:
   type: "float"
@@ -859,9 +843,7 @@ PARAM_PID_YAW_RATE_D:
   value:
     option: "scalar"
     default: 0.0
-    function: "pid_set_gain_d(&_pid_yaw_rate, get_---
-PARAM_fix16(---
-PARAM_PID_YAW_RATE_D));"
+    function: "pid_set_gain_d(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_D));"
 ---
 PARAM_MAX_YAW_RATE:
   type: "float"
@@ -884,7 +866,7 @@ PARAM_PID_ROLL_ANGLE_P:
 ---
 PARAM_MAX_ROLL_ANGLE:
   type: "float"
-  name: "PID_ROLL_ANG_P"
+  name: "MAX_ROLL_A"
   description: "Maximum allowed command roll angle (TODO)"
   reboot: false
   value:
@@ -903,7 +885,7 @@ PARAM_PID_PITCH_ANGLE_P:
 ---
 PARAM_MAX_PITCH_ANGLE:
   type: "float"
-  name: "PID_PITCH_ANG_P"
+  name: "MAX_PITCH_A"
   description: "Maximum allowed command pitch angle (TODO)"
   reboot: false
   value:
@@ -913,7 +895,7 @@ PARAM_MAX_PITCH_ANGLE:
 ---
 PARAM_PID_YAW_ANGLE_P:
   type: "float"
-  name: "PID_PITCH_ANG_P"
+  name: "PID_YAW_ANG_P"
   description: "Feed-forward gain for yaw angle"
   reboot: false
   value:
@@ -928,13 +910,7 @@ PARAM_PID_TAU:
   value:
     option: "scalar"
     default: 0.05
-    function: "pid_set_gain_tau(&_pid_roll_rate, get_---
-PARAM_fix16(---
-PARAM_PID_TAU));\npid_set_gain_tau(&_pid_pitch_rate, get_---
-PARAM_fix16(---
-PARAM_PID_TAU));\npid_set_gain_tau(&_pid_yaw_rate, get_---
-PARAM_fix16(---
-PARAM_PID_TAU));"
+    function: "pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));\npid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));\npid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));"
 ---
 PARAM_MOTOR_PWM_SEND_RATE:
   type: "uint"

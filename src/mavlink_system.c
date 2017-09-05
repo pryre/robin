@@ -6,6 +6,7 @@
 #include "mavlink_system.h"
 #include "mavlink/mavlink_types.h"
 #include "mavlink/common/mavlink.h"
+#include "mavlink_transmit.h"
 
 #include "fix16.h"
 #include "fixextra.h"
@@ -71,18 +72,25 @@ void communications_system_init(void) {
 		Serial2 = uartOpen( USART2, NULL, get_param_uint( PARAM_BAUD_RATE_1 ), MODE_RXTX, SERIAL_NOT_INVERTED );
 		comm_set_open( COMM_CH_1 );
 	}
+	
+	
+	for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++)
+		communication_calc_period_update(COMM_CH_0, i);
+		
+	for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++)
+		communication_calc_period_update(COMM_CH_1, i);
 }
 
 bool comm_is_open( uint8_t ch ) {
 	return comms_open_status_ & ch;
 }
 
-bool comm_set_open( uint8_t ch ) {
-	return comms_open_status_ |= ch;
+void comm_set_open( uint8_t ch ) {
+	comms_open_status_ |= ch;
 }
 
-bool comm_set_closed( uint8_t ch ) {
-	return comms_open_status_ &= ~ch;
+void comm_set_closed( uint8_t ch ) {
+	comms_open_status_ &= ~ch;
 }
 
 /**
