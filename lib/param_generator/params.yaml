@@ -774,6 +774,7 @@ PARAM_MAX_ROLL_RATE:
     option: "scalar"
     default: 3.14159
     unit: "rad/s"
+    function: "pid_set_min_max(&_pid_roll_rate, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));"
 ---
 PARAM_PID_PITCH_RATE_P:
   type: "float"
@@ -814,6 +815,7 @@ PARAM_MAX_PITCH_RATE:
     option: "scalar"
     default: 3.14159
     unit: "rad/s"
+    function: "pid_set_min_max(&_pid_pitch_rate, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));"
 ---
 PARAM_PID_YAW_RATE_P:
   type: "float"
@@ -854,6 +856,7 @@ PARAM_MAX_YAW_RATE:
     option: "scalar"
     default: 1.57079
     unit: "rad/s"
+    function: "pid_set_min_max(&_pid_yaw_rate, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));"
 ---
 PARAM_PID_ROLL_ANGLE_P:
   type: "float"
@@ -910,7 +913,7 @@ PARAM_PID_TAU:
   value:
     option: "scalar"
     default: 0.05
-    function: "pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));\npid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));\npid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));"
+    function: "pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));\n\t\t\tpid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));\n\t\t\tpid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));"
 ---
 PARAM_MOTOR_PWM_SEND_RATE:
   type: "uint"

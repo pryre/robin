@@ -1,6 +1,10 @@
 PROJECT_NAME = robin
 
-GEN_PARAMS := $(shell python3 lib/param_generator/gen_params.py >&2)
+GEN_PARAMS := $(shell python3 lib/param_generator/gen_params.py >&2; echo $$?)
+#$(info $$GEN_PARAMS is [${GEN_PARAMS}])
+ifeq ($(GEN_PARAMS),"0")
+    $(error Cannot continue make without parameters generated)
+endif
 
 GIT_VERSION_FLIGHT := $(shell git describe --abbrev=8 --always | sed 's/^ *//g' | head -c 8)
 GIT_VERSION_OS := $(shell git submodule status | grep BreezySTM32 | sed 's/^ *//g' | head -c 8)
@@ -18,7 +22,7 @@ PROJECT_SRC_FILES = ./src/main.c \
 					./src/pid_controller.c \
 					./src/controller.c \
 					./src/mixer.c
-					
+
 # Parameter Generation
 PROJECT_DIR_PARAM_GEN = ./lib/param_generator
 PROJECT_SRC_PARAM_GEN = $(PROJECT_DIR_PARAM_GEN)/param_gen.c

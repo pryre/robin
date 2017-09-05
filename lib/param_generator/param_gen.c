@@ -1,5 +1,9 @@
 #include "params.h"
 #include "param_generator/param_gen.h"
+#include "mavlink_system.h"
+#include "mavlink_transmit.h"
+#include "controller.h"
+#include "pid_controller.h"
 #include "fix16.h"
 
 void set_param_defaults(void) {
@@ -99,4 +103,111 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, "FAILSAFE_THRTL", fix16_from_float(0.25f));
 	init_param_uint(PARAM_THROTTLE_TIMEOUT, "TIMEOUT_THRTL", 10000000);
 	init_param_uint(PARAM_MIXER, "MIXER", 0);
+}
+
+void param_change_callback(param_id_t id) {
+	switch(id) {
+		case PARAM_STREAM_RATE_HEARTBEAT_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_HEARTBEAT);
+			break;
+		case PARAM_STREAM_RATE_SYS_STATUS_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_SYS_STATUS);
+			break;
+		case PARAM_STREAM_RATE_HIGHRES_IMU_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_HIGHRES_IMU);
+			break;
+		case PARAM_STREAM_RATE_ATTITUDE_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE);
+			break;
+		case PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);
+			break;
+		case PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_TARGET);
+			break;
+		case PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);
+			break;
+		case PARAM_STREAM_RATE_TIMESYNC_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_TIMESYNC);
+			break;
+		case PARAM_STREAM_RATE_LOW_PRIORITY_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_LOW_PRIORITY);
+			break;
+		case PARAM_STREAM_RATE_HEARTBEAT_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HEARTBEAT);
+			break;
+		case PARAM_STREAM_RATE_SYS_STATUS_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SYS_STATUS);
+			break;
+		case PARAM_STREAM_RATE_HIGHRES_IMU_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HIGHRES_IMU);
+			break;
+		case PARAM_STREAM_RATE_ATTITUDE_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE);
+			break;
+		case PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);
+			break;
+		case PARAM_STREAM_RATE_ATTITUDE_TARGET_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_TARGET);
+			break;
+		case PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);
+			break;
+		case PARAM_STREAM_RATE_TIMESYNC_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_TIMESYNC);
+			break;
+		case PARAM_STREAM_RATE_LOW_PRIORITY_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_LOW_PRIORITY);
+			break;
+		case PARAM_PID_ROLL_RATE_P:
+			pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));
+			break;
+		case PARAM_PID_ROLL_RATE_I:
+			pid_set_gain_i(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_I));
+			break;
+		case PARAM_PID_ROLL_RATE_D:
+			pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));
+			break;
+		case PARAM_MAX_ROLL_RATE:
+			pid_set_min_max(&_pid_roll_rate, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
+			break;
+		case PARAM_PID_PITCH_RATE_P:
+			pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));
+			break;
+		case PARAM_PID_PITCH_RATE_I:
+			pid_set_gain_i(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_I));
+			break;
+		case PARAM_PID_PITCH_RATE_D:
+			pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));
+			break;
+		case PARAM_MAX_PITCH_RATE:
+			pid_set_min_max(&_pid_pitch_rate, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
+			break;
+		case PARAM_PID_YAW_RATE_P:
+			pid_set_gain_p(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_P));
+			break;
+		case PARAM_PID_YAW_RATE_I:
+			pid_set_gain_i(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_I));
+			break;
+		case PARAM_PID_YAW_RATE_D:
+			pid_set_gain_d(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_D));
+			break;
+		case PARAM_MAX_YAW_RATE:
+			pid_set_min_max(&_pid_yaw_rate, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
+			break;
+		case PARAM_PID_TAU:
+			pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));
+			pid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));
+			break;
+		default:
+			//No action needed for this param ID
+			break;
+	}
+
+	mavlink_message_t msg_out;
+	mavlink_prepare_param_value( &msg_out, id );
+	lpq_queue_broadcast_msg( &msg_out );
 }

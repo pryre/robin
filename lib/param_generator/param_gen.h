@@ -101,3 +101,4 @@ typedef enum {
 } param_id_t;
 
 void params_init(void);
+void param_change_callback(param_id_t id);

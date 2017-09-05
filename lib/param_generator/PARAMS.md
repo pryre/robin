@@ -1,6 +1,6 @@
 # Parameter File Reference
 
-Name | Type | Description | Default | Unit | Options | Reboot
+param_id | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
 BOARD_REV | uint | Selects what version of the board to setup sensors for | 5 |  | [min:5, max:5] | True
 FW_VERSION | uint | A compile-time stamp for the flight firmware version |  | | | False

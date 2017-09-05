@@ -9,12 +9,12 @@
 
 #include "param_generator/param_gen.h"
 
-#include "controller.h"
-#include "pid_controller.h"
+//#include "controller.h"
+//#include "pid_controller.h"
 
 #include "safety.h"
 #include "mavlink_system.h"
-#include "mavlink_transmit.h"
+//#include "mavlink_transmit.h"
 
 
 // global variable definitions
@@ -82,7 +82,7 @@ void params_init(void) {
 
 		//systemReset();
 	}
-	
+
 	//for(param_id_t i=0; i < PARAMS_COUNT; i++)
 	//	param_change_callback(i);
 }
@@ -137,6 +137,7 @@ bool write_params(void) {
 	return success;
 }
 
+/*
 //TODO: Any more params need a callback to update?
 //TODO: Should probably check return values for bad param set
 void param_change_callback(param_id_t id) {
@@ -251,6 +252,7 @@ void param_change_callback(param_id_t id) {
 	mavlink_prepare_param_value( &msg_out, id );
 	lpq_queue_broadcast_msg( &msg_out );
 }
+*/
 
 param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]) {
 	for (uint16_t id = 0; id < PARAMS_COUNT; id++) {

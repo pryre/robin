@@ -37,7 +37,6 @@ void init_param_fix16(param_id_t id, const char name[PARAMS_NAME_LENGTH], const 
 
 bool read_params(void);
 bool write_params(void);
-void param_change_callback(param_id_t id);
 
 mavlink_message_type_t get_param_type(param_id_t id);
 void get_param_name(param_id_t id, char *name);
