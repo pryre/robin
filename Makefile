@@ -81,6 +81,7 @@ DO_FLASH  = stm32flash -w $(TARGET_HEX) -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEV
 
 # Source files common to all targets
 $(PROJECT_NAME)_SRC = $(PROJECT_SRC_FILES) \
+					  $(PROJECT_SRC_PARAM_GEN) \
 					  $(PROJECT_SRC_LIBFIXMATH) \
 					  $(PROJECT_SRC_LIBFIXMATRIX) \
 					  $(PROJECT_BREEZY_FILES) \

@@ -1,3 +1,4 @@
+#---
 #PARAM_VALUE:
 #  type: "int"
 #  name: "EX_VALUE"
@@ -7,7 +8,7 @@
 #    option: "scalar"
 #    default: -3
 #    unit: "m/s"
-#
+#---
 #PARAM_UPDATE:
 #  type: "int"
 #  name: "EX_DYN_UPDT"
@@ -17,7 +18,7 @@
 #    option: "scalar"
 #    default: 1000
 #    function: "param_update(EX_DYN_UPDT);" # Some function or call
-#
+#---
 #PARAM_RANGE:
 #  type: "float"
 #  name: "EX_RANGE"
@@ -28,7 +29,7 @@
 #    default: 0.0
 #    min: -1.0
 #    max: 1.0
-#
+#---
 #PARAM_GEN:
 #  type: "uint"
 #  name: "EX_GEN"
@@ -37,7 +38,7 @@
 #  value:
 #    option: "generated"
 #    function: "param_value_gen()" # Some function or call
-#
+#---
 #PARAM_LIST:
 #  type: "uint"
 #  name: "EX_LIST"
@@ -58,7 +59,7 @@ PARAM_BOARD_REVISION:
     default: 5
     min: 5
     max: 5
-
+---
 PARAM_VERSION_FIRMWARE:
   type: "uint"
   name: "FW_VERSION"
@@ -67,7 +68,7 @@ PARAM_VERSION_FIRMWARE:
   value:
     option: "generated"
     function: "strtoll(GIT_VERSION_FLIGHT_STR, NULL, 16)"
-
+---
 PARAM_VERSION_SOFTWARE:
   type: "uint"
   name: "SW_VERSION"
@@ -76,7 +77,7 @@ PARAM_VERSION_SOFTWARE:
   value:
     option: "generated"
     function: "strtoll(GIT_VERSION_OS_STR, NULL, 16)"
-
+---
 PARAM_BAUD_RATE_0:
   type: "uint"
   name: "BAUD_RATE_0"
@@ -86,7 +87,7 @@ PARAM_BAUD_RATE_0:
     option: "list"
     default: 4
     list: [0, 9600, 57600, 115200, 921600]
-
+---
 PARAM_BAUD_RATE_1:
   type: "uint"
   name: "BAUD_RATE_1"
@@ -96,7 +97,7 @@ PARAM_BAUD_RATE_1:
     option: "list"
     default: 0
     list: [0, 9600, 57600, 115200, 921600]
-
+---
 PARAM_TIMESYNC_ALPHA:
   type: "float"
   name: "TIMESYNC_ALPHA"
@@ -107,7 +108,7 @@ PARAM_TIMESYNC_ALPHA:
     default: 0.8
     min: 0.0
     max: 1.0
-
+---
 PARAM_SYSTEM_ID:
   type: "uint"
   name: "SYS_ID"
@@ -118,7 +119,7 @@ PARAM_SYSTEM_ID:
     default: 1
     min: 0
     max: 255
-
+---
 PARAM_COMPONENT_ID:
   type: "uint"
   name: "COMP_ID"
@@ -129,7 +130,7 @@ PARAM_COMPONENT_ID:
     default: 1
     min: 0
     max: 255
-
+---
 PARAM_STREAM_RATE_HEARTBEAT_0:
   type: "float"
   name: "STRM0_HRTBT"
@@ -140,7 +141,7 @@ PARAM_STREAM_RATE_HEARTBEAT_0:
     default: 1.0
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_HEARTBEAT);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_SYS_STATUS_0:
   type: "float"
   name: "STRM0_SYS_STAT"
@@ -151,7 +152,7 @@ PARAM_STREAM_RATE_SYS_STATUS_0:
     default: 0.2
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_SYS_STATUS);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_HIGHRES_IMU_0:
   type: "float"
   name: "STRM0_HR_IMU"
@@ -162,7 +163,7 @@ PARAM_STREAM_RATE_HIGHRES_IMU_0:
     default: 100.0
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_HIGHRES_IMU);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_ATTITUDE_0:
   type: "float"
   name: "STRM0_ATT"
@@ -173,7 +174,7 @@ PARAM_STREAM_RATE_ATTITUDE_0:
     default: 0.0
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0:
   type: "float"
   name: "STRM0_ATT_Q"
@@ -184,7 +185,7 @@ PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0:
     default: 50.0
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
   type: "float"
   name: "STRM0_ATT_T"
@@ -195,7 +196,7 @@ PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
     default: 50.0
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
   type: "float"
   name: "STRM0_SRV_OUT"
@@ -206,7 +207,7 @@ PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
     default: 10.0
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_TIMESYNC_0:
   type: "float"
   name: "STRM0_TIMESYNC"
@@ -217,7 +218,7 @@ PARAM_STREAM_RATE_TIMESYNC_0:
     default: 10.0
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_TIMESYNC);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_LOW_PRIORITY_0:
   type: "float"
   name: "STRM0_LPQ"
@@ -228,7 +229,7 @@ PARAM_STREAM_RATE_LOW_PRIORITY_0:
     default: 100.0
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_LOW_PRIORITY);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_HEARTBEAT_1:
   type: "float"
   name: "STRM1_HRTBT"
@@ -239,7 +240,7 @@ PARAM_STREAM_RATE_HEARTBEAT_1:
     default: 1.0
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HEARTBEAT);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_SYS_STATUS_1:
   type: "float"
   name: "STRM1_SYS_STAT"
@@ -250,7 +251,7 @@ PARAM_STREAM_RATE_SYS_STATUS_1:
     default: 0.2
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SYS_STATUS);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_HIGHRES_IMU_1:
   type: "float"
   name: "STRM1_HR_IMU"
@@ -261,7 +262,7 @@ PARAM_STREAM_RATE_HIGHRES_IMU_1:
     default: 100.0
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HIGHRES_IMU);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_ATTITUDE_1:
   type: "float"
   name: "STRM1_ATT"
@@ -272,7 +273,7 @@ PARAM_STREAM_RATE_ATTITUDE_1:
     default: 0.0
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1:
   type: "float"
   name: "STRM1_ATT_Q"
@@ -283,7 +284,7 @@ PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1:
     default: 50.0
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_ATTITUDE_TARGET_1:
   type: "float"
   name: "STRM1_ATT_T"
@@ -294,7 +295,7 @@ PARAM_STREAM_RATE_ATTITUDE_TARGET_1:
     default: 50.0
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1:
   type: "float"
   name: "STRM1_SRV_OUT"
@@ -305,7 +306,7 @@ PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1:
     default: 10.0
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_TIMESYNC_1:
   type: "float"
   name: "STRM1_TIMESYNC"
@@ -316,7 +317,7 @@ PARAM_STREAM_RATE_TIMESYNC_1:
     default: 10.0
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_TIMESYNC);"
     unit: "Hz"
-
+---
 PARAM_STREAM_RATE_LOW_PRIORITY_1:
   type: "float"
   name: "STRM1_LPQ"
@@ -327,7 +328,7 @@ PARAM_STREAM_RATE_LOW_PRIORITY_1:
     default: 100.0
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_LOW_PRIORITY);"
     unit: "Hz"
-
+---
 PARAM_SENSOR_IMU_CBRK:
   type: "uint"
   name: "CBRK_IMU"
@@ -336,7 +337,7 @@ PARAM_SENSOR_IMU_CBRK:
   value:
     option: "scalar"
     default: 1
-
+---
 PARAM_SENSOR_MAG_CBRK:
   type: "uint"
   name: "CBRK_MAG"
@@ -345,7 +346,7 @@ PARAM_SENSOR_MAG_CBRK:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_SENSOR_BARO_CBRK:
   type: "uint"
   name: "CBRK_BARO"
@@ -354,7 +355,7 @@ PARAM_SENSOR_BARO_CBRK:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_SENSOR_SONAR_CBRK:
   type: "uint"
   name: "CBRK_SONAR"
@@ -363,7 +364,7 @@ PARAM_SENSOR_SONAR_CBRK:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_SENSOR_SAFETY_CBRK:
   type: "uint"
   name: "CBRK_SAFETY"
@@ -372,7 +373,7 @@ PARAM_SENSOR_SAFETY_CBRK:
   value:
     option: "scalar"
     default: 1
-
+---
 PARAM_SENSOR_BARO_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_BARO"
@@ -382,7 +383,7 @@ PARAM_SENSOR_BARO_UPDATE_RATE:
     option: "scalar"
     default: 0.0
     unit: "Hz"
-
+---
 PARAM_SENSOR_SONAR_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_SONAR"
@@ -392,7 +393,7 @@ PARAM_SENSOR_SONAR_UPDATE_RATE:
     option: "scalar"
     default: 0.0
     unit: "Hz"
-
+---
 PARAM_SENSOR_MAG_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_MAG"
@@ -402,7 +403,7 @@ PARAM_SENSOR_MAG_UPDATE_RATE:
     option: "scalar"
     default: 0.0
     unit: "Hz"
-
+---
 PARAM_SENSOR_IMU_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_IMU"
@@ -411,7 +412,7 @@ PARAM_SENSOR_IMU_STRM_COUNT:
   value:
     option: "scalar"
     default: 1000
-
+---
 PARAM_SENSOR_BARO_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_BARO"
@@ -420,7 +421,7 @@ PARAM_SENSOR_BARO_STRM_COUNT:
   value:
     option: "scalar"
     default: 50
-
+---
 PARAM_SENSOR_SONAR_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_SONAR"
@@ -429,7 +430,7 @@ PARAM_SENSOR_SONAR_STRM_COUNT:
   value:
     option: "scalar"
     default: 50
-
+---
 PARAM_SENSOR_MAG_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_MAG"
@@ -438,7 +439,7 @@ PARAM_SENSOR_MAG_STRM_COUNT:
   value:
     option: "scalar"
     default: 50
-
+---
 PARAM_SENSOR_OFFB_HRBT_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_OB_H"
@@ -447,7 +448,7 @@ PARAM_SENSOR_OFFB_HRBT_STRM_COUNT:
   value:
     option: "scalar"
     default: 2
-
+---
 PARAM_SENSOR_OFFB_CTRL_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_OB_C"
@@ -456,7 +457,7 @@ PARAM_SENSOR_OFFB_CTRL_STRM_COUNT:
   value:
     option: "scalar"
     default: 100
-
+---
 PARAM_SENSOR_IMU_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_IMU"
@@ -466,7 +467,7 @@ PARAM_SENSOR_IMU_TIMEOUT:
     option: "scalar"
     default: 2000
     unit: "us"
-
+---
 PARAM_SENSOR_BARO_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_BARO"
@@ -476,7 +477,7 @@ PARAM_SENSOR_BARO_TIMEOUT:
     option: "scalar"
     default: 20000
     unit: "us"
-
+---
 PARAM_SENSOR_SONAR_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_SONAR"
@@ -486,7 +487,7 @@ PARAM_SENSOR_SONAR_TIMEOUT:
     option: "scalar"
     default: 20000
     unit: "us"
-
+---
 PARAM_SENSOR_MAG_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_MAG"
@@ -496,7 +497,7 @@ PARAM_SENSOR_MAG_TIMEOUT:
     option: "scalar"
     default: 20000
     unit: "us"
-
+---
 PARAM_SENSOR_OFFB_HRBT_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_OB_HRBT"
@@ -506,7 +507,7 @@ PARAM_SENSOR_OFFB_HRBT_TIMEOUT:
     option: "scalar"
     default: 5000000
     unit: "us"
-
+---
 PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_OB_CTRL"
@@ -516,7 +517,7 @@ PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
     option: "scalar"
     default: 200000
     unit: "us"
-
+---
 PARAM_INIT_TIME:
   type: "uint"
   name: "FILTER_INIT_T"
@@ -526,7 +527,7 @@ PARAM_INIT_TIME:
     option: "scalar"
     default: 3000
     unit: "ms"
-
+---
 PARAM_EST_USE_ACC_COR:
   type: "uint"
   name: "EST_ACC_COR"
@@ -535,7 +536,7 @@ PARAM_EST_USE_ACC_COR:
   value:
     option: "scalar"
     default: 1
-
+---
 PARAM_EST_USE_MAT_EXP:
   type: "uint"
   name: "EST_ACC_COR"
@@ -544,7 +545,7 @@ PARAM_EST_USE_MAT_EXP:
   value:
     option: "scalar"
     default: 1
-
+---
 PARAM_EST_USE_QUAD_INT:
   type: "uint"
   name: "EST_ACC_COR"
@@ -553,7 +554,7 @@ PARAM_EST_USE_QUAD_INT:
   value:
     option: "scalar"
     default: 1
-
+---
 PARAM_EST_USE_ADPT_BIAS:
   type: "uint"
   name: "EST_ADPT_BIAS"
@@ -562,7 +563,7 @@ PARAM_EST_USE_ADPT_BIAS:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_FILTER_KP:
   type: "float"
   name: "FILTER_KP"
@@ -571,7 +572,7 @@ PARAM_FILTER_KP:
   value:
     option: "scalar"
     default: 1.0
-
+---
 PARAM_FILTER_KI:
   type: "float"
   name: "FILTER_KI"
@@ -580,7 +581,7 @@ PARAM_FILTER_KI:
   value:
     option: "scalar"
     default: 0.05
-
+---
 PARAM_GYRO_ALPHA:
   type: "float"
   name: "EST_LPF_GYRO_A"
@@ -589,7 +590,7 @@ PARAM_GYRO_ALPHA:
   value:
     option: "scalar"
     default: 0.6
-
+---
 PARAM_ACC_ALPHA:
   type: "float"
   name: "EST_LPF_ACC_A"
@@ -598,7 +599,7 @@ PARAM_ACC_ALPHA:
   value:
     option: "scalar"
     default: 0.6
-
+---
 PARAM_GYRO_X_BIAS:
   type: "int"
   name: "GYRO_X_BIAS"
@@ -607,7 +608,7 @@ PARAM_GYRO_X_BIAS:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_GYRO_Y_BIAS:
   type: "int"
   name: "GYRO_Y_BIAS"
@@ -616,7 +617,7 @@ PARAM_GYRO_Y_BIAS:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_GYRO_Z_BIAS:
   type: "int"
   name: "GYRO_Z_BIAS"
@@ -625,7 +626,7 @@ PARAM_GYRO_Z_BIAS:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_ACC_X_BIAS:
   type: "int"
   name: "ACC_X_BIAS"
@@ -634,7 +635,7 @@ PARAM_ACC_X_BIAS:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_ACC_Y_BIAS:
   type: "int"
   name: "ACC_Y_BIAS"
@@ -643,7 +644,7 @@ PARAM_ACC_Y_BIAS:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_ACC_Z_BIAS:
   type: "int"
   name: "ACC_Z_BIAS"
@@ -652,7 +653,7 @@ PARAM_ACC_Z_BIAS:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_ACC_X_SCALE_POS:
   type: "float"
   name: "ACC_X_S_POS"
@@ -661,7 +662,7 @@ PARAM_ACC_X_SCALE_POS:
   value:
     option: "scalar"
     default: 1.0
-
+---
 PARAM_ACC_X_SCALE_NEG:
   type: "float"
   name: "ACC_X_S_POS"
@@ -670,7 +671,7 @@ PARAM_ACC_X_SCALE_NEG:
   value:
     option: "scalar"
     default: 1.0
-
+---
 PARAM_ACC_Y_SCALE_POS:
   type: "float"
   name: "ACC_Y_S_POS"
@@ -679,7 +680,7 @@ PARAM_ACC_Y_SCALE_POS:
   value:
     option: "scalar"
     default: 1.0
-
+---
 PARAM_ACC_Y_SCALE_NEG:
   type: "float"
   name: "ACC_Y_S_POS"
@@ -688,7 +689,7 @@ PARAM_ACC_Y_SCALE_NEG:
   value:
     option: "scalar"
     default: 1.0
-
+---
 PARAM_ACC_Z_SCALE_POS:
   type: "float"
   name: "ACC_Z_S_POS"
@@ -697,7 +698,7 @@ PARAM_ACC_Z_SCALE_POS:
   value:
     option: "scalar"
     default: 1.0
-
+---
 PARAM_ACC_Z_SCALE_NEG:
   type: "float"
   name: "ACC_Z_S_POS"
@@ -706,7 +707,7 @@ PARAM_ACC_Z_SCALE_NEG:
   value:
     option: "scalar"
     default: 1.0
-
+---
 PARAM_ACC_X_TEMP_COMP:
   type: "float"
   name: "ACC_X_TEMP_COMP"
@@ -715,7 +716,7 @@ PARAM_ACC_X_TEMP_COMP:
   value:
     option: "scalar"
     default: 0.0
-
+---
 PARAM_ACC_Y_TEMP_COMP:
   type: "float"
   name: "ACC_Y_TEMP_COMP"
@@ -724,7 +725,7 @@ PARAM_ACC_Y_TEMP_COMP:
   value:
     option: "scalar"
     default: 0.0
-
+---
 PARAM_ACC_Z_TEMP_COMP:
   type: "float"
   name: "ACC_Z_TEMP_COMP"
@@ -733,7 +734,7 @@ PARAM_ACC_Z_TEMP_COMP:
   value:
     option: "scalar"
     default: 0.0
-
+---
 PARAM_PID_ROLL_RATE_P:
   type: "float"
   name: "PID_ROLL_R_P"
@@ -742,8 +743,10 @@ PARAM_PID_ROLL_RATE_P:
   value:
     option: "scalar"
     default: 0.05
-    function: "pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));"
-
+    function: "pid_set_gain_p(&_pid_roll_rate, get_---
+PARAM_fix16(---
+PARAM_PID_ROLL_RATE_P));"
+---
 PARAM_PID_ROLL_RATE_I:
   type: "float"
   name: "PID_ROLL_R_I"
@@ -752,8 +755,10 @@ PARAM_PID_ROLL_RATE_I:
   value:
     option: "scalar"
     default: 0.0
-    function: "pid_set_gain_i(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_I));"
-
+    function: "pid_set_gain_i(&_pid_roll_rate, get_---
+PARAM_fix16(---
+PARAM_PID_ROLL_RATE_I));"
+---
 PARAM_PID_ROLL_RATE_D:
   type: "float"
   name: "PID_ROLL_R_D"
@@ -762,8 +767,10 @@ PARAM_PID_ROLL_RATE_D:
   value:
     option: "scalar"
     default: 0.005
-    function: "pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));"
-
+    function: "pid_set_gain_d(&_pid_roll_rate, get_---
+PARAM_fix16(---
+PARAM_PID_ROLL_RATE_D));"
+---
 PARAM_MAX_ROLL_RATE:
   type: "float"
   name: "MAX_ROLL_R"
@@ -773,7 +780,7 @@ PARAM_MAX_ROLL_RATE:
     option: "scalar"
     default: 3.14159
     unit: "rad/s"
-
+---
 PARAM_PID_PITCH_RATE_P:
   type: "float"
   name: "PID_PITCH_R_P"
@@ -782,8 +789,10 @@ PARAM_PID_PITCH_RATE_P:
   value:
     option: "scalar"
     default: 0.05
-    function: "pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));"
-
+    function: "pid_set_gain_p(&_pid_pitch_rate, get_---
+PARAM_fix16(---
+PARAM_PID_PITCH_RATE_P));"
+---
 PARAM_PID_PITCH_RATE_I:
   type: "float"
   name: "PID_PITCH_R_I"
@@ -792,8 +801,10 @@ PARAM_PID_PITCH_RATE_I:
   value:
     option: "scalar"
     default: 0.0
-    function: "pid_set_gain_i(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_I));"
-
+    function: "pid_set_gain_i(&_pid_pitch_rate, get_---
+PARAM_fix16(---
+PARAM_PID_PITCH_RATE_I));"
+---
 PARAM_PID_PITCH_RATE_D:
   type: "float"
   name: "PID_PITCH_R_D"
@@ -802,8 +813,10 @@ PARAM_PID_PITCH_RATE_D:
   value:
     option: "scalar"
     default: 0.005
-    function: "pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));"
-
+    function: "pid_set_gain_d(&_pid_pitch_rate, get_---
+PARAM_fix16(---
+PARAM_PID_PITCH_RATE_D));"
+---
 PARAM_MAX_PITCH_RATE:
   type: "float"
   name: "MAX_PITCH_R"
@@ -813,7 +826,7 @@ PARAM_MAX_PITCH_RATE:
     option: "scalar"
     default: 3.14159
     unit: "rad/s"
-
+---
 PARAM_PID_YAW_RATE_P:
   type: "float"
   name: "PID_YAW_R_P"
@@ -822,8 +835,10 @@ PARAM_PID_YAW_RATE_P:
   value:
     option: "scalar"
     default: 0.2
-    function: "pid_set_gain_p(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_P));"
-
+    function: "pid_set_gain_p(&_pid_yaw_rate, get_---
+PARAM_fix16(---
+PARAM_PID_YAW_RATE_P));"
+---
 PARAM_PID_YAW_RATE_I:
   type: "float"
   name: "PID_YAW_R_I"
@@ -832,8 +847,10 @@ PARAM_PID_YAW_RATE_I:
   value:
     option: "scalar"
     default: 0.1
-    function: "pid_set_gain_i(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_I));"
-
+    function: "pid_set_gain_i(&_pid_yaw_rate, get_---
+PARAM_fix16(---
+PARAM_PID_YAW_RATE_I));"
+---
 PARAM_PID_YAW_RATE_D:
   type: "float"
   name: "PID_YAW_R_D"
@@ -842,8 +859,10 @@ PARAM_PID_YAW_RATE_D:
   value:
     option: "scalar"
     default: 0.0
-    function: "pid_set_gain_d(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_D));"
-
+    function: "pid_set_gain_d(&_pid_yaw_rate, get_---
+PARAM_fix16(---
+PARAM_PID_YAW_RATE_D));"
+---
 PARAM_MAX_YAW_RATE:
   type: "float"
   name: "MAX_YAW_R"
@@ -853,7 +872,7 @@ PARAM_MAX_YAW_RATE:
     option: "scalar"
     default: 1.57079
     unit: "rad/s"
-
+---
 PARAM_PID_ROLL_ANGLE_P:
   type: "float"
   name: "PID_ROLL_ANG_P"
@@ -862,7 +881,7 @@ PARAM_PID_ROLL_ANGLE_P:
   value:
     option: "scalar"
     default: 6.5
-
+---
 PARAM_MAX_ROLL_ANGLE:
   type: "float"
   name: "PID_ROLL_ANG_P"
@@ -872,7 +891,7 @@ PARAM_MAX_ROLL_ANGLE:
     option: "scalar"
     default: 0.786
     unit: "rad"
-
+---
 PARAM_PID_PITCH_ANGLE_P:
   type: "float"
   name: "PID_PITCH_ANG_P"
@@ -881,7 +900,7 @@ PARAM_PID_PITCH_ANGLE_P:
   value:
     option: "scalar"
     default: 6.5
-
+---
 PARAM_MAX_PITCH_ANGLE:
   type: "float"
   name: "PID_PITCH_ANG_P"
@@ -891,7 +910,7 @@ PARAM_MAX_PITCH_ANGLE:
     option: "scalar"
     default: 0.786
     unit: "rad"
-
+---
 PARAM_PID_YAW_ANGLE_P:
   type: "float"
   name: "PID_PITCH_ANG_P"
@@ -900,7 +919,7 @@ PARAM_PID_YAW_ANGLE_P:
   value:
     option: "scalar"
     default: 6.5
-
+---
 PARAM_PID_TAU:
   type: "float"
   name: "PID_TAU"
@@ -909,8 +928,14 @@ PARAM_PID_TAU:
   value:
     option: "scalar"
     default: 0.05
-    function: "pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));\npid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));\npid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));"
-
+    function: "pid_set_gain_tau(&_pid_roll_rate, get_---
+PARAM_fix16(---
+PARAM_PID_TAU));\npid_set_gain_tau(&_pid_pitch_rate, get_---
+PARAM_fix16(---
+PARAM_PID_TAU));\npid_set_gain_tau(&_pid_yaw_rate, get_---
+PARAM_fix16(---
+PARAM_PID_TAU));"
+---
 PARAM_MOTOR_PWM_SEND_RATE:
   type: "uint"
   name: "MOTOR_PWM_RATE"
@@ -920,7 +945,7 @@ PARAM_MOTOR_PWM_SEND_RATE:
     option: "scalar"
     default: 400
     unit: "?"
-
+---
 PARAM_MOTOR_PWM_IDLE:
   type: "uint"
   name: "MOTOR_PWM_IDLE"
@@ -930,7 +955,7 @@ PARAM_MOTOR_PWM_IDLE:
     option: "scalar"
     default: 1150
     unit: "pwm"
-
+---
 PARAM_MOTOR_PWM_MIN:
   type: "uint"
   name: "MOTOR_PWM_MIN"
@@ -940,7 +965,7 @@ PARAM_MOTOR_PWM_MIN:
     option: "scalar"
     default: 1000
     unit: "pwm"
-
+---
 PARAM_MOTOR_PWM_MAX:
   type: "uint"
   name: "MOTOR_PWM_MAX"
@@ -950,7 +975,7 @@ PARAM_MOTOR_PWM_MAX:
     option: "scalar"
     default: 2000
     unit: "pwm"
-
+---
 PARAM_DO_ESC_CAL:
   type: "uint"
   name: "DO_ESC_CAL"
@@ -959,7 +984,7 @@ PARAM_DO_ESC_CAL:
   value:
     option: "scalar"
     default: 0
-
+---
 PARAM_FAILSAFE_THROTTLE:
   type: "float"
   name: "FAILSAFE_THRTL"
@@ -968,7 +993,7 @@ PARAM_FAILSAFE_THROTTLE:
   value:
     option: "scalar"
     default: 0.25
-
+---
 PARAM_THROTTLE_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_THRTL"
@@ -978,7 +1003,7 @@ PARAM_THROTTLE_TIMEOUT:
     option: "scalar"
     default: 10000000
     unit: "us"
-
+---
 PARAM_MIXER:
   type: "uint"
   name: "MIXER"
