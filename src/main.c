@@ -47,7 +47,7 @@ void setup(void) {
 
     i2cInit(I2CDEV);
 
-	sensors_init();
+	sensors_init_internal();
 
 	estimator_init();
 
@@ -58,6 +58,8 @@ void setup(void) {
 	mixer_init();
 
 	pwm_init();
+
+	sensors_init_external(); //XXX: Overrides settings made by pwm backend
 
 	//==============================================================
 
