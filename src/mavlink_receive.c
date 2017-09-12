@@ -315,6 +315,32 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 				break;
 			}
+			case MAVLINK_MSG_ID_ATT_POS_MOCAP: {
+				//TODO: Check timestamp was recent before accepting
+				_sensors.ext_pose.status.time_read = micros();
+
+				//Position
+				_sensors.ext_pose.p.x = fix16_from_float(mavlink_msg_att_pos_mocap_get_x(&msg));
+				_sensors.ext_pose.p.y = fix16_from_float(mavlink_msg_att_pos_mocap_get_y(&msg));
+				_sensors.ext_pose.p.z = fix16_from_float(mavlink_msg_att_pos_mocap_get_z(&msg));
+
+				//Attitude
+				float qt_float[4];
+				qf16 qt_fix;
+				mavlink_msg_set_attitude_target_get_q(&msg, &qt_float[0]);
+
+				qt_fix.a = fix16_from_float(qt_float[0]);
+				qt_fix.b = fix16_from_float(qt_float[1]);
+				qt_fix.c = fix16_from_float(qt_float[2]);
+				qt_fix.d = fix16_from_float(qt_float[3]);
+
+				qf16_normalize_to_unit(&_sensors.ext_pose.q, &qt_fix);
+
+				//Update Sensor
+				safety_update_sensor(&_system_status.sensors.ext_pose);
+
+				break;
+			}
 			/*
 			case MAVLINK_MSG_ID_TIMESYNC: {
 				mavlink_timesync_t tsync;

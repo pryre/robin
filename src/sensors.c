@@ -132,6 +132,9 @@ void sensors_init_external(void) {
 	//==-- Sonar
 	sensor_status_init( &_sensors.sonar.status, (bool)get_param_uint( PARAM_SENSOR_SONAR_CBRK ) );
 
+	//==-- External Pose
+	sensor_status_init( &_sensors.ext_pose.status, (bool)get_param_uint( PARAM_SENSOR_EXT_POSE_CBRK ) );
+
 	//==-- Safety button
 	sensor_status_init(&_sensors.safety_button.status, (bool)get_param_uint(PARAM_SENSOR_SAFETY_CBRK));
 	_sensors.safety_button.gpio_p = GPIOA;

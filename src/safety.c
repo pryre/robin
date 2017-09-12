@@ -96,6 +96,13 @@ void safety_init() {
 	_system_status.sensors.sonar.param_timeout = PARAM_SENSOR_SONAR_TIMEOUT;
 	strncpy(_system_status.sensors.sonar.name, "Sonar", 24);
 
+	_system_status.sensors.ext_pose.health = SYSTEM_HEALTH_UNKNOWN;
+	_system_status.sensors.ext_pose.last_read = 0;
+	_system_status.sensors.ext_pose.count = 0;
+	_system_status.sensors.ext_pose.param_stream_count = PARAM_SENSOR_EXT_POSE_STRM_COUNT;
+	_system_status.sensors.ext_pose.param_timeout = PARAM_SENSOR_EXT_POSE_TIMEOUT;
+	strncpy(_system_status.sensors.ext_pose.name, "External Pose", 24);
+
 	_system_status.sensors.offboard_heartbeat.health = SYSTEM_HEALTH_UNKNOWN;
 	_system_status.sensors.offboard_heartbeat.last_read = 0;
 	_system_status.sensors.offboard_heartbeat.count = 0;
@@ -550,6 +557,7 @@ static void safety_health_update(uint32_t time_now) {
 	  ( !_sensors.mag.status.present || ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) ) &&
 	  ( !_sensors.baro.status.present || ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) ) &&
 	  ( !_sensors.sonar.status.present || ( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) ) &&
+	  ( !_sensors.ext_pose.status.present || ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) ) &&
 	  ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
 	  ( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) ) {
 		_system_status.health = SYSTEM_HEALTH_OK;
@@ -575,6 +583,7 @@ void safety_run( uint32_t time_now ) {
 	safety_check_sensor( &_system_status.sensors.mag, time_now );
 	safety_check_sensor( &_system_status.sensors.baro, time_now );
 	safety_check_sensor( &_system_status.sensors.sonar, time_now );
+	safety_check_sensor( &_system_status.sensors.ext_pose, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_heartbeat, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_control, time_now );
 

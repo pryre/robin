@@ -365,6 +365,15 @@ PARAM_SENSOR_SONAR_CBRK:
     option: "scalar"
     default: 0
 ---
+PARAM_SENSOR_EXT_POSE_CBRK:
+  type: "uint"
+  name: "CBRK_EXT_POSE"
+  description: "Sensor circuit breaker arming check for external pose estimate (set to 0 to disable checking device)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0
+---
 PARAM_SENSOR_SAFETY_CBRK:
   type: "uint"
   name: "CBRK_SAFETY"
@@ -431,6 +440,15 @@ PARAM_SENSOR_SONAR_STRM_COUNT:
     option: "scalar"
     default: 50
 ---
+PARAM_SENSOR_EXT_POSE_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_EXT_P"
+  description: "Number of external pose readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10
+---
 PARAM_SENSOR_MAG_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_MAG"
@@ -486,6 +504,16 @@ PARAM_SENSOR_SONAR_TIMEOUT:
   value:
     option: "scalar"
     default: 20000
+    unit: "us"
+---
+PARAM_SENSOR_EXT_POSE_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_EXT_P"
+  description: "Time that new data must be read before a external pose timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 500000
     unit: "us"
 ---
 PARAM_SENSOR_MAG_TIMEOUT:

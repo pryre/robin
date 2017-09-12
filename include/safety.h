@@ -32,6 +32,7 @@ typedef struct {
 	timeout_status_t mag;
 	timeout_status_t baro;
 	timeout_status_t sonar;
+	timeout_status_t ext_pose;
 	timeout_status_t offboard_heartbeat;
 	timeout_status_t offboard_control;
 } safety_sensor_status_t;

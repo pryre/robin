@@ -4,6 +4,8 @@
 #include <stdbool.h>
 
 #include "fixvector3d.h"
+#include "fixquat.h"
+#include "fix16.h"
 #include "breezystm32.h"
 
 typedef struct {
@@ -76,6 +78,13 @@ typedef struct {
 typedef struct {
 	sensor_status_t status;
 
+	v3d p;	//External position estimate
+	qf16 q;	//External attitude estimate
+} sensor_readings_ext_pose_t;
+
+typedef struct {
+	sensor_status_t status;
+
 	GPIO_TypeDef *gpio_p;
 	uint16_t pin;
 
@@ -93,6 +102,7 @@ typedef struct {
 	sensor_readings_magnometer_t mag;
 	sensor_readings_barometer_t baro;
 	sensor_readings_sonar_t sonar;
+	sensor_readings_ext_pose_t ext_pose;
 	sensor_readings_safety_button_t safety_button;
 } sensor_readings_t;
 

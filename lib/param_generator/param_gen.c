@@ -37,6 +37,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_MAG_CBRK, "CBRK_MAG", 0);
 	init_param_uint(PARAM_SENSOR_BARO_CBRK, "CBRK_BARO", 0);
 	init_param_uint(PARAM_SENSOR_SONAR_CBRK, "CBRK_SONAR", 0);
+	init_param_uint(PARAM_SENSOR_EXT_POSE_CBRK, "CBRK_EXT_POSE", 0);
 	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, "CBRK_SAFETY", 1);
 	init_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE, "CHK_RATE_BARO", fix16_from_float(0.0f));
 	init_param_fix16(PARAM_SENSOR_SONAR_UPDATE_RATE, "CHK_RATE_SONAR", fix16_from_float(0.0f));
@@ -44,12 +45,14 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_IMU_STRM_COUNT, "STRM_NUM_IMU", 1000);
 	init_param_uint(PARAM_SENSOR_BARO_STRM_COUNT, "STRM_NUM_BARO", 50);
 	init_param_uint(PARAM_SENSOR_SONAR_STRM_COUNT, "STRM_NUM_SONAR", 50);
+	init_param_uint(PARAM_SENSOR_EXT_POSE_STRM_COUNT, "STRM_NUM_EXT_P", 10);
 	init_param_uint(PARAM_SENSOR_MAG_STRM_COUNT, "STRM_NUM_MAG", 50);
 	init_param_uint(PARAM_SENSOR_OFFB_HRBT_STRM_COUNT, "STRM_NUM_OB_H", 2);
 	init_param_uint(PARAM_SENSOR_OFFB_CTRL_STRM_COUNT, "STRM_NUM_OB_C", 100);
 	init_param_uint(PARAM_SENSOR_IMU_TIMEOUT, "TIMEOUT_IMU", 2000);
 	init_param_uint(PARAM_SENSOR_BARO_TIMEOUT, "TIMEOUT_BARO", 20000);
 	init_param_uint(PARAM_SENSOR_SONAR_TIMEOUT, "TIMEOUT_SONAR", 20000);
+	init_param_uint(PARAM_SENSOR_EXT_POSE_TIMEOUT, "TIMEOUT_EXT_P", 500000);
 	init_param_uint(PARAM_SENSOR_MAG_TIMEOUT, "TIMEOUT_MAG", 20000);
 	init_param_uint(PARAM_SENSOR_OFFB_HRBT_TIMEOUT, "TIMEOUT_OB_HRBT", 5000000);
 	init_param_uint(PARAM_SENSOR_OFFB_CTRL_TIMEOUT, "TIMEOUT_OB_CTRL", 200000);
