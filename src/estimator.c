@@ -199,7 +199,7 @@ void estimator_update( uint32_t time_now ) {
 		rot_mat.data[2][2] = body_z.z;
 
 		matrix_to_qf16(&q_hat_acc, &rot_mat );
-		qf16_normalize(&q_hat_acc, &q_hat_acc);
+		qf16_normalize_to_unit(&q_hat_acc, &q_hat_acc);
 
 		// Below Eq. 45 Mahoney Paper
 		qf16_mul(&q_tilde, &q_acc_inv, &q_hat_acc);
@@ -299,7 +299,7 @@ void estimator_update( uint32_t time_now ) {
 			q_hat_temp.c = fix16_add(fix16_mul(t1, q_hat.c), qdot.c);
 			q_hat_temp.d = fix16_add(fix16_mul(t1, q_hat.d), qdot.d);
 
-			qf16_normalize(&q_hat, &q_hat_temp);
+			qf16_normalize_to_unit(&q_hat, &q_hat_temp);
 		} else {
 			// Euler Integration
 			// (Eq. 47a Mahoney Paper), but this is pretty straight-forward
@@ -321,7 +321,7 @@ void estimator_update( uint32_t time_now ) {
 			q_hat_temp.c = fix16_add(q_hat.c, fix16_mul(qdot.c, dt));
 			q_hat_temp.d = fix16_add(q_hat.d, fix16_mul(qdot.d, dt));
 
-			qf16_normalize(&q_hat, &q_hat_temp);
+			qf16_normalize_to_unit(&q_hat, &q_hat_temp);
 		}
 	}
 

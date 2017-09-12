@@ -32,7 +32,7 @@ CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disab
 CBRK_MAG | uint | Sensor circuit breaker arming check for magnetometer (set to 0 to disable checking device) | 0 |  | scalar | True
 CBRK_BARO | uint | Sensor circuit breaker arming check for barometer (set to 0 to disable checking device) | 0 |  | scalar | True
 CBRK_SONAR | uint | Sensor circuit breaker arming check for sonar (set to 0 to disable checking device) | 0 |  | scalar | True
-CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety devices (set to 0 to checking disable device) | 1 |  | scalar | True
+CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 0 |  | scalar | True
 CHK_RATE_BARO | float | Sensor update rate for barometer (TODO) | 0.0 | Hz | scalar | False
 CHK_RATE_SONAR | float | Sensor update rate for sonar (TODO) | 0.0 | Hz | scalar | False
 CHK_RATE_MAG | float | Sensor update rate for magnetometer (TODO) | 0.0 | Hz | scalar | False
@@ -97,4 +97,4 @@ MOTOR_PWM_MAX | uint | Maximum output for motors | 2000 | pwm | scalar | False
 DO_ESC_CAL | uint | When set to true, a motor calibration will be performed on the next boot (False:0,True:1) | 0 |  | scalar | True
 FAILSAFE_THRTL | float | Throttle percentage output when in failsafe mode | 0.25 |  | scalar | False
 TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed | 10000000 | us | scalar | False
-MIXER | uint | Mixer type to use (see mixer_type_t enum) | 0 |  | scalar | True
+MIXER | uint | Mixer type to use (see mixer_type_t enum) | 2 |  | scalar | True

@@ -369,7 +369,7 @@ void controller_run( uint32_t time_now ) {
 		rot_mat.data[2][2] = body_z.z;
 
 		matrix_to_qf16(&q_body_lock, &rot_mat);
-		qf16_normalize(&q_body_lock, &q_body_lock);
+		qf16_normalize_to_unit(&q_body_lock, &q_body_lock);
 		//======== End Body Frame Lock ========//
 
 		//Caclulate goal body rotations

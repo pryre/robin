@@ -1,7 +1,7 @@
 #pragma once
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
-#define LOW_PRIORITY_QUEUE_SIZE 16
+#define LOW_PRIORITY_QUEUE_SIZE 8
 
 #include "breezystm32.h"
 #include "serial.h"
@@ -53,8 +53,8 @@ typedef struct {
 	uint8_t port;
 	int32_t request_all_params;
 
-	uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE][MAVLINK_MAX_PACKET_LEN];
-	uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE];
+	uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE][MAVLINK_MAX_PACKET_LEN];	//List of buffered messages
+	uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE];						//Lengths of buffered messages
 	uint16_t position;	//Current position in the queue
 	uint16_t length;	//Current length of the queue
 

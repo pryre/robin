@@ -368,11 +368,11 @@ PARAM_SENSOR_SONAR_CBRK:
 PARAM_SENSOR_SAFETY_CBRK:
   type: "uint"
   name: "CBRK_SAFETY"
-  description: "Sensor circuit breaker arming check for safety devices (set to 0 to checking disable device)"
+  description: "Sensor circuit breaker arming check for safety button (set to 0 to disable checking device)"
   reboot: true
   value:
     option: "scalar"
-    default: 1
+    default: 0
 ---
 PARAM_SENSOR_BARO_UPDATE_RATE:
   type: "float"
@@ -990,4 +990,4 @@ PARAM_MIXER:
   reboot: true
   value:
     option: "scalar"
-    default: 0
+    default: 2

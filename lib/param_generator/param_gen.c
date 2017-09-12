@@ -37,7 +37,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_MAG_CBRK, "CBRK_MAG", 0);
 	init_param_uint(PARAM_SENSOR_BARO_CBRK, "CBRK_BARO", 0);
 	init_param_uint(PARAM_SENSOR_SONAR_CBRK, "CBRK_SONAR", 0);
-	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, "CBRK_SAFETY", 1);
+	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, "CBRK_SAFETY", 0);
 	init_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE, "CHK_RATE_BARO", fix16_from_float(0.0f));
 	init_param_fix16(PARAM_SENSOR_SONAR_UPDATE_RATE, "CHK_RATE_SONAR", fix16_from_float(0.0f));
 	init_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE, "CHK_RATE_MAG", fix16_from_float(0.0f));
@@ -102,7 +102,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_DO_ESC_CAL, "DO_ESC_CAL", 0);
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, "FAILSAFE_THRTL", fix16_from_float(0.25f));
 	init_param_uint(PARAM_THROTTLE_TIMEOUT, "TIMEOUT_THRTL", 10000000);
-	init_param_uint(PARAM_MIXER, "MIXER", 0);
+	init_param_uint(PARAM_MIXER, "MIXER", 2);
 }
 
 void param_change_callback(param_id_t id) {

@@ -59,10 +59,11 @@ void setup(void) {
 
 	pwm_init();
 
+	//==============================================================
+
 	//Wait here for the first imu message (probably not really neaded)
 	while( !sensors_read() );
 }
-
 
 //XXX: Measured CPU load when armed and running: 51.4%
 void loop(void) {

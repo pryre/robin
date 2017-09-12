@@ -7,6 +7,8 @@
 #include "sensors.h"
 #include "controller.h"
 
+#include "fixextra.h"
+
 #include <stdio.h>
 
 uint8_t _system_operation_control;
@@ -302,7 +304,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					qt_fix.c = fix16_from_float(qt_float[2]);
 					qt_fix.d = fix16_from_float(qt_float[3]);
 
-					qf16_normalize(&_command_input.q, &qt_fix);
+					qf16_normalize_to_unit(&_command_input.q, &qt_fix);
 
 					//Trottle
 					_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));

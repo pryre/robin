@@ -47,6 +47,17 @@ static inline void qf16_inverse(qf16 *dest, const qf16 *q) {
 	qf16_div_s(dest, &q_temp, qf16_norm(q));
 }
 
+static inline void qf16_normalize_to_unit(qf16 *dest, const qf16 *q) {
+	fix16_t d = fix16_sqrt( fix16_add(fix16_sq(q->a),
+							fix16_add(fix16_sq(q->b),
+							fix16_add(fix16_sq(q->c), fix16_sq(q->d)))));
+
+	dest->a = fix16_div(q->a, d);
+	dest->b = fix16_div(q->b, d);
+	dest->c = fix16_div(q->c, d);
+	dest->d = fix16_div(q->d, d);
+}
+
 //Returns the rotation between two vectors
 static inline void qf16_from_shortest_path(qf16 *dest, const v3d *v1, const v3d *v2) {
 	fix16_t v_dot = v3d_dot(v1, v2);
