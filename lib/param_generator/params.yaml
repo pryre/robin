@@ -631,7 +631,7 @@ PARAM_ACC_ALPHA:
 PARAM_FUSE_EXT_HDG_W:
   type: "float"
   name: "FSE_EXT_HDG_W"
-  description: "Weighting for external heading fusion (0 means don't trust, 1 means trust fully)"
+  description: "TODO: Weighting for external heading fusion (0 means don't trust, 1 means trust fully)"
   reboot: false
   value:
     option: "scalar"

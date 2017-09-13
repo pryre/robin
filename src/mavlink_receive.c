@@ -329,7 +329,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				//Attitude
 				float qt_float[4];
 				qf16 qt_fix;
-				mavlink_msg_set_attitude_target_get_q(&msg, &qt_float[0]);
+				mavlink_msg_att_pos_mocap_get_q(&msg, &qt_float[0]);
 
 				qt_fix.a = fix16_from_float(qt_float[0]);
 				qt_fix.b = fix16_from_float(qt_float[1]);
