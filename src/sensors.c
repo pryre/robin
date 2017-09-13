@@ -13,6 +13,7 @@
 
 #include "fix16.h"
 #include "fixvector3d.h"
+#include "fixquat.h"
 #include "fixextra.h"
 
 
@@ -133,7 +134,7 @@ void sensors_init_external(void) {
 	sensor_status_init( &_sensors.sonar.status, (bool)get_param_uint( PARAM_SENSOR_SONAR_CBRK ) );
 
 	//==-- External Pose
-	sensor_status_init( &_sensors.ext_pose.status, (bool)get_param_uint( PARAM_SENSOR_EXT_POSE_CBRK ) );
+	sensor_status_init( &_sensors.ext_pose.status, false );
 
 	//==-- Safety button
 	sensor_status_init(&_sensors.safety_button.status, (bool)get_param_uint(PARAM_SENSOR_SAFETY_CBRK));

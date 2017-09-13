@@ -372,7 +372,7 @@ PARAM_SENSOR_EXT_POSE_CBRK:
   reboot: true
   value:
     option: "scalar"
-    default: 0
+    default: 1
 ---
 PARAM_SENSOR_SAFETY_CBRK:
   type: "uint"
@@ -627,6 +627,15 @@ PARAM_ACC_ALPHA:
   value:
     option: "scalar"
     default: 0.6
+---
+PARAM_FUSE_EXT_HDG_W:
+  type: "float"
+  name: "FSE_EXT_HDG_W"
+  description: "Weighting for external heading fusion (0 means don't trust, 1 means trust fully)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.8
 ---
 PARAM_GYRO_X_BIAS:
   type: "int"

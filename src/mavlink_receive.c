@@ -316,6 +316,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				break;
 			}
 			case MAVLINK_MSG_ID_ATT_POS_MOCAP: {
+				_sensors.ext_pose.status.present = true;
+
 				//TODO: Check timestamp was recent before accepting
 				_sensors.ext_pose.status.time_read = micros();
 
@@ -338,6 +340,9 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 				//Update Sensor
 				safety_update_sensor(&_system_status.sensors.ext_pose);
+
+				if( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK )
+					_sensors.ext_pose.status.new_data = true;
 
 				break;
 			}

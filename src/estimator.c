@@ -325,7 +325,77 @@ void estimator_update( uint32_t time_now ) {
 		}
 	}
 
-	//q_hat is given as z-down, rotate to NED
+
+	//==-- External pose data fusion
+	if( get_param_uint( PARAM_SENSOR_EXT_POSE_CBRK ) && _sensors.ext_pose.status.new_data ) {
+		mf16 rot_int;	//Internal orientation estimation
+		mf16 rot_ext;	//External orientation estimation
+		qf16_to_matrix(&rot_int, &q_hat);
+		qf16_to_matrix(&rot_ext, &_sensors.ext_pose.q);
+
+		//Get Y vectors from measurements
+		//Also flatten the measurements to the XY plane
+		v3d c_int;
+		v3d c_ext;
+		c_int.x = rot_int.data[0][0];
+		c_int.y = rot_int.data[0][1];
+		c_int.z = 0;
+		c_ext.x = rot_ext.data[0][0];
+		c_ext.y = rot_ext.data[0][1];
+		c_ext.z = 0;
+
+		v3d_normalize(&c_int, &c_int);
+		v3d_normalize(&c_ext, &c_ext);
+
+		//Weighted average
+		fix16_t wa = get_param_fix16( PARAM_FUSE_EXT_HDG_W );
+		c_int.x = fix16_div( fix16_add(
+						fix16_mul( wa, c_ext.x ),
+						( fix16_mul( fix16_sub( _fc_1, wa ), c_int.x ) )
+						), _fc_2 );
+		c_int.y = fix16_div( fix16_add(
+						fix16_mul( wa, c_ext.y ),
+						( fix16_mul( fix16_sub( _fc_1, wa ), c_int.y ) )
+						), _fc_2 );
+
+		v3d_normalize(&c_int, &c_int);
+
+		//Reconstuct int matrix
+		v3d x_int;
+		v3d y_int;
+		v3d z_int;
+		z_int.x = rot_int.data[2][0];
+		z_int.y = rot_int.data[2][1];
+		z_int.z = rot_int.data[2][2];
+
+		v3d_cross(&x_int, &c_int, &z_int);
+		v3d_normalize(&x_int, &x_int);
+
+		v3d_cross(&y_int, &z_int, &x_int);
+		v3d_normalize(&y_int, &y_int);
+
+		//Convert back to quaternion
+		rot_int.data[0][0] = x_int.x;
+		rot_int.data[0][1] = x_int.y;
+		rot_int.data[0][2] = x_int.z;
+		rot_int.data[1][0] = y_int.x;
+		rot_int.data[1][1] = y_int.y;
+		rot_int.data[1][2] = y_int.z;
+		rot_int.data[2][0] = z_int.x;
+		rot_int.data[2][1] = z_int.y;
+		rot_int.data[2][2] = z_int.z;
+
+		matrix_to_qf16(&q_hat, &rot_int );
+
+		//Normalize quaternion
+		qf16_normalize_to_unit(&q_hat, &q_hat);
+
+		//Unset the new data flag
+		_sensors.ext_pose.status.new_data = false;
+	}
+
+
+	//q_hat is given as z-down (NED)
 	_state_estimator.attitude = q_hat;
 	// Extract Euler Angles for controller
 	//euler_from_quat(&q_hat, &_state_estimator.phi, &_state_estimator.theta, &_state_estimator.psi);
