@@ -328,78 +328,31 @@ void estimator_update( uint32_t time_now ) {
 
 	//==-- External pose data fusion
 	if( get_param_uint( PARAM_SENSOR_EXT_POSE_CBRK ) && _sensors.ext_pose.status.new_data ) {
+		qf16 q_temp;
+		qf16 dq;
 
-		mf16 rot_int;	//Internal orientation estimation
-		qf16_to_matrix(&rot_int, &q_hat);
-		/*
-		mf16 rot_ext;	//External orientation estimation
-		qf16_to_matrix(&rot_ext, &_sensors.ext_pose.q);
+		qf16_inverse(&q_temp, &q_hat);
+		qf16_mul(&dq, &_sensors.ext_pose.q, &q_temp);	//Difference between est and mocap
+		qf16_normalize_to_unit(&dq, &dq);
 
-		//Get Y vectors from measurements
-		//Also flatten the measurements to the XY plane
-		v3d c_int;
-		v3d c_ext;
-		c_int.x = rot_int.data[1][0];
-		c_int.y = rot_int.data[1][1];
-		c_int.z = 0;
-		c_ext.x = rot_ext.data[1][0];
-		c_ext.y = rot_ext.data[1][1];
-		c_ext.z = 0;
-		//c_ext.x = 0;
-		//c_ext.y = _fc_1;
-		//c_ext.z = 0;
+		v3d fv;
+		fv.x = _fc_1;
+		fv.y = 0;
+		fv.z = 0;
 
-		v3d_normalize(&c_int, &c_int);
-		v3d_normalize(&c_ext, &c_ext);
+		qf16_rotate(&fv, &dq, &fv);
+		fv.z = 0;
+		v3d_normalize(&fv, &fv);	//Rotated vector in the XY plane
 
-		//Weighted average
+		fix16_t rot_a = fix16_atan2(fv.y, fv.x);
+		rot_a = fix16_mul(get_param_fix16( PARAM_FUSE_EXT_HDG_W ), rot_a);
+		v3d rot_axis;
+		rot_axis.x = 0;
+		rot_axis.y = 0;
+		rot_axis.z = _fc_1;
+		qf16_from_axis_angle(&q_temp, &rot_axis, rot_a);	//Create a rotation quaternion for the flat rotation around Z axis
 
-		fix16_t wa = get_param_fix16( PARAM_FUSE_EXT_HDG_W );
-		v3d_mul_s( &c_int, &c_int, fix16_sub( _fc_1, wa ) );
-		v3d_mul_s( &c_ext, &c_ext, wa );
-		v3d_add( &c_int, &c_int, &c_ext );
-		v3d_div_s( &c_int, &c_int, _fc_2 );
-		v3d_normalize(&c_int, &c_int);
-		*/
-
-		//fix16_t yaw_int;
-		fix16_t roll_scrap;
-		fix16_t pitch_scrap;
-		fix16_t yaw_ext;
-
-		euler_from_quat(&_sensors.ext_pose.q, &roll_scrap, &pitch_scrap, &yaw_ext );
-
-		v3d c_int;
-		c_int.x = -fix16_asin(yaw_ext);
-		c_int.y = fix16_acos(yaw_ext);
-		c_int.z = 0;
-
-		//Reconstuct int matrix
-		v3d x_int;
-		v3d y_int;
-		v3d z_int;
-		z_int.x = rot_int.data[2][0];
-		z_int.y = rot_int.data[2][1];
-		z_int.z = rot_int.data[2][2];
-
-		v3d_cross(&x_int, &c_int, &z_int);
-		v3d_normalize(&x_int, &x_int);
-
-		v3d_cross(&y_int, &z_int, &x_int);
-		v3d_normalize(&y_int, &y_int);
-
-		//Convert back to quaternion
-		rot_int.data[0][0] = x_int.x;
-		rot_int.data[0][1] = x_int.y;
-		rot_int.data[0][2] = x_int.z;
-		rot_int.data[1][0] = y_int.x;
-		rot_int.data[1][1] = y_int.y;
-		rot_int.data[1][2] = y_int.z;
-		rot_int.data[2][0] = z_int.x;
-		rot_int.data[2][1] = z_int.y;
-		rot_int.data[2][2] = z_int.z;
-
-		matrix_to_qf16(&q_hat, &rot_int );
+		qf16_mul(&q_hat, &q_temp, &q_hat);	//Rotate the estimate
 
 		//Normalize quaternion
 		qf16_normalize_to_unit(&q_hat, &q_hat);

@@ -65,7 +65,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_FILTER_KI, "FILTER_KI", fix16_from_float(0.05f));
 	init_param_fix16(PARAM_GYRO_ALPHA, "EST_LPF_GYRO_A", fix16_from_float(0.6f));
 	init_param_fix16(PARAM_ACC_ALPHA, "EST_LPF_ACC_A", fix16_from_float(0.6f));
-	init_param_fix16(PARAM_FUSE_EXT_HDG_W, "FSE_EXT_HDG_W", fix16_from_float(0.8f));
+	init_param_fix16(PARAM_FUSE_EXT_HDG_W, "FSE_EXT_HDG_W", fix16_from_float(0.2f));
 	init_param_int(PARAM_GYRO_X_BIAS, "GYRO_X_BIAS", 0);
 	init_param_int(PARAM_GYRO_Y_BIAS, "GYRO_Y_BIAS", 0);
 	init_param_int(PARAM_GYRO_Z_BIAS, "GYRO_Z_BIAS", 0);

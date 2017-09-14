@@ -635,7 +635,7 @@ PARAM_FUSE_EXT_HDG_W:
   reboot: false
   value:
     option: "scalar"
-    default: 0.8
+    default: 0.2
 ---
 PARAM_GYRO_X_BIAS:
   type: "int"

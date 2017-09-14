@@ -60,7 +60,7 @@ FILTER_KP | float | Adjusts the amount of proportional filtering done on the att
 FILTER_KI | float | Adjusts the amount of integral filtering done on the attitude estimation | 0.05 |  | scalar | False
 EST_LPF_GYRO_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.6 |  | scalar | False
 EST_LPF_ACC_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.6 |  | scalar | False
-FSE_EXT_HDG_W | float | TODO: Weighting for external heading fusion (0 means don't trust, 1 means trust fully) | 0.8 |  | scalar | False
+FSE_EXT_HDG_W | float | TODO: Weighting for external heading fusion (0 means don't trust, 1 means trust fully) | 0.2 |  | scalar | False
 GYRO_X_BIAS | int | Bias correction for gyroscope measurements (X axis) | 0 |  | scalar | False
 GYRO_Y_BIAS | int | Bias correction for gyroscope measurements (Y axis) | 0 |  | scalar | False
 GYRO_Z_BIAS | int | Bias correction for gyroscope measurements (Z axis) | 0 |  | scalar | False
