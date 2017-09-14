@@ -91,7 +91,7 @@ PARAM_BAUD_RATE_0:
 PARAM_BAUD_RATE_1:
   type: "uint"
   name: "BAUD_RATE_1"
-  description: "Baud rate for the the COMM_1 port - set to 0 to disable"
+  description: "DISABLED: Baud rate for the the COMM_1 port - set to 0 to disable"
   reboot: true
   value:
     option: "list"
