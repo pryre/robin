@@ -6,7 +6,7 @@ BOARD_REV | uint | Selects what version of the board to setup sensors for | 5 | 
 FW_VERSION | uint | A compile-time stamp for the flight firmware version |  | | | False
 SW_VERSION | uint | A compile-time stamp for the OS firmware version |  | | | False
 BAUD_RATE_0 | uint | Baud rate for the the COMM_0 port - set to 0 to disable | 921600 |  | [0, 9600, 57600, 115200, 921600] | True
-BAUD_RATE_1 | uint | Baud rate for the the COMM_1 port - set to 0 to disable | 0 |  | [0, 9600, 57600, 115200, 921600] | True
+BAUD_RATE_1 | uint | DISABLED: Baud rate for the the COMM_1 port - set to 0 to disable | 0 |  | [0, 9600, 57600, 115200, 921600] | True
 TIMESYNC_ALPHA | float | TODO - also check min-max values | 0.8 |  | [min:0.0, max:1.0] | False
 SYS_ID | uint | Sets the MAVLINK System ID parameter for the message header | 1 |  | [min:0, max:255] | True
 COMP_ID | uint | Sets the MAVLINK Component ID parameter for the message header | 1 |  | [min:0, max:255] | True
