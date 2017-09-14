@@ -1,7 +1,7 @@
 #pragma once
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
-#define LOW_PRIORITY_QUEUE_SIZE 8
+#define LOW_PRIORITY_QUEUE_SIZE 12
 
 #include "breezystm32.h"
 #include "serial.h"
@@ -21,10 +21,10 @@
  */
 
 #define COMM_CH_0 (uint8_t)0x01	//0b00000001
-#define COMM_CH_1 (uint8_t)0x02	//0b00000010
+//XXX:#define COMM_CH_1 (uint8_t)0x02	//0b00000010
 
 serialPort_t* Serial1;
-serialPort_t* Serial2;
+//XXX:serialPort_t* Serial2;
 
 extern mavlink_system_t mavlink_system;
 
@@ -62,7 +62,7 @@ typedef struct {
 } mavlink_queue_t;
 
 extern mavlink_queue_t _lpq_port_0;
-extern mavlink_queue_t _lpq_port_1;
+//XXX:extern mavlink_queue_t _lpq_port_1;
 
 bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg);
 void lpq_queue_broadcast_msg(mavlink_message_t *msg);

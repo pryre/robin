@@ -24,15 +24,6 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0, "STRM0_SRV_OUT", fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_TIMESYNC_0, "STRM0_TIMESYNC", fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_LOW_PRIORITY_0, "STRM0_LPQ", fix16_from_float(100.0f));
-	init_param_fix16(PARAM_STREAM_RATE_HEARTBEAT_1, "STRM1_HRTBT", fix16_from_float(1.0f));
-	init_param_fix16(PARAM_STREAM_RATE_SYS_STATUS_1, "STRM1_SYS_STAT", fix16_from_float(0.2f));
-	init_param_fix16(PARAM_STREAM_RATE_HIGHRES_IMU_1, "STRM1_HR_IMU", fix16_from_float(100.0f));
-	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_1, "STRM1_ATT", fix16_from_float(0.0f));
-	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1, "STRM1_ATT_Q", fix16_from_float(50.0f));
-	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_TARGET_1, "STRM1_ATT_T", fix16_from_float(50.0f));
-	init_param_fix16(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1, "STRM1_SRV_OUT", fix16_from_float(10.0f));
-	init_param_fix16(PARAM_STREAM_RATE_TIMESYNC_1, "STRM1_TIMESYNC", fix16_from_float(10.0f));
-	init_param_fix16(PARAM_STREAM_RATE_LOW_PRIORITY_1, "STRM1_LPQ", fix16_from_float(100.0f));
 	init_param_uint(PARAM_SENSOR_IMU_CBRK, "CBRK_IMU", 1);
 	init_param_uint(PARAM_SENSOR_MAG_CBRK, "CBRK_MAG", 0);
 	init_param_uint(PARAM_SENSOR_BARO_CBRK, "CBRK_BARO", 0);
@@ -137,33 +128,6 @@ void param_change_callback(param_id_t id) {
 			break;
 		case PARAM_STREAM_RATE_LOW_PRIORITY_0:
 			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_LOW_PRIORITY);
-			break;
-		case PARAM_STREAM_RATE_HEARTBEAT_1:
-			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HEARTBEAT);
-			break;
-		case PARAM_STREAM_RATE_SYS_STATUS_1:
-			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SYS_STATUS);
-			break;
-		case PARAM_STREAM_RATE_HIGHRES_IMU_1:
-			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HIGHRES_IMU);
-			break;
-		case PARAM_STREAM_RATE_ATTITUDE_1:
-			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE);
-			break;
-		case PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1:
-			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);
-			break;
-		case PARAM_STREAM_RATE_ATTITUDE_TARGET_1:
-			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_TARGET);
-			break;
-		case PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1:
-			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);
-			break;
-		case PARAM_STREAM_RATE_TIMESYNC_1:
-			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_TIMESYNC);
-			break;
-		case PARAM_STREAM_RATE_LOW_PRIORITY_1:
-			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_LOW_PRIORITY);
 			break;
 		case PARAM_PID_ROLL_RATE_P:
 			pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));

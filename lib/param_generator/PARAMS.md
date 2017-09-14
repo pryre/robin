@@ -19,15 +19,6 @@ STRM0_ATT_T | float | Communication update rate for current attitude target (set
 STRM0_SRV_OUT | float | Communication update rate for commanded servo output (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 100.0 | Hz | scalar | False
-STRM1_HRTBT | float | Communication update rate for system heartbeat (set to 0 to turn off stream) | 1.0 | Hz | scalar | False
-STRM1_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
-STRM1_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 100.0 | Hz | scalar | False
-STRM1_ATT | float | Communication update rate for current attitude euler angles (set to 0 to turn off stream) | 0.0 | Hz | scalar | False
-STRM1_ATT_Q | float | Communication update rate for current attitude quaternion (set to 0 to turn off stream) | 50.0 | Hz | scalar | False
-STRM1_ATT_T | float | Communication update rate for current attitude target (set to 0 to turn off stream) | 50.0 | Hz | scalar | False
-STRM1_SRV_OUT | float | Communication update rate for commanded servo output (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
-STRM1_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
-STRM1_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 100.0 | Hz | scalar | False
 CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disable checking device) | 1 |  | scalar | True
 CBRK_MAG | uint | Sensor circuit breaker arming check for magnetometer (set to 0 to disable checking device) | 0 |  | scalar | True
 CBRK_BARO | uint | Sensor circuit breaker arming check for barometer (set to 0 to disable checking device) | 0 |  | scalar | True

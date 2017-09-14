@@ -492,8 +492,12 @@ void safety_check_failsafe(void) {
 		//If flight-critical systems are down
 		if( ( _system_status.sensors.imu.health != SYSTEM_HEALTH_OK ) ) {	//Emergency //TODO: More?
 			safety_request_state( MAV_STATE_EMERGENCY );
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] WARNING! Enabling hard failsafe!";
+			mavlink_queue_broadcast_error( &text[0] );
 		} else {	//Critical
 			safety_request_state( MAV_STATE_CRITICAL );
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] WARNING! Enabling soft failsafe!";
+			mavlink_queue_broadcast_error( &text[0] );
 		}
 	}
 }

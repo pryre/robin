@@ -31,7 +31,7 @@
  */
 
 mavlink_queue_t _lpq_port_0;
-mavlink_queue_t _lpq_port_1;
+//XXX: mavlink_queue_t _lpq_port_1;
 
 mavlink_system_t mavlink_system;
 
@@ -57,28 +57,28 @@ void communications_system_init(void) {
 	_lpq_port_0.request_all_params = -1;
 	_lpq_port_0.timer_warn_full = 0;
 
-	_lpq_port_1.port = MAVLINK_COMM_1;
-	_lpq_port_1.position = 0;
-	_lpq_port_1.length = 0;
-	_lpq_port_1.request_all_params = -1;
-	_lpq_port_1.timer_warn_full = 0;
+	//XXX: _lpq_port_1.port = MAVLINK_COMM_1;
+	//XXX: _lpq_port_1.position = 0;
+	//XXX: _lpq_port_1.length = 0;
+	//XXX: _lpq_port_1.request_all_params = -1;
+	//XXX: _lpq_port_1.timer_warn_full = 0;
 
 	if( get_param_uint( PARAM_BAUD_RATE_0 ) > 0 ) {
 		Serial1 = uartOpen( USART1, NULL, get_param_uint(PARAM_BAUD_RATE_0 ), MODE_RXTX, SERIAL_NOT_INVERTED );
 		comm_set_open( COMM_CH_0 );
 	}
 
-	if( get_param_uint( PARAM_BAUD_RATE_1 ) > 0 ) {
-		Serial2 = uartOpen( USART2, NULL, get_param_uint( PARAM_BAUD_RATE_1 ), MODE_RXTX, SERIAL_NOT_INVERTED );
-		comm_set_open( COMM_CH_1 );
-	}
-	
-	
+	//XXX: if( get_param_uint( PARAM_BAUD_RATE_1 ) > 0 ) {
+	//XXX: 	Serial2 = uartOpen( USART2, NULL, get_param_uint( PARAM_BAUD_RATE_1 ), MODE_RXTX, SERIAL_NOT_INVERTED );
+	//XXX: 	comm_set_open( COMM_CH_1 );
+	//XXX: }
+
+
 	for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++)
 		communication_calc_period_update(COMM_CH_0, i);
-		
-	for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++)
-		communication_calc_period_update(COMM_CH_1, i);
+
+	//XXX: for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++)
+	//XXX: 	communication_calc_period_update(COMM_CH_1, i);
 }
 
 bool comm_is_open( uint8_t ch ) {
@@ -102,8 +102,8 @@ void comm_set_closed( uint8_t ch ) {
 void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 	if( (chan == MAVLINK_COMM_0 ) && comm_is_open( COMM_CH_0 ) ) {
 		serialWrite(Serial1, ch);
-	} else if( (chan == MAVLINK_COMM_1 ) && comm_is_open( COMM_CH_1 ) ) {
-		serialWrite(Serial2, ch);
+	//XXX: } else if( (chan == MAVLINK_COMM_1 ) && comm_is_open( COMM_CH_1 ) ) {
+	//XXX: 	serialWrite(Serial2, ch);
 	}
 }
 
@@ -115,12 +115,11 @@ void mavlink_send_statustext(uint8_t port, uint8_t severity, char* text) {
 }
 
 void mavlink_send_broadcast_statustext(uint8_t severity, char* text) {
-
 	if( comm_is_open( COMM_CH_0 ) )
 		mavlink_send_statustext(MAVLINK_COMM_0, severity, text);
 
-	if( comm_is_open( COMM_CH_1 ) )
-		mavlink_send_statustext(MAVLINK_COMM_1, severity, text);
+	//XXX: if( comm_is_open( COMM_CH_1 ) )
+	//XXX: 	mavlink_send_statustext(MAVLINK_COMM_1, severity, text);
 }
 
 void mavlink_send_timesync(uint8_t port, uint64_t tc1, uint64_t ts1) {
@@ -163,8 +162,8 @@ bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg) {
 
 	if( port == _lpq_port_0.port ) {
 		queue = &_lpq_port_0;
-	} else if( port == _lpq_port_1.port ) {
-		queue = &_lpq_port_1;
+	//XXX: } else if( port == _lpq_port_1.port ) {
+	//XXX: 	queue = &_lpq_port_1;
 	}
 
 	if( check_lpq_space_free( queue ) && ( queue != NULL) ) {
@@ -201,8 +200,8 @@ void lpq_queue_broadcast_msg(mavlink_message_t *msg) {
 	if( comm_is_open( COMM_CH_0 ) )
 		lpq_queue_msg(MAVLINK_COMM_0, msg);
 
-	if( comm_is_open( COMM_CH_1 ) )
-		lpq_queue_msg(MAVLINK_COMM_1, msg);
+	//XXX: if( comm_is_open( COMM_CH_1 ) )
+	//XXX: 	lpq_queue_msg(MAVLINK_COMM_1, msg);
 }
 
 void lpq_send(mavlink_queue_t* queue) {
@@ -225,11 +224,11 @@ void mavlink_stream_low_priority(uint8_t port) {
 			lpq_queue_all_params(&_lpq_port_0);
 
 		lpq_send(&_lpq_port_0);
-	} else if( port == _lpq_port_1.port ) {
-		if( _lpq_port_1.request_all_params >= 0 )
-			lpq_queue_all_params(&_lpq_port_1);
-
-		lpq_send(&_lpq_port_1);
+	//XXX: } else if( port == _lpq_port_1.port ) {
+	//XXX: 	if( _lpq_port_1.request_all_params >= 0 )
+	//XXX: 		lpq_queue_all_params(&_lpq_port_1);
+	//XXX:
+	//XXX: 	lpq_send(&_lpq_port_1);
 	}
 }
 

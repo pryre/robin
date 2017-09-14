@@ -14,7 +14,7 @@
 uint8_t _system_operation_control;
 uint8_t _sensor_calibration;
 mavlink_queue_t _lpq_port_0;
-mavlink_queue_t _lpq_port_1;
+//XXX: mavlink_queue_t _lpq_port_1;
 
 command_input_t _command_input;
 system_status_t _system_status;
@@ -38,8 +38,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					//Set the new request flag
 					if(port == MAVLINK_COMM_0) {
 						_lpq_port_0.request_all_params = 0;
-					} else if(port == MAVLINK_COMM_1) {
-						_lpq_port_1.request_all_params = 0;
+					//XXX: } else if(port == MAVLINK_COMM_1) {
+					//XXX: 	_lpq_port_1.request_all_params = 0;
 					}
 
 					mavlink_queue_broadcast_notice("[PARAM] Caution: Broadcasting param list!");
@@ -415,11 +415,11 @@ void communication_receive(void) {
 		while( serialTotalRxBytesWaiting( Serial1 ) && ( (micros() - time_start_read ) < time_read_max ) )
 				communication_decode( MAVLINK_COMM_0, serialRead(Serial1) );
 
-	time_start_read = micros();
+	//XXX: time_start_read = micros();
 
-	if( comm_is_open( COMM_CH_1 ) )
-		while( serialTotalRxBytesWaiting( Serial2 ) && ( (micros() - time_start_read ) < time_read_max ) )
-				communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
+	//XXX: if( comm_is_open( COMM_CH_1 ) )
+	//XXX: 	while( serialTotalRxBytesWaiting( Serial2 ) && ( (micros() - time_start_read ) < time_read_max ) )
+	//XXX: 			communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
 
 	//TODO: Update global packet drops counter
 	//packet_drops += status.packet_rx_drop_count;
