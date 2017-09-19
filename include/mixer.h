@@ -8,7 +8,7 @@
 
 //TODO: Need to add support later for more mixing types
 typedef enum {
-	MIXER_NONE,
+	MIXER_NONE = 0,
 	MIXER_QUADCOPTER_PLUS,
 	MIXER_QUADCOPTER_X,
 	MIXER_PLANE_BASIC,

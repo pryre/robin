@@ -69,16 +69,19 @@ static mixer_t *mixer_to_use;
 void mixer_init() {
 	switch( get_param_uint(PARAM_MIXER) ) {
 		case MIXER_QUADCOPTER_PLUS: {
+			mavlink_queue_broadcast_error("[MIX] Using mixer QUAD +");
 			mixer_to_use = &mixer_quadcopter_plus;
 
 			break;
 		}
 		case MIXER_QUADCOPTER_X: {
+			mavlink_queue_broadcast_error("[MIX] Using mixer QUAD X");
 			mixer_to_use = &mixer_quadcopter_x;
 
 			break;
 		}
 		case MIXER_PLANE_BASIC: {
+			mavlink_queue_broadcast_error("[MIX] Using mixer PLANE BASIC");
 			mixer_to_use = &mixer_plane_basic;
 
 			break;

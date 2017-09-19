@@ -127,7 +127,6 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		R_sp_z.y = R_sp.data[1][2];
 		R_sp_z.z = R_sp.data[2][2];
 
-
 		//px4: axis and sin(angle) of desired rotation
 		//px4: math::Vector<3> e_R = R.transposed() * (R_z % R_sp_z);
 		mf16 Rt;
