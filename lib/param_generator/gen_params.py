@@ -81,7 +81,24 @@ def check_params(params):
 				else:
 					raise ValueError("%s: Parameter name duplicate with param %s" % (param_id, id_list[name_list.index(details["name"])]))
 
-				if details["value"]["option"] == "scalar":
+				if details["value"]["option"] == "bool":
+					param_type = details["type"]
+					param_val = details["value"]["default"]
+					param_val_type = type(param_val)
+					raise_error_type_val = False
+					raise_error_bad_val = False
+
+					# Default type
+					raise_error_type_val = not val_check_type(param_val, param_type)
+
+					if not ( (param_val == 0) or (param_val == 1) ):
+						raise_error_bad_val = True
+
+					if raise_error_type_val:
+						raise ValueError("%s: Type (%s) and default value (%s) mismatch" % (param_id, param_type, str(param_val_type)))
+					if raise_error_bad_val:
+						raise ValueError("%s: Value (%s) must be either 0 or 1 for option 'bool'" % (param_id, str(param_val)))
+				elif details["value"]["option"] == "scalar":
 					param_type = details["type"]
 					param_val = details["value"]["default"]
 					param_val_type = type(param_val)
@@ -160,7 +177,7 @@ def check_params(params):
 				elif details["value"]["option"] == "generated":
 					pass
 				else:
-					raise ValueError("%s: Unsupported value option (%s)" % (param_id, details["value"]["option"]))
+					raise ValueError("%s: Unsupported value option (%s) for parameter checking" % (param_id, details["value"]["option"]))
 
 		print("Paramters parsed OK!")
 		success = True
@@ -195,7 +212,14 @@ def gen_md(params, filepath):
 				if "unit" in details["value"]:
 					unit_str = details["value"]["unit"]
 
-				if details["value"]["option"] == "scalar":
+				if details["value"]["option"] == "bool":
+					str_md += str(details["value"]["default"])
+					str_md += " | "
+					str_md += "0 / 1"
+					str_md += " | "
+					str_md += "boolean"
+					str_md += " | "
+				elif details["value"]["option"] == "scalar":
 					str_md += str(details["value"]["default"])
 					str_md += " | "
 					str_md += unit_str
@@ -219,7 +243,7 @@ def gen_md(params, filepath):
 				elif details["value"]["option"] == "generated":
 					str_md += " | | | "
 				else:
-					raise ValueError("%s: Unsupported value option (%s)" % (param_id, details["value"]["option"]))
+					raise ValueError("%s: Unsupported value option (%s) for Markdown generation" % (param_id, details["value"]["option"]))
 
 				str_md += str(details["reboot"])
 
@@ -303,7 +327,9 @@ def gen_c(params, filepath):
 
 				val_str = ""
 
-				if details["value"]["option"] == "scalar":
+				if details["value"]["option"] == "bool":
+					val_str = str(details["value"]["default"])
+				elif details["value"]["option"] == "scalar":
 					if details["type"] == "float":
 						val_str = "fix16_from_float(" + str(details["value"]["default"]) + "f)"
 					else:
@@ -323,7 +349,7 @@ def gen_c(params, filepath):
 					else:
 						val_str = str(val)
 				else:
-					raise ValueError("%s: Unsupported value option (%s)" % (param_id, details["value"]["option"]))
+					raise ValueError("%s: Unsupported value option (%s) for C generation" % (param_id, details["value"]["option"]))
 
 				str_c = "\t" + start_str + val_str + ");\n"
 				param_gen_c.write(str_c)

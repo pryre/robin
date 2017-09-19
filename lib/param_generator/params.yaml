@@ -131,6 +131,15 @@ PARAM_COMPONENT_ID:
     min: 0
     max: 255
 ---
+PARAM_RELAXED_PARAM_SET:
+  type: "uint"
+  name: "RELAXED_SET"
+  description: "Allows for 'unit' type parameters to be set when send as 'int' type"
+  reboot: false
+  value:
+    option: "bool"
+    default: 1
+---
 PARAM_STREAM_RATE_HEARTBEAT_0:
   type: "float"
   name: "STRM0_HRTBT"
@@ -335,7 +344,7 @@ PARAM_SENSOR_IMU_CBRK:
   description: "Sensor circuit breaker arming check for IMU (set to 0 to disable checking device)"
   reboot: true
   value:
-    option: "scalar"
+    option: "bool"
     default: 1
 ---
 PARAM_SENSOR_MAG_CBRK:
@@ -344,7 +353,7 @@ PARAM_SENSOR_MAG_CBRK:
   description: "Sensor circuit breaker arming check for magnetometer (set to 0 to disable checking device)"
   reboot: true
   value:
-    option: "scalar"
+    option: "bool"
     default: 0
 ---
 PARAM_SENSOR_BARO_CBRK:
@@ -353,7 +362,7 @@ PARAM_SENSOR_BARO_CBRK:
   description: "Sensor circuit breaker arming check for barometer (set to 0 to disable checking device)"
   reboot: true
   value:
-    option: "scalar"
+    option: "bool"
     default: 0
 ---
 PARAM_SENSOR_SONAR_CBRK:
@@ -362,7 +371,7 @@ PARAM_SENSOR_SONAR_CBRK:
   description: "Sensor circuit breaker arming check for sonar (set to 0 to disable checking device)"
   reboot: true
   value:
-    option: "scalar"
+    option: "bool"
     default: 0
 ---
 PARAM_SENSOR_EXT_POSE_CBRK:
@@ -371,7 +380,7 @@ PARAM_SENSOR_EXT_POSE_CBRK:
   description: "Sensor circuit breaker arming check for external pose estimate (set to 0 to disable checking device)"
   reboot: true
   value:
-    option: "scalar"
+    option: "bool"
     default: 1
 ---
 PARAM_SENSOR_SAFETY_CBRK:
@@ -380,7 +389,7 @@ PARAM_SENSOR_SAFETY_CBRK:
   description: "Sensor circuit breaker arming check for safety button (set to 0 to disable checking device)"
   reboot: true
   value:
-    option: "scalar"
+    option: "bool"
     default: 1
 ---
 PARAM_SENSOR_BARO_UPDATE_RATE:
@@ -998,7 +1007,7 @@ PARAM_DO_ESC_CAL:
   description: "When set to true, a motor calibration will be performed on the next boot (False:0,True:1)"
   reboot: true
   value:
-    option: "scalar"
+    option: "bool"
     default: 0
 ---
 PARAM_FAILSAFE_THROTTLE:

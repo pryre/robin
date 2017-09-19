@@ -40,8 +40,7 @@ sensor_readings_t _sensors;
 params_t _params;
 state_t _state_estimator;
 
-command_input_t _command_input;
-control_output_t _control_output;
+command_input_t _control_input;
 int32_t _pwm_output[8];
 
 static uint8_t comms_open_status_ = 0;
@@ -381,24 +380,22 @@ void mavlink_stream_attitude_quaternion(uint8_t port) {
 }
 
 void mavlink_stream_attitude_target(uint8_t port) {
-	float q[4] = {fix16_to_float(_command_input.q.a),
-				  fix16_to_float(_command_input.q.b),
-				  fix16_to_float(_command_input.q.c),
-				  fix16_to_float(_command_input.q.d)};
-
-	//XXX: TODO: _control_output (r,p,y) are not the goal rates!
+	float q[4] = {fix16_to_float(_control_input.q.a),
+				  fix16_to_float(_control_input.q.b),
+				  fix16_to_float(_control_input.q.c),
+				  fix16_to_float(_control_input.q.d)};
 
 	//Use the control output for some of these commands as they reflect the actual goals
 	// The input mask applied is included, but the information will still potentially be useful
 	// The timestamp used is the one that is used to generate the commands
 	mavlink_msg_attitude_target_send(port,
 									 sensors_clock_ls_get(),
-									 _command_input.input_mask,
+									 _control_input.input_mask,
 									 &q[0],
-									 fix16_to_float(_control_output.r),
-									 fix16_to_float(_control_output.p),
-									 fix16_to_float(_control_output.y),
-									 fix16_to_float(_control_output.T));
+									 fix16_to_float(_control_input.r),
+									 fix16_to_float(_control_input.p),
+									 fix16_to_float(_control_input.y),
+									 fix16_to_float(_control_input.T));
 }
 
 void mavlink_stream_servo_output_raw(uint8_t port) {

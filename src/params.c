@@ -191,7 +191,7 @@ void get_param_name(param_id_t id, char name[PARAMS_NAME_LENGTH]) {
 	memcpy(name, _params.names[id], PARAMS_NAME_LENGTH);
 }
 
-mavlink_message_type_t get_param_type(param_id_t id) {
+MAV_PARAM_TYPE get_param_type(param_id_t id) {
 	return _params.types[id];
 }
 

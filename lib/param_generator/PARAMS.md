@@ -10,6 +10,7 @@ BAUD_RATE_1 | uint | DISABLED: Baud rate for the the COMM_1 port - set to 0 to d
 TIMESYNC_ALPHA | float | TODO - also check min-max values | 0.8 |  | [min:0.0, max:1.0] | False
 SYS_ID | uint | Sets the MAVLINK System ID parameter for the message header | 1 |  | [min:0, max:255] | True
 COMP_ID | uint | Sets the MAVLINK Component ID parameter for the message header | 1 |  | [min:0, max:255] | True
+RELAXED_SET | uint | Allows for 'unit' type parameters to be set when send as 'int' type | 1 | 0 / 1 | boolean | False
 STRM0_HRTBT | float | Communication update rate for system heartbeat (set to 0 to turn off stream) | 1.0 | Hz | scalar | False
 STRM0_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
 STRM0_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 100.0 | Hz | scalar | False
@@ -19,12 +20,12 @@ STRM0_ATT_T | float | Communication update rate for current attitude target (set
 STRM0_SRV_OUT | float | Communication update rate for commanded servo output (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 100.0 | Hz | scalar | False
-CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disable checking device) | 1 |  | scalar | True
-CBRK_MAG | uint | Sensor circuit breaker arming check for magnetometer (set to 0 to disable checking device) | 0 |  | scalar | True
-CBRK_BARO | uint | Sensor circuit breaker arming check for barometer (set to 0 to disable checking device) | 0 |  | scalar | True
-CBRK_SONAR | uint | Sensor circuit breaker arming check for sonar (set to 0 to disable checking device) | 0 |  | scalar | True
-CBRK_EXT_POSE | uint | Sensor circuit breaker arming check for external pose estimate (set to 0 to disable checking device) | 1 |  | scalar | True
-CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 1 |  | scalar | True
+CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
+CBRK_MAG | uint | Sensor circuit breaker arming check for magnetometer (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
+CBRK_BARO | uint | Sensor circuit breaker arming check for barometer (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
+CBRK_SONAR | uint | Sensor circuit breaker arming check for sonar (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
+CBRK_EXT_POSE | uint | Sensor circuit breaker arming check for external pose estimate (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
+CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CHK_RATE_BARO | float | Sensor update rate for barometer (TODO) | 0.0 | Hz | scalar | False
 CHK_RATE_SONAR | float | Sensor update rate for sonar (TODO) | 0.0 | Hz | scalar | False
 CHK_RATE_MAG | float | Sensor update rate for magnetometer (TODO) | 0.0 | Hz | scalar | False
@@ -89,7 +90,7 @@ MOTOR_PWM_RATE | uint | Update rate for PWM outputs | 400 | ? | scalar | True
 MOTOR_PWM_IDLE | uint | Idle output for motors (when armed) | 1150 | pwm | scalar | False
 MOTOR_PWM_MIN | uint | Minimum output for motors | 1000 | pwm | scalar | False
 MOTOR_PWM_MAX | uint | Maximum output for motors | 2000 | pwm | scalar | False
-DO_ESC_CAL | uint | When set to true, a motor calibration will be performed on the next boot (False:0,True:1) | 0 |  | scalar | True
+DO_ESC_CAL | uint | When set to true, a motor calibration will be performed on the next boot (False:0,True:1) | 0 | 0 / 1 | boolean | True
 FAILSAFE_THRTL | float | Throttle percentage output when in failsafe mode | 0.25 |  | scalar | False
 TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed | 10000000 | us | scalar | False
 MIXER | uint | Mixer type to use (see mixer_type_t enum) | 2 |  | scalar | True

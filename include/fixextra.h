@@ -154,6 +154,34 @@ static inline void matrix_to_qf16(qf16 *dest, const mf16 *mat) {
 	dest->d = temp[2];
 }
 
+static inline void dcm_to_basis(v3d *b_x, v3d *b_y, v3d *b_z, const mf16 *dcm) {
+		b_x->x = dcm->data[0][0];
+		b_x->y = dcm->data[0][1];
+		b_x->z = dcm->data[0][2];
+
+		b_y->x = dcm->data[1][0];
+		b_y->y = dcm->data[1][1];
+		b_y->z = dcm->data[1][2];
+
+		b_z->x = dcm->data[2][0];
+		b_z->y = dcm->data[2][1];
+		b_z->z = dcm->data[2][2];
+}
+
+static inline void dcm_from_basis(mf16 *dcm, const v3d *b_x, const v3d *b_y, const v3d *b_z) {
+		dcm->data[0][0] = b_x->x;
+		dcm->data[0][1] = b_x->y;
+		dcm->data[0][2] = b_x->z;
+
+		dcm->data[1][0] = b_y->x;
+		dcm->data[1][1] = b_y->y;
+		dcm->data[1][2] = b_y->z;
+
+		dcm->data[2][0] = b_z->x;
+		dcm->data[2][1] = b_z->y;
+		dcm->data[2][2] = b_z->z;
+}
+
 //static inline v3d v3d_imu_to_ned(const v3d *imu) {
 //	v3d ned;
 //	qf16_rotate(&ned, &NED_IMU_Q, imu);

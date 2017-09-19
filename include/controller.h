@@ -37,6 +37,7 @@ typedef struct {
 } control_output_t;
 
 extern command_input_t _command_input;
+extern command_input_t _control_input;
 extern control_output_t _control_output;
 
 extern pid_controller_t _pid_roll_rate;

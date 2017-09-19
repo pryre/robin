@@ -188,15 +188,7 @@ void estimator_update( uint32_t time_now ) {
 		v3d_cross(&body_y, &body_z, &body_x);
 		v3d_normalize(&body_y, &body_y);
 
-		rot_mat.data[0][0] = body_x.x;
-		rot_mat.data[0][1] = body_x.y;
-		rot_mat.data[0][2] = body_x.z;
-		rot_mat.data[1][0] = body_y.x;
-		rot_mat.data[1][1] = body_y.y;
-		rot_mat.data[1][2] = body_y.z;
-		rot_mat.data[2][0] = body_z.x;
-		rot_mat.data[2][1] = body_z.y;
-		rot_mat.data[2][2] = body_z.z;
+		dcm_from_basis(&rot_mat, &body_x, &body_y, &body_z);
 
 		matrix_to_qf16(&q_hat_acc, &rot_mat );
 		qf16_normalize_to_unit(&q_hat_acc, &q_hat_acc);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <mavlink_system.h>
-#include <mavlink/mavlink_types.h>
+#include <mavlink/common/common.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -20,7 +20,7 @@ typedef struct {
 
 	uint32_t values[PARAMS_COUNT];
 	char names[PARAMS_COUNT][PARAMS_NAME_LENGTH];
-	mavlink_message_type_t types[PARAMS_COUNT];
+	MAV_PARAM_TYPE types[PARAMS_COUNT];
 
 	uint8_t magic_ef;                       // magic number, should be 0xEF
 	uint8_t chk;                            // XOR checksum
@@ -38,7 +38,7 @@ void init_param_fix16(param_id_t id, const char name[PARAMS_NAME_LENGTH], const 
 bool read_params(void);
 bool write_params(void);
 
-mavlink_message_type_t get_param_type(param_id_t id);
+MAV_PARAM_TYPE get_param_type(param_id_t id);
 void get_param_name(param_id_t id, char *name);
 param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]);
 

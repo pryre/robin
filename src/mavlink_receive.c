@@ -2,7 +2,7 @@
 
 #include "mavlink_receive.h"
 #include "mavlink_system.h"
-#include "mavlink/mavlink_types.h"
+#include <mavlink/common/common.h>
 #include "safety.h"
 #include "sensors.h"
 #include "controller.h"
@@ -79,8 +79,24 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					param_id_t index = lookup_param_id(param_id);
 
 					if(index < PARAMS_COUNT) { //If the ID is valid
-						if( mavlink_msg_param_set_get_param_type(&msg) == get_param_type(index) ) {
-							switch(mavlink_msg_param_set_get_param_type(&msg)) {
+						MAV_PARAM_TYPE send_type = mavlink_msg_param_set_get_param_type(&msg);
+						MAV_PARAM_TYPE known_type = get_param_type(index);
+
+						bool int_uint_conversion = false;
+
+						//XXX: Some GCS won't send correct parameter types, so we allow relaxed setting
+						if( get_param_uint( PARAM_RELAXED_PARAM_SET ) ) {
+							if( (send_type == MAV_PARAM_TYPE_INT32 ) && (known_type == MAV_PARAM_TYPE_UINT32 ) ) {
+								int_uint_conversion = true;
+								known_type = send_type;
+
+								mavlink_queue_broadcast_notice("[PARAM] Using relaxed parameter saving");
+							}
+
+						}
+
+						if( send_type == known_type ) {
+							switch( send_type ) {
 								case MAV_PARAM_TYPE_UINT32: {
 									union {
 										float f;
@@ -99,7 +115,12 @@ static void communication_decode(uint8_t port, uint8_t c) {
 									} u;
 
 									u.f = mavlink_msg_param_set_get_param_value(&msg);
-									set_complete = set_param_by_name_int(param_id, u.i);
+
+									if(!int_uint_conversion) {
+										set_complete = set_param_by_name_int(param_id, u.i);
+									} else {
+										set_complete = set_param_by_name_uint(param_id, (uint32_t)u.i);
+									}
 
 									break;
 								}
@@ -110,7 +131,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 									break;
 								}
 								default:
-									mavlink_queue_broadcast_error("[PARAM] Do not know how to handle read paramater type!");
+									mavlink_queue_broadcast_notice("[PARAM] Do not know how to handle read paramater type!");
 
 									break;
 							}

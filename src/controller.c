@@ -20,6 +20,7 @@ extern "C" {
 system_status_t _system_status;
 state_t _state_estimator;
 command_input_t _command_input;
+command_input_t _control_input;
 control_output_t _control_output;
 
 pid_controller_t _pid_roll_rate;
@@ -285,99 +286,136 @@ void controller_run( uint32_t time_now ) {
 		// rotation body, and tell it that
 		// we assume that the attitude message sent up was in the body frame
 
-		mf16 rot_mat;
-		qf16_to_matrix(&rot_mat, &_state_estimator.attitude);
+		mf16 rot_mat_b;
+		mf16 rot_mat_c;
+		qf16_to_matrix(&rot_mat_b, &_state_estimator.attitude);
+		qf16_to_matrix(&rot_mat_c, &_command_input.q);
 
 		v3d body_x;
 		v3d body_y;
 		v3d body_z;
+		v3d con_x;
+		v3d con_y;
+		v3d con_z;
 
 		//Poulate rotation vectors
-		body_x.x = rot_mat.data[0][0];
-		body_x.y = rot_mat.data[0][1];
-		body_x.z = rot_mat.data[0][2];
-		body_y.x = rot_mat.data[1][0];
-		body_y.y = rot_mat.data[1][1];
-		body_y.z = rot_mat.data[1][2];
-		body_z.x = rot_mat.data[2][0];
-		body_z.y = rot_mat.data[2][1];
-		body_z.z = rot_mat.data[2][2];
+		dcm_to_basis(&body_x, &body_y, &body_z, &rot_mat_b);
+		dcm_to_basis(&con_x, &con_y, &con_z, &rot_mat_c);
 
 		qf16 q_body_lock;
+		qf16 q_control_lock;
 
 		//Roll control will be overriden
 		if( !(_command_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
 			//Use Z axis as a reference
 			v3d body_c;
+			v3d con_c;
+
 			body_c.x = 0;
 			body_c.y = 0;
 			body_c.z = _fc_1;
 
+			con_c.x = 0;
+			con_c.y = 0;
+			con_c.z = _fc_1;
+
 			//Find Y Rotation
 			v3d_cross(&body_y, &body_c, &body_x);
+			v3d_cross(&con_y, &con_c, &con_x);
+
 			v3d_normalize(&body_y, &body_y);
+			v3d_normalize(&con_y, &con_y);
 
 			//Find Z Rotation
 			v3d_cross(&body_z, &body_x, &body_y);
+			v3d_cross(&con_z, &con_x, &con_y);
+
 			v3d_normalize(&body_z, &body_z);
+			v3d_normalize(&con_z, &con_z);
 		}
 
 		//Pitch control will be overriden
 		if( !(_command_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
 			//Use X axis as a reference
 			v3d body_c;
+			v3d con_c;
+
 			body_c.x = _fc_1;
 			body_c.y = 0;
 			body_c.z = 0;
 
+			con_c.x = _fc_1;
+			con_c.y = 0;
+			con_c.z = 0;
+
 			//Find Z Rotation
 			v3d_cross(&body_z, &body_c, &body_y);
+			v3d_cross(&con_z, &con_c, &con_y);
+
 			v3d_normalize(&body_z, &body_z);
+			v3d_normalize(&con_z, &con_z);
 
 			//Find X Rotation
 			v3d_cross(&body_x, &body_y, &body_z);
+			v3d_cross(&con_x, &con_y, &con_z);
+
 			v3d_normalize(&body_x, &body_x);
+			v3d_normalize(&con_x, &con_x);
 		}
 
 		//Yaw control will be overriden
 		if( !(_command_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
 			//Use Y axis as a reference
 			v3d body_c;
+			v3d con_c;
+
 			body_c.x = 0;
 			body_c.y = _fc_1;
 			body_c.z = 0;
 
+			con_c.x = 0;
+			con_c.y = _fc_1;
+			con_c.z = 0;
+
 			//Find X Rotation
 			v3d_cross(&body_x, &body_c, &body_z);
+			v3d_cross(&con_x, &con_c, &con_z);
+
 			v3d_normalize(&body_x, &body_x);
+			v3d_normalize(&con_x, &con_x);
 
 			//Find Y Rotation
 			v3d_cross(&body_y, &body_z, &body_x);
+			v3d_cross(&con_y, &con_z, &con_x);
+
 			v3d_normalize(&body_y, &body_y);
+			v3d_normalize(&con_y, &con_y);
 		}
 
 		//Re-poulate rotation matrix
-		rot_mat.data[0][0] = body_x.x;
-		rot_mat.data[0][1] = body_x.y;
-		rot_mat.data[0][2] = body_x.z;
-		rot_mat.data[1][0] = body_y.x;
-		rot_mat.data[1][1] = body_y.y;
-		rot_mat.data[1][2] = body_y.z;
-		rot_mat.data[2][0] = body_z.x;
-		rot_mat.data[2][1] = body_z.y;
-		rot_mat.data[2][2] = body_z.z;
+		dcm_from_basis(&rot_mat_b, &body_x, &body_y, &body_z);
+		dcm_from_basis(&rot_mat_c, &con_x, &con_y, &con_z);
 
-		matrix_to_qf16(&q_body_lock, &rot_mat);
+		matrix_to_qf16(&q_body_lock, &rot_mat_b);
+		matrix_to_qf16(&q_control_lock, &rot_mat_c);
+
 		qf16_normalize_to_unit(&q_body_lock, &q_body_lock);
+		qf16_normalize_to_unit(&q_control_lock, &q_control_lock);
 		//======== End Body Frame Lock ========//
 
 		//Caclulate goal body rotations
-		v3d rates_sp = rate_goals_from_attitude(&_command_input.q, &q_body_lock);
+		v3d rates_sp = rate_goals_from_attitude(&q_control_lock, &q_body_lock);
 
 		//Set goal rates
 		goal_r = rates_sp.x;
 		goal_p = rates_sp.y;
 		goal_y = rates_sp.z;
+
+		//Save intermittent goals
+		_control_input.q.a = _command_input.q.a;
+		_control_input.q.b = _command_input.q.b;
+		_control_input.q.c = _command_input.q.c;
+		_control_input.q.d = _command_input.q.d;
 	}
 
 	//==-- Rate Control PIDs
@@ -385,7 +423,6 @@ void controller_run( uint32_t time_now ) {
 	if( !(_command_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
 		//Use the commanded roll rate goal
 		goal_r = _command_input.r;
-
 	}
 
 	//Pitch Rate
@@ -406,6 +443,11 @@ void controller_run( uint32_t time_now ) {
 	goal_p = fix16_constrain(goal_p, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
 	goal_y = fix16_constrain(goal_y, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
 
+	//Save intermittent goals
+	_control_input.r = goal_r;
+	_control_input.p = goal_p;
+	_control_input.y = goal_y;
+
 	//Rate PID Controllers
 	_control_output.r = pid_step(&_pid_roll_rate, time_now, goal_r, _state_estimator.p, 0, false);
 	_control_output.p = pid_step(&_pid_pitch_rate, time_now, goal_p, _state_estimator.q, 0, false);
@@ -420,6 +462,12 @@ void controller_run( uint32_t time_now ) {
 	}
 
 	_control_output.T = goal_throttle;
+
+	//Save intermittent goals
+	_control_input.T = goal_throttle;
+
+	//Save intermittent goals
+	_command_input.input_mask = _command_input.input_mask;
 }
 
 #ifdef __cplusplus
