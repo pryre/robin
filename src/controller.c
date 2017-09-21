@@ -17,6 +17,9 @@ extern "C" {
 #include "controller.h"
 #include "pid_controller.h"
 
+#include "mavlink_system.h"
+#include "stdio.h"
+
 system_status_t _system_status;
 state_t _state_estimator;
 command_input_t _command_input;
@@ -31,6 +34,17 @@ void controller_reset(void) {
 	pid_reset(&_pid_roll_rate, _state_estimator.p);
 	pid_reset(&_pid_pitch_rate, _state_estimator.q);
 	pid_reset(&_pid_yaw_rate, _state_estimator.r);
+
+
+	_control_input.r = 0;
+	_control_input.p = 0;
+	_control_input.y = 0;
+	_control_input.q.a = _fc_1;
+	_control_input.q.b = 0;
+	_control_input.q.c = 0;
+	_control_input.q.d = 0;
+	_control_input.T = 0;
+	_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;
 
 	_control_output.r = 0;
 	_control_output.p = 0;
@@ -78,7 +92,7 @@ void controller_init(void) {
 	_command_input.r = 0;
 	_command_input.p = 0;
 	_command_input.y = 0;
-	_command_input.q.a = 1;
+	_command_input.q.a = _fc_1;
 	_command_input.q.b = 0;
 	_command_input.q.c = 0;
 	_command_input.q.d = 0;
@@ -95,7 +109,7 @@ static void controller_set_input_failsafe(void) {
 	_command_input.r = 0;
 	_command_input.p = 0;
 	_command_input.y = 0;
-	_command_input.q.a = 1;
+	_command_input.q.a = _fc_1;
 	_command_input.q.b = 0;
 	_command_input.q.c = 0;
 	_command_input.q.d = 0;
@@ -153,12 +167,14 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		fix16_t e_R_z_cos = v3d_dot(&R_z, &R_sp_z);	//XXX: "float e_R_z_cos = R_z * R_sp_z;" means dot product(?)
 
 		//px4: calculate weight for yaw control
-		fix16_t yaw_w = R_sp.data[2][2] * R_sp.data[2][2];
+		fix16_t yaw_w = fix16_sq(R_sp.data[2][2]);
 
 		//px4: calculate rotation matrix after roll/pitch only rotation
 		mf16 R_rp;
 		R_rp.rows = 3;
 		R_rp.columns = 3;
+
+		e_R_z_sin = 0;	//TODO: XXX: Seems to fix issues somewhere
 
 		if(e_R_z_sin > 0) {
 			//px4: get axis-angle representation
@@ -198,6 +214,8 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 			R_rp = R;
 		}
 
+		//XXX: R_rp = R;
+
 		//px4: R_rp and R_sp has the same Z axis, calculate yaw error
 		v3d R_sp_x;
 		R_sp_x.x = R_sp.data[0][0];
@@ -212,6 +230,7 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		v3d R_rp_c_sp;
 		v3d_cross(&R_rp_c_sp, &R_rp_x, &R_sp_x);
 
+		//e_R(2) = atan2f(R_rp_c_sp * R_sp_z, R_rp_x * R_sp_x) * yaw_w;
 		e_R.z = fix16_mul(fix16_atan2(v3d_dot(&R_rp_c_sp, &R_sp_z), v3d_dot(&R_rp_x, &R_sp_x)), yaw_w);
 
 		if(e_R_z_cos < 0) {
@@ -271,9 +290,15 @@ void controller_run( uint32_t time_now ) {
 	if(_system_status.state == MAV_STATE_CRITICAL)
 		controller_set_input_failsafe();	//Hold angle and failsafe throttle
 
+	//Get the control input mask to use
+	_control_input.input_mask = _command_input.input_mask;
+
+	//Save intermittent goals
+	_control_input.q = _command_input.q;
+
 	//==-- Attitude Control
 	//If we should listen to attitude input
-	if( !(_command_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
 		//======== Body Frame Lock ========//
 		//XXX: Very important!
 		//TODO: Make a very clear note about this
@@ -289,7 +314,7 @@ void controller_run( uint32_t time_now ) {
 		mf16 rot_mat_b;
 		mf16 rot_mat_c;
 		qf16_to_matrix(&rot_mat_b, &_state_estimator.attitude);
-		qf16_to_matrix(&rot_mat_c, &_command_input.q);
+		qf16_to_matrix(&rot_mat_c, &_control_input.q);
 
 		v3d body_x;
 		v3d body_y;
@@ -302,11 +327,8 @@ void controller_run( uint32_t time_now ) {
 		dcm_to_basis(&body_x, &body_y, &body_z, &rot_mat_b);
 		dcm_to_basis(&con_x, &con_y, &con_z, &rot_mat_c);
 
-		qf16 q_body_lock;
-		qf16 q_control_lock;
-
 		//Roll control will be overriden
-		if( !(_command_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
+		if( !(_control_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
 			//Use Z axis as a reference
 			v3d body_c;
 			v3d con_c;
@@ -335,7 +357,7 @@ void controller_run( uint32_t time_now ) {
 		}
 
 		//Pitch control will be overriden
-		if( !(_command_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
+		if( !(_control_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
 			//Use X axis as a reference
 			v3d body_c;
 			v3d con_c;
@@ -364,7 +386,7 @@ void controller_run( uint32_t time_now ) {
 		}
 
 		//Yaw control will be overriden
-		if( !(_command_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
+		if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
 			//Use Y axis as a reference
 			v3d body_c;
 			v3d con_c;
@@ -396,11 +418,14 @@ void controller_run( uint32_t time_now ) {
 		dcm_from_basis(&rot_mat_b, &body_x, &body_y, &body_z);
 		dcm_from_basis(&rot_mat_c, &con_x, &con_y, &con_z);
 
+		qf16 q_body_lock;
+		qf16 q_control_lock;
+
 		matrix_to_qf16(&q_body_lock, &rot_mat_b);
 		matrix_to_qf16(&q_control_lock, &rot_mat_c);
 
-		qf16_normalize_to_unit(&q_body_lock, &q_body_lock);
-		qf16_normalize_to_unit(&q_control_lock, &q_control_lock);
+		qf16_normalize(&q_body_lock, &q_body_lock);
+		qf16_normalize(&q_control_lock, &q_control_lock);
 		//======== End Body Frame Lock ========//
 
 		//Caclulate goal body rotations
@@ -410,29 +435,23 @@ void controller_run( uint32_t time_now ) {
 		goal_r = rates_sp.x;
 		goal_p = rates_sp.y;
 		goal_y = rates_sp.z;
-
-		//Save intermittent goals
-		_control_input.q.a = _command_input.q.a;
-		_control_input.q.b = _command_input.q.b;
-		_control_input.q.c = _command_input.q.c;
-		_control_input.q.d = _command_input.q.d;
 	}
 
 	//==-- Rate Control PIDs
 	//Roll Rate
-	if( !(_command_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
 		//Use the commanded roll rate goal
 		goal_r = _command_input.r;
 	}
 
 	//Pitch Rate
-	if( !(_command_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
 		//Use the commanded pitch rate goal
 		goal_p = _command_input.p;
 	}
 
 	//Yaw Rate
-	if( !(_command_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
 		//Use the commanded yaw rate goal
 		goal_y = _command_input.y;
 	}
@@ -456,7 +475,7 @@ void controller_run( uint32_t time_now ) {
 	//==-- Throttle Control
 
 	//Trottle
-	if( !(_command_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) {
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) {
 		//Use the commanded throttle
 		goal_throttle = _command_input.T;
 	}
@@ -465,9 +484,6 @@ void controller_run( uint32_t time_now ) {
 
 	//Save intermittent goals
 	_control_input.T = goal_throttle;
-
-	//Save intermittent goals
-	_command_input.input_mask = _command_input.input_mask;
 }
 
 #ifdef __cplusplus

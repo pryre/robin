@@ -390,7 +390,7 @@ PARAM_SENSOR_SAFETY_CBRK:
   reboot: true
   value:
     option: "bool"
-    default: 1
+    default: 0
 ---
 PARAM_SENSOR_BARO_UPDATE_RATE:
   type: "float"

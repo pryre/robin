@@ -349,6 +349,10 @@ bool safety_request_arm(void) {
 				strncpy(text_reason,
 						 "(sonar)",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else if(_sensors.ext_pose.status.present && (_system_status.sensors.ext_pose.health != SYSTEM_HEALTH_OK) ) {
+				strncpy(text_reason,
+						 "(ext_pose)",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			} else if(_system_status.sensors.offboard_heartbeat.health != SYSTEM_HEALTH_OK) {
 				strncpy(text_reason,
 						 "(offb_hrbt)",
