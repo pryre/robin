@@ -242,9 +242,9 @@ void mavlink_stream_heartbeat(uint8_t port) {
 
 	mavlink_msg_heartbeat_send(port,
 							   mav_type_reported,
-							   MAV_AUTOPILOT_GENERIC,
-							   _system_status.mode,
-							   0,	//We don't use custom_mode
+							   MAV_AUTOPILOT_PX4,	//XXX: This is to get compatibility for offboard software
+							   _system_status.mode | MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,	//XXX: Set custom mode to allow for the pretend mode
+							   compat_encode_px4_main_mode( MAIN_MODE_OFFBOARD ),	//We don't use custom_mode, but pretend to match px4 custom_mode for OFFBOARD
 							   _system_status.state);
 }
 

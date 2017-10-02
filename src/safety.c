@@ -585,6 +585,14 @@ static void safety_arm_throttle_timeout( uint32_t time_now ) {
 	}
 }
 
+uint32_t compat_encode_px4_main_mode( uint8_t main_mode ) {
+	return (uint32_t)( main_mode << 16 );
+}
+
+uint8_t compat_decode_px4_main_mode( uint32_t mode ) {
+	return (uint8_t)( mode >> 16 );
+}
+
 void safety_run( uint32_t time_now ) {
 	//Check sensors to ensure they are operating correctly
 	safety_check_sensor( &_system_status.sensors.imu, time_now );

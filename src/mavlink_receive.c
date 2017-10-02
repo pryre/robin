@@ -301,6 +301,19 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 				break;
 			}
+			case MAVLINK_MSG_ID_SET_MODE: {
+				uint8_t base_mode = mavlink_msg_set_mode_get_base_mode(&msg);
+				uint32_t custom_mode = mavlink_msg_set_mode_get_custom_mode(&msg);
+
+				if( ( base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED ) &&
+				    ( compat_decode_px4_main_mode( custom_mode ) == MAIN_MODE_OFFBOARD ) ) {
+					mavlink_send_broadcast_statustext( MAV_SEVERITY_NOTICE, "[SAFETY] Mav already in OFFBOARD mode" );
+				} else {
+					mavlink_send_broadcast_statustext( MAV_SEVERITY_ERROR, "[SAFETY] Unsupported mode" );
+				}
+
+				break;
+			}
 			case MAVLINK_MSG_ID_SET_ATTITUDE_TARGET: {
 				if( (mavlink_msg_set_attitude_target_get_target_system(&msg) == mavlink_system.sysid) &&
 					(mavlink_msg_set_attitude_target_get_target_system(&msg) == mavlink_system.compid) ) {

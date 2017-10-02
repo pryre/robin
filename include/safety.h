@@ -9,6 +9,17 @@
 #define MAV_MODE_NUM_MODES (7 + 1)
 #define MAV_MODE_NAME_LEN 10
 
+enum COMPAT_PX4_MAIN_MODE {
+	MAIN_MODE_MANUAL = 1,
+	MAIN_MODE_ALTCTL,
+	MAIN_MODE_POSCTL,
+	MAIN_MODE_AUTO,
+	MAIN_MODE_ACRO,
+	MAIN_MODE_OFFBOARD,
+	MAIN_MODE_STABILIZED,
+	MAIN_MODE_RATTITUDE
+} compat_px4_main_mode_t;
+
 //General UAV health status
 typedef enum {
 	SYSTEM_HEALTH_UNKNOWN,	//Have not made contact with sensor
@@ -104,6 +115,9 @@ bool safety_request_disarm( void );
 
 void status_buzzer_success( void );
 void status_buzzer_failure( void );
+
+uint32_t compat_encode_px4_main_mode( uint8_t main_mode );
+uint8_t compat_decode_px4_main_mode( uint32_t mode );
 
 void safety_update_sensor( timeout_status_t *sensor);
 
