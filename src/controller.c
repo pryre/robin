@@ -311,6 +311,7 @@ void controller_run( uint32_t time_now ) {
 		// rotation body, and tell it that
 		// we assume that the attitude message sent up was in the body frame
 
+		/*
 		mf16 rot_mat_b;
 		mf16 rot_mat_c;
 		qf16_to_matrix(&rot_mat_b, &_state_estimator.attitude);
@@ -426,10 +427,64 @@ void controller_run( uint32_t time_now ) {
 
 		qf16_normalize(&q_body_lock, &q_body_lock);
 		qf16_normalize(&q_control_lock, &q_control_lock);
+
+
+		*/
+
+		qf16 q_control_lock;
+		q_control_lock = _control_input.q;
+
+		//Yaw control will be overriden
+		if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
+			/*
+			qf16 q_temp;
+			qf16 dq;
+
+			qf16_inverse(&q_temp, &q_control_lock);
+			qf16_mul(&dq, &_state_estimator.attitude, &q_temp);	//Difference between attitude and control
+			qf16_normalize_to_unit(&dq, &dq);
+
+			v3d fv;	//Flat vector
+			fv.x = _fc_1;	//Set to directly forward
+			fv.y = 0;
+			fv.z = 0;
+
+			qf16_rotate(&fv, &dq, &fv);	//Rotated vector in the XY plane
+			fv.z = 0;
+			v3d_normalize(&fv, &fv);	//Re-flatten, and normalize
+
+			fix16_t rot_a = fix16_atan2(fv.y, fv.x);	//Get the angular difference
+			v3d rot_axis;
+			rot_axis.x = 0;
+			rot_axis.y = 0;
+			rot_axis.z = _fc_1;
+			qf16_from_axis_angle(&q_temp, &rot_axis, rot_a);	//Create a rotation quaternion for the flat rotation around Z axis
+
+			qf16_mul(&q_control_lock, &q_temp, &q_control_lock);	//Rotate the control input
+
+			//Normalize quaternion
+			qf16_normalize_to_unit(&q_control_lock, &q_control_lock);
+			*/
+			qf16_align_to_axis(&q_control_lock, &q_control_lock, &_state_estimator.attitude, AXIS_LOCK_Z);
+		}
+
+		//Pitch control will be overriden
+		if( !(_control_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
+			qf16_align_to_axis(&q_control_lock, &q_control_lock, &_state_estimator.attitude, AXIS_LOCK_Y);
+		}
+
+		//Roll control will be overriden
+		if( !(_control_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
+			qf16_align_to_axis(&q_control_lock, &q_control_lock, &_state_estimator.attitude, AXIS_LOCK_X);
+		}
+
+		//Save intermittent goals
+		_control_input.q = q_control_lock;
 		//======== End Body Frame Lock ========//
 
 		//Caclulate goal body rotations
-		v3d rates_sp = rate_goals_from_attitude(&q_control_lock, &q_body_lock);
+		//XXX: v3d rates_sp = rate_goals_from_attitude(&q_control_lock, &q_body_lock);
+		v3d rates_sp = rate_goals_from_attitude(&q_control_lock, &_state_estimator.attitude);
 
 		//Set goal rates
 		goal_r = rates_sp.x;

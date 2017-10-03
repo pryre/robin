@@ -28,6 +28,12 @@
 #define _fc_epsilon		0x0000FFFF	//0.99...
 #define _fc_gravity		0x0009CE80	//Is equal to 9.80665 (Positive!) in Q16.16
 
+typedef enum {
+	AXIS_LOCK_X,
+	AXIS_LOCK_Y,
+	AXIS_LOCK_Z
+} qf16_axis_lock_t;
+
 static const qf16 NED_ENU_Q = {0, _fc_sqrt_0_5, -_fc_sqrt_0_5, 0};
 //static const qf16 NED_IMU_Q = {0, _fc_1, 0, 0};
 
@@ -180,6 +186,79 @@ static inline void dcm_from_basis(mf16 *dcm, const v3d *b_x, const v3d *b_y, con
 		dcm->data[2][0] = b_z->x;
 		dcm->data[2][1] = b_z->y;
 		dcm->data[2][2] = b_z->z;
+}
+
+static inline void qf16_align_to_axis(qf16 *dest, const qf16 *input, const qf16 *reference, const qf16_axis_lock_t axis) {
+	qf16 q_temp;
+	qf16 dq;
+
+	qf16_inverse(&q_temp, input);
+	qf16_mul(&dq, reference, &q_temp);	//Difference between reference and input
+	qf16_normalize_to_unit(&dq, &dq);
+
+	v3d fv;	//Flat vector
+
+	fv.x = _fc_1;	//Set to directly forward, no rotation
+	fv.y = 0;
+	fv.z = 0;
+
+	qf16_rotate(&fv, &dq, &fv);	//Rotate the flat vector by the difference in rotation
+
+	v3d rot_axis;	//Axis of rotation
+	fix16_t rot_a = 0;	//Rotation angle
+
+	switch(axis) {
+		case AXIS_LOCK_X: {
+			fv.x = 0;
+			v3d_normalize(&fv, &fv);	//Re-flatten, and normalize
+
+			rot_a = fix16_atan2(fv.z, fv.y);	//Get the angular difference
+
+			rot_axis.x = _fc_1;
+			rot_axis.y = 0;
+			rot_axis.z = 0;
+
+			break;
+		}
+		case AXIS_LOCK_Y: {
+			fv.y = 0;
+			v3d_normalize(&fv, &fv);	//Re-flatten, and normalize
+
+			rot_a = fix16_atan2(fv.x, fv.z);	//Get the angular difference
+
+			rot_axis.x = 0;
+			rot_axis.y = _fc_1;
+			rot_axis.z = 0;
+
+			break;
+		}
+		case AXIS_LOCK_Z: {
+			fv.z = 0;
+			v3d_normalize(&fv, &fv);	//Re-flatten, and normalize
+
+			rot_a = fix16_atan2(fv.y, fv.x);	//Get the angular difference
+
+			rot_axis.x = 0;
+			rot_axis.y = 0;
+			rot_axis.z = _fc_1;
+
+			break;
+		}
+		default: {
+			rot_a = 0;
+
+			rot_axis.x = _fc_1;
+			rot_axis.y = 0;
+			rot_axis.z = 0;
+		}
+	}
+
+	qf16 q_rot;
+	qf16_from_axis_angle(&q_rot, &rot_axis, rot_a);	//Create a rotation quaternion for the flat rotation the axis
+	qf16_mul(dest, &q_rot, input);	//Rotate the control input
+
+	//Normalize quaternion
+	qf16_normalize_to_unit(dest, dest);
 }
 
 //static inline v3d v3d_imu_to_ned(const v3d *imu) {
