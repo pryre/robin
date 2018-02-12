@@ -256,7 +256,7 @@ static bool sensors_calibrate(void) {
 			_sensor_cal_data.gyro.sum_z += _sensors.imu.gyro_raw.z;
 
 			_sensor_cal_data.gyro.count++;
-
+					
 			if (_sensor_cal_data.gyro.count >= get_param_uint(PARAM_CAL_IMU_PASSES)) {
 				set_param_int(PARAM_GYRO_X_BIAS, (_sensor_cal_data.gyro.sum_x / _sensor_cal_data.gyro.count));
 				set_param_int(PARAM_GYRO_Y_BIAS, (_sensor_cal_data.gyro.sum_y / _sensor_cal_data.gyro.count));
@@ -275,7 +275,7 @@ static bool sensors_calibrate(void) {
 				mavlink_queue_broadcast_notice("[SENSOR] Gyro calibration complete!");
 				status_buzzer_success();
 			}
-
+			
 			break;
 		}
 		case SENSOR_CAL_MAG: {

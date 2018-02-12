@@ -79,9 +79,11 @@ void mavlink_stream_servo_output_raw(uint8_t port);
 void mavlink_stream_timesync(uint8_t port);
 
 //==-- Low Priority Messages
-void mavlink_prepare_autopilot_version(mavlink_message_t *msg);
+void mavlink_queue_broadcast_info(char* text);
 void mavlink_queue_broadcast_notice(char* text);
 void mavlink_queue_broadcast_error(char* text);
+
+void mavlink_prepare_autopilot_version(mavlink_message_t *msg);
 
 void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result);
 void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index);

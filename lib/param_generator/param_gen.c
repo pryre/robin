@@ -41,6 +41,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_MAG_STRM_COUNT, "STRM_NUM_MAG", 50);
 	init_param_uint(PARAM_SENSOR_OFFB_HRBT_STRM_COUNT, "STRM_NUM_OB_H", 2);
 	init_param_uint(PARAM_SENSOR_OFFB_CTRL_STRM_COUNT, "STRM_NUM_OB_C", 100);
+	init_param_uint(PARAM_SENSOR_PWM_CTRL_STRM_COUNT, "STRM_NUM_RC_C", 100);
 	init_param_uint(PARAM_SENSOR_IMU_TIMEOUT, "TIMEOUT_IMU", 2000);
 	init_param_uint(PARAM_SENSOR_BARO_TIMEOUT, "TIMEOUT_BARO", 20000);
 	init_param_uint(PARAM_SENSOR_SONAR_TIMEOUT, "TIMEOUT_SONAR", 20000);
@@ -48,6 +49,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_MAG_TIMEOUT, "TIMEOUT_MAG", 20000);
 	init_param_uint(PARAM_SENSOR_OFFB_HRBT_TIMEOUT, "TIMEOUT_OB_HRBT", 5000000);
 	init_param_uint(PARAM_SENSOR_OFFB_CTRL_TIMEOUT, "TIMEOUT_OB_CTRL", 200000);
+	init_param_uint(PARAM_SENSOR_PWM_CTRL_TIMEOUT, "TIMEOUT_RC_CTRL", 200000);
 	init_param_uint(PARAM_CAL_IMU_PASSES, "CAL_IMU_PASSES", 1000);
 	init_param_uint(PARAM_INIT_TIME, "FILTER_INIT_T", 3000);
 	init_param_uint(PARAM_EST_USE_ACC_COR, "EST_ACC_COR", 1);

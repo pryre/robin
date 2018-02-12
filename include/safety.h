@@ -46,6 +46,7 @@ typedef struct {
 	timeout_status_t ext_pose;
 	timeout_status_t offboard_heartbeat;
 	timeout_status_t offboard_control;
+	timeout_status_t pwm_control;
 } safety_sensor_status_t;
 
 //List of failures

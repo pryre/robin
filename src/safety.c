@@ -117,6 +117,13 @@ void safety_init() {
 	_system_status.sensors.offboard_control.param_timeout = PARAM_SENSOR_OFFB_CTRL_TIMEOUT;
 	strncpy(_system_status.sensors.offboard_control.name, "Offboard Control", 24);
 
+	_system_status.sensors.pwm_control.health = SYSTEM_HEALTH_UNKNOWN;
+	_system_status.sensors.pwm_control.last_read = 0;
+	_system_status.sensors.pwm_control.count = 0;
+	_system_status.sensors.pwm_control.param_stream_count = PARAM_SENSOR_PWM_CTRL_STRM_COUNT;
+	_system_status.sensors.pwm_control.param_timeout = PARAM_SENSOR_PWM_CTRL_TIMEOUT;
+	strncpy(_system_status.sensors.pwm_control.name, "PWM Control", 24);
+
 	_time_safety_arm_throttle_timeout = 0;
 
 	_new_safety_button_press = false;
@@ -561,13 +568,17 @@ static void system_state_update(void) {
 }
 
 static void safety_health_update(uint32_t time_now) {
-	if( ( !_sensors.imu.status.present || ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) ) &&
-	  ( !_sensors.mag.status.present || ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) ) &&
-	  ( !_sensors.baro.status.present || ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) ) &&
-	  ( !_sensors.sonar.status.present || ( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) ) &&
-	  ( !_sensors.ext_pose.status.present || ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) ) &&
-	  ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
-	  ( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) ) {
+	bool sensors_ok = ( !_sensors.imu.status.present || ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) ) &&
+					  ( !_sensors.mag.status.present || ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) ) &&
+					  ( !_sensors.baro.status.present || ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) ) &&
+					  ( !_sensors.sonar.status.present || ( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) ) &&
+					  ( !_sensors.ext_pose.status.present || ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) );
+
+	//XXX: Was going to have a PWM Control health, but it should be fine as an additional
+	bool control_ok = _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK;
+	
+	if( sensors_ok && control_ok &&
+		( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) ) {
 		_system_status.health = SYSTEM_HEALTH_OK;
 	} else {
 		_system_status.health = SYSTEM_HEALTH_ERROR;
@@ -602,6 +613,7 @@ void safety_run( uint32_t time_now ) {
 	safety_check_sensor( &_system_status.sensors.ext_pose, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_heartbeat, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_control, time_now );
+	safety_check_sensor( &_system_status.sensors.pwm_control, time_now );
 
 	//Update the overall system health based on the individual sensors
 	safety_health_update(time_now);

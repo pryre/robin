@@ -6,6 +6,7 @@
 #include "safety.h"
 #include "sensors.h"
 #include "controller.h"
+#include "mixer.h"
 
 #include "fixextra.h"
 
@@ -317,7 +318,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 			}
 			case MAVLINK_MSG_ID_SET_ATTITUDE_TARGET: {
 				if( (mavlink_msg_set_attitude_target_get_target_system(&msg) == mavlink_system.sysid) &&
-					(mavlink_msg_set_attitude_target_get_target_system(&msg) == mavlink_system.compid) ) {
+					(mavlink_msg_set_attitude_target_get_target_component(&msg) == mavlink_system.compid) ) {
 
 					//TODO: Check timestamp was recent before accepting
 
@@ -346,6 +347,25 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 					//Update Sensor
 					safety_update_sensor(&_system_status.sensors.offboard_control);
+				}
+
+				break;
+			}
+			case MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE: {
+				if( (mavlink_msg_rc_channels_override_get_target_system(&msg) == mavlink_system.sysid) &&
+					(mavlink_msg_rc_channels_override_get_target_component(&msg) == mavlink_system.compid) ) {
+
+					_pwm_control[0] = mavlink_msg_rc_channels_override_get_chan1_raw(&msg);
+					_pwm_control[1] = mavlink_msg_rc_channels_override_get_chan2_raw(&msg);
+					_pwm_control[2] = mavlink_msg_rc_channels_override_get_chan3_raw(&msg);
+					_pwm_control[3] = mavlink_msg_rc_channels_override_get_chan4_raw(&msg);
+					_pwm_control[4] = mavlink_msg_rc_channels_override_get_chan5_raw(&msg);
+					_pwm_control[5] = mavlink_msg_rc_channels_override_get_chan6_raw(&msg);
+					_pwm_control[6] = mavlink_msg_rc_channels_override_get_chan7_raw(&msg);
+					_pwm_control[7] = mavlink_msg_rc_channels_override_get_chan8_raw(&msg);
+
+					//Update Sensor
+					safety_update_sensor(&_system_status.sensors.pwm_control);
 				}
 
 				break;

@@ -422,6 +422,14 @@ void mavlink_prepare_statustext(mavlink_message_t *msg, uint8_t severity, char* 
 }
 
 //Broadcasts an notice to all open comm channels
+void mavlink_queue_broadcast_info(char* text) {
+	mavlink_message_t msg;
+	mavlink_prepare_statustext(&msg, MAV_SEVERITY_INFO, text);
+
+	lpq_queue_broadcast_msg(&msg);
+}
+
+//Broadcasts an notice to all open comm channels
 void mavlink_queue_broadcast_notice(char* text) {
 	mavlink_message_t msg;
 	mavlink_prepare_statustext(&msg, MAV_SEVERITY_NOTICE, text);

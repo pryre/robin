@@ -20,6 +20,7 @@ system_status_t _system_status;
 
 int32_t _GPIO_outputs[8];
 output_type_t _GPIO_output_type[8];
+int32_t _pwm_control[8];
 int32_t _pwm_output_requested[8];
 int32_t _pwm_output[8];
 
@@ -113,6 +114,7 @@ void mixer_init() {
 	}
 
 	for (uint8_t i = 0; i < 8; i++) {
+		_pwm_control[i] = 0;
 		_pwm_output_requested[i] = 0;
 		_pwm_output[i] = 0;
 		_GPIO_outputs[i] = 0;
@@ -254,11 +256,23 @@ void mixer_output() {
 	if (max_output > 1000)
 		scale_factor = 1000 * 1000 / max_output;
 
-	for (int8_t i=0; i<8; i++) {
+	for (uint8_t i=0; i<8; i++) {
 		if (mixer_to_use->output_type[i] == M) {
 			_pwm_output_requested[i] = prescaled_outputs[i] * scale_factor / 1000; // divide by scale factor
 		} else {
 			_pwm_output_requested[i] = prescaled_outputs[i];
+		}
+		
+		if( _system_status.sensors.pwm_control.health == SYSTEM_HEALTH_OK ) {
+			//If the user wants to control this channel
+			if( (_pwm_control[i] != 0xFFFF) || (_pwm_control[i] != 0) ) {
+				//Get the pwm_override, and clamp it
+				int32_t pwm_override = int32_constrain(_pwm_control[i],
+													   get_param_uint(PARAM_MOTOR_PWM_MIN),
+													   get_param_uint(PARAM_MOTOR_PWM_MAX));
+				//Get requested pwm from 0 to 1000
+				_pwm_output_requested[i] = pwm_override - get_param_uint(PARAM_MOTOR_PWM_MIN);
+			}
 		}
 	}
 

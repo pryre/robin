@@ -483,6 +483,15 @@ PARAM_SENSOR_OFFB_CTRL_STRM_COUNT:
     option: "scalar"
     default: 100
 ---
+PARAM_SENSOR_PWM_CTRL_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_RC_C"
+  description: "Number of PWM control messages that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100
+---
 PARAM_SENSOR_IMU_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_IMU"
@@ -547,6 +556,16 @@ PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_OB_CTRL"
   description: "Time that new data must be read before a off-board control timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 200000
+    unit: "us"
+---
+PARAM_SENSOR_PWM_CTRL_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_RC_CTRL"
+  description: "Time that new data must be read before a PWM control timeout is declared"
   reboot: false
   value:
     option: "scalar"

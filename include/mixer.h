@@ -35,6 +35,8 @@ typedef struct {
 extern int32_t _GPIO_outputs[8];
 extern output_type_t _GPIO_output_type[8];
 
+extern int32_t _pwm_control[8];
+
 extern int32_t _pwm_output_requested[8];
 extern int32_t _pwm_output[8];
 
