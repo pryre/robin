@@ -31,7 +31,7 @@ make
 #### Version Options
 By default, robin will compile for the Naze32 Rev6. This can be overridden with the `NAZE32_REV` flag for other devices, such as the Naze32 Rev5 or the Naze32 Mini Rev3 (both of these use Rev5):
 ```sh
-make NAZE32\_REV=5
+make NAZE32_REV=5
 ```
 
 If you are constantly reflashing the firmware, you can adjust the default on the first few lines of the `makefile`.
@@ -64,11 +64,11 @@ For a reflash, you may get the best results if you set the baud rate to whatever
 #### Flashing Options
 You can not only pass the version flag in the command line, but you can also pass the serial parameters to use as well:
 ```sh
-make flash SERIAL\_DEVICE=/dev/ttyACM0 SERIAL_BAUD=57600 NAZE32\_REV=5
+make flash SERIAL_DEVICE=/dev/ttyACM0 SERIAL_BAUD=57600 NAZE32_REV=5
 ```
 
 ## Documentation
-Additional documentation on features, interfacing, and packaged tools, [please check here](documents/README.md)
+Additional documentation on features, interfacing, and packaged tools, [please check here](documents/README.md) (`/documents/README.md`).
 
 
 
