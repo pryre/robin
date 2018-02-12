@@ -18,7 +18,7 @@
 # along with this code.  If not, see <http://www.gnu.org/licenses/>.
 
 ###############################################################################
-NAZE32_REV  := 6
+NAZE32_REV		?= 6
 
 SERIAL_DEVICE	?= /dev/ttyUSB0
 SERIAL_BAUD		?= 921600
@@ -35,7 +35,7 @@ F1_DIR		= $(BREEZY_DIR)/f1
 
 include makefile.project
 
-TARGET		?= $(PROJECT_NAME)
+TARGET		?= $(PROJECT_NAME)_naze32_r$(NAZE32_REV)
 
 # Compile-time options
 OPTIONS		?=
@@ -82,16 +82,16 @@ TARGET_IMG = $(TARGET_HEX)
 DO_FLASH  = stm32flash -w $(TARGET_HEX) -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
 # Source files common to all targets
-$(PROJECT_NAME)_SRC = $(PROJECT_SRC_FILES) \
-					  $(PROJECT_SRC_PARAM_GEN) \
-					  $(PROJECT_SRC_LIBFIXMATH) \
-					  $(PROJECT_SRC_LIBFIXMATRIX) \
-					  $(PROJECT_BREEZY_FILES) \
-					  $(F1_DIR)/system.c \
-					  $(F1_DIR)/serial.c \
-					  $(DEVICE_SRC) \
-					  $(CMSIS_SRC) \
-					  $(STDPERIPH_SRC)
+$(TARGET)_SRC = $(PROJECT_SRC_FILES) \
+			    $(PROJECT_SRC_PARAM_GEN) \
+			    $(PROJECT_SRC_LIBFIXMATH) \
+			    $(PROJECT_SRC_LIBFIXMATRIX) \
+			    $(PROJECT_BREEZY_FILES) \
+			    $(F1_DIR)/system.c \
+			    $(F1_DIR)/serial.c \
+			    $(DEVICE_SRC) \
+			    $(CMSIS_SRC) \
+			    $(STDPERIPH_SRC)
 
 # In some cases, %.s regarded as intermediate file, which is actually not.
 # This will prevent accidental deletion of startup code.
