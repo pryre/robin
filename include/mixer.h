@@ -7,11 +7,13 @@
 #include "controller.h"
 
 //TODO: Need to add support later for more mixing types
+//http://autoquad.org/wiki/wiki/configuring-autoquad-flightcontroller/frame-motor-mixing-table/
 typedef enum {
 	MIXER_NONE = 0,
-	MIXER_QUADCOPTER_PLUS,
-	MIXER_QUADCOPTER_X,
-	MIXER_PLANE_BASIC,
+	MIXER_QUADROTOR_PLUS = 5001,
+	MIXER_QUADROTOR_X = 4001,
+	MIXER_HEXAROTOR_X = 6001,
+	MIXER_PLANE_STANDARD = 2100,
 	NUM_MIXERS
 } mixer_type_t;
 

@@ -8,7 +8,7 @@
 #include "params.h"
 #include "mavlink_system.h"
 #include "breezystm32.h"
-#include "drivers/mpu.h"
+#include "drv_mpu.h"
 #include "gpio.h"
 
 #include "fix16.h"
@@ -16,11 +16,10 @@
 #include "fixquat.h"
 #include "fixextra.h"
 
-
 #include "stdio.h"
 
 //Number of itterations of averaging to use with IMU calibrations
-#define SENSOR_CAL_IMU_PASSES 1000
+//#define SENSOR_CAL_IMU_PASSES 1000
 
 //==-- Local Variables
 int32_t _imu_time_read = 0;
@@ -63,9 +62,9 @@ static void sensors_imu_poll(void) {
 	//==-- Timing setup get loop time
 	_imu_time_read = micros();
 
-	mpu6050_request_async_accel_read(read_accel_raw, &accel_status);
-	mpu6050_request_async_gyro_read(read_gyro_raw, &gyro_status);
-	mpu6050_request_async_temp_read(&(read_temp_raw), &temp_status);
+	mpu_request_async_accel_read(read_accel_raw, &accel_status);
+	mpu_request_async_gyro_read(read_gyro_raw, &gyro_status);
+	mpu_request_async_temp_read(&(read_temp_raw), &temp_status);
 }
 
 static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
@@ -109,9 +108,25 @@ static void sensors_cal_init(void) {
 void sensors_init_internal(void) {
 	//==-- IMU-MPU6050
 	sensor_status_init(&_sensors.imu.status, (bool)get_param_uint(PARAM_SENSOR_IMU_CBRK));
-    mpu6050_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
-	_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);	//Get the 1g gravity scale (raw->g's)
-
+	mpu_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
+	
+	switch(get_param_uint(PARAM_BOARD_REVISION)) {
+		case 5: {
+			//Get the 1g gravity scale (raw->g's)
+			_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);
+			break;
+		}
+		case 6: {
+			//Get the 1g gravity scale (raw->g's)
+			_sensor_cal_data.accel.acc1G = mpu6500_init(INV_FSR_8G, INV_FSR_2000DPS);
+			break;
+		}
+		default: {
+			//Could not determine IMU!
+			failureMode(5);
+		}
+	}
+	
 	_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
 	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 
@@ -242,7 +257,7 @@ static bool sensors_calibrate(void) {
 
 			_sensor_cal_data.gyro.count++;
 
-			if (_sensor_cal_data.gyro.count >= SENSOR_CAL_IMU_PASSES) {
+			if (_sensor_cal_data.gyro.count >= get_param_uint(PARAM_CAL_IMU_PASSES)) {
 				set_param_int(PARAM_GYRO_X_BIAS, (_sensor_cal_data.gyro.sum_x / _sensor_cal_data.gyro.count));
 				set_param_int(PARAM_GYRO_Y_BIAS, (_sensor_cal_data.gyro.sum_y / _sensor_cal_data.gyro.count));
 				set_param_int(PARAM_GYRO_Z_BIAS, (_sensor_cal_data.gyro.sum_z / _sensor_cal_data.gyro.count));
@@ -340,7 +355,7 @@ static bool sensors_calibrate(void) {
 
 					_sensor_cal_data.accel.data.count++;
 
-					if (_sensor_cal_data.accel.data.count >= SENSOR_CAL_IMU_PASSES) {
+					if (_sensor_cal_data.accel.data.count >= get_param_uint(PARAM_CAL_IMU_PASSES)) {
 						switch(_sensor_cal_data.accel.accel_cal_step) {
 							case SENSOR_CAL_ACCEL_Z_DOWN: {
 								_sensor_cal_data.accel.data.t_av_sum += _sensor_cal_data.accel.data.t_sum / _sensor_cal_data.accel.data.count;

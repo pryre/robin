@@ -33,8 +33,9 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				break;
 			}
 			case MAVLINK_MSG_ID_PARAM_REQUEST_LIST: {
-				if((mavlink_msg_param_request_list_get_target_system(&msg) == mavlink_system.sysid) &&
-					(mavlink_msg_param_request_list_get_target_component(&msg) == mavlink_system.compid)) {
+				if( (mavlink_msg_param_request_list_get_target_system(&msg) == mavlink_system.sysid) &&
+					( (mavlink_msg_param_request_list_get_target_component(&msg) == mavlink_system.compid) ||
+					  (mavlink_msg_param_request_list_get_target_component(&msg) == MAV_COMP_ID_ALL) ) ) {
 					//Set the new request flag
 					if(port == MAVLINK_COMM_0) {
 						_lpq_port_0.request_all_params = 0;

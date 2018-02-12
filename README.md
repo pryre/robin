@@ -4,7 +4,19 @@ The ROS Offboard Integration for the Naze32 Rev.5 (or similar Naze32-based board
 ## Preperation
 #### Ubuntu
 ```sh
-sudo apt install gcc-arm-none-eabi stm32flash python3-yaml
+sudo apt install gcc-arm-none-eabi  stm32flash python3-yaml
+mkdir -p ~/src
+cd ~/src
+git clone --recursive https://github.com/qutas/robin/
+```
+
+#### Arch
+```sh
+sudo apt install arm-none-eabi-gcc arm-none-eabi-newlib python-yaml
+```
+You'll need to get the `stm32flash` package from the AUR or compile it manually
+
+```sh
 mkdir -p ~/src
 cd ~/src
 git clone --recursive https://github.com/qutas/robin/
@@ -17,6 +29,9 @@ make
 ```
 
 ## Flashing
+
+####NOTE: Some Naze32 models don not allow for flashing to be done via USB, and need to be connected to the UART1 port directly
+
 Before you can flash the the Naze32, you must first put it into bootloader mode. For the initial flash, you can short out the bootloader pins and power on the device.
 
 The makefile assumes that the device is connected as `/dev/ttyUSB0` and will use a baud rate of `921600`. You may have to adjust these to suit your device. If the flash is not successful, try using a slower baud rate.

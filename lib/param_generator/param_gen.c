@@ -7,14 +7,14 @@
 #include "fix16.h"
 
 void set_param_defaults(void) {
-	init_param_uint(PARAM_BOARD_REVISION, "BOARD_REV", 5);
+	init_param_uint(PARAM_BOARD_REVISION, "BOARD_REV", NAZE32_REV);
 	init_param_uint(PARAM_VERSION_FIRMWARE, "FW_VERSION", strtoll(GIT_VERSION_FLIGHT_STR, NULL, 16));
 	init_param_uint(PARAM_VERSION_SOFTWARE, "SW_VERSION", strtoll(GIT_VERSION_OS_STR, NULL, 16));
 	init_param_uint(PARAM_BAUD_RATE_0, "BAUD_RATE_0", 921600);
 	init_param_uint(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);
 	init_param_fix16(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));
-	init_param_uint(PARAM_SYSTEM_ID, "SYS_ID", 1);
-	init_param_uint(PARAM_COMPONENT_ID, "COMP_ID", 1);
+	init_param_uint(PARAM_SYSTEM_ID, "MAV_SYS_ID", 1);
+	init_param_uint(PARAM_COMPONENT_ID, "MAV_COMP_ID", 1);
 	init_param_uint(PARAM_RELAXED_PARAM_SET, "RELAXED_SET", 1);
 	init_param_fix16(PARAM_STREAM_RATE_HEARTBEAT_0, "STRM0_HRTBT", fix16_from_float(1.0f));
 	init_param_fix16(PARAM_STREAM_RATE_SYS_STATUS_0, "STRM0_SYS_STAT", fix16_from_float(0.2f));
@@ -48,6 +48,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_MAG_TIMEOUT, "TIMEOUT_MAG", 20000);
 	init_param_uint(PARAM_SENSOR_OFFB_HRBT_TIMEOUT, "TIMEOUT_OB_HRBT", 5000000);
 	init_param_uint(PARAM_SENSOR_OFFB_CTRL_TIMEOUT, "TIMEOUT_OB_CTRL", 200000);
+	init_param_uint(PARAM_CAL_IMU_PASSES, "CAL_IMU_PASSES", 1000);
 	init_param_uint(PARAM_INIT_TIME, "FILTER_INIT_T", 3000);
 	init_param_uint(PARAM_EST_USE_ACC_COR, "EST_ACC_COR", 1);
 	init_param_uint(PARAM_EST_USE_MAT_EXP, "EST_MAT_EXP", 1);
@@ -98,7 +99,9 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_DO_ESC_CAL, "DO_ESC_CAL", 0);
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, "FAILSAFE_THRTL", fix16_from_float(0.25f));
 	init_param_uint(PARAM_THROTTLE_TIMEOUT, "TIMEOUT_THRTL", 10000000);
-	init_param_uint(PARAM_MIXER, "MIXER", 2);
+	init_param_uint(PARAM_MIXER, "SYS_AUTOSTART", 0);
+	init_param_uint(PARAM_MAV_TYPE, "MAV_TYPE", 0);
+	init_param_uint(PARAM_RESET_PARAMS, "SYS_AUTOCONFIG", 0);
 }
 
 void param_change_callback(param_id_t id) {

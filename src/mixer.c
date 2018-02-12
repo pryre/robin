@@ -15,8 +15,6 @@
 #include "safety.h"
 #include "controller.h"
 
-#define FC_1 0x00010000
-
 control_output_t _control_output;
 system_status_t _system_status;
 
@@ -35,31 +33,40 @@ static mixer_t mixer_none = {
 };
 
 //TODO: Double check
-static mixer_t mixer_quadcopter_plus = {
+static mixer_t mixer_quadrotor_plus = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
-	{ FC_1, FC_1, FC_1, FC_1, 0, 0, 0, 0}, // F Mix
-	{-FC_1, FC_1, 0,    0,    0, 0, 0, 0}, // X Mix
-	{ 0,    0,   -FC_1, FC_1, 0, 0, 0, 0}, // Y Mix
-	{ FC_1, FC_1,-FC_1,-FC_1, 0, 0, 0, 0}  // Z Mix
+	{ _fc_1, _fc_1, _fc_1, _fc_1, 0, 0, 0, 0}, // F Mix
+	{-_fc_1, _fc_1, 0,    0,    0, 0, 0, 0}, // X Mix
+	{ 0,    0,   -_fc_1, _fc_1, 0, 0, 0, 0}, // Y Mix
+	{ _fc_1, _fc_1,-_fc_1,-_fc_1, 0, 0, 0, 0}  // Z Mix
 };
 
-static mixer_t mixer_quadcopter_x = {
+static mixer_t mixer_quadrotor_x = {
 	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
 
-	{ FC_1, FC_1, FC_1, FC_1, 0, 0, 0, 0}, // F Mix
-	{-FC_1, FC_1, FC_1,-FC_1, 0, 0, 0, 0}, // X Mix
-	{ FC_1,-FC_1, FC_1,-FC_1, 0, 0, 0, 0}, // Y Mix
-	{ FC_1, FC_1,-FC_1,-FC_1, 0, 0, 0, 0}  // Z Mix
+	{ _fc_1, _fc_1, _fc_1, _fc_1, 0, 0, 0, 0}, // F Mix
+	{-_fc_1, _fc_1, _fc_1,-_fc_1, 0, 0, 0, 0}, // X Mix
+	{ _fc_1,-_fc_1, _fc_1,-_fc_1, 0, 0, 0, 0}, // Y Mix
+	{ _fc_1, _fc_1,-_fc_1,-_fc_1, 0, 0, 0, 0}  // Z Mix
 };
 
-static mixer_t mixer_plane_basic = {
+static mixer_t mixer_hexarotor_x = {
+	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
+
+	{ _fc_1, _fc_1,   _fc_1,   _fc_1,    _fc_1,   _fc_1, 0, 0}, // F Mix
+	{-_fc_1, _fc_1, _fc_0_5,-_fc_0_5, -_fc_0_5, _fc_0_5, 0, 0}, // X Mix
+	{    0,    0,     _fc_1,  -_fc_1,    _fc_1,   _fc_1, 0, 0}, // Y Mix
+	{-_fc_1, _fc_1,  -_fc_1,   _fc_1,    _fc_1,   _fc_1, 0, 0}  // Z Mix
+};
+
+static mixer_t mixer_plane_standard = {
 	{M, S, S, S, NONE, NONE, NONE, NONE}, // output_type
 
-	{ FC_1, 0, 0, 0, 0, 0, 0, 0}, // F Mix
-	{ 0, FC_1, 0, 0, 0, 0, 0, 0}, // X Mix
-	{ 0, 0, FC_1, 0, 0, 0, 0, 0}, // Y Mix
-	{ 0, 0, 0, FC_1, 0, 0, 0, 0}  // Z Mix
+	{ _fc_1, 0, 0, 0, 0, 0, 0, 0}, // F Mix
+	{ 0, _fc_1, 0, 0, 0, 0, 0, 0}, // X Mix
+	{ 0, 0, _fc_1, 0, 0, 0, 0, 0}, // Y Mix
+	{ 0, 0, 0, _fc_1, 0, 0, 0, 0}  // Z Mix
 
 	//TODO: Should double check this, but it would allow stabilize control with motor throughput and a servo out for ailerons, elevator and rudder
 };
@@ -68,26 +75,37 @@ static mixer_t *mixer_to_use;
 
 void mixer_init() {
 	switch( get_param_uint(PARAM_MIXER) ) {
-		case MIXER_QUADCOPTER_PLUS: {
+		case MIXER_QUADROTOR_PLUS: {
+			mixer_to_use = &mixer_quadrotor_plus;
+			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_QUADROTOR);
 			mavlink_queue_broadcast_error("[MIX] Using mixer QUAD +");
-			mixer_to_use = &mixer_quadcopter_plus;
 
 			break;
 		}
-		case MIXER_QUADCOPTER_X: {
+		case MIXER_QUADROTOR_X: {
+			mixer_to_use = &mixer_quadrotor_x;
+			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_QUADROTOR);
 			mavlink_queue_broadcast_error("[MIX] Using mixer QUAD X");
-			mixer_to_use = &mixer_quadcopter_x;
 
 			break;
 		}
-		case MIXER_PLANE_BASIC: {
-			mavlink_queue_broadcast_error("[MIX] Using mixer PLANE BASIC");
-			mixer_to_use = &mixer_plane_basic;
+		case MIXER_HEXAROTOR_X: {
+			mixer_to_use = &mixer_hexarotor_x;
+			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_HEXAROTOR);
+			mavlink_queue_broadcast_error("[MIX] Using mixer HEX X");
+
+			break;
+		}
+		case MIXER_PLANE_STANDARD: {
+			mixer_to_use = &mixer_plane_standard;
+			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_FIXED_WING);
+			mavlink_queue_broadcast_error("[MIX] Using mixer PLANE STANDARD");
 
 			break;
 		}
 		default: {
 			mixer_to_use = &mixer_none;
+			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_GENERIC);
 			mavlink_queue_broadcast_error("[MIX] Unknown mixer! Disabling!");
 
 			break;

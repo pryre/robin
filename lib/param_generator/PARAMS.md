@@ -2,14 +2,14 @@
 
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
-BOARD_REV | uint | Selects what version of the board to setup sensors for | 5 |  | [min:5, max:5] | True
+BOARD_REV | uint | A compile-time selector for what version of the board to setup sensors for |  | | | False
 FW_VERSION | uint | A compile-time stamp for the flight firmware version |  | | | False
 SW_VERSION | uint | A compile-time stamp for the OS firmware version |  | | | False
 BAUD_RATE_0 | uint | Baud rate for the the COMM_0 port - set to 0 to disable | 921600 |  | [0, 9600, 57600, 115200, 921600] | True
 BAUD_RATE_1 | uint | DISABLED: Baud rate for the the COMM_1 port - set to 0 to disable | 0 |  | [0, 9600, 57600, 115200, 921600] | True
 TIMESYNC_ALPHA | float | TODO - also check min-max values | 0.8 |  | [min:0.0, max:1.0] | False
-SYS_ID | uint | Sets the MAVLINK System ID parameter for the message header | 1 |  | [min:0, max:255] | True
-COMP_ID | uint | Sets the MAVLINK Component ID parameter for the message header | 1 |  | [min:0, max:255] | True
+MAV_SYS_ID | uint | Sets the MAVLINK System ID parameter for the message header | 1 |  | [min:0, max:255] | True
+MAV_COMP_ID | uint | Sets the MAVLINK Component ID parameter for the message header | 1 |  | [min:0, max:255] | True
 RELAXED_SET | uint | Allows for 'unit' type parameters to be set when send as 'int' type | 1 | 0 / 1 | boolean | False
 STRM0_HRTBT | float | Communication update rate for system heartbeat (set to 0 to turn off stream) | 1.0 | Hz | scalar | False
 STRM0_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
@@ -43,6 +43,7 @@ TIMEOUT_EXT_P | uint | Time that new data must be read before a external pose ti
 TIMEOUT_MAG | uint | Time that new data must be read before a magnetometer timeout is declared | 20000 | us | scalar | False
 TIMEOUT_OB_HRBT | uint | Time that new data must be read before a off-board heartbeat timeout is declared | 5000000 | us | scalar | False
 TIMEOUT_OB_CTRL | uint | Time that new data must be read before a off-board control timeout is declared | 200000 | us | scalar | False
+CAL_IMU_PASSES | uint | Number of samples to collect for IMU calibrations | 1000 |  | scalar | False
 FILTER_INIT_T | uint | Time from boot where the estimator will use quick convergence | 3000 | ms | scalar | True
 EST_ACC_COR | uint | Toggle to enable accelerometer correction (required for angular control) in the attitude estimator (0:false,1:true) | 1 |  | scalar | False
 EST_MAT_EXP | uint | Toggle to enable matrix expotential approximation (adds decent estimation accuracy) in the attitude estimator (0:false,1:true) | 1 |  | scalar | False
@@ -93,4 +94,6 @@ MOTOR_PWM_MAX | uint | Maximum output for motors | 2000 | pwm | scalar | False
 DO_ESC_CAL | uint | When set to true, a motor calibration will be performed on the next boot (False:0,True:1) | 0 | 0 / 1 | boolean | True
 FAILSAFE_THRTL | float | Throttle percentage output when in failsafe mode | 0.25 |  | scalar | False
 TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed | 10000000 | us | scalar | False
-MIXER | uint | Mixer type to use (see mixer_type_t enum) | 2 |  | scalar | True
+SYS_AUTOSTART | uint | Mixer type to use (see mixer_type_t enum) | 0 |  | scalar | True
+MAV_TYPE | uint | Convenience parameter, this is over-ridden during mixer selection on startup | 0 |  | scalar | False
+SYS_AUTOCONFIG | uint | Tells the system to reset all parameters to default on next boot | 0 |  | scalar | True

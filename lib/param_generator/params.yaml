@@ -52,13 +52,11 @@
 PARAM_BOARD_REVISION:
   type: "uint"
   name: "BOARD_REV"
-  description: "Selects what version of the board to setup sensors for"
-  reboot: true
+  description: "A compile-time selector for what version of the board to setup sensors for"
+  reboot: false
   value:
-    option: "range"
-    default: 5
-    min: 5
-    max: 5
+    option: "generated"
+    function: "NAZE32_REV"
 ---
 PARAM_VERSION_FIRMWARE:
   type: "uint"
@@ -111,7 +109,7 @@ PARAM_TIMESYNC_ALPHA:
 ---
 PARAM_SYSTEM_ID:
   type: "uint"
-  name: "SYS_ID"
+  name: "MAV_SYS_ID"
   description: "Sets the MAVLINK System ID parameter for the message header"
   reboot: true
   value:
@@ -122,7 +120,7 @@ PARAM_SYSTEM_ID:
 ---
 PARAM_COMPONENT_ID:
   type: "uint"
-  name: "COMP_ID"
+  name: "MAV_COMP_ID"
   description: "Sets the MAVLINK Component ID parameter for the message header"
   reboot: true
   value:
@@ -554,6 +552,15 @@ PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
     option: "scalar"
     default: 200000
     unit: "us"
+---
+PARAM_CAL_IMU_PASSES:
+  type: "uint"
+  name: "CAL_IMU_PASSES"
+  description: "Number of samples to collect for IMU calibrations"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
 ---
 PARAM_INIT_TIME:
   type: "uint"
@@ -1031,9 +1038,27 @@ PARAM_THROTTLE_TIMEOUT:
 ---
 PARAM_MIXER:
   type: "uint"
-  name: "MIXER"
+  name: "SYS_AUTOSTART"
   description: "Mixer type to use (see mixer_type_t enum)"
   reboot: true
   value:
     option: "scalar"
-    default: 2
+    default: 0
+---
+PARAM_MAV_TYPE:
+  type: "uint"
+  name: "MAV_TYPE"
+  description: "Convenience parameter, this is over-ridden during mixer selection on startup"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_RESET_PARAMS:
+  type: "uint"
+  name: "SYS_AUTOCONFIG"
+  description: "Tells the system to reset all parameters to default on next boot"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0

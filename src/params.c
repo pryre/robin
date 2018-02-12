@@ -79,8 +79,13 @@ void params_init(void) {
 		set_param_defaults();
 
 		write_params();
+	}
+	
+	//Check if we should reset the by request
+	if(get_param_uint(PARAM_RESET_PARAMS)) {
+		set_param_defaults();
 
-		//systemReset();
+		write_params();
 	}
 
 	//for(param_id_t i=0; i < PARAMS_COUNT; i++)

@@ -17,6 +17,9 @@ PROJECT_SRC_FILES = ./src/main.c \
 					./src/mavlink_system.c \
 					./src/mavlink_receive.c \
 					./src/mavlink_transmit.c \
+					./src/drv_mpu.c \
+					./src/drv_mpu6050.c \
+					./src/drv_mpu6500.c \
 					./src/sensors.c \
 					./src/estimator.c \
 					./src/pid_controller.c \
@@ -29,8 +32,8 @@ PROJECT_SRC_PARAM_GEN = $(PROJECT_DIR_PARAM_GEN)/param_gen.c
 
 # Drivers, etc.
 PROJECT_BREEZY_FILES = $(F1_DIR)/i2c_stm32f10x.c \
-					   $(F1_DIR)/drivers/mpu.c \
 					   $(F1_DIR)/pwm.c
+					   #$(F1_DIR)/drivers/mpu.c
 
 # Math Libs.
 PROJECT_DIR_LIBFIXMATH = ./lib/libfixmath/libfixmath

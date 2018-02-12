@@ -18,6 +18,8 @@
 # along with this code.  If not, see <http://www.gnu.org/licenses/>.
 
 ###############################################################################
+NAZE32_REV  := 6
+
 SERIAL_DEVICE	?= /dev/ttyUSB0
 SERIAL_BAUD		?= 921600
 ###############################################################################
@@ -147,6 +149,7 @@ CFLAGS	 = $(ARCH_FLAGS) \
 		   -DUSE_STDPERIPH_DRIVER \
 		   -D$(TARGET) \
 		   -Wno-unused-parameter \
+		   -DNAZE32_REV=$(NAZE32_REV) \
 		   -DGIT_VERSION_FLIGHT_STR=\"$(GIT_VERSION_FLIGHT)\" \
 		   -DGIT_VERSION_OS_STR=\"$(GIT_VERSION_OS)\"
 
@@ -226,9 +229,9 @@ flash_$(TARGET): $(TARGET_IMG)
 
 mavlink_bootloader:
 	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb
-	sleep 0.5
+	sleep 1.0
 	echo -en '\xfe\x21\x3c\x01\xf0\x4c\x00\x00\x40\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x01\x01\x00\x03\x79' > $(SERIAL_DEVICE)
-	sleep 0.5
+	sleep 1.0
 
 reflash: mavlink_bootloader flash
 
