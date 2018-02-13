@@ -262,10 +262,10 @@ void mixer_output() {
 		} else {
 			_pwm_output_requested[i] = prescaled_outputs[i];
 		}
-		
+
 		if( _system_status.sensors.pwm_control.health == SYSTEM_HEALTH_OK ) {
 			//If the user wants to control this channel
-			if( (_pwm_control[i] != 0xFFFF) || (_pwm_control[i] != 0) ) {
+			if( (_pwm_control[i] != 0xFFFF) && (_pwm_control[i] != 0) ) {
 				//Get the pwm_override, and clamp it
 				int32_t pwm_override = int32_constrain(_pwm_control[i],
 													   get_param_uint(PARAM_MOTOR_PWM_MIN),
