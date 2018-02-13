@@ -53,7 +53,7 @@ static mixer_t mixer_quadrotor_x = {
 };
 
 static mixer_t mixer_hexarotor_x = {
-	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
+	{M, M, M, M, M, M, NONE, NONE}, // output_type
 
 	{ _fc_1, _fc_1,   _fc_1,   _fc_1,    _fc_1,   _fc_1, 0, 0}, // F Mix
 	{-_fc_1, _fc_1, _fc_0_5,-_fc_0_5, -_fc_0_5, _fc_0_5, 0, 0}, // X Mix
