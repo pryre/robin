@@ -9,16 +9,16 @@ Use the flag `NAZE32_REV5` compile flag while compiling and flashing.
 #### Pinout
 1. PWM motor outputs (motor numbers on back)
 2. Auxilary outputs
-  - GND
-  * 5V
-  1. NC
-  2. NC
-  3. NC
-  4. NC
-  5. NC
-  6. NC
-  7. NC
-  8. NC
+   - GND
+   * 5V
+   1. NC
+   2. NC
+   3. NC
+   4. NC
+   5. NC
+   6. NC
+   7. NC
+   8. NC
 3. Battery Monitor (NC)
 4. Buzzer
 5. Secondary Tx(?) output (NC)
