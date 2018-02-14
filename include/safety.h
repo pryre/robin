@@ -92,13 +92,8 @@ typedef struct {
 	GPIO_TypeDef *gpio_p;
 	uint16_t pin;
 
-	status_buzzer_modes_t mode;
-	bool state;
-	uint8_t beep_steps;
-	uint32_t period_high_us;
-	uint32_t period_low_us;
-	uint32_t length_us;
-	uint32_t last_pulse;
+	uint8_t num_beeps;
+	uint32_t period;
 	uint32_t last_beep;
 } status_buzzer_t;
 

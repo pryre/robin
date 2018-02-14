@@ -13,8 +13,6 @@ extern "C" {
 
 #include <stdio.h>
 
-#define NUM_STATUS_BEEP_STEPS 4	//Number of beeps x2
-
 system_status_t _system_status;
 sensor_readings_t _sensors;
 command_input_t _command_input;
@@ -55,14 +53,9 @@ static void status_buzzer_init() {
     safety_buzzer_cfg.speed = Speed_2MHz;
     gpioInit(_status_buzzer.gpio_p, &safety_buzzer_cfg);
 
-	_status_buzzer.mode = STATUS_BUZZER_QUIET;
-	_status_buzzer.state = false;
-	_status_buzzer.beep_steps = 0;			//Number of beeps to make
-	_status_buzzer.period_high_us = 1912;	//C Major
-	_status_buzzer.period_low_us = 3830;	//C Minor
-	_status_buzzer.length_us = 200000;		//200ms beep length
-	_status_buzzer.last_pulse = 0;			//Time last pulse started
-	_status_buzzer.last_beep = 0;			//Time last pulse started
+	_status_buzzer.num_beeps = 0;	//Number of beeps to make
+	_status_buzzer.period = 0;		//200ms beep length
+	_status_buzzer.last_beep = 0;	//Time last beep started
 
     digitalLo( _status_buzzer.gpio_p, _status_buzzer.pin );
 }
@@ -144,86 +137,42 @@ void safety_init() {
 	status_buzzer_init();
 }
 
+void status_buzzer_set(int8_t num, uint32_t period) {
+	_status_buzzer.last_beep = 0;	//Time last beep started
+
+	_status_buzzer.num_beeps = 2*num;	//double to get the correct on/off states
+	_status_buzzer.period = period;
+
+    digitalLo( _status_buzzer.gpio_p, _status_buzzer.pin );
+}
+
 void status_buzzer_success(void) {
-	_status_buzzer.mode = STATUS_BUZZER_SUCCESS;
-	_status_buzzer.beep_steps = NUM_STATUS_BEEP_STEPS;
+	//Play 2 quick beeps
+	status_buzzer_set(2, 200000);
 }
 
 void status_buzzer_failure(void) {
-	_status_buzzer.mode = STATUS_BUZZER_FAILURE;
-	_status_buzzer.beep_steps = NUM_STATUS_BEEP_STEPS;
+	//Play 1 long beep
+	status_buzzer_set(1, 500000);
 }
 
 static void status_buzzer_update(void) {
-	//If the system is in a failsafe mode, and the buzzer isn't set to make a different beep
-	if( (_system_status.state == MAV_STATE_CRITICAL ) ||
-	  (_system_status.state == MAV_STATE_EMERGENCY ) ) {
-		//Not waiting for the delay makes a funky beep pattern, but it is unique
-		if( _status_buzzer.mode == STATUS_BUZZER_QUIET ) {
-			_status_buzzer.mode = STATUS_BUZZER_FAILSAFE;
-			_status_buzzer.beep_steps = NUM_STATUS_BEEP_STEPS;
-			_status_buzzer.last_beep = 0;
-			_status_buzzer.last_pulse = 0;
-		}
+	//If the system is in a failsafe mode
+	//	and the buzzer isn't set to make a beep
+	if( ( _status_buzzer.num_beeps == 0 ) &&
+		( (_system_status.state == MAV_STATE_CRITICAL ) ||
+	      (_system_status.state == MAV_STATE_EMERGENCY ) ) ) {
+
+		status_buzzer_set(1, 100000);
 	}
 
-	if( _status_buzzer.last_beep == 0 ) {
-		//This is a fresh beep
+	if( ( _status_buzzer.num_beeps > 0 ) &&
+		( ( micros() - _status_buzzer.last_beep ) > _status_buzzer.period ) ) {
+
+		digitalToggle(_status_buzzer.gpio_p, _status_buzzer.pin);
+
 		_status_buzzer.last_beep = micros();
-	} else if( ( micros() - _status_buzzer.last_beep ) > _status_buzzer.length_us ) {
-		_status_buzzer.beep_steps--;
-		_status_buzzer.last_beep = micros();
-	}
-
-	if(_status_buzzer.beep_steps == 0) {
-		_status_buzzer.mode = STATUS_BUZZER_QUIET;	//No need to reset state, as it only makes noise when it changes, not when high
-		_status_buzzer.last_beep = 0;
-		_status_buzzer.last_pulse = 0;
-	}
-
-	uint32_t beep_step_us = 0;
-
-	switch(_status_buzzer.mode) {
-		case STATUS_BUZZER_SUCCESS: {
-			if(_status_buzzer.beep_steps == 4) {
-				beep_step_us = _status_buzzer.period_low_us;
-			} else if(_status_buzzer.beep_steps == 2) {
-				beep_step_us = _status_buzzer.period_high_us;
-			}
-
-			break;
-		}
-		case STATUS_BUZZER_FAILURE: {
-			if(_status_buzzer.beep_steps == 4) {
-				beep_step_us = _status_buzzer.period_high_us;
-			} else if(_status_buzzer.beep_steps == 2) {
-				beep_step_us = _status_buzzer.period_low_us;
-			}
-
-			break;
-		}
-		case STATUS_BUZZER_FAILSAFE: {
-			if(_status_buzzer.beep_steps % 2)
-				beep_step_us = _status_buzzer.period_low_us;
-
-			break;
-		}
-		default: {
-			break;
-		}
-	}
-
-	if( beep_step_us > 0 ) {
-		if( ( micros() - _status_buzzer.last_pulse ) > beep_step_us ) {
-			_status_buzzer.state = !_status_buzzer.state;
-			_status_buzzer.last_pulse = micros();
-		}
-
-		if(_status_buzzer.state) {
-			digitalHi(_status_buzzer.gpio_p, _status_buzzer.pin);
-		} else {
-			digitalLo(_status_buzzer.gpio_p, _status_buzzer.pin);
-		}
+		_status_buzzer.num_beeps--;
 	}
 }
 
