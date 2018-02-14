@@ -1,5 +1,6 @@
 # Documentation
 Here you can find the current list of documentation:
+- [Supported Devices](PINOUT.md)
 - [Interfacing](INTERFACING.md)
 - [Parameters](PARAMETERS.md)
 - [Calibration](CALIBRATIONS.md)
