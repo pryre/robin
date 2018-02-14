@@ -576,7 +576,7 @@ static void safety_health_update(uint32_t time_now) {
 
 	//XXX: Was going to have a PWM Control health, but it should be fine as an additional
 	bool control_ok = _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK;
-	
+
 	if( sensors_ok && control_ok &&
 		( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) ) {
 		_system_status.health = SYSTEM_HEALTH_OK;
