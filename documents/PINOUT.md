@@ -7,6 +7,25 @@ The Naze32 Rev5 is the recommended device in terms of support and stability.
 Use the flag `NAZE32_REV5` compile flag while compiling and flashing.
 
 #### Pinout
+1. PWM motor outputs (motor numbers on back)
+2. Auxilary outputs
+  - GND
+  * 5V
+  1. NC
+  2. NC
+  3. NC
+  4. NC
+  5. NC
+  6. NC
+  7. NC
+  8. NC
+3. Battery Monitor (NC)
+4. Buzzer
+5. Secondary Tx(?) output (NC)
+6. 3.3V output (100mA max)
+7. Booloader Pins (short to enter bootloader during power on)
+8. UART1 Tx/Rx
+
 ![Naze32 Rev5 Pinout](naz32_rev5_pinout.png)
 
 ## Naze32 Rev6
