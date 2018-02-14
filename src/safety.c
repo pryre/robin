@@ -137,7 +137,7 @@ void safety_init() {
 	status_buzzer_init();
 }
 
-void status_buzzer_set(int8_t num, uint32_t period) {
+static void status_buzzer_set(int8_t num, uint32_t period) {
 	_status_buzzer.last_beep = 0;	//Time last beep started
 
 	_status_buzzer.num_beeps = 2*num;	//double to get the correct on/off states
