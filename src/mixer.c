@@ -5,15 +5,19 @@
 #include "mavlink_system.h"
 #include "mavlink/mavlink_types.h"
 #include "fix16.h"
-//#include "fixvector3d.h"
-//#include "fixmatrix.h"
-//#include "fixquat.h"
 #include "fixextra.h"
 
 #include "mixer.h"
 #include "params.h"
 #include "safety.h"
 #include "controller.h"
+
+#include "mixers/mixer_none.h"
+#include "mixers/mixer_mc_p4.h"
+#include "mixers/mixer_mc_x4.h"
+#include "mixers/mixer_mc_x6.h"
+#include "mixers/mixer_fw_std.h"
+
 
 control_output_t _control_output;
 system_status_t _system_status;
@@ -24,55 +28,7 @@ int32_t _pwm_control[8];
 int32_t _pwm_output_requested[8];
 int32_t _pwm_output[8];
 
-static mixer_t mixer_none = {
-	{NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE}, // output_type
-
-	{ 0, 0, 0, 0, 0, 0, 0, 0}, // F Mix
-	{ 0, 0, 0, 0, 0, 0, 0, 0}, // X Mix
-	{ 0, 0, 0, 0, 0, 0, 0, 0}, // Y Mix
-	{ 0, 0, 0, 0, 0, 0, 0, 0}  // Z Mix
-};
-
-//TODO: Double check
-static mixer_t mixer_quadrotor_plus = {
-	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
-
-	{ _fc_1, _fc_1, _fc_1, _fc_1, 0, 0, 0, 0}, // F Mix
-	{-_fc_1, _fc_1, 0,    0,    0, 0, 0, 0}, // X Mix
-	{ 0,    0,   -_fc_1, _fc_1, 0, 0, 0, 0}, // Y Mix
-	{ _fc_1, _fc_1,-_fc_1,-_fc_1, 0, 0, 0, 0}  // Z Mix
-};
-
-static mixer_t mixer_quadrotor_x = {
-	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
-
-	{ _fc_1, _fc_1, _fc_1, _fc_1, 0, 0, 0, 0}, // F Mix
-	{-_fc_1, _fc_1, _fc_1,-_fc_1, 0, 0, 0, 0}, // X Mix
-	{ _fc_1,-_fc_1, _fc_1,-_fc_1, 0, 0, 0, 0}, // Y Mix
-	{ _fc_1, _fc_1,-_fc_1,-_fc_1, 0, 0, 0, 0}  // Z Mix
-};
-
-static mixer_t mixer_hexarotor_x = {
-	{M, M, M, M, M, M, NONE, NONE}, // output_type
-
-	{ _fc_1, _fc_1,   _fc_1,   _fc_1,    _fc_1,   _fc_1, 0, 0}, // F Mix
-	{-_fc_1, _fc_1, _fc_0_5,-_fc_0_5, -_fc_0_5, _fc_0_5, 0, 0}, // X Mix
-	{    0,    0,     _fc_1,  -_fc_1,    _fc_1,   _fc_1, 0, 0}, // Y Mix
-	{-_fc_1, _fc_1,  -_fc_1,   _fc_1,    _fc_1,   _fc_1, 0, 0}  // Z Mix
-};
-
-static mixer_t mixer_plane_standard = {
-	{M, S, S, S, NONE, NONE, NONE, NONE}, // output_type
-
-	{ _fc_1, 0, 0, 0, 0, 0, 0, 0}, // F Mix
-	{ 0, _fc_1, 0, 0, 0, 0, 0, 0}, // X Mix
-	{ 0, 0, _fc_1, 0, 0, 0, 0, 0}, // Y Mix
-	{ 0, 0, 0, _fc_1, 0, 0, 0, 0}  // Z Mix
-
-	//TODO: Should double check this, but it would allow stabilize control with motor throughput and a servo out for ailerons, elevator and rudder
-};
-
-static mixer_t *mixer_to_use;
+static const mixer_t *mixer_to_use;
 
 void mixer_init() {
 	switch( get_param_uint(PARAM_MIXER) ) {
