@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import yaml
 #path_params_pdf = "documents/params.pdf"
 
@@ -396,23 +397,30 @@ def main():
 	path_params_h = "lib/param_generator/param_gen.h"
 	path_params_c = "lib/param_generator/param_gen.c"
 
-	params = read_params(path_params_yaml)
+	mod_time_yaml = os.stat(path_params_yaml).st_mtime
+	mod_time_md = os.stat(path_params_md).st_mtime
+	mod_time_h = os.stat(path_params_h).st_mtime
+	mod_time_c = os.stat(path_params_c).st_mtime
 
-	#TODO: Still need to check for unique param_ids
-	if not check_params(params):
-		exit(1)
+	if (mod_time_yaml > mod_time_md) or (mod_time_yaml > mod_time_h) or (mod_time_yaml > mod_time_c):	
+		params = read_params(path_params_yaml)
 
-	if not gen_md(params, path_params_md):
-		exit(1)
+		#TODO: Still need to check for unique param_ids
+		if not check_params(params):
+			exit(1)
 
-	if not gen_h(params, path_params_h):
-		exit(1)
+		if not gen_md(params, path_params_md):
+			exit(1)
 
-	if not gen_c(params, path_params_c):
-		exit(1)
+		if not gen_h(params, path_params_h):
+			exit(1)
 
-	print("Finished parameter file generation")
+		if not gen_c(params, path_params_c):
+			exit(1)
 
+		print("Finished parameter file generation")
+	else:
+		print("Parameter files up to date")
 
 if __name__ == "__main__":
     main()
