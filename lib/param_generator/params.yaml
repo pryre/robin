@@ -1084,7 +1084,7 @@ PARAM_MIXER:
   reboot: true
   value:
     option: "scalar"
-    default: 0
+    default: 6001
 ---
 PARAM_MAV_TYPE:
   type: "uint"

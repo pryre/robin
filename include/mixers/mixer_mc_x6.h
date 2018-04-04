@@ -10,7 +10,7 @@ const mixer_t mixer_hexarotor_x = {
 
 	{ _fc_1, _fc_1,   _fc_1,   _fc_1,    _fc_1,   _fc_1, 0, 0}, // F Mix
 	{-_fc_1, _fc_1, _fc_0_5,-_fc_0_5, -_fc_0_5, _fc_0_5, 0, 0}, // X Mix
-	{    0,    0,     _fc_1,  -_fc_1,    _fc_1,   _fc_1, 0, 0}, // Y Mix
-	{-_fc_1, _fc_1,  -_fc_1,   _fc_1,    _fc_1,   _fc_1, 0, 0}  // Z Mix
+	{    0,    0,     _fc_1,  -_fc_1,    _fc_1,  -_fc_1, 0, 0}, // Y Mix
+	{-_fc_1, _fc_1,  -_fc_1,   _fc_1,    _fc_1,  -_fc_1, 0, 0}  // Z Mix
 };
 

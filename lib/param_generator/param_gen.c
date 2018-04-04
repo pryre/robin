@@ -103,7 +103,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_DO_ESC_CAL, "DO_ESC_CAL", 0);
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, "FAILSAFE_THRTL", fix16_from_float(0.25f));
 	init_param_uint(PARAM_THROTTLE_TIMEOUT, "TIMEOUT_THRTL", 10000000);
-	init_param_uint(PARAM_MIXER, "SYS_AUTOSTART", 0);
+	init_param_uint(PARAM_MIXER, "SYS_AUTOSTART", 6001);
 	init_param_uint(PARAM_MAV_TYPE, "MAV_TYPE", 0);
 	init_param_uint(PARAM_RESET_PARAMS, "SYS_AUTOCONFIG", 0);
 }
