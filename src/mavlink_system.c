@@ -33,6 +33,7 @@
 mavlink_queue_t _lpq_port_0;
 //XXX: mavlink_queue_t _lpq_port_1;
 
+mavlink_system_t _mavlink_gcs;
 mavlink_system_t mavlink_system;
 
 system_status_t _system_status;
@@ -45,10 +46,14 @@ int32_t _pwm_output[8];
 
 static uint8_t comms_open_status_ = 0;
 static const uint8_t blank_array_[8] = {0,0,0,0,0,0,0,0};
+static const uint8_t blank_array_uid_[18] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 void communications_system_init(void) {
 	mavlink_system.sysid = get_param_uint(PARAM_SYSTEM_ID); // System ID, 1-255
 	mavlink_system.compid = get_param_uint(PARAM_COMPONENT_ID); // Component/Subsystem ID, 1-255
+
+	_mavlink_gcs.sysid = get_param_uint(PARAM_GCS_SYSTEM_ID); // System ID, 1-255
+	_mavlink_gcs.compid = get_param_uint(PARAM_GCS_COMPONENT_ID); // Component/Subsystem ID, 1-255
 
 	_lpq_port_0.port = MAVLINK_COMM_0;
 	_lpq_port_0.position = 0;
@@ -401,7 +406,8 @@ void mavlink_stream_servo_output_raw(uint8_t port) {
 									  _pwm_output[4],
 									  _pwm_output[5],
 									  _pwm_output[6],
-									  _pwm_output[7]);
+									  _pwm_output[7],
+									  0,0,0,0,0,0,0,0);	//XXX: We don't even have enough ports
 }
 
 void mavlink_stream_timesync(uint8_t port) {
@@ -483,7 +489,8 @@ void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 									   &blank_array_[0],
 									   0x10c4,	//TODO: This is the serial vendor and product ID, should be dynamic?
 									   0xea60,
-									   U_ID_0);
+									   U_ID_0,
+									   &blank_array_uid_[0]);
 }
 
 //Sends a command acknowledgement
@@ -492,7 +499,8 @@ void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8
 								 mavlink_system.compid,
 								 msg,
 								 command,
-								 result);
+								 result,
+								 0xff, 0xff, _mavlink_gcs.sysid, _mavlink_gcs.compid);
 }
 
 //Sends the requested parameter

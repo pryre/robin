@@ -15,6 +15,8 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));
 	init_param_uint(PARAM_SYSTEM_ID, "MAV_SYS_ID", 1);
 	init_param_uint(PARAM_COMPONENT_ID, "MAV_COMP_ID", 1);
+	init_param_uint(PARAM_GCS_SYSTEM_ID, "GCS_SYS_ID", 1);
+	init_param_uint(PARAM_GCS_COMPONENT_ID, "GCS_COMP_ID", 240);
 	init_param_uint(PARAM_RELAXED_PARAM_SET, "RELAXED_SET", 1);
 	init_param_fix16(PARAM_STREAM_RATE_HEARTBEAT_0, "STRM0_HRTBT", fix16_from_float(1.0f));
 	init_param_fix16(PARAM_STREAM_RATE_SYS_STATUS_0, "STRM0_SYS_STAT", fix16_from_float(0.2f));

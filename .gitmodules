@@ -1,9 +1,6 @@
 [submodule "lib/BreezySTM32"]
 	path = lib/BreezySTM32
 	url = https://github.com/simondlevy/BreezySTM32
-[submodule "lib/mavlink"]
-	path = lib/mavlink
-	url = https://github.com/mavlink/c_library_v1
 [submodule "lib/TurboTrig"]
 	path = lib/TurboTrig
 	url = https://github.com/ibilux/TurboTrig
@@ -13,3 +10,6 @@
 [submodule "lib/libfixmatrix"]
 	path = lib/libfixmatrix
 	url = https://github.com/PetteriAimonen/libfixmatrix
+[submodule "lib/mavlink"]
+	path = lib/mavlink
+	url = https://github.com/mavlink/c_library_v2

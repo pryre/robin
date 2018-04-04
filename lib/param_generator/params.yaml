@@ -110,7 +110,7 @@ PARAM_TIMESYNC_ALPHA:
 PARAM_SYSTEM_ID:
   type: "uint"
   name: "MAV_SYS_ID"
-  description: "Sets the MAVLINK System ID parameter for the message header"
+  description: "Sets the MAVLINK System ID parameter for this mav"
   reboot: true
   value:
     option: "range"
@@ -121,11 +121,33 @@ PARAM_SYSTEM_ID:
 PARAM_COMPONENT_ID:
   type: "uint"
   name: "MAV_COMP_ID"
-  description: "Sets the MAVLINK Component ID parameter for the message header"
+  description: "Sets the MAVLINK Component ID parameter for this mav"
   reboot: true
   value:
     option: "range"
     default: 1
+    min: 0
+    max: 255
+---
+PARAM_GCS_SYSTEM_ID:
+  type: "uint"
+  name: "GCS_SYS_ID"
+  description: "Sets the MAVLINK System ID parameter for the ground station"
+  reboot: true
+  value:
+    option: "range"
+    default: 1
+    min: 0
+    max: 255
+---
+PARAM_GCS_COMPONENT_ID:
+  type: "uint"
+  name: "GCS_COMP_ID"
+  description: "Sets the MAVLINK Component ID parameter for the ground station"
+  reboot: true
+  value:
+    option: "range"
+    default: 240
     min: 0
     max: 255
 ---

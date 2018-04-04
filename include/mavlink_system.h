@@ -27,6 +27,7 @@ serialPort_t* Serial1;
 //XXX:serialPort_t* Serial2;
 
 extern mavlink_system_t mavlink_system;
+extern mavlink_system_t mavlink_gcs;
 
 void communications_system_init(void);
 bool comm_is_open( uint8_t ch );
