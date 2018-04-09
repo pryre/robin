@@ -218,6 +218,9 @@ $(OBJECT_DIR)/$(TARGET)/%.o: %.S
 
 clean:
 	rm -rf *.o obj $(TARGET_HEX) $(TARGET_ELF) $(TARGET_OBJS) $(TARGET_MAP)
+	rm ./lib/param_generator/param_gen.h
+	rm ./lib/param_generator/param_gen.c
+	rm ./lib/param_generator/PARAMS.md
 
 flash: flash_$(TARGET)
 

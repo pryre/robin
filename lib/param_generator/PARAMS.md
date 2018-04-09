@@ -7,7 +7,7 @@ FW_VERSION | uint | A compile-time stamp for the flight firmware version |  | | 
 SW_VERSION | uint | A compile-time stamp for the OS firmware version |  | | | False
 BAUD_RATE_0 | uint | Baud rate for the the COMM_0 port - set to 0 to disable | 921600 |  | [0, 9600, 57600, 115200, 921600] | True
 BAUD_RATE_1 | uint | DISABLED: Baud rate for the the COMM_1 port - set to 0 to disable | 0 |  | [0, 9600, 57600, 115200, 921600] | True
-COMMS_WAIT | uint | Instructs autopilot to remain silent until it receives a valid heartbeat message (False:0,True:1) | 1 | 0 / 1 | boolean | True
+COMMS_WAIT | uint | Instructs autopilot to remain silent until it receives a valid heartbeat message (False:0,True:1) | 0 | 0 / 1 | boolean | True
 TIMESYNC_ALPHA | float | TODO - also check min-max values | 0.8 |  | [min:0.0, max:1.0] | False
 MAV_SYS_ID | uint | Sets the MAVLINK System ID parameter for this mav | 1 |  | [min:0, max:255] | True
 MAV_COMP_ID | uint | Sets the MAVLINK Component ID parameter for this mav | 1 |  | [min:0, max:255] | True
@@ -99,6 +99,6 @@ MOTOR_PWM_MAX | uint | Maximum output for motors | 2000 | pwm | scalar | False
 DO_ESC_CAL | uint | When set to true, a motor calibration will be performed on the next boot (False:0,True:1) | 0 | 0 / 1 | boolean | True
 FAILSAFE_THRTL | float | Throttle percentage output when in failsafe mode | 0.25 |  | scalar | False
 TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed | 10000000 | us | scalar | False
-SYS_AUTOSTART | uint | Mixer type to use (see mixer_type_t enum) | 6001 |  | scalar | True
+SYS_AUTOSTART | uint | Mixer type to use (see mixer_type_t enum) | 0 |  | scalar | True
 MAV_TYPE | uint | Convenience parameter, this is over-ridden during mixer selection on startup | 0 |  | scalar | False
 SYS_AUTOCONFIG | uint | Tells the system to reset all parameters to default on next boot | 0 |  | scalar | True

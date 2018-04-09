@@ -77,6 +77,11 @@ def check_params(params):
 				else:
 					raise ValueError("%s: Parameter ID duplicate with param #%i" % (param_id, id_list.index(param_id)))
 
+				#XXX: Length 16 is from MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
+				if len(details["name"]) >= 16:
+					raise ValueError("%s: Parameter name too long (%d>=16)" % (param_id, len(details["name"])))
+
+
 				if not details["name"] in name_list:
 					name_list.append(details["name"])
 				else:
@@ -273,7 +278,12 @@ def gen_h(params, filepath):
 
 	try:
 		# Prepare file headers
-		str_h = "#pragma once\n\ntypedef enum {\n"
+		str_h = """#pragma once
+
+#include <mavlink/common/common.h>
+
+typedef enum {
+"""
 		param_gen_h.write(str_h)
 
 		# Header generation
@@ -283,7 +293,14 @@ def gen_h(params, filepath):
 				param_gen_h.write(str_h)
 
 		# Prepare file footers
-		str_h = "\tPARAMS_COUNT\n} param_id_t;\n\nvoid params_init(void);\nvoid param_change_callback(param_id_t id);\n"
+		str_h = """\tPARAMS_COUNT
+} param_id_t;
+
+extern const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
+
+void params_init(void);
+void param_change_callback(param_id_t id);
+"""
 		param_gen_h.write(str_h)
 
 		print("Finished generating H file: %s" % filepath)
@@ -318,11 +335,11 @@ def gen_c(params, filepath):
 				start_str = "init_param_"
 
 				if details["type"] == "uint":
-					start_str += "uint" + "(" + param_id + ", \"" + details["name"] + "\", "
+					start_str += "uint" + "(" + param_id + ", "
 				elif details["type"] == "int":
-					start_str += "int" + "(" + param_id + ", \"" + details["name"] + "\", "
+					start_str += "int" + "(" + param_id + ", "
 				elif details["type"] == "float":
-					start_str += "fix16" + "(" + param_id + ", \"" + details["name"] + "\", "
+					start_str += "fix16" + "(" + param_id + ", "
 				else:
 					raise ValueError("%s: Unsupported type option (%s)" % (param_id, details["type"]))
 
@@ -356,6 +373,18 @@ def gen_c(params, filepath):
 				param_gen_c.write(str_c)
 
 		str_c = "}\n\n"
+		param_gen_c.write(str_c)
+
+
+		str_c = "const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN] = {\n"
+		param_gen_c.write(str_c)
+
+		for p in params:
+			for param_id, details in p.items():
+				str_c = "\t\"" + details["name"] + "\",\n"
+				param_gen_c.write(str_c)
+
+		str_c = "};\n\n"
 		param_gen_c.write(str_c)
 
 		str_c = "void param_change_callback(param_id_t id) {\n\tswitch(id) {\n"
@@ -397,12 +426,21 @@ def main():
 	path_params_h = "lib/param_generator/param_gen.h"
 	path_params_c = "lib/param_generator/param_gen.c"
 
-	mod_time_yaml = os.stat(path_params_yaml).st_mtime
-	mod_time_md = os.stat(path_params_md).st_mtime
-	mod_time_h = os.stat(path_params_h).st_mtime
-	mod_time_c = os.stat(path_params_c).st_mtime
+	do_gen = False
+	mod_time_yaml = 0
+	mod_time_md = 0
+	mod_time_h = 0
+	mod_time_c = 0
 
-	if (mod_time_yaml > mod_time_md) or (mod_time_yaml > mod_time_h) or (mod_time_yaml > mod_time_c):	
+	try:
+		mod_time_yaml = os.stat(path_params_yaml).st_mtime
+		mod_time_md = os.stat(path_params_md).st_mtime
+		mod_time_h = os.stat(path_params_h).st_mtime
+		mod_time_c = os.stat(path_params_c).st_mtime
+	except FileNotFoundError as e:
+		do_gen = True
+
+	if (mod_time_yaml > mod_time_md) or (mod_time_yaml > mod_time_h) or (mod_time_yaml > mod_time_c) or do_gen:
 		params = read_params(path_params_yaml)
 
 		#TODO: Still need to check for unique param_ids

@@ -103,7 +103,7 @@ PARAM_WAIT_FOR_HEARTBEAT:
   reboot: true
   value:
     option: "bool"
-    default: 1
+    default: 0
 ---
 PARAM_TIMESYNC_ALPHA:
   type: "float"
@@ -1093,7 +1093,7 @@ PARAM_MIXER:
   reboot: true
   value:
     option: "scalar"
-    default: 6001
+    default: 0
 ---
 PARAM_MAV_TYPE:
   type: "uint"

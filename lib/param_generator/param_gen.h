@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mavlink/common/common.h>
+
 typedef enum {
 	PARAM_BOARD_REVISION,
 	PARAM_VERSION_FIRMWARE,
@@ -103,6 +105,8 @@ typedef enum {
 	PARAM_RESET_PARAMS,
 	PARAMS_COUNT
 } param_id_t;
+
+extern const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
 
 void params_init(void);
 void param_change_callback(param_id_t id);

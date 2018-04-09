@@ -19,7 +19,6 @@ typedef struct {
 	uint8_t magic_be;                       // magic number, should be 0xBE
 
 	uint32_t values[PARAMS_COUNT];
-	char names[PARAMS_COUNT][PARAMS_NAME_LENGTH];
 	MAV_PARAM_TYPE types[PARAMS_COUNT];
 
 	uint8_t magic_ef;                       // magic number, should be 0xEF
@@ -31,9 +30,9 @@ extern params_t _params;
 
 // function declarations
 void set_param_defaults(void);
-void init_param_uint(param_id_t id, const char name[PARAMS_NAME_LENGTH], const uint32_t value);
-void init_param_int(param_id_t id, const char name[PARAMS_NAME_LENGTH], const int32_t value);
-void init_param_fix16(param_id_t id, const char name[PARAMS_NAME_LENGTH], const fix16_t value);
+void init_param_uint(param_id_t id, const uint32_t value);
+void init_param_int(param_id_t id, const int32_t value);
+void init_param_fix16(param_id_t id, const fix16_t value);
 
 bool read_params(void);
 bool write_params(void);

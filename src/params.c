@@ -19,15 +19,16 @@
 
 // global variable definitions
 params_t _params;
+const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
 
 // local function definitions
-void init_param_uint(param_id_t id, const char name[PARAMS_NAME_LENGTH], const uint32_t value) {
-	memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
+void init_param_uint(param_id_t id, const uint32_t value) {
+	//memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
 	_params.values[id] = value;
 	_params.types[id] = MAVLINK_TYPE_UINT32_T;
 }
 
-void init_param_int(param_id_t id, const char name[PARAMS_NAME_LENGTH], const int32_t value) {
+void init_param_int(param_id_t id, const int32_t value) {
 	union {
 		int32_t i;
 		uint32_t u;
@@ -35,12 +36,12 @@ void init_param_int(param_id_t id, const char name[PARAMS_NAME_LENGTH], const in
 
 	u.i = value;
 
-	memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
+	//memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
 	_params.values[id] = u.u;
 	_params.types[id] = MAVLINK_TYPE_INT32_T;
 }
 
-void init_param_fix16(param_id_t id, const char name[PARAMS_NAME_LENGTH], const fix16_t value) {
+void init_param_fix16(param_id_t id, const fix16_t value) {
 	union {
 		fix16_t f;
 		uint32_t u;
@@ -48,7 +49,7 @@ void init_param_fix16(param_id_t id, const char name[PARAMS_NAME_LENGTH], const 
 
 	u.f = value;
 
-	memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
+	//memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
 	_params.values[id] = u.u;
 	_params.types[id] = MAVLINK_TYPE_FLOAT;
 }
@@ -148,14 +149,14 @@ param_id_t lookup_param_id(const char name[PARAMS_NAME_LENGTH]) {
 
 		for (uint8_t i = 0; i < PARAMS_NAME_LENGTH; i++) {
 			// compare each character
-			if (name[i] != _params.names[id][i])
+			if (name[i] != _param_names[id][i])
 			{
 				match = false;
 				break;
 			}
 
 			// stop comparing if end of string is reached
-			if (_params.names[id][i] == '\0')
+			if (_param_names[id][i] == '\0')
 				break;
 		}
 
@@ -193,7 +194,7 @@ fix16_t get_param_fix16(param_id_t id) {
 }
 
 void get_param_name(param_id_t id, char name[PARAMS_NAME_LENGTH]) {
-	memcpy(name, _params.names[id], PARAMS_NAME_LENGTH);
+	memcpy(name, _param_names[id], PARAMS_NAME_LENGTH);
 }
 
 MAV_PARAM_TYPE get_param_type(param_id_t id) {

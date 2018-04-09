@@ -11,6 +11,7 @@
 #include "fix16.h"
 #include "fixextra.h"
 #include "params.h"
+#include "param_generator/param_gen.h"
 #include "safety.h"
 #include "sensors.h"
 #include "estimator.h"
@@ -39,6 +40,7 @@ mavlink_system_t mavlink_system;
 system_status_t _system_status;
 sensor_readings_t _sensors;
 params_t _params;
+const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
 state_t _state_estimator;
 
 command_input_t _control_input;
@@ -104,10 +106,12 @@ void comm_set_closed( uint8_t ch ) {
  * @param ch Character to send
  */
 void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
-	if( (chan == MAVLINK_COMM_0 ) && comm_is_open( COMM_CH_0 ) ) {
-		serialWrite(Serial1, ch);
-	//XXX: } else if( (chan == MAVLINK_COMM_1 ) && comm_is_open( COMM_CH_1 ) ) {
-	//XXX: 	serialWrite(Serial2, ch);
+	if( !get_param_uint( PARAM_WAIT_FOR_HEARTBEAT ) || ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) ) {
+		if( (chan == MAVLINK_COMM_0 ) && comm_is_open( COMM_CH_0 ) ) {
+			serialWrite(Serial1, ch);
+		//XXX: } else if( (chan == MAVLINK_COMM_1 ) && comm_is_open( COMM_CH_1 ) ) {
+		//XXX: 	serialWrite(Serial2, ch);
+		}
 	}
 }
 
@@ -542,7 +546,7 @@ void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index) {
 		mavlink_msg_param_value_pack(mavlink_system.sysid,
 									 mavlink_system.compid,
 									 msg,
-									 &_params.names[index][0],		//String of name
+									 &_param_names[index][0],		//String of name
 									 u.f,			//Value (always as float)
 									 _params.types[index],		//From MAV_PARAM_TYPE
 									 PARAMS_COUNT,	//Total number of parameters
