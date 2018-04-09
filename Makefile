@@ -222,7 +222,7 @@ clean:
 flash: flash_$(TARGET)
 
 flash_$(TARGET): $(TARGET_IMG)
-	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb -ixon
+#	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb -ixon
 #	echo -n 'R' >$(SERIAL_DEVICE)
 #	sleep 1
 	$(DO_FLASH)

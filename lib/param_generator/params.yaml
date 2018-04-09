@@ -96,6 +96,15 @@ PARAM_BAUD_RATE_1:
     default: 0
     list: [0, 9600, 57600, 115200, 921600]
 ---
+PARAM_WAIT_FOR_HEARTBEAT:
+  type: "uint"
+  name: "COMMS_WAIT"
+  description: "Instructs autopilot to remain silent until it receives a valid heartbeat message (False:0,True:1)"
+  reboot: true
+  value:
+    option: "bool"
+    default: 1
+---
 PARAM_TIMESYNC_ALPHA:
   type: "float"
   name: "TIMESYNC_ALPHA"

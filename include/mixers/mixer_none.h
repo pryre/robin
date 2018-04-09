@@ -7,7 +7,7 @@
 
 const mixer_t mixer_none = {
 	//Ch1, Ch2,  Ch3,  Ch4,  Ch5,  Ch6,  Ch7,  Ch8
-	{NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE}, // output_type
+	{MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE}, // output_type
 
 	//Channels
 	//1, 2, 3, 4, 5, 6, 7, 8

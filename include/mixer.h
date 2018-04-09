@@ -18,10 +18,10 @@ typedef enum {
 } mixer_type_t;
 
 typedef enum {
-	NONE,	//None
-	S,		//Servo
-	M,		//Motor
-	G		//GPIO
+	MT_NONE,	//None
+	MT_S,		//Servo
+	MT_M,		//Motor
+	MT_G		//GPIO
 } output_type_t;
 
 typedef struct {

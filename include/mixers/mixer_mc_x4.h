@@ -6,7 +6,7 @@
 #include "fixextra.h"
 
 const mixer_t mixer_quadrotor_x = {
-	{M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
+	{MT_M, MT_M, MT_M, MT_M, MT_NONE, MT_NONE, MT_NONE, MT_NONE}, // output_type
 
 	{ _fc_1, _fc_1, _fc_1, _fc_1, 0, 0, 0, 0}, // F Mix
 	{-_fc_1, _fc_1, _fc_1,-_fc_1, 0, 0, 0, 0}, // X Mix

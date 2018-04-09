@@ -74,7 +74,7 @@ void mixer_init() {
 		_pwm_output_requested[i] = 0;
 		_pwm_output[i] = 0;
 		_GPIO_outputs[i] = 0;
-		_GPIO_output_type[i] = NONE;
+		_GPIO_output_type[i] = MT_NONE;
 	}
 }
 
@@ -92,16 +92,23 @@ void pwm_init() {
 
 	if( get_param_uint( PARAM_DO_ESC_CAL ) ) {
 		for (uint8_t i = 0; i < 8; i++)
-			if (mixer_to_use->output_type[i] != M)
+			if (mixer_to_use->output_type[i] == MT_M)
 				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MAX ) );
 
-		delay(2000);
+		LED0_ON;
+		LED1_OFF;
+		delay(5000);
 
 		for (uint8_t i = 0; i < 8; i++)
-			if (mixer_to_use->output_type[i] != M)
+			if (mixer_to_use->output_type[i] == MT_M)
 				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MIN ) );
 
-		delay(2000);
+		LED0_ON;
+		LED1_ON;
+		delay(5000);
+
+		LED0_OFF;
+		LED1_OFF;
 
 		set_param_uint( PARAM_DO_ESC_CAL, 0);
 
@@ -153,18 +160,18 @@ static void pwm_output() {
 		output_type_t output_type = mixer_to_use->output_type[i];
 
 		//TODO: This logic needs to be double checked
-		if (output_type == NONE) {
+		if (output_type == MT_NONE) {
 			// Incorporate GPIO on not already reserved outputs
 			_pwm_output_requested[i] = _GPIO_outputs[i];
 			output_type = _GPIO_output_type[i];
 		}
 
 		// Write output to motors
-		if (output_type == S) {
+		if (output_type == MT_S) {
 			//write_servo(i, _pwm_output_requested[i]);
-		} else if (output_type == M) {
+		} else if (output_type == MT_M) {
 			write_motor(i, _pwm_output_requested[i]);
-		} else if (output_type == G) {
+		} else if (output_type == MT_G) {
 			//write_servo(i, _pwm_output_requested[i]);	//XXX: Could have another function here to handle GPIO cases
 		}
 	}
@@ -178,7 +185,7 @@ void mixer_output() {
 
 	for (uint8_t i = 0; i < 8; i++) {
 		//TODO: This logic needs to be double checked
-		if (mixer_to_use->output_type[i] != NONE) {
+		if (mixer_to_use->output_type[i] != MT_NONE) {
 			// Matrix multiply (in so many words) -- done in integer, hence the /1000 at the end
 			//TODO: This might actually be very easy to do with fix16 matrix operations...
 			/*
@@ -196,7 +203,7 @@ void mixer_output() {
 			prescaled_outputs[i] = fix16_to_int(fix16_mul(thrust_calc, _fc_1000));
 			//Note: Negitive PWM values could be calculated here, but will be saturated to 0pwm later
 
-			if( mixer_to_use->output_type[i] == M ) {
+			if( mixer_to_use->output_type[i] == MT_M ) {
 				if( prescaled_outputs[i] > max_output )
 					max_output = prescaled_outputs[i];
 
@@ -213,7 +220,7 @@ void mixer_output() {
 		scale_factor = 1000 * 1000 / max_output;
 
 	for (uint8_t i=0; i<8; i++) {
-		if (mixer_to_use->output_type[i] == M) {
+		if (mixer_to_use->output_type[i] == MT_M) {
 			_pwm_output_requested[i] = prescaled_outputs[i] * scale_factor / 1000; // divide by scale factor
 		} else {
 			_pwm_output_requested[i] = prescaled_outputs[i];

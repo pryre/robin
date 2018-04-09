@@ -4,11 +4,14 @@
 #include "mavlink_system.h"
 #include "params.h"
 #include "fixextra.h"
+#include "safety.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
+
+system_status_t _system_status;
 
 //Stream rate in microseconds: 1s = 1,000,000ms
 static mavlink_stream_t mavlink_stream_comm_0[MAVLINK_STREAM_COUNT] = {
@@ -78,16 +81,18 @@ void communication_transmit(uint32_t time_us) {
 	bool message_sent_comm_0 = !comm_is_open( COMM_CH_0 );
 	bool message_sent_comm_1 = true; //XXX: !comm_is_open( COMM_CH_1 );
 
-	for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
+	if( !get_param_uint( PARAM_WAIT_FOR_HEARTBEAT ) || ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) ) {
+		for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
 
-		if( !message_sent_comm_0 )
-			message_sent_comm_0 = transmit_stream(time_us, MAVLINK_COMM_0, &(mavlink_stream_comm_0[i]));
+			if( !message_sent_comm_0 )
+				message_sent_comm_0 = transmit_stream(time_us, MAVLINK_COMM_0, &(mavlink_stream_comm_0[i]));
 
-		//XXX: if( !message_sent_comm_1 )
-		//XXX: 	message_sent_comm_1 = transmit_stream(time_us, MAVLINK_COMM_1, &(mavlink_stream_comm_1[i]));
+			//XXX: if( !message_sent_comm_1 )
+			//XXX: 	message_sent_comm_1 = transmit_stream(time_us, MAVLINK_COMM_1, &(mavlink_stream_comm_1[i]));
 
-		//Break early if neither device will transmit again
-		if(message_sent_comm_0 && message_sent_comm_1)
-			break;
+			//Break early if neither device will transmit again
+			if(message_sent_comm_0 && message_sent_comm_1)
+				break;
+		}
 	}
 }

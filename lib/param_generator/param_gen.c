@@ -12,6 +12,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_VERSION_SOFTWARE, "SW_VERSION", strtoll(GIT_VERSION_OS_STR, NULL, 16));
 	init_param_uint(PARAM_BAUD_RATE_0, "BAUD_RATE_0", 921600);
 	init_param_uint(PARAM_BAUD_RATE_1, "BAUD_RATE_1", 0);
+	init_param_uint(PARAM_WAIT_FOR_HEARTBEAT, "COMMS_WAIT", 1);
 	init_param_fix16(PARAM_TIMESYNC_ALPHA, "TIMESYNC_ALPHA", fix16_from_float(0.8f));
 	init_param_uint(PARAM_SYSTEM_ID, "MAV_SYS_ID", 1);
 	init_param_uint(PARAM_COMPONENT_ID, "MAV_COMP_ID", 1);

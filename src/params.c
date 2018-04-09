@@ -80,7 +80,7 @@ void params_init(void) {
 
 		write_params();
 	}
-	
+
 	//Check if we should reset the by request
 	if(get_param_uint(PARAM_RESET_PARAMS)) {
 		set_param_defaults();
