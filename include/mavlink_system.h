@@ -78,6 +78,7 @@ void mavlink_stream_attitude_quaternion(uint8_t port);
 void mavlink_stream_attitude_target(uint8_t port);
 void mavlink_stream_servo_output_raw(uint8_t port);
 void mavlink_stream_timesync(uint8_t port);
+void mavlink_stream_battery_status(uint8_t port);
 
 //==-- Low Priority Messages
 void mavlink_queue_broadcast_info(char* text);

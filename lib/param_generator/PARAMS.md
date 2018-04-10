@@ -22,6 +22,7 @@ STRM0_ATT_Q | float | Communication update rate for current attitude quaternion 
 STRM0_ATT_T | float | Communication update rate for current attitude target (set to 0 to turn off stream) | 50.0 | Hz | scalar | False
 STRM0_SRV_OUT | float | Communication update rate for commanded servo output (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
+STRM0_BATTSTAT | float | Communication update rate for battery status (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
 STRM0_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 100.0 | Hz | scalar | False
 CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CBRK_MAG | uint | Sensor circuit breaker arming check for magnetometer (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
@@ -92,6 +93,12 @@ PID_PITCH_ANG_P | float | Feed-forward gain for pitch angle | 6.5 |  | scalar | 
 MAX_PITCH_A | float | Maximum allowed command pitch angle (TODO) | 0.786 | rad | scalar | False
 PID_YAW_ANG_P | float | Feed-forward gain for yaw angle | 6.5 |  | scalar | False
 PID_TAU | float | Time parameter for PID controllers | 0.05 |  | scalar | False
+BATT_TYPE | uint | See the MAV_BATTERY_TYPE enum | 0 |  | scalar | False
+BATT_FUNC | uint | See the MAV_BATTERY_FUNCTION enum | 0 |  | scalar | False
+BATT_CELL_NUM | uint | Number of cells in the battery | 0 |  | scalar | False
+BATT_CELL_MIN | float | Low cell voltage | 3.7 |  | scalar | False
+BATT_CELL_MAX | float | High cell voltage | 4.2 |  | scalar | False
+BATT_FILTER | float | A smoothing filter for the voltage reading (0->1) | 0.8 |  | scalar | False
 MOTOR_PWM_RATE | uint | Update rate for PWM outputs | 400 | ? | scalar | True
 MOTOR_PWM_IDLE | uint | Idle output for motors (when armed) | 1150 | pwm | scalar | False
 MOTOR_PWM_MIN | uint | Minimum output for motors | 1000 | pwm | scalar | False

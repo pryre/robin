@@ -97,6 +97,21 @@ typedef struct {
 } sensor_readings_safety_button_t;
 
 typedef struct {
+	sensor_status_t status;
+
+	GPIO_TypeDef *gpio_p;
+	uint16_t pin;
+
+	fix16_t divider;		//Voltage monitor divider
+
+	uint16_t state_raw;		//Measured state raw
+	fix16_t state_calc;		//Measured state
+	fix16_t state_filtered;	//Measured state filtered
+	int8_t precentage;		//Measured percentage
+
+} sensor_readings_voltage_monitor_t;
+
+typedef struct {
 	sensor_readings_clock_t clock;
 	sensor_readings_imu_t imu;
 	sensor_readings_magnometer_t mag;
@@ -104,6 +119,7 @@ typedef struct {
 	sensor_readings_sonar_t sonar;
 	sensor_readings_ext_pose_t ext_pose;
 	sensor_readings_safety_button_t safety_button;
+	sensor_readings_voltage_monitor_t voltage_monitor;
 } sensor_readings_t;
 
 typedef enum {

@@ -27,6 +27,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_TARGET_0, fix16_from_float(50.0f));
 	init_param_fix16(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0, fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_TIMESYNC_0, fix16_from_float(10.0f));
+	init_param_fix16(PARAM_STREAM_RATE_BATTERY_STATUS_0, fix16_from_float(2.0f));
 	init_param_fix16(PARAM_STREAM_RATE_LOW_PRIORITY_0, fix16_from_float(100.0f));
 	init_param_uint(PARAM_SENSOR_IMU_CBRK, 1);
 	init_param_uint(PARAM_SENSOR_MAG_CBRK, 0);
@@ -97,6 +98,12 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_MAX_PITCH_ANGLE, fix16_from_float(0.786f));
 	init_param_fix16(PARAM_PID_YAW_ANGLE_P, fix16_from_float(6.5f));
 	init_param_fix16(PARAM_PID_TAU, fix16_from_float(0.05f));
+	init_param_uint(PARAM_BATTERY_TYPE, 0);
+	init_param_uint(PARAM_BATTERY_FUNCTION, 0);
+	init_param_uint(PARAM_BATTERY_CELL_NUM, 0);
+	init_param_fix16(PARAM_BATTERY_CELL_MIN, fix16_from_float(3.7f));
+	init_param_fix16(PARAM_BATTERY_CELL_MAX, fix16_from_float(4.2f));
+	init_param_fix16(PARAM_BATTERY_READING_FILTER, fix16_from_float(0.8f));
 	init_param_uint(PARAM_MOTOR_PWM_SEND_RATE, 400);
 	init_param_uint(PARAM_MOTOR_PWM_IDLE, 1150);
 	init_param_uint(PARAM_MOTOR_PWM_MIN, 1000);
@@ -130,6 +137,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"STRM0_ATT_T",
 	"STRM0_SRV_OUT",
 	"STRM0_TIMESYNC",
+	"STRM0_BATTSTAT",
 	"STRM0_LPQ",
 	"CBRK_IMU",
 	"CBRK_MAG",
@@ -200,6 +208,12 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"MAX_PITCH_A",
 	"PID_YAW_ANG_P",
 	"PID_TAU",
+	"BATT_TYPE",
+	"BATT_FUNC",
+	"BATT_CELL_NUM",
+	"BATT_CELL_MIN",
+	"BATT_CELL_MAX",
+	"BATT_FILTER",
 	"MOTOR_PWM_RATE",
 	"MOTOR_PWM_IDLE",
 	"MOTOR_PWM_MIN",
@@ -237,6 +251,9 @@ void param_change_callback(param_id_t id) {
 			break;
 		case PARAM_STREAM_RATE_TIMESYNC_0:
 			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_TIMESYNC);
+			break;
+		case PARAM_STREAM_RATE_BATTERY_STATUS_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_BATTERY_STATUS);
 			break;
 		case PARAM_STREAM_RATE_LOW_PRIORITY_0:
 			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_LOW_PRIORITY);

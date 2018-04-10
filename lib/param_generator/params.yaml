@@ -257,6 +257,17 @@ PARAM_STREAM_RATE_TIMESYNC_0:
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_TIMESYNC);"
     unit: "Hz"
 ---
+PARAM_STREAM_RATE_BATTERY_STATUS_0:
+  type: "float"
+  name: "STRM0_BATTSTAT"
+  description: "Communication update rate for battery status (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2.0
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_BATTERY_STATUS);"
+    unit: "Hz"
+---
 PARAM_STREAM_RATE_LOW_PRIORITY_0:
   type: "float"
   name: "STRM0_LPQ"
@@ -1017,6 +1028,60 @@ PARAM_PID_TAU:
     option: "scalar"
     default: 0.05
     function: "pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));\n\t\t\tpid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));\n\t\t\tpid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));"
+---
+PARAM_BATTERY_TYPE:
+  type: "uint"
+  name: "BATT_TYPE"
+  description: "See the MAV_BATTERY_TYPE enum"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_BATTERY_FUNCTION:
+  type: "uint"
+  name: "BATT_FUNC"
+  description: "See the MAV_BATTERY_FUNCTION enum"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_BATTERY_CELL_NUM:
+  type: "uint"
+  name: "BATT_CELL_NUM"
+  description: "Number of cells in the battery"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_BATTERY_CELL_MIN:
+  type: "float"
+  name: "BATT_CELL_MIN"
+  description: "Low cell voltage"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 3.7
+---
+PARAM_BATTERY_CELL_MAX:
+  type: "float"
+  name: "BATT_CELL_MAX"
+  description: "High cell voltage"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 4.2
+---
+PARAM_BATTERY_READING_FILTER:
+  type: "float"
+  name: "BATT_FILTER"
+  description: "A smoothing filter for the voltage reading (0->1)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.8
 ---
 PARAM_MOTOR_PWM_SEND_RATE:
   type: "uint"

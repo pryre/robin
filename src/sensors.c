@@ -109,7 +109,7 @@ void sensors_init_internal(void) {
 	//==-- IMU-MPU6050
 	sensor_status_init(&_sensors.imu.status, (bool)get_param_uint(PARAM_SENSOR_IMU_CBRK));
 	mpu_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
-	
+
 	switch(get_param_uint(PARAM_BOARD_REVISION)) {
 		case 5: {
 			//Get the 1g gravity scale (raw->g's)
@@ -126,7 +126,7 @@ void sensors_init_internal(void) {
 			failureMode(5);
 		}
 	}
-	
+
 	_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
 	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 
@@ -167,6 +167,22 @@ void sensors_init_external(void) {
 	_sensors.safety_button.time_db_read = 0;
 	_sensors.safety_button.period_db_us = 50000;	//50ms debounce period
 	_sensors.safety_button.state_db = false;
+
+	//==-- Voltage Monitor
+	sensor_status_init(&_sensors.voltage_monitor.status, true);
+	_sensors.safety_button.gpio_p = GPIOA;
+	_sensors.safety_button.pin = Pin_4;
+
+	gpio_config_t voltage_monitor_cfg;
+    voltage_monitor_cfg.pin = _sensors.voltage_monitor.pin;
+    voltage_monitor_cfg.mode = Mode_AIN;
+    voltage_monitor_cfg.speed = Speed_2MHz;
+    gpioInit(_sensors.voltage_monitor.gpio_p, &voltage_monitor_cfg);
+
+	_sensors.voltage_monitor.state_raw = 0;
+	_sensors.voltage_monitor.state_calc = 0;
+	_sensors.voltage_monitor.state_filtered = 0;
+	_sensors.voltage_monitor.divider = _fc_1;
 }
 
 bool sensors_read(void) {
@@ -256,7 +272,7 @@ static bool sensors_calibrate(void) {
 			_sensor_cal_data.gyro.sum_z += _sensors.imu.gyro_raw.z;
 
 			_sensor_cal_data.gyro.count++;
-					
+
 			if (_sensor_cal_data.gyro.count >= get_param_uint(PARAM_CAL_IMU_PASSES)) {
 				set_param_int(PARAM_GYRO_X_BIAS, (_sensor_cal_data.gyro.sum_x / _sensor_cal_data.gyro.count));
 				set_param_int(PARAM_GYRO_Y_BIAS, (_sensor_cal_data.gyro.sum_y / _sensor_cal_data.gyro.count));
@@ -275,7 +291,7 @@ static bool sensors_calibrate(void) {
 				mavlink_queue_broadcast_notice("[SENSOR] Gyro calibration complete!");
 				status_buzzer_success();
 			}
-			
+
 			break;
 		}
 		case SENSOR_CAL_MAG: {
@@ -530,6 +546,21 @@ bool sensors_update(uint32_t time_us) {
 	}
 
 	_sensors.safety_button.state_db = safety_button_reading;
+
+	//==-- Voltage Monitor
+	_sensors.voltage_monitor.state_raw = digitalIn(_sensors.voltage_monitor.gpio_p, _sensors.voltage_monitor.pin);
+	_sensors.voltage_monitor.state_calc = fix16_div( fix16_from_int(_sensors.voltage_monitor.state_raw), _sensors.voltage_monitor.divider);
+	//Filter reading: value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
+	fix16_t voltage_alpha = get_param_fix16(PARAM_BATTERY_READING_FILTER);
+	_sensors.voltage_monitor.state_filtered = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, voltage_alpha), _sensors.voltage_monitor.state_calc), fix16_smul(voltage_alpha, _sensors.voltage_monitor.state_filtered));
+	//Calculate percentage left
+	fix16_t voltage_min = fix16_mul( get_param_fix16(PARAM_BATTERY_CELL_NUM), get_param_fix16(PARAM_BATTERY_CELL_MIN) );
+	fix16_t voltage_max = fix16_mul( get_param_fix16(PARAM_BATTERY_CELL_NUM), get_param_fix16(PARAM_BATTERY_CELL_MAX) );
+	fix16_t voltage_range = fix16_sub(voltage_max, voltage_min);
+
+	_sensors.voltage_monitor.precentage = fix16_div(fix16_sub(_sensors.voltage_monitor.state_filtered, voltage_min), voltage_range);
+	_sensors.voltage_monitor.status.time_read = time_us;
+		_sensors.voltage_monitor.status.new_data = true;
 
 	//==-- Calibrations
 	if( _system_status.state == MAV_STATE_CALIBRATING ) {	//If any calibration is in progress
