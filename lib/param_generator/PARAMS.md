@@ -99,6 +99,10 @@ BATT_CELL_NUM | uint | Number of cells in the battery | 0 |  | scalar | False
 BATT_CELL_MIN | float | Low cell voltage | 3.7 |  | scalar | False
 BATT_CELL_MAX | float | High cell voltage | 4.2 |  | scalar | False
 BATT_FILTER | float | A smoothing filter for the voltage reading (0->1) | 0.8 |  | scalar | False
+BATT_DIVIDER | float | Resistor voltage divider for battery sensing (Naze32's use 10K:1k which gives a value of 11) | 11.0 |  | scalar | False
+BATT_CHRG_OK | uint | Charge state cutoff normal battery operation (as a percentage) | 50 |  | scalar | False
+BATT_CHRG_LOW | uint | Charge state cutoff for low battery remaining (as a percentage) | 20 |  | scalar | False
+BATT_CHRG_CRIT | uint | Charge state cutoff for critical battery remaining (as a percentage) | 10 |  | scalar | False
 MOTOR_PWM_RATE | uint | Update rate for PWM outputs | 400 | ? | scalar | True
 MOTOR_PWM_IDLE | uint | Idle output for motors (when armed) | 1150 | pwm | scalar | False
 MOTOR_PWM_MIN | uint | Minimum output for motors | 1000 | pwm | scalar | False

@@ -102,8 +102,6 @@ typedef struct {
 	GPIO_TypeDef *gpio_p;
 	uint16_t pin;
 
-	fix16_t divider;		//Voltage monitor divider
-
 	uint16_t state_raw;		//Measured state raw
 	fix16_t state_calc;		//Measured state
 	fix16_t state_filtered;	//Measured state filtered

@@ -254,7 +254,7 @@ void mavlink_stream_sys_status(uint8_t port) {
 	uint32_t onboard_control_sensors_enabled = 0;
 	uint32_t onboard_control_sensors_health = 0;
 	uint16_t load = 0;
-	uint16_t voltage_battery = _sensors.voltage_monitor.state_filtered;
+	uint16_t voltage_battery = fix16_to_int(fix16_mul(_fc_1000,_sensors.voltage_monitor.state_filtered));
 	uint16_t current_battery = -1;
 	uint8_t battery_remaining = _sensors.voltage_monitor.precentage;
 	uint16_t drop_rate_comm = 0;
@@ -424,10 +424,11 @@ void mavlink_stream_battery_status(uint8_t port) {
 	uint8_t batt_id = 0;
 
 	uint16_t voltages[10];
-	uint16_t voltage_av = 1000 * fix16_to_int( fix16_div( _sensors.voltage_monitor.state_filtered, get_param_uint(PARAM_BATTERY_CELL_NUM) ) );
-	for(int i = 0; i < (int)get_param_uint(PARAM_BATTERY_CELL_NUM); i++) {
+	fix16_t voltage_cell = fix16_div( _sensors.voltage_monitor.state_filtered, fix16_from_int(get_param_uint(PARAM_BATTERY_CELL_NUM)) );
+	uint16_t voltage_cell_int = fix16_to_int( fix16_mul( _fc_1000, voltage_cell ) );
+	for(int i = 0; i < 10; i++) {
 		if(i < (int)get_param_uint(PARAM_BATTERY_CELL_NUM)) {
-			voltages[i] = voltage_av;
+			voltages[i] = voltage_cell_int;
 		} else {
 			voltages[i] = UINT16_MAX;
 		}
@@ -435,6 +436,22 @@ void mavlink_stream_battery_status(uint8_t port) {
 
 	//TODO: This could be done better
 	uint8_t charge_state = MAV_BATTERY_CHARGE_STATE_UNDEFINED;
+
+	if(get_param_uint(PARAM_BATTERY_CELL_NUM) > 0) {
+		if(_sensors.voltage_monitor.precentage > 100) {
+			charge_state = MAV_BATTERY_CHARGE_STATE_UNHEALTHY;
+		} else if(_sensors.voltage_monitor.precentage > (int)get_param_uint(PARAM_BATTERY_CHARGE_STATE_OK)) {
+			charge_state = MAV_BATTERY_CHARGE_STATE_OK;
+		} else if(_sensors.voltage_monitor.precentage > (int)get_param_uint(PARAM_BATTERY_CHARGE_STATE_LOW)) {
+			charge_state = MAV_BATTERY_CHARGE_STATE_LOW;
+		} else if(_sensors.voltage_monitor.precentage > (int)get_param_uint(PARAM_BATTERY_CHARGE_STATE_CRITICAL)) {
+			charge_state = MAV_BATTERY_CHARGE_STATE_CRITICAL;
+		} else if(_sensors.voltage_monitor.precentage > 0) {
+			charge_state = MAV_BATTERY_CHARGE_STATE_EMERGENCY;
+		} else {
+			charge_state = MAV_BATTERY_CHARGE_STATE_FAILED;
+		}
+	}
 
 	mavlink_msg_battery_status_send(port,
 								   batt_id,

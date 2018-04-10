@@ -1083,6 +1083,42 @@ PARAM_BATTERY_READING_FILTER:
     option: "scalar"
     default: 0.8
 ---
+PARAM_BATTERY_DIVIDER:
+  type: "float"
+  name: "BATT_DIVIDER"
+  description: "Resistor voltage divider for battery sensing (Naze32's use 10K:1k which gives a value of 11)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 11.0
+---
+PARAM_BATTERY_CHARGE_STATE_OK:
+  type: "uint"
+  name: "BATT_CHRG_OK"
+  description: "Charge state cutoff normal battery operation (as a percentage)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50
+---
+PARAM_BATTERY_CHARGE_STATE_LOW:
+  type: "uint"
+  name: "BATT_CHRG_LOW"
+  description: "Charge state cutoff for low battery remaining (as a percentage)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 20
+---
+PARAM_BATTERY_CHARGE_STATE_CRITICAL:
+  type: "uint"
+  name: "BATT_CHRG_CRIT"
+  description: "Charge state cutoff for critical battery remaining (as a percentage)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10
+---
 PARAM_MOTOR_PWM_SEND_RATE:
   type: "uint"
   name: "MOTOR_PWM_RATE"

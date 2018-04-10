@@ -104,6 +104,10 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_BATTERY_CELL_MIN, fix16_from_float(3.7f));
 	init_param_fix16(PARAM_BATTERY_CELL_MAX, fix16_from_float(4.2f));
 	init_param_fix16(PARAM_BATTERY_READING_FILTER, fix16_from_float(0.8f));
+	init_param_fix16(PARAM_BATTERY_DIVIDER, fix16_from_float(11.0f));
+	init_param_uint(PARAM_BATTERY_CHARGE_STATE_OK, 50);
+	init_param_uint(PARAM_BATTERY_CHARGE_STATE_LOW, 20);
+	init_param_uint(PARAM_BATTERY_CHARGE_STATE_CRITICAL, 10);
 	init_param_uint(PARAM_MOTOR_PWM_SEND_RATE, 400);
 	init_param_uint(PARAM_MOTOR_PWM_IDLE, 1150);
 	init_param_uint(PARAM_MOTOR_PWM_MIN, 1000);
@@ -214,6 +218,10 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"BATT_CELL_MIN",
 	"BATT_CELL_MAX",
 	"BATT_FILTER",
+	"BATT_DIVIDER",
+	"BATT_CHRG_OK",
+	"BATT_CHRG_LOW",
+	"BATT_CHRG_CRIT",
 	"MOTOR_PWM_RATE",
 	"MOTOR_PWM_IDLE",
 	"MOTOR_PWM_MIN",

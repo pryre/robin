@@ -9,6 +9,7 @@
 #include "mavlink_system.h"
 #include "breezystm32.h"
 #include "drv_mpu.h"
+#include "adc.h"
 #include "gpio.h"
 
 #include "fix16.h"
@@ -136,6 +137,9 @@ void sensors_init_internal(void) {
 
 	//==-- Timer
 	clock_init();
+
+	//==-- ADC
+	adcInit(false);
 }
 
 void sensors_init_external(void) {
@@ -170,6 +174,7 @@ void sensors_init_external(void) {
 
 	//==-- Voltage Monitor
 	sensor_status_init(&_sensors.voltage_monitor.status, true);
+	/*
 	_sensors.safety_button.gpio_p = GPIOA;
 	_sensors.safety_button.pin = Pin_4;
 
@@ -178,11 +183,11 @@ void sensors_init_external(void) {
     voltage_monitor_cfg.mode = Mode_AIN;
     voltage_monitor_cfg.speed = Speed_2MHz;
     gpioInit(_sensors.voltage_monitor.gpio_p, &voltage_monitor_cfg);
+	*/
 
 	_sensors.voltage_monitor.state_raw = 0;
 	_sensors.voltage_monitor.state_calc = 0;
 	_sensors.voltage_monitor.state_filtered = 0;
-	_sensors.voltage_monitor.divider = _fc_1;
 }
 
 bool sensors_read(void) {
@@ -548,8 +553,11 @@ bool sensors_update(uint32_t time_us) {
 	_sensors.safety_button.state_db = safety_button_reading;
 
 	//==-- Voltage Monitor
-	_sensors.voltage_monitor.state_raw = digitalIn(_sensors.voltage_monitor.gpio_p, _sensors.voltage_monitor.pin);
-	_sensors.voltage_monitor.state_calc = fix16_div( fix16_from_int(_sensors.voltage_monitor.state_raw), _sensors.voltage_monitor.divider);
+	//_sensors.voltage_monitor.state_raw = digitalIn(_sensors.voltage_monitor.gpio_p, _sensors.voltage_monitor.pin);
+	_sensors.voltage_monitor.state_raw = adcGetChannel(ADC_EXTERNAL_PAD);
+
+	fix16_t voltage_res = fix16_div(fix16_from_int(0xFFF), _fc_3_3 );	//XXX: 0xFFF is from 12Bit adc
+	_sensors.voltage_monitor.state_calc = fix16_mul(fix16_div(fix16_from_int(_sensors.voltage_monitor.state_raw), voltage_res), get_param_fix16(PARAM_BATTERY_DIVIDER));
 	//Filter reading: value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
 	fix16_t voltage_alpha = get_param_fix16(PARAM_BATTERY_READING_FILTER);
 	_sensors.voltage_monitor.state_filtered = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, voltage_alpha), _sensors.voltage_monitor.state_calc), fix16_smul(voltage_alpha, _sensors.voltage_monitor.state_filtered));

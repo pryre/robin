@@ -21,6 +21,7 @@
 #define _fc_1			0x00010000	//1.0
 #define _fc_1_15		0x00012666	//1.15
 #define _fc_2			0x00020000	//2.0
+#define _fc_3_3			0x00034CCC	//3.3
 #define _fc_10			0x000A0000	//10
 #define _fc_1000		0x03E80000	//1000
 
