@@ -562,11 +562,12 @@ bool sensors_update(uint32_t time_us) {
 	fix16_t voltage_alpha = get_param_fix16(PARAM_BATTERY_READING_FILTER);
 	_sensors.voltage_monitor.state_filtered = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, voltage_alpha), _sensors.voltage_monitor.state_calc), fix16_smul(voltage_alpha, _sensors.voltage_monitor.state_filtered));
 	//Calculate percentage left
-	fix16_t voltage_min = fix16_mul( get_param_fix16(PARAM_BATTERY_CELL_NUM), get_param_fix16(PARAM_BATTERY_CELL_MIN) );
-	fix16_t voltage_max = fix16_mul( get_param_fix16(PARAM_BATTERY_CELL_NUM), get_param_fix16(PARAM_BATTERY_CELL_MAX) );
+	fix16_t voltage_min = fix16_mul( fix16_from_int(get_param_uint(PARAM_BATTERY_CELL_NUM)), get_param_fix16(PARAM_BATTERY_CELL_MIN) );
+	fix16_t voltage_max = fix16_mul( fix16_from_int(get_param_uint(PARAM_BATTERY_CELL_NUM)), get_param_fix16(PARAM_BATTERY_CELL_MAX) );
 	fix16_t voltage_range = fix16_sub(voltage_max, voltage_min);
+	fix16_t batt_remaining = fix16_div(fix16_sub(_sensors.voltage_monitor.state_filtered, voltage_min), voltage_range);
+	_sensors.voltage_monitor.precentage = fix16_to_int(fix16_mul(_fc_100, batt_remaining));
 
-	_sensors.voltage_monitor.precentage = fix16_div(fix16_sub(_sensors.voltage_monitor.state_filtered, voltage_min), voltage_range);
 	_sensors.voltage_monitor.status.time_read = time_us;
 		_sensors.voltage_monitor.status.new_data = true;
 

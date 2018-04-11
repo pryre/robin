@@ -148,12 +148,12 @@ static void status_buzzer_set(int8_t num, uint32_t period) {
 
 void status_buzzer_success(void) {
 	//Play 2 quick beeps
-	status_buzzer_set(2, 200000);
+	status_buzzer_set(2, 100000);
 }
 
 void status_buzzer_failure(void) {
 	//Play 1 long beep
-	status_buzzer_set(1, 500000);
+	status_buzzer_set(1, 1000000);
 }
 
 static void status_buzzer_update(void) {
