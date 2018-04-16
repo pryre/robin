@@ -231,10 +231,7 @@ flash_$(TARGET): $(TARGET_IMG)
 	$(DO_FLASH)
 
 mavlink_bootloader:
-	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb
-	sleep 1.0
-	echo -en '\xfe\x21\x3c\x01\xf0\x4c\x00\x00\x40\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x01\x01\x00\x03\x79' > $(SERIAL_DEVICE)
-	sleep 1.0
+	./lib/scripts/reboot_bootloader --device $(SERIAL_DEVICE) --baudrate $(SERIAL_BAUD)
 
 reflash: mavlink_bootloader flash
 
@@ -244,4 +241,6 @@ unbrick_$(TARGET): $(TARGET_IMG)
 	$(DO_FLASH)
 
 listen:
-	picocom $(SERIAL_DEVICE) -b $(SERIAL_BAUD)
+	#picocom $(SERIAL_DEVICE) -b $(SERIAL_BAUD)
+	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb -ixon
+	od -x < $(SERIAL_DEVICE)

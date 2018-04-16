@@ -47,19 +47,21 @@ Before you can flash the the Naze32, you must first put it into bootloader mode.
 
 The makefile assumes that the device is connected as `/dev/ttyUSB0` and will use a baud rate of `921600`. You may have to adjust these to suit your device. If the flash is not successful, try using a slower baud rate, such as `115200`.
 
-Depending on your version of `stm32flash`, you may have to call the flash command multiple times before the flashing will actually start.
-
 Once in bootloader mode run the following command:
 ```sh
 make flash
 ```
 
-After the initial flash, you can use the MAVLINK command `MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN` to put the device into bootloader mode through the software. Additionally, the following command will attempt to send this directly from the CLI (but it may not work for all systems):
+Depending on your version of `stm32flash`, you may have to call the flash command multiple times before the flashing will actually start. Another common problem is that `stm32flash` sometimes misses the initializer message from the autopilot if plugged in via USB, or it gets confused by other data in the serial buffer. The best work around for this is to do the following:
+- Unplug and unpower the autopilot completely
+- Plug a USB-Serial adaptor into your computer
+- Connect the USB-Serial Tx/Rx to the autopilot
+- Power on the autopilot directly into bootloader mode
+
+After the initial flash, you can use the MAVLINK command `MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN` to put the device into bootloader mode through the software. Additionally, the following command will attempt to send this directly from the CLI (but requires `pymavlink` to be installed):
 ```sh
 make reflash
 ```
-
-For a reflash, you may get the best results if you set the baud rate to whatever your `PARAM_BAUD_RATE_0` is set to.
 
 #### Flashing Options
 You can not only pass the version flag in the command line, but you can also pass the serial parameters to use as well:

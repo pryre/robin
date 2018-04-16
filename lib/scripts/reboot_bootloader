@@ -1,0 +1,45 @@
+#!/bin/python
+
+#Adapted from: https://discuss.bluerobotics.com/t/sending-mavproxy-messages-from-a-python-program/1515
+
+import time
+from pymavlink import mavutil
+
+from argparse import ArgumentParser
+parser = ArgumentParser(description=__doc__)
+
+parser.add_argument("--baudrate", type=int,
+                  help="master port baud rate", default=115200)
+parser.add_argument("--device", required=True, help="serial device")
+args = parser.parse_args()
+
+
+mavutil.set_dialect("common")
+autopilot = mavutil.mavlink_connection(args.device, baud=args.baudrate)
+
+# wait for autopilot connection
+msg = None
+while msg is None:
+        msg = autopilot.recv_msg()
+
+# The values of these heartbeat fields is not really important here
+# I just used the same numbers that QGC uses
+# It is standard practice for any system communicating via mavlink emit the HEARTBEAT message at 1Hz! Your autopilot may not behave the way you want otherwise!
+autopilot.mav.heartbeat_send(
+6, # type
+8, # autopilot
+192, # base_mode
+0, # custom_mode
+4, # system_status
+3  # mavlink_version
+)
+
+#Send the reboot to bootloader command
+autopilot.mav.command_long_send(
+1, # autopilot system id
+1, # autopilot component id
+246, # MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN
+0, # confirmation
+3, # reboot to bootloader
+0,0,0,0,0,0 # unused parameters for this command
+)
