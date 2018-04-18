@@ -1,23 +1,23 @@
 # Calibration
 The robin flight software supports the `MAV_CMD_PREFLIGHT_CALIBRATION` command, and will issue instructions through the `STATUSTEXT` messages for the user to follow.
 
-If using MAVROS, you should be able to use the following process to perform a calibration.
+ If using QGCS, the [custom interface](TOOLS.md#qgroundcontrol) can be used to issue the corresponding commands. It is recommended that you open the _notices_ menu so you can easily see the calibration instructions.
+
+If using MAVROS, you should be able to use the following process to perform a calibration. It is recommended that you open the command interface so you can easily see the calibration instructions.
 
 ## Gyroscope
 To perform a gyroscope calibration:
 1. Place the autopilot on a flat surface
-2. Do not bump the device then issue the following command:
-```sh
-rosrun mavros mavcmd long 241 1 0 0 0 0 0 0
-```
+2. Do not bump the device then issue the calibration command (for MAVROS: `rosrun mavros mavcmd long 241 1 0 0 0 0 0 0`)
 3. The calibration should only take a few seconds
 
 ## Accelerometer
+The flight controller uses the NED frame of reference. During the calibration steps you will be instructed to orient each axis of the flight controller, with the axis oriented both pointing up to the sky and pointing down to the ground.
+
+![http://www.chrobotics.com/wp-content/uploads/2012/11/Inertial-Frame.png](https://raw.githubusercontent.com/qutas/robin/master/documents/Inertial-Frame.png)
+
 To perform a accelerometer calibration:
 1. Place the autopilot on a flat surface, with the Z-axis pointing down (in the NED frame)
-2. Hold the device steady, then issue the following command:
-```sh
-rosrun mavros mavcmd long 241 0 0 0 0 1 0 0
-```
-3. Repeat step 2, following the instructions sent back to MAVROS
+2. Hold the device steady, then issue the calibration command (for MAVROS: `rosrun mavros mavcmd long 241 0 0 0 0 1 0 0`)
+3. Repeat step 2, following the instructions sent back from the autopilot
 4. The calibration should only take a few seconds per axis, but it will need to be done for each axis, in both directions
