@@ -85,6 +85,10 @@ void communications_system_init(void) {
 
 	//XXX: for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++)
 	//XXX: 	communication_calc_period_update(COMM_CH_1, i);
+	
+	
+	mavlink_set_proto_version(MAVLINK_COMM_0, 1);
+	//XXX: mavlink_set_proto_version(MAVLINK_COMM_1, 1);
 }
 
 bool comm_is_open( uint8_t ch ) {
@@ -519,13 +523,26 @@ void mavlink_prepare_debug(mavlink_message_t *msg, uint32_t stamp, uint8_t index
 							u.f);	//Value (always as float)
 }
 
+//Prepares an the mavlink protocol version message
+void mavlink_prepare_protocol_version(mavlink_message_t *msg) {
+	mavlink_msg_protocol_version_pack(mavlink_system.sysid,
+									   mavlink_system.compid,
+									   msg,
+									   MAVLINK_VERSION_MAX,
+									   MAVLINK_VERSION_MIN,
+									   MAVLINK_VERSION_MAX,
+									   &blank_array_[0],
+									   (uint8_t*)GIT_VERSION_MAVLINK_STR);
+}
+
 //Prepares an autopilot version details
 void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 	//TODO: Update capabilities
 	const uint64_t capabilities = MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT +
 								  MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET +
 								  MAV_PROTOCOL_CAPABILITY_SET_ACTUATOR_TARGET +
-								  MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION;
+								  MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION +
+							  	  MAV_PROTOCOL_CAPABILITY_MAVLINK2;
 
 	mavlink_msg_autopilot_version_pack(mavlink_system.sysid,
 									   mavlink_system.compid,

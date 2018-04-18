@@ -20,6 +20,9 @@
    Lines also in your main.c, e.g. by reading these parameter from EEPROM.
  */
 
+#define MAVLINK_VERSION_MIN 100
+#define MAVLINK_VERSION_MAX 200
+
 #define COMM_CH_0 (uint8_t)0x01	//0b00000001
 //XXX:#define COMM_CH_1 (uint8_t)0x02	//0b00000010
 
@@ -85,6 +88,7 @@ void mavlink_queue_broadcast_info(char* text);
 void mavlink_queue_broadcast_notice(char* text);
 void mavlink_queue_broadcast_error(char* text);
 
+void mavlink_prepare_protocol_version(mavlink_message_t *msg);
 void mavlink_prepare_autopilot_version(mavlink_message_t *msg);
 
 void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result);

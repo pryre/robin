@@ -60,7 +60,7 @@ PARAM_BOARD_REVISION:
 ---
 PARAM_VERSION_FIRMWARE:
   type: "uint"
-  name: "FW_VERSION"
+  name: "VERSION_FW"
   description: "A compile-time stamp for the flight firmware version"
   reboot: false
   value:
@@ -69,7 +69,7 @@ PARAM_VERSION_FIRMWARE:
 ---
 PARAM_VERSION_SOFTWARE:
   type: "uint"
-  name: "SW_VERSION"
+  name: "VERSION_SW"
   description: "A compile-time stamp for the OS firmware version"
   reboot: false
   value:
@@ -137,6 +137,15 @@ PARAM_COMPONENT_ID:
     default: 1
     min: 0
     max: 255
+---
+PARAM_STRICT_GCS_MATCH:
+  type: "uint"
+  name: "GCS_MATCH"
+  description: "Sets the MAVLINK System ID parameter for the ground station"
+  reboot: true
+  value:
+    option: "bool"
+    default: 0
 ---
 PARAM_GCS_SYSTEM_ID:
   type: "uint"

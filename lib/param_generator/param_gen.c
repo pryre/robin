@@ -16,6 +16,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_TIMESYNC_ALPHA, fix16_from_float(0.8f));
 	init_param_uint(PARAM_SYSTEM_ID, 1);
 	init_param_uint(PARAM_COMPONENT_ID, 1);
+	init_param_uint(PARAM_STRICT_GCS_MATCH, 0);
 	init_param_uint(PARAM_GCS_SYSTEM_ID, 1);
 	init_param_uint(PARAM_GCS_COMPONENT_ID, 240);
 	init_param_uint(PARAM_RELAXED_PARAM_SET, 1);
@@ -122,14 +123,15 @@ void set_param_defaults(void) {
 
 const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN] = {
 	"BOARD_REV",
-	"FW_VERSION",
-	"SW_VERSION",
+	"VERSION_FW",
+	"VERSION_SW",
 	"BAUD_RATE_0",
 	"BAUD_RATE_1",
 	"COMMS_WAIT",
 	"TIMESYNC_ALPHA",
 	"MAV_SYS_ID",
 	"MAV_COMP_ID",
+	"GCS_MATCH",
 	"GCS_SYS_ID",
 	"GCS_COMP_ID",
 	"RELAXED_SET",

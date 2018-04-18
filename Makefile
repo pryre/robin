@@ -151,7 +151,8 @@ CFLAGS	 = $(ARCH_FLAGS) \
 		   -Wno-unused-parameter \
 		   -DNAZE32_REV=$(NAZE32_REV) \
 		   -DGIT_VERSION_FLIGHT_STR=\"$(GIT_VERSION_FLIGHT)\" \
-		   -DGIT_VERSION_OS_STR=\"$(GIT_VERSION_OS)\"
+		   -DGIT_VERSION_OS_STR=\"$(GIT_VERSION_OS)\" \
+		   -DGIT_VERSION_MAVLINK_STR=\"$(GIT_VERSION_MAVLINK)\"
 
 ASFLAGS		 = $(ARCH_FLAGS) \
 		   -x assembler-with-cpp \

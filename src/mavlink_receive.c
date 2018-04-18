@@ -27,9 +27,12 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 	// Try to get a new message
 	if(mavlink_parse_char(port, c, &msg, &status)) {
-
-		//XXX: If it's a message from the GCS
-		if( (msg.sysid == _mavlink_gcs.sysid) && (msg.compid == _mavlink_gcs.compid) ) {
+		if( ( !get_param_uint(PARAM_STRICT_GCS_MATCH) ) ||
+		    ( (msg.sysid == _mavlink_gcs.sysid) && (msg.compid == _mavlink_gcs.compid) ) ) {
+			//If we detected a mavlink v2 status from GCS, switch
+			if( !(status.flags & MAVLINK_STATUS_FLAG_IN_MAVLINK1) )
+				mavlink_set_proto_version(port, 2);
+				
 			// Handle message
 			switch(msg.msgid) {
 				case MAVLINK_MSG_ID_HEARTBEAT: {
@@ -196,6 +199,17 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 							break;
 						}
+						case MAV_CMD_REQUEST_PROTOCOL_VERSION: {
+							mavlink_set_proto_version(port, 2);
+							
+							mavlink_message_t msg_out;
+							mavlink_prepare_protocol_version(&msg_out);
+							lpq_queue_msg(port, &msg_out);
+							
+							need_ack = true;
+							
+							break;
+						}
 						case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES: {
 							mavlink_message_t msg_out;
 							mavlink_prepare_autopilot_version(&msg_out);
@@ -222,7 +236,12 @@ static void communication_decode(uint8_t port, uint8_t c) {
 										} else {
 											command_result = MAV_RESULT_FAILED;
 										}
-
+										
+										//XXX
+										//Reinit imu as writing EEPROM messes up the callback										
+										sensors_init_imu();
+										//XXX
+											
 										break;
 									case 2:		//Reset to defaults
 										set_param_defaults();

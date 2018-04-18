@@ -3,14 +3,15 @@
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
 BOARD_REV | uint | A compile-time selector for what version of the board to setup sensors for |  | | | False
-FW_VERSION | uint | A compile-time stamp for the flight firmware version |  | | | False
-SW_VERSION | uint | A compile-time stamp for the OS firmware version |  | | | False
+VERSION_FW | uint | A compile-time stamp for the flight firmware version |  | | | False
+VERSION_SW | uint | A compile-time stamp for the OS firmware version |  | | | False
 BAUD_RATE_0 | uint | Baud rate for the the COMM_0 port - set to 0 to disable | 921600 |  | [0, 9600, 57600, 115200, 921600] | True
 BAUD_RATE_1 | uint | DISABLED: Baud rate for the the COMM_1 port - set to 0 to disable | 0 |  | [0, 9600, 57600, 115200, 921600] | True
 COMMS_WAIT | uint | Instructs autopilot to remain silent until it receives a valid heartbeat message (False:0,True:1) | 0 | 0 / 1 | boolean | True
 TIMESYNC_ALPHA | float | TODO - also check min-max values | 0.8 |  | [min:0.0, max:1.0] | False
 MAV_SYS_ID | uint | Sets the MAVLINK System ID parameter for this mav | 1 |  | [min:0, max:255] | True
 MAV_COMP_ID | uint | Sets the MAVLINK Component ID parameter for this mav | 1 |  | [min:0, max:255] | True
+GCS_MATCH | uint | Sets the MAVLINK System ID parameter for the ground station | 0 | 0 / 1 | boolean | True
 GCS_SYS_ID | uint | Sets the MAVLINK System ID parameter for the ground station | 1 |  | [min:0, max:255] | True
 GCS_COMP_ID | uint | Sets the MAVLINK Component ID parameter for the ground station | 240 |  | [min:0, max:255] | True
 RELAXED_SET | uint | Allows for 'unit' type parameters to be set when send as 'int' type | 1 | 0 / 1 | boolean | False

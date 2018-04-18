@@ -194,6 +194,7 @@ extern sensor_readings_t _sensors;
 extern sensor_calibration_data_t _sensor_cal_data;
 
 // function declarations
+void sensors_init_imu(void);
 void sensors_init_internal(void);
 void sensors_init_external(void);
 bool sensors_read(void);

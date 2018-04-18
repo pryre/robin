@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 #Adapted from: https://discuss.bluerobotics.com/t/sending-mavproxy-messages-from-a-python-program/1515
 

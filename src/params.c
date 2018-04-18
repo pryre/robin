@@ -100,44 +100,15 @@ bool read_params(void) {
 bool write_params(void) {
 	bool success = false;
 
-	//XXX: System will freeze after eeprom write (not 100% sure why, but something to do with interrupts), so reboot here
-	if( safety_request_state( MAV_STATE_POWEROFF ) ) {
-		bool flasher = true;
-		GPIO_TypeDef *gpio_led_p;
-		uint16_t led_pin;
-
+	if( safety_request_state( MAV_STATE_STANDBY ) ) {
 		if( writeEEPROM() ) {
-			//Write sucess
-			mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[PARAM] EEPROM written, mav will now reboot");
-
-			gpio_led_p = LED0_GPIO;
-			led_pin = LED0_PIN;
-
+			mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[PARAM] EEPROM written");
+			success = true;
 		} else {
-			//Write failed
-			mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[PARAM] EEPROM write failed, mav will now reboot");
-
-			gpio_led_p = LED1_GPIO;
-			led_pin = LED1_PIN;
+			mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[PARAM] EEPROM write failed");
 		}
-
-		for(uint32_t i=0; i<5; i++) {
-			if(flasher) {
-				digitalLo(gpio_led_p, led_pin);
-			} else {
-				digitalHi(gpio_led_p, led_pin);
-			}
-
-			flasher = !flasher;
-			delay(100);
-		}
-
-		digitalHi(LED0_GPIO, LED0_PIN);
-		digitalHi(LED1_GPIO, LED1_PIN);
-
-		systemReset();
 	} else {
-		mavlink_queue_broadcast_error("[SAFETY] Unable to poweroff, can't write params!");
+		mavlink_queue_broadcast_error("[SAFETY] Unable to enter standby, can't write params!");
 	}
 
 	return success;

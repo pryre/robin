@@ -106,8 +106,7 @@ static void sensors_cal_init(void) {
 	_sensor_cal_data.accel.temp_shift = fix16_from_float(36.53f);
 }
 
-void sensors_init_internal(void) {
-	//==-- IMU-MPU6050
+void sensors_init_imu(void) {
 	sensor_status_init(&_sensors.imu.status, (bool)get_param_uint(PARAM_SENSOR_IMU_CBRK));
 	mpu_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
 
@@ -130,7 +129,11 @@ void sensors_init_internal(void) {
 
 	_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
 	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
+}
 
+void sensors_init_internal(void) {
+	//==-- IMU-MPU6050
+	sensors_init_imu();
 
 	//==-- Calibrations
 	sensors_cal_init();
