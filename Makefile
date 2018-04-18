@@ -232,6 +232,7 @@ flash_$(TARGET): $(TARGET_IMG)
 
 mavlink_bootloader:
 	./lib/scripts/reboot_bootloader --device $(SERIAL_DEVICE) --baudrate $(SERIAL_BAUD)
+	sleep 1
 
 reflash: mavlink_bootloader flash
 

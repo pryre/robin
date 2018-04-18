@@ -1,6 +1,8 @@
-#!/bin/python
+#!/usr/bin/python
 
 #Adapted from: https://discuss.bluerobotics.com/t/sending-mavproxy-messages-from-a-python-program/1515
+
+import os
 
 import time
 from pymavlink import mavutil
@@ -11,11 +13,13 @@ parser = ArgumentParser(description=__doc__)
 parser.add_argument("--baudrate", type=int,
                   help="master port baud rate", default=115200)
 parser.add_argument("--device", required=True, help="serial device")
+parser.add_argument("--sysid", type=int, help="serial device", default=1)
+parser.add_argument("--compid", type=int, help="serial device", default=240)
 args = parser.parse_args()
 
-
+os.environ['MAVLINK20'] = 'True'
 mavutil.set_dialect("common")
-autopilot = mavutil.mavlink_connection(args.device, baud=args.baudrate)
+autopilot = mavutil.mavlink_connection(args.device, baud=args.baudrate, source_system=args.sysid, source_component=args.compid)
 
 # wait for autopilot connection
 msg = None
