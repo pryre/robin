@@ -1,5 +1,5 @@
 # robin
-The ROS Offboard Integration for the Naze32 Rev.5 (or similar Naze32-based board that uses the MPU-6050).
+The ROS Offboard Integration for Naze32-based flight controllers.
 
 ## Preperation
 #### Ubuntu
