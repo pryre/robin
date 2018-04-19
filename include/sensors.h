@@ -189,9 +189,16 @@ typedef struct {
 	sensor_calibration_accel_data_t accel;
 } sensor_calibration_data_t;
 
-extern uint8_t _sensor_calibration;
+typedef struct {
+	uint8_t type;
+	sensor_calibration_data_t data;
+
+	uint8_t req_sysid;
+	uint8_t req_compid;
+} sensor_calibration_t;
+
 extern sensor_readings_t _sensors;
-extern sensor_calibration_data_t _sensor_cal_data;
+extern sensor_calibration_t _sensor_calibration;
 
 // function declarations
 void sensors_init_imu(void);

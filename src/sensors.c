@@ -33,8 +33,7 @@ static int16_t read_gyro_raw[3];
 static volatile int16_t read_temp_raw;
 
 sensor_readings_t _sensors;
-uint8_t _sensor_calibration;
-sensor_calibration_data_t _sensor_cal_data;
+sensor_calibration_t _sensor_calibration;
 
 system_status_t _system_status;
 
@@ -75,35 +74,35 @@ static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
 }
 
 static void sensors_cal_init(void) {
-	_sensor_calibration = SENSOR_CAL_NONE;
+	_sensor_calibration.type = SENSOR_CAL_NONE;
 
-	_sensor_cal_data.gyro.count = 0;
-	_sensor_cal_data.gyro.sum_x = 0;
-	_sensor_cal_data.gyro.sum_y = 0;
-	_sensor_cal_data.gyro.sum_z = 0;
+	_sensor_calibration.data.gyro.count = 0;
+	_sensor_calibration.data.gyro.sum_x = 0;
+	_sensor_calibration.data.gyro.sum_y = 0;
+	_sensor_calibration.data.gyro.sum_z = 0;
 
-	_sensor_cal_data.accel.accel_cal_step = SENSOR_CAL_ACCEL_INIT;
-	_sensor_cal_data.accel.waiting = false;
-	_sensor_cal_data.accel.data.count = 0;
+	_sensor_calibration.data.accel.accel_cal_step = SENSOR_CAL_ACCEL_INIT;
+	_sensor_calibration.data.accel.waiting = false;
+	_sensor_calibration.data.accel.data.count = 0;
 
-	_sensor_cal_data.accel.data.t_sum = 0;
-	_sensor_cal_data.accel.data.x_sum = 0;
-	_sensor_cal_data.accel.data.y_sum = 0;
-	_sensor_cal_data.accel.data.z_sum = 0;
+	_sensor_calibration.data.accel.data.t_sum = 0;
+	_sensor_calibration.data.accel.data.x_sum = 0;
+	_sensor_calibration.data.accel.data.y_sum = 0;
+	_sensor_calibration.data.accel.data.z_sum = 0;
 
-	_sensor_cal_data.accel.data.t_av_sum = 0;
-	_sensor_cal_data.accel.data.x_flat_av_sum = 0;
-	_sensor_cal_data.accel.data.y_flat_av_sum = 0;
-	_sensor_cal_data.accel.data.z_flat_av_sum = 0;
-	_sensor_cal_data.accel.data.x_up_av = 0;
-	_sensor_cal_data.accel.data.x_down_av = 0;
-	_sensor_cal_data.accel.data.y_up_av = 0;
-	_sensor_cal_data.accel.data.y_down_av = 0;
-	_sensor_cal_data.accel.data.z_up_av = 0;
-	_sensor_cal_data.accel.data.z_down_av = 0;
+	_sensor_calibration.data.accel.data.t_av_sum = 0;
+	_sensor_calibration.data.accel.data.x_flat_av_sum = 0;
+	_sensor_calibration.data.accel.data.y_flat_av_sum = 0;
+	_sensor_calibration.data.accel.data.z_flat_av_sum = 0;
+	_sensor_calibration.data.accel.data.x_up_av = 0;
+	_sensor_calibration.data.accel.data.x_down_av = 0;
+	_sensor_calibration.data.accel.data.y_up_av = 0;
+	_sensor_calibration.data.accel.data.y_down_av = 0;
+	_sensor_calibration.data.accel.data.z_up_av = 0;
+	_sensor_calibration.data.accel.data.z_down_av = 0;
 
-	_sensor_cal_data.accel.temp_scale = fix16_from_float(340.0f);
-	_sensor_cal_data.accel.temp_shift = fix16_from_float(36.53f);
+	_sensor_calibration.data.accel.temp_scale = fix16_from_float(340.0f);
+	_sensor_calibration.data.accel.temp_shift = fix16_from_float(36.53f);
 }
 
 void sensors_init_imu(void) {
@@ -113,12 +112,12 @@ void sensors_init_imu(void) {
 	switch(get_param_uint(PARAM_BOARD_REVISION)) {
 		case 5: {
 			//Get the 1g gravity scale (raw->g's)
-			_sensor_cal_data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);
+			_sensor_calibration.data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);
 			break;
 		}
 		case 6: {
 			//Get the 1g gravity scale (raw->g's)
-			_sensor_cal_data.accel.acc1G = mpu6500_init(INV_FSR_8G, INV_FSR_2000DPS);
+			_sensor_calibration.data.accel.acc1G = mpu6500_init(INV_FSR_8G, INV_FSR_2000DPS);
 			break;
 		}
 		default: {
@@ -127,7 +126,7 @@ void sensors_init_imu(void) {
 		}
 	}
 
-	_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_sensor_cal_data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
+	_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_sensor_calibration.data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
 	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 }
 
@@ -273,31 +272,30 @@ uint32_t sensors_clock_imu_int_get(void) {
 static bool sensors_calibrate(void) {
 	bool cal_mode_error = false;
 
-	switch(_sensor_calibration) {
+	switch(_sensor_calibration.type) {
 		case SENSOR_CAL_GYRO: {
-			_sensor_cal_data.gyro.sum_x += _sensors.imu.gyro_raw.x;
-			_sensor_cal_data.gyro.sum_y += _sensors.imu.gyro_raw.y;
-			_sensor_cal_data.gyro.sum_z += _sensors.imu.gyro_raw.z;
+			_sensor_calibration.data.gyro.sum_x += _sensors.imu.gyro_raw.x;
+			_sensor_calibration.data.gyro.sum_y += _sensors.imu.gyro_raw.y;
+			_sensor_calibration.data.gyro.sum_z += _sensors.imu.gyro_raw.z;
 
-			_sensor_cal_data.gyro.count++;
+			_sensor_calibration.data.gyro.count++;
 
-			if (_sensor_cal_data.gyro.count >= get_param_uint(PARAM_CAL_IMU_PASSES)) {
-				set_param_int(PARAM_GYRO_X_BIAS, (_sensor_cal_data.gyro.sum_x / _sensor_cal_data.gyro.count));
-				set_param_int(PARAM_GYRO_Y_BIAS, (_sensor_cal_data.gyro.sum_y / _sensor_cal_data.gyro.count));
-				set_param_int(PARAM_GYRO_Z_BIAS, (_sensor_cal_data.gyro.sum_z / _sensor_cal_data.gyro.count));
+			if (_sensor_calibration.data.gyro.count >= get_param_uint(PARAM_CAL_IMU_PASSES)) {
+				set_param_int(PARAM_GYRO_X_BIAS, (_sensor_calibration.data.gyro.sum_x / _sensor_calibration.data.gyro.count));
+				set_param_int(PARAM_GYRO_Y_BIAS, (_sensor_calibration.data.gyro.sum_y / _sensor_calibration.data.gyro.count));
+				set_param_int(PARAM_GYRO_Z_BIAS, (_sensor_calibration.data.gyro.sum_z / _sensor_calibration.data.gyro.count));
 
-				_sensor_cal_data.gyro.count = 0;
-				_sensor_cal_data.gyro.sum_x = 0;
-				_sensor_cal_data.gyro.sum_y = 0;
-				_sensor_cal_data.gyro.sum_z = 0;
+				_sensor_calibration.data.gyro.count = 0;
+				_sensor_calibration.data.gyro.sum_x = 0;
+				_sensor_calibration.data.gyro.sum_y = 0;
+				_sensor_calibration.data.gyro.sum_z = 0;
 
 				reset_adaptive_gyro_bias();
 
-				_sensor_calibration ^= SENSOR_CAL_GYRO;	//Turn off SENSOR_CAL_GYRO bit
+				_sensor_calibration.type ^= SENSOR_CAL_GYRO;	//Turn off SENSOR_CAL_GYRO bit
 				//TODO: "we could do some sanity checking here if we wanted to."
 
 				mavlink_queue_broadcast_notice("[SENSOR] Gyro calibration complete!");
-				status_buzzer_success();
 			}
 
 			break;
@@ -319,46 +317,46 @@ static bool sensors_calibrate(void) {
 			*/
 			//======== TODO! REMOVE THIS LATER ========//
 
-			_sensor_calibration ^= SENSOR_CAL_MAG;
+			_sensor_calibration.type ^= SENSOR_CAL_MAG;
 
 			break;
 		}
 		case SENSOR_CAL_BARO: {
 			//TODO
-			_sensor_calibration ^= SENSOR_CAL_BARO;
+			_sensor_calibration.type ^= SENSOR_CAL_BARO;
 
 			break;
 		}
 		case SENSOR_CAL_RC: {
 			//TODO
-			_sensor_calibration ^= SENSOR_CAL_RC;
+			_sensor_calibration.type ^= SENSOR_CAL_RC;
 
 			break;
 		}
 		case SENSOR_CAL_ACCEL: {
-			if(!_sensor_cal_data.accel.waiting) {
-				if( _sensor_cal_data.accel.accel_cal_step == SENSOR_CAL_ACCEL_INIT ) {
-					_sensor_cal_data.accel.waiting = true;
-					_sensor_cal_data.accel.accel_cal_step = SENSOR_CAL_ACCEL_Z_DOWN;
+			if(!_sensor_calibration.data.accel.waiting) {
+				if( _sensor_calibration.data.accel.accel_cal_step == SENSOR_CAL_ACCEL_INIT ) {
+					_sensor_calibration.data.accel.waiting = true;
+					_sensor_calibration.data.accel.accel_cal_step = SENSOR_CAL_ACCEL_Z_DOWN;
 					mavlink_queue_broadcast_notice("[SENSOR] Ready for Z-Down, send accel cal");
-				} else if ( _sensor_cal_data.accel.accel_cal_step == SENSOR_CAL_ACCEL_DONE ) {
+				} else if ( _sensor_calibration.data.accel.accel_cal_step == SENSOR_CAL_ACCEL_DONE ) {
 					//==-- bias = sum / count
 					//==-- //TODO: bias = (sum - (temp_comp*temp_sum)) / count
-					int32_t x_bias = _sensor_cal_data.accel.data.x_flat_av_sum / 4;
-					int32_t y_bias = _sensor_cal_data.accel.data.y_flat_av_sum / 4;
-					int32_t z_bias = _sensor_cal_data.accel.data.z_flat_av_sum / 4;
+					int32_t x_bias = _sensor_calibration.data.accel.data.x_flat_av_sum / 4;
+					int32_t y_bias = _sensor_calibration.data.accel.data.y_flat_av_sum / 4;
+					int32_t z_bias = _sensor_calibration.data.accel.data.z_flat_av_sum / 4;
 
 					set_param_int( PARAM_ACC_X_BIAS, x_bias );
 					set_param_int( PARAM_ACC_Y_BIAS, y_bias );
 					set_param_int( PARAM_ACC_Z_BIAS, z_bias );
 
 					//Correct for measurement biases
-					fix16_t accel_x_down_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.x_down_av - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
-					fix16_t accel_y_down_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.y_down_av - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
-					fix16_t accel_z_down_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.z_down_av - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
-					fix16_t accel_x_up_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.x_up_av - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
-					fix16_t accel_y_up_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.y_up_av - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
-					fix16_t accel_z_up_1g = fix16_mul(fix16_from_int(_sensor_cal_data.accel.data.z_up_av - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
+					fix16_t accel_x_down_1g = fix16_mul(fix16_from_int(_sensor_calibration.data.accel.data.x_down_av - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
+					fix16_t accel_y_down_1g = fix16_mul(fix16_from_int(_sensor_calibration.data.accel.data.y_down_av - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
+					fix16_t accel_z_down_1g = fix16_mul(fix16_from_int(_sensor_calibration.data.accel.data.z_down_av - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
+					fix16_t accel_x_up_1g = fix16_mul(fix16_from_int(_sensor_calibration.data.accel.data.x_up_av - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
+					fix16_t accel_y_up_1g = fix16_mul(fix16_from_int(_sensor_calibration.data.accel.data.y_up_av - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
+					fix16_t accel_z_up_1g = fix16_mul(fix16_from_int(_sensor_calibration.data.accel.data.z_up_av - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
 
 					set_param_fix16( PARAM_ACC_X_SCALE_POS, fix16_div( _fc_gravity, accel_x_down_1g ) );
 					set_param_fix16( PARAM_ACC_Y_SCALE_POS, fix16_div( _fc_gravity, accel_y_down_1g ) );
@@ -367,82 +365,82 @@ static bool sensors_calibrate(void) {
 					set_param_fix16( PARAM_ACC_Y_SCALE_NEG, fix16_div( -_fc_gravity, accel_y_up_1g ) );
 					set_param_fix16( PARAM_ACC_Z_SCALE_NEG, fix16_div( -_fc_gravity, accel_z_up_1g ) );
 
-					_sensor_calibration ^= SENSOR_CAL_ACCEL;	//Turn off SENSOR_CAL_ACCEL bit
+					_sensor_calibration.type ^= SENSOR_CAL_ACCEL;	//Turn off SENSOR_CAL_ACCEL bit
 					//TODO: "we could do some sanity checking here if we wanted to."
 
 					mavlink_queue_broadcast_notice("[SENSOR] Accel calibration complete!");
 				} else {
-					_sensor_cal_data.accel.data.t_sum += _sensors.imu.temp_raw;
-					_sensor_cal_data.accel.data.x_sum += _sensors.imu.accel_raw.x;
-					_sensor_cal_data.accel.data.y_sum += _sensors.imu.accel_raw.y;
-					_sensor_cal_data.accel.data.z_sum += _sensors.imu.accel_raw.z;
+					_sensor_calibration.data.accel.data.t_sum += _sensors.imu.temp_raw;
+					_sensor_calibration.data.accel.data.x_sum += _sensors.imu.accel_raw.x;
+					_sensor_calibration.data.accel.data.y_sum += _sensors.imu.accel_raw.y;
+					_sensor_calibration.data.accel.data.z_sum += _sensors.imu.accel_raw.z;
 
-					_sensor_cal_data.accel.data.count++;
+					_sensor_calibration.data.accel.data.count++;
 
-					if (_sensor_cal_data.accel.data.count >= get_param_uint(PARAM_CAL_IMU_PASSES)) {
-						switch(_sensor_cal_data.accel.accel_cal_step) {
+					if (_sensor_calibration.data.accel.data.count >= get_param_uint(PARAM_CAL_IMU_PASSES)) {
+						switch(_sensor_calibration.data.accel.accel_cal_step) {
 							case SENSOR_CAL_ACCEL_Z_DOWN: {
-								_sensor_cal_data.accel.data.t_av_sum += _sensor_cal_data.accel.data.t_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.x_flat_av_sum += _sensor_cal_data.accel.data.x_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.y_flat_av_sum += _sensor_cal_data.accel.data.y_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.z_down_av = _sensor_cal_data.accel.data.z_sum / _sensor_cal_data.accel.data.count;
+								_sensor_calibration.data.accel.data.t_av_sum += _sensor_calibration.data.accel.data.t_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.x_flat_av_sum += _sensor_calibration.data.accel.data.x_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.y_flat_av_sum += _sensor_calibration.data.accel.data.y_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.z_down_av = _sensor_calibration.data.accel.data.z_sum / _sensor_calibration.data.accel.data.count;
 
-								_sensor_cal_data.accel.accel_cal_step = SENSOR_CAL_ACCEL_Z_UP;
+								_sensor_calibration.data.accel.accel_cal_step = SENSOR_CAL_ACCEL_Z_UP;
 								mavlink_queue_broadcast_notice("[SENSOR] Ready for Z-Up, send accel cal");
 
 								break;
 							}
 							case SENSOR_CAL_ACCEL_Z_UP: {
-								_sensor_cal_data.accel.data.t_av_sum += _sensor_cal_data.accel.data.t_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.x_flat_av_sum += _sensor_cal_data.accel.data.x_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.y_flat_av_sum += _sensor_cal_data.accel.data.y_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.z_up_av = _sensor_cal_data.accel.data.z_sum / _sensor_cal_data.accel.data.count;
+								_sensor_calibration.data.accel.data.t_av_sum += _sensor_calibration.data.accel.data.t_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.x_flat_av_sum += _sensor_calibration.data.accel.data.x_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.y_flat_av_sum += _sensor_calibration.data.accel.data.y_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.z_up_av = _sensor_calibration.data.accel.data.z_sum / _sensor_calibration.data.accel.data.count;
 
-								_sensor_cal_data.accel.accel_cal_step = SENSOR_CAL_ACCEL_Y_DOWN;
+								_sensor_calibration.data.accel.accel_cal_step = SENSOR_CAL_ACCEL_Y_DOWN;
 								mavlink_queue_broadcast_notice("[SENSOR] Ready for Y-Down, send accel cal");
 
 								break;
 							}
 							case SENSOR_CAL_ACCEL_Y_DOWN: {
-								_sensor_cal_data.accel.data.t_av_sum += _sensor_cal_data.accel.data.t_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.x_flat_av_sum += _sensor_cal_data.accel.data.x_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.y_down_av = _sensor_cal_data.accel.data.y_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.z_flat_av_sum += _sensor_cal_data.accel.data.z_sum / _sensor_cal_data.accel.data.count;
+								_sensor_calibration.data.accel.data.t_av_sum += _sensor_calibration.data.accel.data.t_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.x_flat_av_sum += _sensor_calibration.data.accel.data.x_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.y_down_av = _sensor_calibration.data.accel.data.y_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.z_flat_av_sum += _sensor_calibration.data.accel.data.z_sum / _sensor_calibration.data.accel.data.count;
 
-								_sensor_cal_data.accel.accel_cal_step = SENSOR_CAL_ACCEL_Y_UP;
+								_sensor_calibration.data.accel.accel_cal_step = SENSOR_CAL_ACCEL_Y_UP;
 								mavlink_queue_broadcast_notice("[SENSOR] Ready for Y-Up, send accel cal");
-
+								
 								break;
 							}
 							case SENSOR_CAL_ACCEL_Y_UP: {
-								_sensor_cal_data.accel.data.t_av_sum += _sensor_cal_data.accel.data.t_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.x_flat_av_sum += _sensor_cal_data.accel.data.x_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.y_up_av = _sensor_cal_data.accel.data.y_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.z_flat_av_sum += _sensor_cal_data.accel.data.z_sum / _sensor_cal_data.accel.data.count;
+								_sensor_calibration.data.accel.data.t_av_sum += _sensor_calibration.data.accel.data.t_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.x_flat_av_sum += _sensor_calibration.data.accel.data.x_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.y_up_av = _sensor_calibration.data.accel.data.y_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.z_flat_av_sum += _sensor_calibration.data.accel.data.z_sum / _sensor_calibration.data.accel.data.count;
 
-								_sensor_cal_data.accel.accel_cal_step = SENSOR_CAL_ACCEL_X_DOWN;
+								_sensor_calibration.data.accel.accel_cal_step = SENSOR_CAL_ACCEL_X_DOWN;
 								mavlink_queue_broadcast_notice("[SENSOR] Ready for X-Down, send accel cal");
 
 								break;
 							}
 							case SENSOR_CAL_ACCEL_X_DOWN: {
-								_sensor_cal_data.accel.data.t_av_sum += _sensor_cal_data.accel.data.t_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.x_down_av = _sensor_cal_data.accel.data.x_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.y_flat_av_sum += _sensor_cal_data.accel.data.y_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.z_flat_av_sum += _sensor_cal_data.accel.data.z_sum / _sensor_cal_data.accel.data.count;
+								_sensor_calibration.data.accel.data.t_av_sum += _sensor_calibration.data.accel.data.t_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.x_down_av = _sensor_calibration.data.accel.data.x_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.y_flat_av_sum += _sensor_calibration.data.accel.data.y_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.z_flat_av_sum += _sensor_calibration.data.accel.data.z_sum / _sensor_calibration.data.accel.data.count;
 
-								_sensor_cal_data.accel.accel_cal_step = SENSOR_CAL_ACCEL_X_UP;
+								_sensor_calibration.data.accel.accel_cal_step = SENSOR_CAL_ACCEL_X_UP;
 								mavlink_queue_broadcast_notice("[SENSOR] Ready for X-Up, send accel cal");
-
+								
 								break;
 							}
 							case SENSOR_CAL_ACCEL_X_UP: {
-								_sensor_cal_data.accel.data.t_av_sum += _sensor_cal_data.accel.data.t_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.x_up_av = _sensor_cal_data.accel.data.x_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.y_flat_av_sum += _sensor_cal_data.accel.data.y_sum / _sensor_cal_data.accel.data.count;
-								_sensor_cal_data.accel.data.z_flat_av_sum += _sensor_cal_data.accel.data.z_sum / _sensor_cal_data.accel.data.count;
+								_sensor_calibration.data.accel.data.t_av_sum += _sensor_calibration.data.accel.data.t_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.x_up_av = _sensor_calibration.data.accel.data.x_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.y_flat_av_sum += _sensor_calibration.data.accel.data.y_sum / _sensor_calibration.data.accel.data.count;
+								_sensor_calibration.data.accel.data.z_flat_av_sum += _sensor_calibration.data.accel.data.z_sum / _sensor_calibration.data.accel.data.count;
 
-								_sensor_cal_data.accel.accel_cal_step = SENSOR_CAL_ACCEL_DONE;
+								_sensor_calibration.data.accel.accel_cal_step = SENSOR_CAL_ACCEL_DONE;
 
 								break;
 							}
@@ -450,23 +448,31 @@ static bool sensors_calibrate(void) {
 								mavlink_queue_broadcast_error("[SENSOR] Issue with accel cal, aborting");
 								sensors_cal_init();
 								cal_mode_error = true;
-								status_buzzer_failure();
 								break;
 							}
 						}
+						
+						mavlink_message_t msg;
+						mavlink_prepare_command_ack(&msg,
+													MAV_CMD_PREFLIGHT_CALIBRATION,
+													MAV_RESULT_IN_PROGRESS,
+													_sensor_calibration.req_sysid,
+													_sensor_calibration.req_compid,
+													_sensor_calibration.data.accel.accel_cal_step / SENSOR_CAL_ACCEL_DONE);
+						lpq_queue_broadcast_msg(&msg);
 
 						status_buzzer_success();
 
 						//Reset for the next calibration
-						_sensor_cal_data.accel.data.count = 0;
-						_sensor_cal_data.accel.data.x_sum = 0;
-						_sensor_cal_data.accel.data.y_sum = 0;
-						_sensor_cal_data.accel.data.z_sum = 0;
-						_sensor_cal_data.accel.data.t_sum = 0;
+						_sensor_calibration.data.accel.data.count = 0;
+						_sensor_calibration.data.accel.data.x_sum = 0;
+						_sensor_calibration.data.accel.data.y_sum = 0;
+						_sensor_calibration.data.accel.data.z_sum = 0;
+						_sensor_calibration.data.accel.data.t_sum = 0;
 
 						//Make sure we wait for confirmation before continuing
-						if(_sensor_cal_data.accel.accel_cal_step != SENSOR_CAL_ACCEL_DONE)
-							_sensor_cal_data.accel.waiting = true;
+						if(_sensor_calibration.data.accel.accel_cal_step != SENSOR_CAL_ACCEL_DONE)
+							_sensor_calibration.data.accel.waiting = true;
 					}
 				}
 			}
@@ -475,7 +481,7 @@ static bool sensors_calibrate(void) {
 		}
 		case SENSOR_CAL_INTER: {
 			//TODO
-			_sensor_calibration ^= SENSOR_CAL_INTER;
+			_sensor_calibration.type ^= SENSOR_CAL_INTER;
 
 			break;
 		}
@@ -489,13 +495,23 @@ static bool sensors_calibrate(void) {
 	}
 
 	//If there are no longer any sensors to calibrate
-	if( !cal_mode_error && (_sensor_calibration == SENSOR_CAL_NONE ) ) {
+	if( _sensor_calibration.type == SENSOR_CAL_NONE ) {
 		mavlink_message_t msg;
-		mavlink_prepare_command_ack(&msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_ACCEPTED);
+
+		if(cal_mode_error) {
+			//Send a message saying that it has failed
+			mavlink_prepare_command_ack(&msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_FAILED, _sensor_calibration.req_sysid, _sensor_calibration.req_compid, 0xFF);
+			status_buzzer_failure();
+		} else {
+			//Send a message saying that it has completed 100%
+			mavlink_prepare_command_ack(&msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_IN_PROGRESS, _sensor_calibration.req_sysid, _sensor_calibration.req_compid, 100);
+			status_buzzer_success();
+		}
+		
 		lpq_queue_broadcast_msg(&msg);
 	}
 
-	return !_sensor_calibration;
+	return !_sensor_calibration.type;
 }
 
 bool sensors_update(uint32_t time_us) {
@@ -507,7 +523,7 @@ bool sensors_update(uint32_t time_us) {
 
 	//Temperature in degC
 	// value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
-	_sensors.imu.temperature = fix16_add(fix16_div(fix16_from_int(_sensors.imu.temp_raw), _sensor_cal_data.accel.temp_scale), _sensor_cal_data.accel.temp_shift);
+	_sensors.imu.temperature = fix16_add(fix16_div(fix16_from_int(_sensors.imu.temp_raw), _sensor_calibration.data.accel.temp_scale), _sensor_calibration.data.accel.temp_shift);
 
 	//Accel
 	//TODO: value = (raw - BIAS - (EMP_COMP * TEMP)) * scale

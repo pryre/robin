@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 uint8_t _system_operation_control;
-uint8_t _sensor_calibration;
+sensor_calibration_t _sensor_calibration;
 mavlink_queue_t _lpq_port_0;
 //XXX: mavlink_queue_t _lpq_port_1;
 
@@ -29,10 +29,14 @@ static void communication_decode(uint8_t port, uint8_t c) {
 	if(mavlink_parse_char(port, c, &msg, &status)) {
 		if( ( !get_param_uint(PARAM_STRICT_GCS_MATCH) ) ||
 		    ( (msg.sysid == _mavlink_gcs.sysid) && (msg.compid == _mavlink_gcs.compid) ) ) {
-			//If we detected a mavlink v2 status from GCS, switch
-			if( !(status.flags & MAVLINK_STATUS_FLAG_IN_MAVLINK1) )
+			//XXX: This may happen automatically in the MAVLINK backend
+			//If we detected a mavlink v2 status from GCS, and we're still in v1, switch
+			if( ( !(mavlink_get_channel_status(port)->flags & MAVLINK_STATUS_FLAG_IN_MAVLINK1) ) &&
+				( mavlink_get_channel_status(port)->flags & MAVLINK_STATUS_FLAG_OUT_MAVLINK1 ) ) {
 				mavlink_set_proto_version(port, 2);
-				
+				mavlink_queue_broadcast_notice("[COMMS] Switching to MAVLINKv2");
+			}
+
 			// Handle message
 			switch(msg.msgid) {
 				case MAVLINK_MSG_ID_HEARTBEAT: {
@@ -169,25 +173,28 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					switch(command) {
 						case MAV_CMD_PREFLIGHT_CALIBRATION: {
 							if(_system_status.state == MAV_STATE_CALIBRATING) {	//XXX: Only allow one calibration request at a time
-								if( (int)mavlink_msg_command_long_get_param5(&msg) && ( _sensor_calibration == SENSOR_CAL_ACCEL ) ) {
-									_sensor_cal_data.accel.waiting = false;
+								if( (int)mavlink_msg_command_long_get_param5(&msg) && ( _sensor_calibration.type == SENSOR_CAL_ACCEL ) ) {
+									_sensor_calibration.data.accel.waiting = false;
 									command_result = MAV_RESULT_ACCEPTED;
 								} else {
 									command_result = MAV_RESULT_TEMPORARILY_REJECTED;
 								}
-							} else if( safety_request_state( MAV_STATE_CALIBRATING ) && ( _sensor_calibration == SENSOR_CAL_NONE ) ) { //TODO: Note about only doing 1 calibration at a time
+							} else if( safety_request_state( MAV_STATE_CALIBRATING ) && ( _sensor_calibration.type == SENSOR_CAL_NONE ) ) { //TODO: Note about only doing 1 calibration at a time
+								_sensor_calibration.req_sysid = msg.sysid;
+								_sensor_calibration.req_compid = msg.compid;
+
 								if( (int)mavlink_msg_command_long_get_param1(&msg) ) {
-									_sensor_calibration |= SENSOR_CAL_GYRO;
+									_sensor_calibration.type |= SENSOR_CAL_GYRO;
 								} else 	if( (int)mavlink_msg_command_long_get_param2(&msg) ) {
-									_sensor_calibration |= SENSOR_CAL_MAG;
+									_sensor_calibration.type |= SENSOR_CAL_MAG;
 								} else if( (int)mavlink_msg_command_long_get_param3(&msg) ) {
-									_sensor_calibration |= SENSOR_CAL_BARO;
+									_sensor_calibration.type |= SENSOR_CAL_BARO;
 								} else if( (int)mavlink_msg_command_long_get_param4(&msg) ) {
-									_sensor_calibration |= SENSOR_CAL_RC;
+									_sensor_calibration.type |= SENSOR_CAL_RC;
 								} else if( (int)mavlink_msg_command_long_get_param5(&msg) ) {
-									_sensor_calibration |= SENSOR_CAL_ACCEL;
+									_sensor_calibration.type |= SENSOR_CAL_ACCEL;
 								} else if( (int)mavlink_msg_command_long_get_param6(&msg) ) {
-									_sensor_calibration |= SENSOR_CAL_INTER;
+									_sensor_calibration.type |= SENSOR_CAL_INTER;
 								}	//TODO: Make sure these are all up to date (some have different values now!)
 
 								command_result = MAV_RESULT_ACCEPTED;
@@ -200,14 +207,19 @@ static void communication_decode(uint8_t port, uint8_t c) {
 							break;
 						}
 						case MAV_CMD_REQUEST_PROTOCOL_VERSION: {
-							mavlink_set_proto_version(port, 2);
-							
-							mavlink_message_t msg_out;
-							mavlink_prepare_protocol_version(&msg_out);
-							lpq_queue_msg(port, &msg_out);
-							
-							need_ack = true;
-							
+							uint8_t ver = mavlink_get_proto_version(port);
+							mavlink_set_proto_version(port, 2);	//Switch to v2
+
+							const uint8_t blank_array[8] = {0,0,0,0,0,0,0,0};
+							mavlink_msg_protocol_version_send(port,
+															  MAVLINK_VERSION_MAX,
+															  MAVLINK_VERSION_MIN,
+															  MAVLINK_VERSION_MAX,
+															  &blank_array[0],
+															  (uint8_t*)GIT_VERSION_MAVLINK_STR);
+
+							mavlink_set_proto_version(port, ver); //Switch back
+
 							break;
 						}
 						case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES: {
@@ -236,12 +248,12 @@ static void communication_decode(uint8_t port, uint8_t c) {
 										} else {
 											command_result = MAV_RESULT_FAILED;
 										}
-										
+
 										//XXX
-										//Reinit imu as writing EEPROM messes up the callback										
+										//Reinit imu as writing EEPROM messes up the callback
 										sensors_init_imu();
 										//XXX
-											
+
 										break;
 									case 2:		//Reset to defaults
 										set_param_defaults();
@@ -265,16 +277,16 @@ static void communication_decode(uint8_t port, uint8_t c) {
 								switch( (int)mavlink_msg_command_long_get_param1(&msg) ) {
 									case 1:
 										mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[SAFETY] Performing system reset!");
-
-										delay(500);
+										mavlink_msg_command_ack_send(port, MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN, MAV_RESULT_ACCEPTED, 0xFF, 0xFF, msg.sysid, msg.compid);
+										delay(500);	//XXX: Give a few moments for the comms to send
 
 										systemReset();
 
 										break;
 									case 3:
 										mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[SAFETY] Entering bootloader mode!");
-
-										delay(500);
+										mavlink_msg_command_ack_send(port, MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN, MAV_RESULT_ACCEPTED, 0xFF, 0xFF, msg.sysid, msg.compid);
+										delay(500);	//XXX: Give a few moments for the comms to send
 
 										systemResetToBootloader();
 
@@ -314,7 +326,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 					if(need_ack) {
 						mavlink_message_t msg_out;
-						mavlink_prepare_command_ack(&msg_out, command, command_result);
+						mavlink_prepare_command_ack(&msg_out, command, command_result, msg.sysid, msg.compid, 0xFF);
 						lpq_queue_msg(port, &msg_out);
 
 						if( command_result == MAV_RESULT_ACCEPTED ) {

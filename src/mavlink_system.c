@@ -562,13 +562,13 @@ void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 }
 
 //Sends a command acknowledgement
-void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result) {
+void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result, uint8_t sender_sysid, uint8_t sender_compid, uint8_t progress) {
 	mavlink_msg_command_ack_pack(mavlink_system.sysid,
 								 mavlink_system.compid,
 								 msg,
 								 command,
 								 result,
-								 0xff, 0xff, _mavlink_gcs.sysid, _mavlink_gcs.compid);
+								 progress, 0xff, sender_sysid, sender_compid);
 }
 
 //Sends the requested parameter

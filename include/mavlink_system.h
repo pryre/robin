@@ -91,7 +91,7 @@ void mavlink_queue_broadcast_error(char* text);
 void mavlink_prepare_protocol_version(mavlink_message_t *msg);
 void mavlink_prepare_autopilot_version(mavlink_message_t *msg);
 
-void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result);
+void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result, uint8_t sender_sysid, uint8_t sender_compid, uint8_t progress);
 void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index);
 void mavlink_prepare_statustext(mavlink_message_t *msg, uint8_t severity, char* text);
 void mavlink_prepare_debug(mavlink_message_t *msg, uint32_t stamp, uint8_t index, uint32_t value);
