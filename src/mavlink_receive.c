@@ -32,7 +32,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 			//XXX: This may happen automatically in the MAVLINK backend
 			//If we detected a mavlink v2 status from GCS, and we're still in v1, switch
 			if( ( !(mavlink_get_channel_status(port)->flags & MAVLINK_STATUS_FLAG_IN_MAVLINK1) ) &&
-				( mavlink_get_channel_status(port)->flags & MAVLINK_STATUS_FLAG_OUT_MAVLINK1 ) ) {
+				( mavlink_get_proto_version(port) == 1) ) {
 				mavlink_set_proto_version(port, 2);
 				mavlink_queue_broadcast_notice("[COMMS] Switching to MAVLINKv2");
 			}
