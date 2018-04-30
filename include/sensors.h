@@ -8,6 +8,29 @@
 #include "fix16.h"
 #include "breezystm32.h"
 
+//XXX: Defined in MAV_CMD_PREFLIGHT_CALIBRATION
+//Param1
+#define SENSOR_CAL_CMD_GYRO 1
+#define SENSOR_CAL_CMD_GYRO_TEMP 3
+//Param2
+#define SENSOR_CAL_CMD_MAG 1
+//Param3
+#define SENSOR_CAL_CMD_PRESSURE_GND 1
+//Param4
+#define SENSOR_CAL_CMD_RC 1
+#define SENSOR_CAL_CMD_RC_TRIM 2
+//Param5
+#define SENSOR_CAL_CMD_ACCEL 1
+#define SENSOR_CAL_CMD_ACCEL_LEVEL 2
+#define SENSOR_CAL_CMD_ACCEL_TEMP 3
+#define SENSOR_CAL_CMD_ACCEL_SIMPLE 4
+//Param6
+#define SENSOR_CAL_CMD_COMPASS_MOTOR 1
+#define SENSOR_CAL_CMD_AIRPSEED 2
+//Param7
+#define SENSOR_CAL_CMD_ESC 1
+#define SENSOR_CAL_CMD_BAROMETER 3
+
 typedef struct {
 	bool present;		//If the sensor is plugged in or not
 	bool new_data;	//If there is new data ready

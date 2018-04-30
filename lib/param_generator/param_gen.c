@@ -116,8 +116,8 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_DO_ESC_CAL, 0);
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, fix16_from_float(0.25f));
 	init_param_uint(PARAM_THROTTLE_TIMEOUT, 10000000);
-	init_param_uint(PARAM_MIXER, 0);
 	init_param_uint(PARAM_MAV_TYPE, 0);
+	init_param_uint(PARAM_MIXER, 0);
 	init_param_uint(PARAM_RESET_PARAMS, 0);
 }
 
@@ -231,8 +231,8 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"DO_ESC_CAL",
 	"FAILSAFE_THRTL",
 	"TIMEOUT_THRTL",
-	"SYS_AUTOSTART",
 	"MAV_TYPE",
+	"SYS_AUTOSTART",
 	"SYS_AUTOCONFIG",
 };
 

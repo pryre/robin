@@ -301,34 +301,19 @@ static bool sensors_calibrate(void) {
 			break;
 		}
 		case SENSOR_CAL_MAG: {
-			//TODO
-
-			//======== TODO! REMOVE THIS LATER ========//
-			/*
-			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-			snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[CAL]:%0.4f,%0.4f,%0.4f,%0.4f,%0.4f,%0.4f",
-					 fix16_to_float(_sensors.imu.accel.x),
-					 fix16_to_float(_sensors.imu.accel.y),
-					 fix16_to_float(_sensors.imu.accel.z),
-					 fix16_to_float(_sensors.imu.gyro.x),
-					 fix16_to_float(_sensors.imu.gyro.y),
-					 fix16_to_float(_sensors.imu.gyro.z));
-			mavlink_queue_broadcast_error(text);
-			*/
-			//======== TODO! REMOVE THIS LATER ========//
-
+			//TODO CAL MAG
 			_sensor_calibration.type ^= SENSOR_CAL_MAG;
 
 			break;
 		}
 		case SENSOR_CAL_BARO: {
-			//TODO
+			//TODO: CAL BARO
 			_sensor_calibration.type ^= SENSOR_CAL_BARO;
 
 			break;
 		}
 		case SENSOR_CAL_RC: {
-			//TODO
+			//TODO: CAL RC
 			_sensor_calibration.type ^= SENSOR_CAL_RC;
 
 			break;
@@ -409,7 +394,7 @@ static bool sensors_calibrate(void) {
 
 								_sensor_calibration.data.accel.accel_cal_step = SENSOR_CAL_ACCEL_Y_UP;
 								mavlink_queue_broadcast_notice("[SENSOR] Ready for Y-Up, send accel cal");
-								
+
 								break;
 							}
 							case SENSOR_CAL_ACCEL_Y_UP: {
@@ -431,7 +416,7 @@ static bool sensors_calibrate(void) {
 
 								_sensor_calibration.data.accel.accel_cal_step = SENSOR_CAL_ACCEL_X_UP;
 								mavlink_queue_broadcast_notice("[SENSOR] Ready for X-Up, send accel cal");
-								
+
 								break;
 							}
 							case SENSOR_CAL_ACCEL_X_UP: {
@@ -451,7 +436,7 @@ static bool sensors_calibrate(void) {
 								break;
 							}
 						}
-						
+
 						mavlink_message_t msg;
 						mavlink_prepare_command_ack(&msg,
 													MAV_CMD_PREFLIGHT_CALIBRATION,
@@ -507,7 +492,7 @@ static bool sensors_calibrate(void) {
 			mavlink_prepare_command_ack(&msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_IN_PROGRESS, _sensor_calibration.req_sysid, _sensor_calibration.req_compid, 100);
 			status_buzzer_success();
 		}
-		
+
 		lpq_queue_broadcast_msg(&msg);
 	}
 

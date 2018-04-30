@@ -179,23 +179,50 @@ static void communication_decode(uint8_t port, uint8_t c) {
 								} else {
 									command_result = MAV_RESULT_TEMPORARILY_REJECTED;
 								}
-							} else if( safety_request_state( MAV_STATE_CALIBRATING ) && ( _sensor_calibration.type == SENSOR_CAL_NONE ) ) { //TODO: Note about only doing 1 calibration at a time
+							} else if( safety_request_state( MAV_STATE_CALIBRATING ) && ( _sensor_calibration.type == SENSOR_CAL_NONE ) ) {
 								_sensor_calibration.req_sysid = msg.sysid;
 								_sensor_calibration.req_compid = msg.compid;
+								//Param6
+								#define SENSOR_CAL_CMD_COMPASS_MOTOR 1
+								#define SENSOR_CAL_CMD_AIRPSEED 2
+								//Param7
+								#define SENSOR_CAL_CMD_ESC 1
+								#define SENSOR_CAL_CMD_BAROMETER 3
 
-								if( (int)mavlink_msg_command_long_get_param1(&msg) ) {
+								if( (int)mavlink_msg_command_long_get_param1(&msg) == SENSOR_CAL_CMD_GYRO ) {
 									_sensor_calibration.type |= SENSOR_CAL_GYRO;
-								} else 	if( (int)mavlink_msg_command_long_get_param2(&msg) ) {
+								//XXX: } else if( (int)mavlink_msg_command_long_get_param1(&msg) == SENSOR_CAL_CMD_GYRO_TEMP ) {
+								//XXX: TODO: GYRO TEMP
+								} else if( (int)mavlink_msg_command_long_get_param2(&msg) == SENSOR_CAL_CMD_MAG ) {
 									_sensor_calibration.type |= SENSOR_CAL_MAG;
-								} else if( (int)mavlink_msg_command_long_get_param3(&msg) ) {
+								} else if( (int)mavlink_msg_command_long_get_param3(&msg) == SENSOR_CAL_CMD_PRESSURE_GND) {
 									_sensor_calibration.type |= SENSOR_CAL_BARO;
-								} else if( (int)mavlink_msg_command_long_get_param4(&msg) ) {
+								} else if( (int)mavlink_msg_command_long_get_param4(&msg) == SENSOR_CAL_CMD_RC ) {
 									_sensor_calibration.type |= SENSOR_CAL_RC;
-								} else if( (int)mavlink_msg_command_long_get_param5(&msg) ) {
+								//XXX: } else if( (int)mavlink_msg_command_long_get_param4(&msg) == SENSOR_CAL_CMD_RC_TRIM ) {
+								//XXX: TODO: RC TRIM
+								} else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL ) {
 									_sensor_calibration.type |= SENSOR_CAL_ACCEL;
-								} else if( (int)mavlink_msg_command_long_get_param6(&msg) ) {
+								//XXX: } else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL_LEVEL ) {
+								//XXX: TODO: ACCEL LEVEL
+								//XXX: } else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL_TEMP ) {
+								//XXX: TODO: ACCEL TEMP
+								} else if( (int)mavlink_msg_command_long_get_param6(&msg) == SENSOR_CAL_CMD_COMPASS_MOTOR ) {
 									_sensor_calibration.type |= SENSOR_CAL_INTER;
-								}	//TODO: Make sure these are all up to date (some have different values now!)
+								//XXX:} else if( (int)mavlink_msg_command_long_get_param6(&msg) == SENSOR_CAL_CMD_AIRPSEED ) {
+								//XXX: TODO: Airpspeed?
+								} else if( (int)mavlink_msg_command_long_get_param7(&msg) == SENSOR_CAL_CMD_ESC ) {
+									set_param_uint( PARAM_DO_ESC_CAL, 1 );
+									if( write_params() ) {
+										mavlink_queue_broadcast_notice("[SENSOR] ESC cal will be run next reboot");
+									} else {
+										mavlink_queue_broadcast_error("[SENSOR] Failed to configure ESC cal!");
+									}
+								//XXX:} else if( (int)mavlink_msg_command_long_get_param7(&msg) == SENSOR_CAL_CMD_BAROMETER ) {
+								//XXX: TODO: BARO
+								}
+
+								//XXX: MAV_STATE_CALIBRATING is cleaned in the sensor loop
 
 								command_result = MAV_RESULT_ACCEPTED;
 							} else {	//We send the denied immidiately if we can't do it now

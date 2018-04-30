@@ -1196,20 +1196,20 @@ PARAM_THROTTLE_TIMEOUT:
     default: 10000000
     unit: "us"
 ---
-PARAM_MIXER:
-  type: "uint"
-  name: "SYS_AUTOSTART"
-  description: "Mixer type to use (see mixer_type_t enum)"
-  reboot: true
-  value:
-    option: "scalar"
-    default: 0
----
 PARAM_MAV_TYPE:
   type: "uint"
   name: "MAV_TYPE"
   description: "Convenience parameter, this is over-ridden during mixer selection on startup"
   reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_MIXER:
+  type: "uint"
+  name: "SYS_AUTOSTART"
+  description: "Mixer type to use (see mixer_type_t enum)"
+  reboot: true
   value:
     option: "scalar"
     default: 0

@@ -110,7 +110,7 @@ void pwm_init() {
 		LED0_OFF;
 		LED1_OFF;
 
-		set_param_uint( PARAM_DO_ESC_CAL, 0);
+		set_param_uint( PARAM_DO_ESC_CAL, 0 );
 
 		write_params();
 	}

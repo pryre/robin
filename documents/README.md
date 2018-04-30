@@ -4,6 +4,7 @@ Here you can find the current list of documentation:
 - [Interfacing](INTERFACING.md)
 - [Parameters](PARAMETERS.md)
 - [Calibration](CALIBRATION.md)
+- [Supported Mixers](MIXER.md)
 - [Bundled Tools](TOOLS.md)
 - [Miscellaneous](OTHER.md)
 
