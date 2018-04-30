@@ -309,6 +309,9 @@ void param_change_callback(param_id_t id) {
 			pid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));
 			pid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));
 			break;
+		case PARAM_MIXER:
+			write_params();
+			break;
 		default:
 			//No action needed for this param ID
 			break;

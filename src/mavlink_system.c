@@ -85,8 +85,8 @@ void communications_system_init(void) {
 
 	//XXX: for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++)
 	//XXX: 	communication_calc_period_update(COMM_CH_1, i);
-	
-	
+
+
 	mavlink_set_proto_version(MAVLINK_COMM_0, 1);
 	//XXX: mavlink_set_proto_version(MAVLINK_COMM_1, 1);
 }

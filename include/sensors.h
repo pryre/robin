@@ -227,6 +227,7 @@ extern sensor_calibration_t _sensor_calibration;
 void sensors_init_imu(void);
 void sensors_init_internal(void);
 void sensors_init_external(void);
+void sensors_cal_init(void);
 bool sensors_read(void);
 
 //void sensors_poll(void);

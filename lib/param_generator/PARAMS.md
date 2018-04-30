@@ -112,5 +112,5 @@ DO_ESC_CAL | uint | When set to true, a motor calibration will be performed on t
 FAILSAFE_THRTL | float | Throttle percentage output when in failsafe mode | 0.25 |  | scalar | False
 TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed | 10000000 | us | scalar | False
 MAV_TYPE | uint | Convenience parameter, this is over-ridden during mixer selection on startup | 0 |  | scalar | False
-SYS_AUTOSTART | uint | Mixer type to use (see mixer_type_t enum) | 0 |  | scalar | True
+SYS_AUTOSTART | uint | Mixer type to use (see mixer_type_t enum) [and write params imidiately to survive qgcs reboot] | 0 |  | scalar | True
 SYS_AUTOCONFIG | uint | Tells the system to reset all parameters to default on next boot | 0 |  | scalar | True

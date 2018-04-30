@@ -59,11 +59,7 @@ void controller_init(void) {
 			 get_param_fix16(PARAM_PID_ROLL_RATE_D),
 			 get_param_fix16(PARAM_PID_TAU),
 			 _state_estimator.p,
-			 0,
-			 0,
-			 0,
-			 -get_param_fix16(PARAM_MAX_ROLL_RATE),
-			 get_param_fix16(PARAM_MAX_ROLL_RATE));	//TODO: This should be something else, percentage throttle maybe?
+			 0, 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
 
 	pid_init(&_pid_pitch_rate,
 			 get_param_fix16(PARAM_PID_PITCH_RATE_P),
@@ -71,11 +67,7 @@ void controller_init(void) {
 			 get_param_fix16(PARAM_PID_PITCH_RATE_D),
 			 get_param_fix16(PARAM_PID_TAU),
 			 _state_estimator.q,
-			 0,
-			 0,
-			 0,
-			 -get_param_fix16(PARAM_MAX_PITCH_RATE),
-			 get_param_fix16(PARAM_MAX_PITCH_RATE));	//TODO: This should be something else, percentage throttle maybe?
+			 0, 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
 
 	pid_init(&_pid_yaw_rate,
 			 get_param_fix16(PARAM_PID_YAW_RATE_P),
@@ -83,11 +75,7 @@ void controller_init(void) {
 			 get_param_fix16(PARAM_PID_YAW_RATE_D),
 			 get_param_fix16(PARAM_PID_TAU),
 			 _state_estimator.r,
-			 0,
-			 0,
-			 0,
-			 -get_param_fix16(PARAM_MAX_YAW_RATE),
-			 get_param_fix16(PARAM_MAX_YAW_RATE));	//TODO: This should be something else, percentage throttle maybe?
+			 0, 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
 
 	_command_input.r = 0;
 	_command_input.p = 0;
@@ -310,161 +298,11 @@ void controller_run( uint32_t time_now ) {
 		//Because of this, if there is a control request to override a specic
 		// rotation body, and tell it that
 		// we assume that the attitude message sent up was in the body frame
-
-		/*
-		mf16 rot_mat_b;
-		mf16 rot_mat_c;
-		qf16_to_matrix(&rot_mat_b, &_state_estimator.attitude);
-		qf16_to_matrix(&rot_mat_c, &_control_input.q);
-
-		v3d body_x;
-		v3d body_y;
-		v3d body_z;
-		v3d con_x;
-		v3d con_y;
-		v3d con_z;
-
-		//Poulate rotation vectors
-		dcm_to_basis(&body_x, &body_y, &body_z, &rot_mat_b);
-		dcm_to_basis(&con_x, &con_y, &con_z, &rot_mat_c);
-
-		//Roll control will be overriden
-		if( !(_control_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
-			//Use Z axis as a reference
-			v3d body_c;
-			v3d con_c;
-
-			body_c.x = 0;
-			body_c.y = 0;
-			body_c.z = _fc_1;
-
-			con_c.x = 0;
-			con_c.y = 0;
-			con_c.z = _fc_1;
-
-			//Find Y Rotation
-			v3d_cross(&body_y, &body_c, &body_x);
-			v3d_cross(&con_y, &con_c, &con_x);
-
-			v3d_normalize(&body_y, &body_y);
-			v3d_normalize(&con_y, &con_y);
-
-			//Find Z Rotation
-			v3d_cross(&body_z, &body_x, &body_y);
-			v3d_cross(&con_z, &con_x, &con_y);
-
-			v3d_normalize(&body_z, &body_z);
-			v3d_normalize(&con_z, &con_z);
-		}
-
-		//Pitch control will be overriden
-		if( !(_control_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
-			//Use X axis as a reference
-			v3d body_c;
-			v3d con_c;
-
-			body_c.x = _fc_1;
-			body_c.y = 0;
-			body_c.z = 0;
-
-			con_c.x = _fc_1;
-			con_c.y = 0;
-			con_c.z = 0;
-
-			//Find Z Rotation
-			v3d_cross(&body_z, &body_c, &body_y);
-			v3d_cross(&con_z, &con_c, &con_y);
-
-			v3d_normalize(&body_z, &body_z);
-			v3d_normalize(&con_z, &con_z);
-
-			//Find X Rotation
-			v3d_cross(&body_x, &body_y, &body_z);
-			v3d_cross(&con_x, &con_y, &con_z);
-
-			v3d_normalize(&body_x, &body_x);
-			v3d_normalize(&con_x, &con_x);
-		}
-
-		//Yaw control will be overriden
-		if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
-			//Use Y axis as a reference
-			v3d body_c;
-			v3d con_c;
-
-			body_c.x = 0;
-			body_c.y = _fc_1;
-			body_c.z = 0;
-
-			con_c.x = 0;
-			con_c.y = _fc_1;
-			con_c.z = 0;
-
-			//Find X Rotation
-			v3d_cross(&body_x, &body_c, &body_z);
-			v3d_cross(&con_x, &con_c, &con_z);
-
-			v3d_normalize(&body_x, &body_x);
-			v3d_normalize(&con_x, &con_x);
-
-			//Find Y Rotation
-			v3d_cross(&body_y, &body_z, &body_x);
-			v3d_cross(&con_y, &con_z, &con_x);
-
-			v3d_normalize(&body_y, &body_y);
-			v3d_normalize(&con_y, &con_y);
-		}
-
-		//Re-poulate rotation matrix
-		dcm_from_basis(&rot_mat_b, &body_x, &body_y, &body_z);
-		dcm_from_basis(&rot_mat_c, &con_x, &con_y, &con_z);
-
-		qf16 q_body_lock;
-		qf16 q_control_lock;
-
-		matrix_to_qf16(&q_body_lock, &rot_mat_b);
-		matrix_to_qf16(&q_control_lock, &rot_mat_c);
-
-		qf16_normalize(&q_body_lock, &q_body_lock);
-		qf16_normalize(&q_control_lock, &q_control_lock);
-
-
-		*/
-
 		qf16 q_control_lock;
 		q_control_lock = _control_input.q;
 
 		//Yaw control will be overriden
 		if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
-			/*
-			qf16 q_temp;
-			qf16 dq;
-
-			qf16_inverse(&q_temp, &q_control_lock);
-			qf16_mul(&dq, &_state_estimator.attitude, &q_temp);	//Difference between attitude and control
-			qf16_normalize_to_unit(&dq, &dq);
-
-			v3d fv;	//Flat vector
-			fv.x = _fc_1;	//Set to directly forward
-			fv.y = 0;
-			fv.z = 0;
-
-			qf16_rotate(&fv, &dq, &fv);	//Rotated vector in the XY plane
-			fv.z = 0;
-			v3d_normalize(&fv, &fv);	//Re-flatten, and normalize
-
-			fix16_t rot_a = fix16_atan2(fv.y, fv.x);	//Get the angular difference
-			v3d rot_axis;
-			rot_axis.x = 0;
-			rot_axis.y = 0;
-			rot_axis.z = _fc_1;
-			qf16_from_axis_angle(&q_temp, &rot_axis, rot_a);	//Create a rotation quaternion for the flat rotation around Z axis
-
-			qf16_mul(&q_control_lock, &q_temp, &q_control_lock);	//Rotate the control input
-
-			//Normalize quaternion
-			qf16_normalize_to_unit(&q_control_lock, &q_control_lock);
-			*/
 			qf16_align_to_axis(&q_control_lock, &q_control_lock, &_state_estimator.attitude, AXIS_LOCK_Z);
 		}
 

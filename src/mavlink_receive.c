@@ -182,6 +182,9 @@ static void communication_decode(uint8_t port, uint8_t c) {
 							} else if( safety_request_state( MAV_STATE_CALIBRATING ) && ( _sensor_calibration.type == SENSOR_CAL_NONE ) ) {
 								_sensor_calibration.req_sysid = msg.sysid;
 								_sensor_calibration.req_compid = msg.compid;
+
+								command_result = MAV_RESULT_DENIED;
+
 								//Param6
 								#define SENSOR_CAL_CMD_COMPASS_MOTOR 1
 								#define SENSOR_CAL_CMD_AIRPSEED 2
@@ -191,29 +194,41 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 								if( (int)mavlink_msg_command_long_get_param1(&msg) == SENSOR_CAL_CMD_GYRO ) {
 									_sensor_calibration.type |= SENSOR_CAL_GYRO;
+									command_result = MAV_RESULT_ACCEPTED;
 								//XXX: } else if( (int)mavlink_msg_command_long_get_param1(&msg) == SENSOR_CAL_CMD_GYRO_TEMP ) {
 								//XXX: TODO: GYRO TEMP
 								} else if( (int)mavlink_msg_command_long_get_param2(&msg) == SENSOR_CAL_CMD_MAG ) {
 									_sensor_calibration.type |= SENSOR_CAL_MAG;
+									command_result = MAV_RESULT_ACCEPTED;
 								} else if( (int)mavlink_msg_command_long_get_param3(&msg) == SENSOR_CAL_CMD_PRESSURE_GND) {
 									_sensor_calibration.type |= SENSOR_CAL_BARO;
+									command_result = MAV_RESULT_ACCEPTED;
 								} else if( (int)mavlink_msg_command_long_get_param4(&msg) == SENSOR_CAL_CMD_RC ) {
 									_sensor_calibration.type |= SENSOR_CAL_RC;
+									command_result = MAV_RESULT_ACCEPTED;
 								//XXX: } else if( (int)mavlink_msg_command_long_get_param4(&msg) == SENSOR_CAL_CMD_RC_TRIM ) {
 								//XXX: TODO: RC TRIM
 								} else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL ) {
 									_sensor_calibration.type |= SENSOR_CAL_ACCEL;
+									command_result = MAV_RESULT_ACCEPTED;
 								//XXX: } else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL_LEVEL ) {
 								//XXX: TODO: ACCEL LEVEL
 								//XXX: } else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL_TEMP ) {
 								//XXX: TODO: ACCEL TEMP
 								} else if( (int)mavlink_msg_command_long_get_param6(&msg) == SENSOR_CAL_CMD_COMPASS_MOTOR ) {
 									_sensor_calibration.type |= SENSOR_CAL_INTER;
+									command_result = MAV_RESULT_ACCEPTED;
 								//XXX:} else if( (int)mavlink_msg_command_long_get_param6(&msg) == SENSOR_CAL_CMD_AIRPSEED ) {
 								//XXX: TODO: Airpspeed?
 								} else if( (int)mavlink_msg_command_long_get_param7(&msg) == SENSOR_CAL_CMD_ESC ) {
-									set_param_uint( PARAM_DO_ESC_CAL, 1 );
-									if( write_params() ) {
+									//Manually reset calibration mode
+									if( set_param_uint( PARAM_DO_ESC_CAL, 1 ) &&
+										safety_request_state( MAV_STATE_STANDBY ) ) {
+										sensors_cal_init();
+
+										write_params();
+
+										command_result = MAV_RESULT_ACCEPTED;
 										mavlink_queue_broadcast_notice("[SENSOR] ESC cal will be run next reboot");
 									} else {
 										mavlink_queue_broadcast_error("[SENSOR] Failed to configure ESC cal!");
@@ -222,11 +237,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 								//XXX: TODO: BARO
 								}
 
-								//XXX: MAV_STATE_CALIBRATING is cleaned in the sensor loop
-
-								command_result = MAV_RESULT_ACCEPTED;
-							} else {	//We send the denied immidiately if we can't do it now
-								command_result = MAV_RESULT_DENIED;
+								//XXX: MAV_STATE_CALIBRATING is handled in the sensor loop
 							}
 
 							need_ack = true;
@@ -275,11 +286,6 @@ static void communication_decode(uint8_t port, uint8_t c) {
 										} else {
 											command_result = MAV_RESULT_FAILED;
 										}
-
-										//XXX
-										//Reinit imu as writing EEPROM messes up the callback
-										sensors_init_imu();
-										//XXX
 
 										break;
 									case 2:		//Reset to defaults
@@ -460,6 +466,19 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 					if( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK )
 						_sensors.ext_pose.status.new_data = true;
+
+					break;
+				}
+				case MAVLINK_MSG_ID_MISSION_REQUEST_LIST: {
+					//XXX: We don't support missions, so just send back 0
+					mavlink_message_t msg_out;
+					mavlink_msg_mission_count_pack(mavlink_system.sysid,
+												   mavlink_system.compid,
+												   &msg_out,
+												   mavlink_system.sysid,
+												   mavlink_system.compid,
+												   0, 0);
+					lpq_queue_msg(port, &msg_out);
 
 					break;
 				}

@@ -73,7 +73,7 @@ static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
 	status->time_read = 0;
 }
 
-static void sensors_cal_init(void) {
+void sensors_cal_init(void) {
 	_sensor_calibration.type = SENSOR_CAL_NONE;
 
 	_sensor_calibration.data.gyro.count = 0;

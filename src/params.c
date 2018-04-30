@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "flash.h"
+#include "sensors.h"
 #include "params.h"
 #include "mixer.h"
 #include "fix16.h"
@@ -111,6 +112,11 @@ bool write_params(void) {
 		mavlink_queue_broadcast_error("[SAFETY] Unable to enter standby, can't write params!");
 	}
 
+	//XXX
+	//Reinit imu as writing EEPROM messes up the callback
+	sensors_init_imu();
+	//XXX
+
 	return success;
 }
 
@@ -173,7 +179,8 @@ MAV_PARAM_TYPE get_param_type(param_id_t id) {
 }
 
 bool set_param_uint(param_id_t id, uint32_t value) {
-	if (id < PARAMS_COUNT && value != _params.values[id]) {
+	//XXX: Don't care if we override same value: if(... && value != _params.values[id]) {
+	if (id < PARAMS_COUNT) {
 		_params.values[id] = value;
 		param_change_callback(id);
 

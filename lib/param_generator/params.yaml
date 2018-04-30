@@ -1208,10 +1208,11 @@ PARAM_MAV_TYPE:
 PARAM_MIXER:
   type: "uint"
   name: "SYS_AUTOSTART"
-  description: "Mixer type to use (see mixer_type_t enum)"
+  description: "Mixer type to use (see mixer_type_t enum) [and write params imidiately to survive qgcs reboot]"
   reboot: true
   value:
     option: "scalar"
+    function: "write_params();"
     default: 0
 ---
 PARAM_RESET_PARAMS:
