@@ -65,7 +65,7 @@ If you are constantly reflashing the firmware, you can adjust the default on the
 #### Flashing
 
 ---
-**Note:** Some Naze32 models don not allow for flashing to be done via USB, and need to be connected to the UART1 port directly
+**Note:** Some Naze32 models do not allow for flashing to be done via USB, and need to be connected to the UART1 port directly
 
 ---
 
