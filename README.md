@@ -2,7 +2,7 @@
 The ROS Offboard Integration for Naze32-based flight controllers.
 
 ## Preperation
-#### Ubuntu
+#### Linux - Ubuntu
 ```sh
 sudo apt install gcc-arm-none-eabi  stm32flash python3-yaml
 mkdir -p ~/src
@@ -10,11 +10,11 @@ cd ~/src
 git clone --recursive https://github.com/qutas/robin/
 ```
 
-#### Arch
+#### Linux - Arch
 ```sh
-sudo apt install arm-none-eabi-gcc arm-none-eabi-newlib python-yaml
+sudo pacman -S arm-none-eabi-gcc arm-none-eabi-newlib python-yaml
 ```
-You'll need to get the `stm32flash` package from the AUR or compile it manually
+You'll also need to get the `stm32flash` package from the AUR or compile it manually
 
 ```sh
 mkdir -p ~/src
@@ -22,7 +22,33 @@ cd ~/src
 git clone --recursive https://github.com/qutas/robin/
 ```
 
-## Compiling
+#### Windows
+Compiling the source code is not currently possible on Windows, however it is still possible to flash the precompiled firmware.
+
+A windows binary of `stm32flash` can be found on the [official repository](https://sourceforge.net/projects/stm32flash/). Download and extract `stm32flash.exe` to a folder of your choice.
+
+## Flashing Pre-Compiled Releases
+Pre-compiled releases can be found in [Releases](https://github.com/qutas/robin/releases) section. Make sure to get the correct release revision for your board model.
+
+Use the following command to flash the firmware to your flight controller. You will need to replace the filename (`robin_naze32_rX.hex`) and device name (`/dev/ttyUSBX` or `COMX`) with the correct options for your setup.
+
+#### Manually Flashing (Linux)
+```sh
+stm32flash -w robin_naze32_rX.hex -v -g 0x0 -b 921600 /dev/ttyUSBX
+```
+
+#### Manually Flashing (Windows)
+Copy the firmware to the same folder as the one where you extracted `stm32flash.exe`. You can then `Shift`+`Right Click` and select `Open Command Prompt Here`.
+
+In the command prompt, run the following:
+```sh
+stm32flash.exe -w robin_naze32_rX.hex -v -g 0x0 -b 921600 COMX
+```
+
+## Documentation
+Additional documentation on features, interfacing, and packaged tools, [please check here](documents/README.md) (`/documents/README.md`).
+
+## Compiling from Source
 ```sh
 cd ~/src/robin
 make
@@ -36,7 +62,7 @@ make NAZE32_REV=5
 
 If you are constantly reflashing the firmware, you can adjust the default on the first few lines of the `makefile`.
 
-## Flashing
+#### Flashing
 
 ---
 **Note:** Some Naze32 models don not allow for flashing to be done via USB, and need to be connected to the UART1 port directly
@@ -68,9 +94,6 @@ You can not only pass the version flag in the command line, but you can also pas
 ```sh
 make flash SERIAL_DEVICE=/dev/ttyACM0 SERIAL_BAUD=57600 NAZE32_REV=5
 ```
-
-## Documentation
-Additional documentation on features, interfacing, and packaged tools, [please check here](documents/README.md) (`/documents/README.md`).
 
 
 
