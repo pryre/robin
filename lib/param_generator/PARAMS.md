@@ -30,7 +30,7 @@ CBRK_MAG | uint | Sensor circuit breaker arming check for magnetometer (set to 0
 CBRK_BARO | uint | Sensor circuit breaker arming check for barometer (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
 CBRK_SONAR | uint | Sensor circuit breaker arming check for sonar (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
 CBRK_EXT_POSE | uint | Sensor circuit breaker arming check for external pose estimate (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
-CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
+CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CHK_RATE_BARO | float | Sensor update rate for barometer (TODO) | 0.0 | Hz | scalar | False
 CHK_RATE_SONAR | float | Sensor update rate for sonar (TODO) | 0.0 | Hz | scalar | False
 CHK_RATE_MAG | float | Sensor update rate for magnetometer (TODO) | 0.0 | Hz | scalar | False

@@ -35,7 +35,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_BARO_CBRK, 0);
 	init_param_uint(PARAM_SENSOR_SONAR_CBRK, 0);
 	init_param_uint(PARAM_SENSOR_EXT_POSE_CBRK, 1);
-	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, 0);
+	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, 1);
 	init_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_SENSOR_SONAR_UPDATE_RATE, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE, fix16_from_float(0.0f));
