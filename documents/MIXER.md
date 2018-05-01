@@ -5,10 +5,11 @@ The mixer profiles can be found in `./include/mixers/`. Custom configurations re
 
 ## Supported Mixers
 Currently, the following mixers are supported:
-| **Mixer Decription** | **PX4 Name** | `SYS_AUTOSTART` |
-|:-------------------- |:------------ | ---------------:|
-| Disabled | --- | 0 |
-| Fixed-Wing Standard Pass-Through | Standard Plane | 2100 |
-| Quadrotor X4 | Generic Quadrotor x | 4001 |
-| Quadrotor +4 | Generic Quadrotor + | 5001 |
-| Hexarotor X6 | Generic Hexarotor x geometry | 6001 |
+
+| **Mixer Decription**             | **PX4 Name**                 | `SYS_AUTOSTART` |
+| --------------------             | ------------                 | ---------------:|
+| Disabled                         | -                            | 0               |
+| Fixed-Wing Standard Pass-Through | Standard Plane               | 2100            |
+| Quadrotor X4                     | Generic Quadrotor x          | 4001            |
+| Quadrotor +4                     | Generic Quadrotor +          | 5001            |
+| Hexarotor X6                     | Generic Hexarotor x geometry | 6001            |
