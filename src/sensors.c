@@ -110,6 +110,9 @@ void sensors_cal_init(void) {
 
 void sensors_deinit_imu(void) {
 	mpu_register_interrupt_cb(&sensors_imu_disable, get_param_uint(PARAM_BOARD_REVISION));
+	while( i2c_job_queued() ); //Wait for jobs to finish
+    //mpuWriteRegisterI2C(MPU_RA_PWR_MGMT_1, MPU_BIT_DEVICE_RESET);
+	//delay(500);
 }
 
 void sensors_init_imu(void) {

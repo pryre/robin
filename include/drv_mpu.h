@@ -66,6 +66,9 @@
 #define MPU_RA_FIFO_COUNT_H     0x72
 #define MPU_RA_FIFO_R_W         0x74
 
+// MPU6xxx bits
+#define MPU_BIT_DEVICE_RESET    0x80
+
 // MPU6050 bits
 #define MPU6050_INV_CLK_GYROZ   0x03
 #define MPU6050_BIT_FIFO_RST    0x04

@@ -313,6 +313,10 @@ static void communication_decode(uint8_t port, uint8_t c) {
 										mavlink_msg_command_ack_send(port, MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN, MAV_RESULT_ACCEPTED, 0xFF, 0xFF, msg.sysid, msg.compid);
 										delay(500);	//XXX: Give a few moments for the comms to send
 
+										//XXX: Graceful Shutdown
+										sensors_deinit_imu();
+										while( i2c_job_queued() ); //Wait for jobs to finish
+
 										systemReset();
 
 										break;
@@ -320,6 +324,10 @@ static void communication_decode(uint8_t port, uint8_t c) {
 										mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[SAFETY] Entering bootloader mode!");
 										mavlink_msg_command_ack_send(port, MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN, MAV_RESULT_ACCEPTED, 0xFF, 0xFF, msg.sysid, msg.compid);
 										delay(500);	//XXX: Give a few moments for the comms to send
+
+										//XXX: Graceful Shutdown
+										sensors_deinit_imu();
+										while( i2c_job_queued() ); //Wait for jobs to finish
 
 										systemResetToBootloader();
 

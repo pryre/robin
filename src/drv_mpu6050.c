@@ -44,7 +44,7 @@ uint16_t mpu6050_init(accel_fsr_e accelFSR, gyro_fsr_e gyroFSR)
             acc1G >>= 1;
         } else if (rev == 2) {
         } else {
-            //failureMode(5);
+            failureMode(5);
         }
     } else {
         mpuReadRegisterI2C(MPU_RA_PRODUCT_ID, &rev, 1);

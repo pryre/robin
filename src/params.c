@@ -10,12 +10,8 @@
 
 #include "param_generator/param_gen.h"
 
-//#include "controller.h"
-//#include "pid_controller.h"
-
 #include "safety.h"
 #include "mavlink_system.h"
-//#include "mavlink_transmit.h"
 
 
 // global variable definitions
@@ -100,13 +96,21 @@ bool read_params(void) {
 
 bool write_params(void) {
 	bool success = false;
+	bool state_ok = false;
 	//XXX
 	//Deinit imu as writing EEPROM messes up the callback
-	sensors_deinit_imu();
-	while( i2c_job_queued() ); //Wait for jobs to finish
+
+	if( (_system_status.state != MAV_STATE_UNINIT ) &&
+		(_system_status.state != MAV_STATE_BOOT ) ) {
+		sensors_deinit_imu();
+
+		state_ok = safety_request_state( MAV_STATE_STANDBY );	//XXX: This used to be in the if loop below
+	} else {
+		state_ok = true; //We are booting, so no need to check for state
+	}
 	//XXX
 
-	if( safety_request_state( MAV_STATE_STANDBY ) ) {
+	if( state_ok ) {
 		if( writeEEPROM() ) {
 			mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[PARAM] EEPROM written");
 			success = true;
@@ -120,8 +124,10 @@ bool write_params(void) {
 	//XXX
 	//Reinit imu as writing EEPROM messes up the callback
 	//As long as we're not in boot phase, as imu hasn't been setup yet
-	if(_system_status.state == MAV_STATE_STANDBY )
+	if( (_system_status.state != MAV_STATE_UNINIT ) &&
+		(_system_status.state != MAV_STATE_BOOT ) ) {
 		sensors_init_imu();
+	}
 	//XXX
 
 	return success;
