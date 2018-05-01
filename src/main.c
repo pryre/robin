@@ -38,13 +38,13 @@ int main(void) {
         loop();
 }
 
-void setup(void) {	
+void setup(void) {
 	params_init();
 
 	communications_system_init();
-	
+
 	delay(500);	//Wait for i2c devices to boot properly
-	
+
     i2cInit(I2CDEV);
 
 	sensors_init_internal();

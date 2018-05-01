@@ -225,10 +225,12 @@ extern sensor_calibration_t _sensor_calibration;
 
 // function declarations
 void sensors_init_imu(void);
+void sensors_deinit_imu(void);
 void sensors_init_internal(void);
 void sensors_init_external(void);
 void sensors_cal_init(void);
 bool sensors_read(void);
+bool i2c_job_queued(void);
 
 //void sensors_poll(void);
 uint32_t sensors_clock_ls_get(void);	//Get time at loop start

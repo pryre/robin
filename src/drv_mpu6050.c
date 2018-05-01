@@ -44,7 +44,7 @@ uint16_t mpu6050_init(accel_fsr_e accelFSR, gyro_fsr_e gyroFSR)
             acc1G >>= 1;
         } else if (rev == 2) {
         } else {
-            failureMode(5);
+            //failureMode(5);
         }
     } else {
         mpuReadRegisterI2C(MPU_RA_PRODUCT_ID, &rev, 1);
@@ -65,7 +65,7 @@ uint16_t mpu6050_init(accel_fsr_e accelFSR, gyro_fsr_e gyroFSR)
     mpuWriteRegisterI2C(MPU_RA_PWR_MGMT_1, MPU6050_INV_CLK_GYROZ); // Clock source = 3 (PLL with Z Gyro reference)
     delay(10);
     mpuWriteRegisterI2C(MPU_RA_CONFIG, mpuLowPassFilter); // set DLPF
-    mpuWriteRegisterI2C(MPU_RA_GYRO_CONFIG, gyroFSR /*INV_FSR_2000DPS*/ << 3); 
+    mpuWriteRegisterI2C(MPU_RA_GYRO_CONFIG, gyroFSR /*INV_FSR_2000DPS*/ << 3);
 
     // Accel config
     mpuWriteRegisterI2C(MPU_RA_ACCEL_CONFIG, accelFSR << 3);

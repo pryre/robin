@@ -58,7 +58,10 @@ static void clock_init(void) {
 	_sensors.clock.rt_sync_last = 0;
 }
 
-static void sensors_imu_poll(void) {
+static void sensors_imu_disable(void) {
+}
+
+void sensors_imu_poll(void) {
 	//==-- Timing setup get loop time
 	_imu_time_read = micros();
 
@@ -103,6 +106,10 @@ void sensors_cal_init(void) {
 
 	_sensor_calibration.data.accel.temp_scale = fix16_from_float(340.0f);
 	_sensor_calibration.data.accel.temp_shift = fix16_from_float(36.53f);
+}
+
+void sensors_deinit_imu(void) {
+	mpu_register_interrupt_cb(&sensors_imu_disable, get_param_uint(PARAM_BOARD_REVISION));
 }
 
 void sensors_init_imu(void) {
@@ -190,6 +197,14 @@ void sensors_init_external(void) {
 	_sensors.voltage_monitor.state_raw = 0;
 	_sensors.voltage_monitor.state_calc = 0;
 	_sensors.voltage_monitor.state_filtered = 0;
+}
+
+bool i2c_job_queued(void) {
+	bool a_done = (accel_status == I2C_JOB_DEFAULT) || (accel_status == I2C_JOB_COMPLETE);
+	bool g_done = (gyro_status == I2C_JOB_DEFAULT) || (gyro_status == I2C_JOB_COMPLETE);
+	bool t_done = (temp_status == I2C_JOB_DEFAULT) || (temp_status == I2C_JOB_COMPLETE);
+
+	return !a_done || !g_done || !t_done;
 }
 
 bool sensors_read(void) {

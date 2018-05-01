@@ -100,6 +100,11 @@ bool read_params(void) {
 
 bool write_params(void) {
 	bool success = false;
+	//XXX
+	//Deinit imu as writing EEPROM messes up the callback
+	sensors_deinit_imu();
+	while( i2c_job_queued() ); //Wait for jobs to finish
+	//XXX
 
 	if( safety_request_state( MAV_STATE_STANDBY ) ) {
 		if( writeEEPROM() ) {
@@ -114,7 +119,9 @@ bool write_params(void) {
 
 	//XXX
 	//Reinit imu as writing EEPROM messes up the callback
-	sensors_init_imu();
+	//As long as we're not in boot phase, as imu hasn't been setup yet
+	if(_system_status.state == MAV_STATE_STANDBY )
+		sensors_init_imu();
 	//XXX
 
 	return success;
