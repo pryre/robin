@@ -17,6 +17,8 @@ sensor_calibration_t _sensor_calibration;
 mavlink_queue_t _lpq_port_0;
 //XXX: mavlink_queue_t _lpq_port_1;
 
+int32_t _pwm_control[MIXER_NUM_MOTORS];
+mixer_motor_test_t _motor_test;
 command_input_t _command_input;
 system_status_t _system_status;
 mavlink_system_t _mavlink_gcs;
@@ -241,6 +243,62 @@ static void communication_decode(uint8_t port, uint8_t c) {
 							}
 
 							need_ack = true;
+
+							break;
+						}
+						case MAV_CMD_DO_MOTOR_TEST: {
+							need_ack = true;
+
+							if( _system_status.sensors.pwm_control.health == SYSTEM_HEALTH_OK ) {
+								mavlink_queue_broadcast_error("[MIXER] Cannot run motor test, PWM control is active!");
+
+								command_result = MAV_RESULT_TEMPORARILY_REJECTED;
+							} else if(!safety_is_armed()) {
+								mavlink_queue_broadcast_error("[MIXER] Cannot run motor test unless armed!");
+
+								command_result = MAV_RESULT_TEMPORARILY_REJECTED;
+							} else {
+								uint8_t motor_test_number = (int)mavlink_msg_command_long_get_param1(&msg);
+								//fix16_t motor_test_type = fix16_from_float(mavlink_msg_command_long_get_param2(&msg));
+								fix16_t motor_test_throttle = fix16_from_float(mavlink_msg_command_long_get_param3(&msg));
+								fix16_t motor_test_timeout = fix16_from_float(mavlink_msg_command_long_get_param4(&msg));
+								//uint8_t motor_test_count = (int)mavlink_msg_command_long_get_param5(&msg);
+								//uint8_t motor_test_order = (int)mavlink_msg_command_long_get_param6(&msg);
+
+								if( ( (motor_test_number < MIXER_NUM_MOTORS) ||
+									  (motor_test_number == MIXER_TEST_MOTORS_ALL) ) &&
+									( (motor_test_throttle > 0) && (motor_test_throttle < _fc_1) ) &&
+									( motor_test_timeout > 0 ) ) {
+
+									//Configure motor test
+									if(motor_test_number == MIXER_TEST_MOTORS_ALL) {
+										_motor_test.test_all = true;
+										_motor_test.motor_step = 0;
+									} else {
+										_motor_test.motor_step = motor_test_number;
+									}
+
+									_motor_test.start = micros();
+									_motor_test.duration = 100*fix16_mul(motor_test_timeout, _fc_100);
+									_motor_test.throttle = motor_test_throttle;
+
+									//XXX: Override sensor health as autopilot is in control
+									safety_update_sensor(&_system_status.sensors.pwm_control);
+									_system_status.sensors.pwm_control.health = SYSTEM_HEALTH_OK;
+
+									char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
+									char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+									itoa(_motor_test.motor_step, mchar, 3);
+									strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+									mavlink_queue_broadcast_notice(text);
+
+									command_result = MAV_RESULT_ACCEPTED;
+								} else {
+									mavlink_queue_broadcast_error("[MIXER] Cannot run motor test, bad test variables!");
+
+									command_result = MAV_RESULT_FAILED;
+								}
+							}
 
 							break;
 						}

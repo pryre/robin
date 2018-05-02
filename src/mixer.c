@@ -22,11 +22,12 @@
 control_output_t _control_output;
 system_status_t _system_status;
 
-int32_t _GPIO_outputs[8];
-output_type_t _GPIO_output_type[8];
-int32_t _pwm_control[8];
-int32_t _pwm_output_requested[8];
-int32_t _pwm_output[8];
+int32_t _GPIO_outputs[MIXER_NUM_MOTORS];
+output_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
+int32_t _pwm_control[MIXER_NUM_MOTORS];
+int32_t _pwm_output_requested[MIXER_NUM_MOTORS];
+int32_t _pwm_output[MIXER_NUM_MOTORS];
+mixer_motor_test_t _motor_test;
 
 static const mixer_t *mixer_to_use;
 
@@ -69,13 +70,19 @@ void mixer_init() {
 		}
 	}
 
-	for (uint8_t i = 0; i < 8; i++) {
+	for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++) {
 		_pwm_control[i] = 0;
 		_pwm_output_requested[i] = 0;
 		_pwm_output[i] = 0;
 		_GPIO_outputs[i] = 0;
 		_GPIO_output_type[i] = MT_NONE;
 	}
+
+	_motor_test.start = 0;
+	_motor_test.throttle = 0;
+	_motor_test.duration = 0;
+	_motor_test.test_all = false;
+	_motor_test.motor_step = 0;
 }
 
 void pwm_init() {
@@ -91,7 +98,7 @@ void pwm_init() {
 	pwmInit(useCPPM, false, false, motor_refresh_rate, pwm_disarm);
 
 	if( get_param_uint( PARAM_DO_ESC_CAL ) ) {
-		for (uint8_t i = 0; i < 8; i++)
+		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
 			if (mixer_to_use->output_type[i] == MT_M)
 				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MAX ) );
 
@@ -99,13 +106,13 @@ void pwm_init() {
 		LED1_OFF;
 		delay(5000);
 
-		for (uint8_t i = 0; i < 8; i++)
+		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
 			if (mixer_to_use->output_type[i] == MT_M)
 				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MIN ) );
 
 		LED0_ON;
 		LED1_ON;
-		delay(5000);
+		delay(1000);
 
 		LED0_OFF;
 		LED1_OFF;
@@ -156,7 +163,7 @@ void write_servo(uint8_t index, int32_t value) {
 //Used to send a PWM while
 static void pwm_output() {
 	// Add in GPIO inputs from Onboard Computer
-	for (int8_t i=0; i<8; i++) {
+	for (int8_t i=0; i<MIXER_NUM_MOTORS; i++) {
 		output_type_t output_type = mixer_to_use->output_type[i];
 
 		//TODO: This logic needs to be double checked
@@ -181,9 +188,9 @@ static void pwm_output() {
 void mixer_output() {
 	int32_t max_output = 1000;
 	int32_t scale_factor = 1000;
-	int32_t prescaled_outputs[8];
+	int32_t prescaled_outputs[MIXER_NUM_MOTORS];
 
-	for (uint8_t i = 0; i < 8; i++) {
+	for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++) {
 		//TODO: This logic needs to be double checked
 		if (mixer_to_use->output_type[i] != MT_NONE) {
 			// Matrix multiply (in so many words) -- done in integer, hence the /1000 at the end
@@ -219,7 +226,45 @@ void mixer_output() {
 	if (max_output > 1000)
 		scale_factor = 1000 * 1000 / max_output;
 
-	for (uint8_t i=0; i<8; i++) {
+	//Handle motor testing
+	if(_motor_test.start > 0) {
+		if( (_motor_test.start + _motor_test.duration) < micros() ) {
+			//Test in progress
+			uint16_t test_pwm_range = fix16_from_int(get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN));
+			uint16_t test_pwm = fix16_to_int(fix16_mul(_motor_test.throttle, test_pwm_range));
+
+			//Override PWM control
+			for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++) {
+				_pwm_control[i] = 0;
+			}
+
+			_pwm_control[_motor_test.motor_step] = test_pwm;
+			safety_update_sensor(&_system_status.sensors.pwm_control);
+		} else {
+			//If there are motors left to test
+			if( (_motor_test.test_all) &&
+				(_motor_test.motor_step < (MIXER_NUM_MOTORS - 1) ) ) {
+					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
+					char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+					itoa(_motor_test.motor_step, mchar, 3);
+					strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+					mavlink_queue_broadcast_notice(text);
+
+					_motor_test.start = micros();
+					_motor_test.motor_step++;
+			} else {
+				//Test is done, reset
+				_motor_test.start = 0;
+				_motor_test.throttle = 0;
+				_motor_test.duration = 0;
+				_motor_test.test_all = false;
+				_motor_test.motor_step = 0;
+			}
+		}
+	}
+
+	//Prepare the motor mixing
+	for (uint8_t i=0; i<MIXER_NUM_MOTORS; i++) {
 		if (mixer_to_use->output_type[i] == MT_M) {
 			_pwm_output_requested[i] = prescaled_outputs[i] * scale_factor / 1000; // divide by scale factor
 		} else {

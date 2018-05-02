@@ -6,6 +6,9 @@
 #include "fix16.h"
 #include "controller.h"
 
+#define MIXER_NUM_MOTORS 8
+#define MIXER_TEST_MOTORS_ALL 0xFF
+
 //TODO: Need to add support later for more mixing types
 //http://autoquad.org/wiki/wiki/configuring-autoquad-flightcontroller/frame-motor-mixing-table/
 typedef enum {
@@ -25,24 +28,31 @@ typedef enum {
 } output_type_t;
 
 typedef struct {
-	output_type_t output_type[8];
-	fix16_t T[8];
-	fix16_t x[8];
-	fix16_t y[8];
-	fix16_t z[8];
+	output_type_t output_type[MIXER_NUM_MOTORS];
+	fix16_t T[MIXER_NUM_MOTORS];
+	fix16_t x[MIXER_NUM_MOTORS];
+	fix16_t y[MIXER_NUM_MOTORS];
+	fix16_t z[MIXER_NUM_MOTORS];
 } mixer_t;
-/* TODO:
+
+
 typedef struct {
-	bool do_test;
+	uint32_t start;
+	fix16_t throttle;
+	uint32_t duration;
+	bool test_all;
+	uint8_t motor_step;
 } mixer_motor_test_t;
-*/
-extern int32_t _GPIO_outputs[8];
-extern output_type_t _GPIO_output_type[8];
 
-extern int32_t _pwm_control[8];
+extern int32_t _GPIO_outputs[MIXER_NUM_MOTORS];
+extern output_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
 
-extern int32_t _pwm_output_requested[8];
-extern int32_t _pwm_output[8];
+extern int32_t _pwm_control[MIXER_NUM_MOTORS];
+
+extern mixer_motor_test_t _motor_test;
+
+extern int32_t _pwm_output_requested[MIXER_NUM_MOTORS];
+extern int32_t _pwm_output[MIXER_NUM_MOTORS];
 
 void pwm_init();
 void mixer_init();

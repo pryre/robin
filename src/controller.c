@@ -349,7 +349,6 @@ void controller_run( uint32_t time_now ) {
 		goal_y = _command_input.y;
 	}
 
-
 	//Constrain rates to set params
 	goal_r = fix16_constrain(goal_r, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
 	goal_p = fix16_constrain(goal_p, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
