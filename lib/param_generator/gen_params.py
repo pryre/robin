@@ -78,8 +78,8 @@ def check_params(params):
 					raise ValueError("%s: Parameter ID duplicate with param #%i" % (param_id, id_list.index(param_id)))
 
 				#XXX: Length 16 is from MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
-				if len(details["name"]) >= 16:
-					raise ValueError("%s: Parameter name too long (%d>=16)" % (param_id, len(details["name"])))
+				if len(details["name"]) > 16:
+					raise ValueError("%s: Parameter name too long (%d>16)" % (param_id, len(details["name"])))
 
 
 				if not details["name"] in name_list:

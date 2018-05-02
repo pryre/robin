@@ -860,7 +860,7 @@ PARAM_ACC_Z_TEMP_COMP:
 ---
 PARAM_PID_ROLL_RATE_P:
   type: "float"
-  name: "PID_ROLL_R_P"
+  name: "MC_ROLLRATE_P"
   description: "Proportional gain for roll rate PID"
   reboot: false
   value:
@@ -870,7 +870,7 @@ PARAM_PID_ROLL_RATE_P:
 ---
 PARAM_PID_ROLL_RATE_I:
   type: "float"
-  name: "PID_ROLL_R_I"
+  name: "MC_ROLLRATE_I"
   description: "Integral gain for roll rate PID"
   reboot: false
   value:
@@ -880,7 +880,7 @@ PARAM_PID_ROLL_RATE_I:
 ---
 PARAM_PID_ROLL_RATE_D:
   type: "float"
-  name: "PID_ROLL_R_D"
+  name: "MC_ROLLRATE_D"
   description: "Derivative gain for roll rate PID"
   reboot: false
   value:
@@ -890,8 +890,8 @@ PARAM_PID_ROLL_RATE_D:
 ---
 PARAM_MAX_ROLL_RATE:
   type: "float"
-  name: "MAX_ROLL_R"
-  description: "Maximum allowed command for roll rate (TODO)"
+  name: "MC_ROLLRATE_MAX"
+  description: "Maximum allowed command for roll rate"
   reboot: false
   value:
     option: "scalar"
@@ -901,7 +901,7 @@ PARAM_MAX_ROLL_RATE:
 ---
 PARAM_PID_PITCH_RATE_P:
   type: "float"
-  name: "PID_PITCH_R_P"
+  name: "MC_PITCHRATE_P"
   description: "Proportional gain for pitch rate PID"
   reboot: false
   value:
@@ -911,7 +911,7 @@ PARAM_PID_PITCH_RATE_P:
 ---
 PARAM_PID_PITCH_RATE_I:
   type: "float"
-  name: "PID_PITCH_R_I"
+  name: "MC_PITCHRATE_I"
   description: "Integral gain for pitch rate PID"
   reboot: false
   value:
@@ -921,7 +921,7 @@ PARAM_PID_PITCH_RATE_I:
 ---
 PARAM_PID_PITCH_RATE_D:
   type: "float"
-  name: "PID_PITCH_R_D"
+  name: "MC_PITCHRATE_D"
   description: "Derivative gain for pitch rate PID"
   reboot: false
   value:
@@ -931,8 +931,8 @@ PARAM_PID_PITCH_RATE_D:
 ---
 PARAM_MAX_PITCH_RATE:
   type: "float"
-  name: "MAX_PITCH_R"
-  description: "Maximum allowed command for pitch rate (TODO)"
+  name: "MC_PITCHRATE_MAX"
+  description: "Maximum allowed command for pitch rate"
   reboot: false
   value:
     option: "scalar"
@@ -942,7 +942,7 @@ PARAM_MAX_PITCH_RATE:
 ---
 PARAM_PID_YAW_RATE_P:
   type: "float"
-  name: "PID_YAW_R_P"
+  name: "MC_YAWRATE_P"
   description: "Proportional gain for yaw rate PID"
   reboot: false
   value:
@@ -952,7 +952,7 @@ PARAM_PID_YAW_RATE_P:
 ---
 PARAM_PID_YAW_RATE_I:
   type: "float"
-  name: "PID_YAW_R_I"
+  name: "MC_YAWRATE_I"
   description: "Integral gain for yaw rate PID"
   reboot: false
   value:
@@ -962,7 +962,7 @@ PARAM_PID_YAW_RATE_I:
 ---
 PARAM_PID_YAW_RATE_D:
   type: "float"
-  name: "PID_YAW_R_D"
+  name: "MC_YAWRATE_D"
   description: "Derivative gain for yaw rate PID"
   reboot: false
   value:
@@ -972,8 +972,8 @@ PARAM_PID_YAW_RATE_D:
 ---
 PARAM_MAX_YAW_RATE:
   type: "float"
-  name: "MAX_YAW_R"
-  description: "Maximum allowed command for yaw rate (TODO)"
+  name: "MC_YAWRATE_MAX"
+  description: "Maximum allowed command for yaw rate"
   reboot: false
   value:
     option: "scalar"
@@ -983,7 +983,7 @@ PARAM_MAX_YAW_RATE:
 ---
 PARAM_PID_ROLL_ANGLE_P:
   type: "float"
-  name: "PID_ROLL_ANG_P"
+  name: "MC_ROLL_P"
   description: "Feed-forward gain for roll angle"
   reboot: false
   value:
@@ -1002,7 +1002,7 @@ PARAM_MAX_ROLL_ANGLE:
 ---
 PARAM_PID_PITCH_ANGLE_P:
   type: "float"
-  name: "PID_PITCH_ANG_P"
+  name: "MC_PITCH_P"
   description: "Feed-forward gain for pitch angle"
   reboot: false
   value:
@@ -1021,12 +1021,12 @@ PARAM_MAX_PITCH_ANGLE:
 ---
 PARAM_PID_YAW_ANGLE_P:
   type: "float"
-  name: "PID_YAW_ANG_P"
+  name: "MC_YAW_P"
   description: "Feed-forward gain for yaw angle"
   reboot: false
   value:
     option: "scalar"
-    default: 6.5
+    default: 2.8
 ---
 PARAM_PID_TAU:
   type: "float"
@@ -1040,7 +1040,7 @@ PARAM_PID_TAU:
 ---
 PARAM_BATTERY_TYPE:
   type: "uint"
-  name: "BATT_TYPE"
+  name: "BAT_TYPE"
   description: "See the MAV_BATTERY_TYPE enum"
   reboot: false
   value:
@@ -1049,7 +1049,7 @@ PARAM_BATTERY_TYPE:
 ---
 PARAM_BATTERY_FUNCTION:
   type: "uint"
-  name: "BATT_FUNC"
+  name: "BAT_FUNC"
   description: "See the MAV_BATTERY_FUNCTION enum"
   reboot: false
   value:
@@ -1058,7 +1058,7 @@ PARAM_BATTERY_FUNCTION:
 ---
 PARAM_BATTERY_CELL_NUM:
   type: "uint"
-  name: "BATT_CELL_NUM"
+  name: "BAT_N_CELLS"
   description: "Number of cells in the battery"
   reboot: false
   value:
@@ -1067,7 +1067,7 @@ PARAM_BATTERY_CELL_NUM:
 ---
 PARAM_BATTERY_CELL_MIN:
   type: "float"
-  name: "BATT_CELL_MIN"
+  name: "BAT_V_EMPTY"
   description: "Low cell voltage"
   reboot: false
   value:
@@ -1076,7 +1076,7 @@ PARAM_BATTERY_CELL_MIN:
 ---
 PARAM_BATTERY_CELL_MAX:
   type: "float"
-  name: "BATT_CELL_MAX"
+  name: "BAT_V_CHARGED"
   description: "High cell voltage"
   reboot: false
   value:
@@ -1085,7 +1085,7 @@ PARAM_BATTERY_CELL_MAX:
 ---
 PARAM_BATTERY_READING_FILTER:
   type: "float"
-  name: "BATT_FILTER"
+  name: "BAT_FILTER"
   description: "A smoothing filter for the voltage reading (0->1)"
   reboot: false
   value:
@@ -1094,43 +1094,43 @@ PARAM_BATTERY_READING_FILTER:
 ---
 PARAM_BATTERY_DIVIDER:
   type: "float"
-  name: "BATT_DIVIDER"
-  description: "Resistor voltage divider for battery sensing (Naze32's use 10K:1k which gives a value of 11)"
+  name: "BAT_V_DIV"
+  description: "Resistor voltage divider for battery sensing (-1 to use board default)"
   reboot: false
   value:
     option: "scalar"
-    default: 11.0
----
-PARAM_BATTERY_CHARGE_STATE_OK:
-  type: "uint"
-  name: "BATT_CHRG_OK"
-  description: "Charge state cutoff normal battery operation (as a percentage)"
-  reboot: false
-  value:
-    option: "scalar"
-    default: 50
+    default: -1.0
 ---
 PARAM_BATTERY_CHARGE_STATE_LOW:
-  type: "uint"
-  name: "BATT_CHRG_LOW"
+  type: "float"
+  name: "BAT_LOW_THR"
   description: "Charge state cutoff for low battery remaining (as a percentage)"
   reboot: false
   value:
     option: "scalar"
-    default: 20
+    default: 0.2
 ---
 PARAM_BATTERY_CHARGE_STATE_CRITICAL:
-  type: "uint"
-  name: "BATT_CHRG_CRIT"
+  type: "float"
+  name: "BAT_CRIT_THR"
   description: "Charge state cutoff for critical battery remaining (as a percentage)"
   reboot: false
   value:
     option: "scalar"
-    default: 10
+    default: 0.1
+---
+PARAM_BATTERY_CHARGE_STATE_EMERGENCY:
+  type: "float"
+  name: "BAT_EMERGEN_THR"
+  description: "Charge state cutoff for emergency battery remaining (as a percentage)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05
 ---
 PARAM_MOTOR_PWM_SEND_RATE:
   type: "uint"
-  name: "MOTOR_PWM_RATE"
+  name: "PWM_RATE"
   description: "Update rate for PWM outputs"
   reboot: true
   value:
@@ -1140,7 +1140,7 @@ PARAM_MOTOR_PWM_SEND_RATE:
 ---
 PARAM_MOTOR_PWM_IDLE:
   type: "uint"
-  name: "MOTOR_PWM_IDLE"
+  name: "PWM_IDLE"
   description: "Idle output for motors (when armed)"
   reboot: false
   value:
@@ -1150,7 +1150,7 @@ PARAM_MOTOR_PWM_IDLE:
 ---
 PARAM_MOTOR_PWM_MIN:
   type: "uint"
-  name: "MOTOR_PWM_MIN"
+  name: "PWM_MIN"
   description: "Minimum output for motors"
   reboot: false
   value:
@@ -1160,7 +1160,7 @@ PARAM_MOTOR_PWM_MIN:
 ---
 PARAM_MOTOR_PWM_MAX:
   type: "uint"
-  name: "MOTOR_PWM_MAX"
+  name: "PWM_MAX"
   description: "Maximum output for motors"
   reboot: false
   value:

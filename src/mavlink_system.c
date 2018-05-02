@@ -260,7 +260,7 @@ void mavlink_stream_sys_status(uint8_t port) {
 	uint16_t load = 0;
 	uint16_t voltage_battery = fix16_to_int(fix16_mul(_fc_1000,_sensors.voltage_monitor.state_filtered));
 	uint16_t current_battery = -1;
-	uint8_t battery_remaining = _sensors.voltage_monitor.precentage;
+	uint8_t battery_remaining = fix16_to_int(fix16_mul(_fc_100,_sensors.voltage_monitor.precentage));
 	uint16_t drop_rate_comm = 0;
 	uint16_t errors_comm = 0;	//TODO: Make an alert to say if the UART overflows
 	uint16_t errors_count1 = _lpq_port_0.length;
@@ -320,7 +320,6 @@ void mavlink_stream_sys_status(uint8_t port) {
 	//TODO: Other sensors?
 	// MAV_SYS_STATUS_SENSOR_BATTERY, MAV_SYS_STATUS_SENSOR_OPTICAL_FLOW, MAV_SYS_STATUS_SENSOR_VISION_POSITION ...?
 
-	//mavlink_msg_sys_status_send(MAVLINK_COMM_0, uint32_t onboard_control_sensors_present, uint32_t onboard_control_sensors_enabled, uint32_t onboard_control_sensors_health, uint16_t load, uint16_t voltage_battery, int16_t current_battery, int8_t battery_remaining, uint16_t drop_rate_comm, uint16_t errors_comm, uint16_t errors_count1, uint16_t errors_count2, uint16_t errors_count3, uint16_t errors_count4)
 	mavlink_msg_sys_status_send(port,
 								onboard_control_sensors_present,
 								onboard_control_sensors_enabled,
@@ -442,13 +441,13 @@ void mavlink_stream_battery_status(uint8_t port) {
 	uint8_t charge_state = MAV_BATTERY_CHARGE_STATE_UNDEFINED;
 
 	if(get_param_uint(PARAM_BATTERY_CELL_NUM) > 0) {
-		if(_sensors.voltage_monitor.precentage > 100) {
+		if(_sensors.voltage_monitor.precentage > _fc_1) {
 			charge_state = MAV_BATTERY_CHARGE_STATE_UNHEALTHY;
-		} else if(_sensors.voltage_monitor.precentage > (int)get_param_uint(PARAM_BATTERY_CHARGE_STATE_OK)) {
+		} else if(_sensors.voltage_monitor.precentage > get_param_fix16(PARAM_BATTERY_CHARGE_STATE_LOW)) {
 			charge_state = MAV_BATTERY_CHARGE_STATE_OK;
-		} else if(_sensors.voltage_monitor.precentage > (int)get_param_uint(PARAM_BATTERY_CHARGE_STATE_LOW)) {
+		} else if(_sensors.voltage_monitor.precentage > get_param_fix16(PARAM_BATTERY_CHARGE_STATE_CRITICAL)) {
 			charge_state = MAV_BATTERY_CHARGE_STATE_LOW;
-		} else if(_sensors.voltage_monitor.precentage > (int)get_param_uint(PARAM_BATTERY_CHARGE_STATE_CRITICAL)) {
+		} else if(_sensors.voltage_monitor.precentage > get_param_fix16(PARAM_BATTERY_CHARGE_STATE_EMERGENCY)) {
 			charge_state = MAV_BATTERY_CHARGE_STATE_CRITICAL;
 		} else if(_sensors.voltage_monitor.precentage > 0) {
 			charge_state = MAV_BATTERY_CHARGE_STATE_EMERGENCY;
@@ -466,7 +465,7 @@ void mavlink_stream_battery_status(uint8_t port) {
 								   -1,
 								   -1,
 								   -1,
-								   _sensors.voltage_monitor.precentage,
+								   fix16_to_int(fix16_mul(_fc_100,_sensors.voltage_monitor.precentage)),
 								   0,
 								   charge_state);
 }

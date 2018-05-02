@@ -31,7 +31,11 @@ typedef struct {
 	fix16_t y[8];
 	fix16_t z[8];
 } mixer_t;
-
+/* TODO:
+typedef struct {
+	bool do_test;
+} mixer_motor_test_t;
+*/
 extern int32_t _GPIO_outputs[8];
 extern output_type_t _GPIO_output_type[8];
 

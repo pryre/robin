@@ -97,7 +97,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_MAX_ROLL_ANGLE, fix16_from_float(0.786f));
 	init_param_fix16(PARAM_PID_PITCH_ANGLE_P, fix16_from_float(6.5f));
 	init_param_fix16(PARAM_MAX_PITCH_ANGLE, fix16_from_float(0.786f));
-	init_param_fix16(PARAM_PID_YAW_ANGLE_P, fix16_from_float(6.5f));
+	init_param_fix16(PARAM_PID_YAW_ANGLE_P, fix16_from_float(2.8f));
 	init_param_fix16(PARAM_PID_TAU, fix16_from_float(0.05f));
 	init_param_uint(PARAM_BATTERY_TYPE, 0);
 	init_param_uint(PARAM_BATTERY_FUNCTION, 0);
@@ -105,10 +105,10 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_BATTERY_CELL_MIN, fix16_from_float(3.7f));
 	init_param_fix16(PARAM_BATTERY_CELL_MAX, fix16_from_float(4.2f));
 	init_param_fix16(PARAM_BATTERY_READING_FILTER, fix16_from_float(0.8f));
-	init_param_fix16(PARAM_BATTERY_DIVIDER, fix16_from_float(11.0f));
-	init_param_uint(PARAM_BATTERY_CHARGE_STATE_OK, 50);
-	init_param_uint(PARAM_BATTERY_CHARGE_STATE_LOW, 20);
-	init_param_uint(PARAM_BATTERY_CHARGE_STATE_CRITICAL, 10);
+	init_param_fix16(PARAM_BATTERY_DIVIDER, fix16_from_float(-1.0f));
+	init_param_fix16(PARAM_BATTERY_CHARGE_STATE_LOW, fix16_from_float(0.2f));
+	init_param_fix16(PARAM_BATTERY_CHARGE_STATE_CRITICAL, fix16_from_float(0.1f));
+	init_param_fix16(PARAM_BATTERY_CHARGE_STATE_EMERGENCY, fix16_from_float(0.05f));
 	init_param_uint(PARAM_MOTOR_PWM_SEND_RATE, 400);
 	init_param_uint(PARAM_MOTOR_PWM_IDLE, 1150);
 	init_param_uint(PARAM_MOTOR_PWM_MIN, 1000);
@@ -196,38 +196,38 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"ACC_X_TEMP_COMP",
 	"ACC_Y_TEMP_COMP",
 	"ACC_Z_TEMP_COMP",
-	"PID_ROLL_R_P",
-	"PID_ROLL_R_I",
-	"PID_ROLL_R_D",
-	"MAX_ROLL_R",
-	"PID_PITCH_R_P",
-	"PID_PITCH_R_I",
-	"PID_PITCH_R_D",
-	"MAX_PITCH_R",
-	"PID_YAW_R_P",
-	"PID_YAW_R_I",
-	"PID_YAW_R_D",
-	"MAX_YAW_R",
-	"PID_ROLL_ANG_P",
+	"MC_ROLLRATE_P",
+	"MC_ROLLRATE_I",
+	"MC_ROLLRATE_D",
+	"MC_ROLLRATE_MAX",
+	"MC_PITCHRATE_P",
+	"MC_PITCHRATE_I",
+	"MC_PITCHRATE_D",
+	"MC_PITCHRATE_MAX",
+	"MC_YAWRATE_P",
+	"MC_YAWRATE_I",
+	"MC_YAWRATE_D",
+	"MC_YAWRATE_MAX",
+	"MC_ROLL_P",
 	"MAX_ROLL_A",
-	"PID_PITCH_ANG_P",
+	"MC_PITCH_P",
 	"MAX_PITCH_A",
-	"PID_YAW_ANG_P",
+	"MC_YAW_P",
 	"PID_TAU",
-	"BATT_TYPE",
-	"BATT_FUNC",
-	"BATT_CELL_NUM",
-	"BATT_CELL_MIN",
-	"BATT_CELL_MAX",
-	"BATT_FILTER",
-	"BATT_DIVIDER",
-	"BATT_CHRG_OK",
-	"BATT_CHRG_LOW",
-	"BATT_CHRG_CRIT",
-	"MOTOR_PWM_RATE",
-	"MOTOR_PWM_IDLE",
-	"MOTOR_PWM_MIN",
-	"MOTOR_PWM_MAX",
+	"BAT_TYPE",
+	"BAT_FUNC",
+	"BAT_N_CELLS",
+	"BAT_V_EMPTY",
+	"BAT_V_CHARGED",
+	"BAT_FILTER",
+	"BAT_V_DIV",
+	"BAT_LOW_THR",
+	"BAT_CRIT_THR",
+	"BAT_EMERGEN_THR",
+	"PWM_RATE",
+	"PWM_IDLE",
+	"PWM_MIN",
+	"PWM_MAX",
 	"DO_ESC_CAL",
 	"FAILSAFE_THRTL",
 	"TIMEOUT_THRTL",

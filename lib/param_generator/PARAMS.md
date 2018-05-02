@@ -76,38 +76,38 @@ ACC_Z_S_NEG | float | Scaling correction for accelerometer measurements (Z negat
 ACC_X_TEMP_COMP | float | Temperature correction for accelerometer measurements (X axis) | 0.0 |  | scalar | False
 ACC_Y_TEMP_COMP | float | Temperature correction for accelerometer measurements (Y axis) | 0.0 |  | scalar | False
 ACC_Z_TEMP_COMP | float | Temperature correction for accelerometer measurements (Z axis) | 0.0 |  | scalar | False
-PID_ROLL_R_P | float | Proportional gain for roll rate PID | 0.05 |  | scalar | False
-PID_ROLL_R_I | float | Integral gain for roll rate PID | 0.0 |  | scalar | False
-PID_ROLL_R_D | float | Derivative gain for roll rate PID | 0.005 |  | scalar | False
-MAX_ROLL_R | float | Maximum allowed command for roll rate (TODO) | 3.14159 | rad/s | scalar | False
-PID_PITCH_R_P | float | Proportional gain for pitch rate PID | 0.05 |  | scalar | False
-PID_PITCH_R_I | float | Integral gain for pitch rate PID | 0.0 |  | scalar | False
-PID_PITCH_R_D | float | Derivative gain for pitch rate PID | 0.005 |  | scalar | False
-MAX_PITCH_R | float | Maximum allowed command for pitch rate (TODO) | 3.14159 | rad/s | scalar | False
-PID_YAW_R_P | float | Proportional gain for yaw rate PID | 0.2 |  | scalar | False
-PID_YAW_R_I | float | Integral gain for yaw rate PID | 0.1 |  | scalar | False
-PID_YAW_R_D | float | Derivative gain for yaw rate PID | 0.0 |  | scalar | False
-MAX_YAW_R | float | Maximum allowed command for yaw rate (TODO) | 1.57079 | rad/s | scalar | False
-PID_ROLL_ANG_P | float | Feed-forward gain for roll angle | 6.5 |  | scalar | False
+MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 0.05 |  | scalar | False
+MC_ROLLRATE_I | float | Integral gain for roll rate PID | 0.0 |  | scalar | False
+MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.005 |  | scalar | False
+MC_ROLLRATE_MAX | float | Maximum allowed command for roll rate | 3.14159 | rad/s | scalar | False
+MC_PITCHRATE_P | float | Proportional gain for pitch rate PID | 0.05 |  | scalar | False
+MC_PITCHRATE_I | float | Integral gain for pitch rate PID | 0.0 |  | scalar | False
+MC_PITCHRATE_D | float | Derivative gain for pitch rate PID | 0.005 |  | scalar | False
+MC_PITCHRATE_MAX | float | Maximum allowed command for pitch rate | 3.14159 | rad/s | scalar | False
+MC_YAWRATE_P | float | Proportional gain for yaw rate PID | 0.2 |  | scalar | False
+MC_YAWRATE_I | float | Integral gain for yaw rate PID | 0.1 |  | scalar | False
+MC_YAWRATE_D | float | Derivative gain for yaw rate PID | 0.0 |  | scalar | False
+MC_YAWRATE_MAX | float | Maximum allowed command for yaw rate | 1.57079 | rad/s | scalar | False
+MC_ROLL_P | float | Feed-forward gain for roll angle | 6.5 |  | scalar | False
 MAX_ROLL_A | float | Maximum allowed command roll angle (TODO) | 0.786 | rad | scalar | False
-PID_PITCH_ANG_P | float | Feed-forward gain for pitch angle | 6.5 |  | scalar | False
+MC_PITCH_P | float | Feed-forward gain for pitch angle | 6.5 |  | scalar | False
 MAX_PITCH_A | float | Maximum allowed command pitch angle (TODO) | 0.786 | rad | scalar | False
-PID_YAW_ANG_P | float | Feed-forward gain for yaw angle | 6.5 |  | scalar | False
+MC_YAW_P | float | Feed-forward gain for yaw angle | 2.8 |  | scalar | False
 PID_TAU | float | Time parameter for PID controllers | 0.05 |  | scalar | False
-BATT_TYPE | uint | See the MAV_BATTERY_TYPE enum | 0 |  | scalar | False
-BATT_FUNC | uint | See the MAV_BATTERY_FUNCTION enum | 0 |  | scalar | False
-BATT_CELL_NUM | uint | Number of cells in the battery | 0 |  | scalar | False
-BATT_CELL_MIN | float | Low cell voltage | 3.7 |  | scalar | False
-BATT_CELL_MAX | float | High cell voltage | 4.2 |  | scalar | False
-BATT_FILTER | float | A smoothing filter for the voltage reading (0->1) | 0.8 |  | scalar | False
-BATT_DIVIDER | float | Resistor voltage divider for battery sensing (Naze32's use 10K:1k which gives a value of 11) | 11.0 |  | scalar | False
-BATT_CHRG_OK | uint | Charge state cutoff normal battery operation (as a percentage) | 50 |  | scalar | False
-BATT_CHRG_LOW | uint | Charge state cutoff for low battery remaining (as a percentage) | 20 |  | scalar | False
-BATT_CHRG_CRIT | uint | Charge state cutoff for critical battery remaining (as a percentage) | 10 |  | scalar | False
-MOTOR_PWM_RATE | uint | Update rate for PWM outputs | 400 | ? | scalar | True
-MOTOR_PWM_IDLE | uint | Idle output for motors (when armed) | 1150 | pwm | scalar | False
-MOTOR_PWM_MIN | uint | Minimum output for motors | 1000 | pwm | scalar | False
-MOTOR_PWM_MAX | uint | Maximum output for motors | 2000 | pwm | scalar | False
+BAT_TYPE | uint | See the MAV_BATTERY_TYPE enum | 0 |  | scalar | False
+BAT_FUNC | uint | See the MAV_BATTERY_FUNCTION enum | 0 |  | scalar | False
+BAT_N_CELLS | uint | Number of cells in the battery | 0 |  | scalar | False
+BAT_V_EMPTY | float | Low cell voltage | 3.7 |  | scalar | False
+BAT_V_CHARGED | float | High cell voltage | 4.2 |  | scalar | False
+BAT_FILTER | float | A smoothing filter for the voltage reading (0->1) | 0.8 |  | scalar | False
+BAT_V_DIV | float | Resistor voltage divider for battery sensing (-1 to use board default) | -1.0 |  | scalar | False
+BAT_LOW_THR | float | Charge state cutoff for low battery remaining (as a percentage) | 0.2 |  | scalar | False
+BAT_CRIT_THR | float | Charge state cutoff for critical battery remaining (as a percentage) | 0.1 |  | scalar | False
+BAT_EMERGEN_THR | float | Charge state cutoff for emergency battery remaining (as a percentage) | 0.05 |  | scalar | False
+PWM_RATE | uint | Update rate for PWM outputs | 400 | ? | scalar | True
+PWM_IDLE | uint | Idle output for motors (when armed) | 1150 | pwm | scalar | False
+PWM_MIN | uint | Minimum output for motors | 1000 | pwm | scalar | False
+PWM_MAX | uint | Maximum output for motors | 2000 | pwm | scalar | False
 DO_ESC_CAL | uint | When set to true, a motor calibration will be performed on the next boot (False:0,True:1) | 0 | 0 / 1 | boolean | True
 FAILSAFE_THRTL | float | Throttle percentage output when in failsafe mode | 0.25 |  | scalar | False
 TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed | 10000000 | us | scalar | False

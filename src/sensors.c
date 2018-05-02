@@ -575,23 +575,33 @@ bool sensors_update(uint32_t time_us) {
 	_sensors.safety_button.state_db = safety_button_reading;
 
 	//==-- Voltage Monitor
-	//_sensors.voltage_monitor.state_raw = digitalIn(_sensors.voltage_monitor.gpio_p, _sensors.voltage_monitor.pin);
-	_sensors.voltage_monitor.state_raw = adcGetChannel(ADC_EXTERNAL_PAD);
+	if(get_param_uint(PARAM_BATTERY_CELL_NUM) > 0) {
+		//_sensors.voltage_monitor.state_raw = digitalIn(_sensors.voltage_monitor.gpio_p, _sensors.voltage_monitor.pin);
+		_sensors.voltage_monitor.state_raw = adcGetChannel(ADC_EXTERNAL_PAD);
 
-	fix16_t voltage_res = fix16_div(fix16_from_int(0xFFF), _fc_3_3 );	//XXX: 0xFFF is from 12Bit adc
-	_sensors.voltage_monitor.state_calc = fix16_mul(fix16_div(fix16_from_int(_sensors.voltage_monitor.state_raw), voltage_res), get_param_fix16(PARAM_BATTERY_DIVIDER));
-	//Filter reading: value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
-	fix16_t voltage_alpha = get_param_fix16(PARAM_BATTERY_READING_FILTER);
-	_sensors.voltage_monitor.state_filtered = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, voltage_alpha), _sensors.voltage_monitor.state_calc), fix16_smul(voltage_alpha, _sensors.voltage_monitor.state_filtered));
-	//Calculate percentage left
-	fix16_t voltage_min = fix16_mul( fix16_from_int(get_param_uint(PARAM_BATTERY_CELL_NUM)), get_param_fix16(PARAM_BATTERY_CELL_MIN) );
-	fix16_t voltage_max = fix16_mul( fix16_from_int(get_param_uint(PARAM_BATTERY_CELL_NUM)), get_param_fix16(PARAM_BATTERY_CELL_MAX) );
-	fix16_t voltage_range = fix16_sub(voltage_max, voltage_min);
-	fix16_t batt_remaining = fix16_div(fix16_sub(_sensors.voltage_monitor.state_filtered, voltage_min), voltage_range);
-	_sensors.voltage_monitor.precentage = fix16_to_int(fix16_mul(_fc_100, batt_remaining));
+		fix16_t voltage_res = fix16_div(fix16_from_int(0xFFF), _fc_3_3 );	//XXX: 0xFFF is from 12Bit adc
+		//XXX: TODO: Should lookup board rev properly
+		fix16_t voltage_div = ( get_param_fix16(PARAM_BATTERY_DIVIDER) == -_fc_1 ) ? SENSOR_VMON_DIVIDER_NAZE32 : get_param_fix16(PARAM_BATTERY_DIVIDER);
 
-	_sensors.voltage_monitor.status.time_read = time_us;
+		_sensors.voltage_monitor.state_calc = fix16_mul(fix16_div(fix16_from_int(_sensors.voltage_monitor.state_raw), voltage_res), voltage_div);
+		//Filter reading: value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
+		fix16_t voltage_alpha = get_param_fix16(PARAM_BATTERY_READING_FILTER);
+		_sensors.voltage_monitor.state_filtered = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, voltage_alpha), _sensors.voltage_monitor.state_calc), fix16_smul(voltage_alpha, _sensors.voltage_monitor.state_filtered));
+		//Calculate percentage left
+		fix16_t voltage_min = fix16_mul( fix16_from_int(get_param_uint(PARAM_BATTERY_CELL_NUM)), get_param_fix16(PARAM_BATTERY_CELL_MIN) );
+		fix16_t voltage_max = fix16_mul( fix16_from_int(get_param_uint(PARAM_BATTERY_CELL_NUM)), get_param_fix16(PARAM_BATTERY_CELL_MAX) );
+		fix16_t voltage_range = fix16_sub(voltage_max, voltage_min);
+		//Only calc percentage if in range
+		if( ( _sensors.voltage_monitor.state_filtered > voltage_min ) &&
+			( _sensors.voltage_monitor.state_filtered < voltage_max ) ) {
+			_sensors.voltage_monitor.precentage = fix16_div(fix16_sub(_sensors.voltage_monitor.state_filtered, voltage_min), voltage_range);
+		} else {
+			_sensors.voltage_monitor.precentage = 0;
+		}
+
+		_sensors.voltage_monitor.status.time_read = time_us;
 		_sensors.voltage_monitor.status.new_data = true;
+	}
 
 	//==-- Calibrations
 	if( _system_status.state == MAV_STATE_CALIBRATING ) {	//If any calibration is in progress

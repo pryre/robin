@@ -31,6 +31,8 @@
 #define SENSOR_CAL_CMD_ESC 1
 #define SENSOR_CAL_CMD_BAROMETER 3
 
+#define SENSOR_VMON_DIVIDER_NAZE32 _fc_11	//XXX: Naze32's use 10K:1k which gives a value of 11.0
+
 typedef struct {
 	bool present;		//If the sensor is plugged in or not
 	bool new_data;	//If there is new data ready
@@ -128,7 +130,7 @@ typedef struct {
 	uint16_t state_raw;		//Measured state raw
 	fix16_t state_calc;		//Measured state
 	fix16_t state_filtered;	//Measured state filtered
-	int8_t precentage;		//Measured percentage
+	fix16_t precentage;		//Measured percentage
 
 } sensor_readings_voltage_monitor_t;
 
