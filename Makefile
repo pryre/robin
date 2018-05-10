@@ -218,7 +218,8 @@ $(OBJECT_DIR)/$(TARGET)/%.o: %.S
 	@$(CC) -c -o $@ $(ASFLAGS) $<
 
 clean:
-	rm -rf *.o obj $(TARGET_HEX) $(TARGET_ELF) $(TARGET_OBJS) $(TARGET_MAP)
+#	rm -rf *.o obj $(TARGET_HEX) $(TARGET_ELF) $(TARGET_OBJS) $(TARGET_MAP)
+	rm -rf ./build
 	rm ./lib/param_generator/param_gen.h
 	rm ./lib/param_generator/param_gen.c
 	rm ./lib/param_generator/PARAMS.md

@@ -1,5 +1,18 @@
 PROJECT_NAME = robin
 
+BUILD_REV_OK := 0
+
+ifeq ($(NAZE32_REV),5)
+	BUILD_REV_OK := 1
+endif
+ifeq ($(NAZE32_REV),6)
+	BUILD_REV_OK := 1
+endif
+
+ifeq ($(BUILD_REV_OK),0)
+$(error Unsupported board revision: $(NAZE32_REV))
+endif
+
 GEN_PARAMS := $(shell python3 lib/param_generator/gen_params.py >&2; echo $$?)
 #$(info $$GEN_PARAMS is [${GEN_PARAMS}])
 ifeq ($(GEN_PARAMS),"0")
