@@ -18,7 +18,7 @@ extern void SetSysClock(bool overclock);
 uint8_t _system_operation_control;
 
 system_status_t _system_status;
-command_input_t _command_input;
+command_input_t _cmd_ob_input;
 
 int main(void) {
 	_system_status.state = MAV_STATE_UNINIT;

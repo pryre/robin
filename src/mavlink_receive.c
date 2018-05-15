@@ -19,7 +19,7 @@ mavlink_queue_t _lpq_port_0;
 
 int32_t _pwm_control[MIXER_NUM_MOTORS];
 mixer_motor_test_t _motor_test;
-command_input_t _command_input;
+command_input_t _cmd_ob_input;
 system_status_t _system_status;
 mavlink_system_t _mavlink_gcs;
 
@@ -457,12 +457,12 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						//TODO: Check timestamp was recent before accepting
 
 						//Input Mask
-						_command_input.input_mask = mavlink_msg_set_attitude_target_get_type_mask(&msg);
+						_cmd_ob_input.input_mask = mavlink_msg_set_attitude_target_get_type_mask(&msg);
 
 						//Rates
-						_command_input.r = fix16_from_float(mavlink_msg_set_attitude_target_get_body_roll_rate(&msg));
-						_command_input.p = fix16_from_float(mavlink_msg_set_attitude_target_get_body_pitch_rate(&msg));
-						_command_input.y = fix16_from_float(mavlink_msg_set_attitude_target_get_body_yaw_rate(&msg));
+						_cmd_ob_input.r = fix16_from_float(mavlink_msg_set_attitude_target_get_body_roll_rate(&msg));
+						_cmd_ob_input.p = fix16_from_float(mavlink_msg_set_attitude_target_get_body_pitch_rate(&msg));
+						_cmd_ob_input.y = fix16_from_float(mavlink_msg_set_attitude_target_get_body_yaw_rate(&msg));
 
 						//Attitude
 						float qt_float[4];
@@ -474,10 +474,10 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						qt_fix.c = fix16_from_float(qt_float[2]);
 						qt_fix.d = fix16_from_float(qt_float[3]);
 
-						qf16_normalize_to_unit(&_command_input.q, &qt_fix);
+						qf16_normalize_to_unit(&_cmd_ob_input.q, &qt_fix);
 
 						//Trottle
-						_command_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
+						_cmd_ob_input.T = fix16_from_float(mavlink_msg_set_attitude_target_get_thrust(&msg));
 
 						//Update Sensor
 						safety_update_sensor(&_system_status.sensors.offboard_control);

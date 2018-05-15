@@ -15,7 +15,7 @@ extern "C" {
 
 system_status_t _system_status;
 sensor_readings_t _sensors;
-command_input_t _command_input;
+command_input_t _cmd_ob_input;
 control_output_t _control_output;
 char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
 char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
@@ -258,8 +258,8 @@ bool safety_request_arm(void) {
 
 	//Make sure low throttle is being provided
 	if( ( _control_output.T == 0 ) &&
-	  ( ( _command_input.T == 0 ) ||
-	    ( _command_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) )
+	  ( ( _cmd_ob_input.T == 0 ) ||
+	    ( _cmd_ob_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) )
 		throttle_check = true;
 
 	if(	( ( _system_status.safety_button_status ) || !_sensors.safety_button.status.present ) &&
@@ -536,7 +536,7 @@ static void safety_health_update(uint32_t time_now) {
 
 static void safety_arm_throttle_timeout( uint32_t time_now ) {
 	if( _time_safety_arm_throttle_timeout ) {	//If the timeout is active
-		if( _command_input.T > 0 ) {
+		if( _cmd_ob_input.T > 0 ) {
 			_time_safety_arm_throttle_timeout = 0;	//We have recieved throttle input, disable timeout
 		} else if( ( time_now - _time_safety_arm_throttle_timeout) > get_param_uint(PARAM_THROTTLE_TIMEOUT) ) {
 			mavlink_queue_broadcast_error("[SAFETY] Throttle timeout, disarming!");
