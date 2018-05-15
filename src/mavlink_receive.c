@@ -283,8 +283,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 									_motor_test.throttle = motor_test_throttle;
 
 									//XXX: Override sensor health as autopilot is in control
+									_system_status.sensors.pwm_control.count = get_param_uint(_system_status.sensors.pwm_control.param_stream_count);
 									safety_update_sensor(&_system_status.sensors.pwm_control);
-									_system_status.sensors.pwm_control.health = SYSTEM_HEALTH_OK;
 
 									char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
 									char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
