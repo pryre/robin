@@ -21,6 +21,7 @@ static mavlink_stream_t mavlink_stream_comm_0[MAVLINK_STREAM_COUNT] = {
 	{ .param_rate = PARAM_STREAM_RATE_ATTITUDE_0,				.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_attitude },
 	{ .param_rate = PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0,	.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_attitude_quaternion },
 	{ .param_rate = PARAM_STREAM_RATE_ATTITUDE_TARGET_0,		.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_attitude_target },
+	{ .param_rate = PARAM_STREAM_RATE_RC_CHANNELS_RAW_0,		.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_rc_channels_raw },
 	{ .param_rate = PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0,		.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_servo_output_raw },
 	{ .param_rate = PARAM_STREAM_RATE_TIMESYNC_0,				.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_timesync },
 	{ .param_rate = PARAM_STREAM_RATE_BATTERY_STATUS_0,			.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_battery_status },

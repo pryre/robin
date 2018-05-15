@@ -79,6 +79,7 @@ void mavlink_stream_highres_imu(uint8_t port);
 void mavlink_stream_attitude(uint8_t port);
 void mavlink_stream_attitude_quaternion(uint8_t port);
 void mavlink_stream_attitude_target(uint8_t port);
+void mavlink_stream_rc_channels_raw(uint8_t port);
 void mavlink_stream_servo_output_raw(uint8_t port);
 void mavlink_stream_timesync(uint8_t port);
 void mavlink_stream_battery_status(uint8_t port);

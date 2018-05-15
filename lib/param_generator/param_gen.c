@@ -3,6 +3,7 @@
 #include "mavlink_system.h"
 #include "mavlink_transmit.h"
 #include "controller.h"
+#include "sensors.h"
 #include "pid_controller.h"
 #include "fix16.h"
 
@@ -26,6 +27,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_0, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0, fix16_from_float(50.0f));
 	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_TARGET_0, fix16_from_float(50.0f));
+	init_param_fix16(PARAM_STREAM_RATE_RC_CHANNELS_RAW_0, fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0, fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_TIMESYNC_0, fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_BATTERY_STATUS_0, fix16_from_float(2.0f));
@@ -117,6 +119,31 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_RC_MAP_PITCH, 0);
 	init_param_uint(PARAM_RC_MAP_YAW, 0);
 	init_param_uint(PARAM_RC_MAP_THROTTLE, 0);
+	init_param_uint(PARAM_RC_MAP_MODE_SW, 0);
+	init_param_uint(PARAM_RC1_MIN, 1000);
+	init_param_uint(PARAM_RC1_MID, 1500);
+	init_param_uint(PARAM_RC1_MAX, 2000);
+	init_param_uint(PARAM_RC2_MIN, 1000);
+	init_param_uint(PARAM_RC2_MID, 1500);
+	init_param_uint(PARAM_RC2_MAX, 2000);
+	init_param_uint(PARAM_RC3_MIN, 1000);
+	init_param_uint(PARAM_RC3_MID, 1500);
+	init_param_uint(PARAM_RC3_MAX, 2000);
+	init_param_uint(PARAM_RC4_MIN, 1000);
+	init_param_uint(PARAM_RC4_MID, 1500);
+	init_param_uint(PARAM_RC4_MAX, 2000);
+	init_param_uint(PARAM_RC5_MIN, 1000);
+	init_param_uint(PARAM_RC5_MID, 1500);
+	init_param_uint(PARAM_RC5_MAX, 2000);
+	init_param_uint(PARAM_RC6_MIN, 1000);
+	init_param_uint(PARAM_RC6_MID, 1500);
+	init_param_uint(PARAM_RC6_MAX, 2000);
+	init_param_uint(PARAM_RC7_MIN, 1000);
+	init_param_uint(PARAM_RC7_MID, 1500);
+	init_param_uint(PARAM_RC7_MAX, 2000);
+	init_param_uint(PARAM_RC8_MIN, 1000);
+	init_param_uint(PARAM_RC8_MID, 1500);
+	init_param_uint(PARAM_RC8_MAX, 2000);
 	init_param_uint(PARAM_DO_ESC_CAL, 0);
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, fix16_from_float(0.25f));
 	init_param_uint(PARAM_THROTTLE_TIMEOUT, 10000000);
@@ -145,6 +172,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"STRM0_ATT",
 	"STRM0_ATT_Q",
 	"STRM0_ATT_T",
+	"STRM0_RC_IN",
 	"STRM0_SRV_OUT",
 	"STRM0_TIMESYNC",
 	"STRM0_BATTSTAT",
@@ -236,6 +264,31 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"RC_MAP_PITCH",
 	"RC_MAP_YAW",
 	"RC_MAP_THROTTLE",
+	"RC_MAP_MODE_SW",
+	"RC1_MIN",
+	"RC1_TRIM",
+	"RC1_MAX",
+	"RC2_MIN",
+	"RC2_TRIM",
+	"RC2_MAX",
+	"RC3_MIN",
+	"RC3_TRIM",
+	"RC3_MAX",
+	"RC4_MIN",
+	"RC4_TRIM",
+	"RC4_MAX",
+	"RC5_MIN",
+	"RC5_TRIM",
+	"RC5_MAX",
+	"RC6_MIN",
+	"RC6_TRIM",
+	"RC6_MAX",
+	"RC7_MIN",
+	"RC7_TRIM",
+	"RC7_MAX",
+	"RC8_MIN",
+	"RC8_TRIM",
+	"RC8_MAX",
 	"DO_ESC_CAL",
 	"FAILSAFE_THRTL",
 	"TIMEOUT_THRTL",
@@ -263,6 +316,9 @@ void param_change_callback(param_id_t id) {
 			break;
 		case PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
 			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_TARGET);
+			break;
+		case PARAM_STREAM_RATE_RC_CHANNELS_RAW_0:
+			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_RC_CHANNELS_RAW);
 			break;
 		case PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
 			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);
@@ -316,6 +372,78 @@ void param_change_callback(param_id_t id) {
 			pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));
 			pid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));
 			pid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));
+			break;
+		case PARAM_RC1_MIN:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC1_MID:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC1_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC2_MIN:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC2_MID:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC2_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC3_MIN:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC3_MID:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC3_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC4_MIN:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC4_MID:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC4_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC5_MIN:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC5_MID:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC5_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC6_MIN:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC6_MID:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC6_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC7_MIN:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC7_MID:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC7_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC8_MIN:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC8_MID:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC8_MAX:
+			sensors_update_rc_cal();
 			break;
 		case PARAM_MIXER:
 			write_params();

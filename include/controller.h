@@ -36,7 +36,8 @@ typedef struct {
 	fix16_t T;
 } control_output_t;
 
-extern command_input_t _command_input;
+extern command_input_t _cmd_ob_input;
+extern command_input_t _cmd_rc_input;
 extern command_input_t _control_input;
 extern control_output_t _control_output;
 

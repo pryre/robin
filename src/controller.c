@@ -23,7 +23,8 @@ extern "C" {
 
 system_status_t _system_status;
 state_t _state_estimator;
-command_input_t _command_input;
+command_input_t _cmd_ob_input;
+command_input_t _cmd_rc_input;
 command_input_t _control_input;
 control_output_t _control_output;
 
@@ -45,7 +46,7 @@ void controller_reset(void) {
 	_control_input.q.c = 0;
 	_control_input.q.d = 0;
 	_control_input.T = 0;
-	_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;
+	_cmd_ob_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;
 
 	_control_output.r = 0;
 	_control_output.p = 0;
@@ -78,15 +79,15 @@ void controller_init(void) {
 			 _state_estimator.r,
 			 0, 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
 
-	_command_input.r = 0;
-	_command_input.p = 0;
-	_command_input.y = 0;
-	_command_input.q.a = _fc_1;
-	_command_input.q.b = 0;
-	_command_input.q.c = 0;
-	_command_input.q.d = 0;
-	_command_input.T = 0;
-	_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
+	_cmd_ob_input.r = 0;
+	_cmd_ob_input.p = 0;
+	_cmd_ob_input.y = 0;
+	_cmd_ob_input.q.a = _fc_1;
+	_cmd_ob_input.q.b = 0;
+	_cmd_ob_input.q.c = 0;
+	_cmd_ob_input.q.d = 0;
+	_cmd_ob_input.T = 0;
+	_cmd_ob_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
 
 	_control_output.r = 0;
 	_control_output.p = 0;
@@ -94,28 +95,16 @@ void controller_init(void) {
 	_control_output.T = 0;
 }
 
-static void controller_set_input_failsafe(command_input_t &input) {
-	input.r = 0;
-	input.p = 0;
-	input.y = 0;
-	input.q.a = _fc_1;
-	input.q.b = 0;
-	input.q.c = 0;
-	input.q.d = 0;
-	input.T = get_param_fix16(PARAM_FAILSAFE_THROTTLE);
-	input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
-}
-
-static fix16_t normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
-	//Center PWMs around 0
-	int16_t pwm_l = min - mid;
-	int16_t pwm_m = pwm - mid;
-	int16_t pwm_h = max - mid;
-
-	//normalize (0 -> 1)
-	fix16_t ni = fix16_div(fix16_from_int(pwm_m - pwm_l), fix16_from_int(pwm_h - pwm_l))
-	//scale (-1 -> 1)
-	return fix16_sub(fix16_mul(ni, _fc_2), _fc_1);
+static void controller_set_input_failsafe(command_input_t *input) {
+	input->r = 0;
+	input->p = 0;
+	input->y = 0;
+	input->q.a = _fc_1;
+	input->q.b = 0;
+	input->q.c = 0;
+	input->q.d = 0;
+	input->T = get_param_fix16(PARAM_FAILSAFE_THROTTLE);
+	input->input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
 }
 
 static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
@@ -288,26 +277,26 @@ void controller_run( uint32_t time_now ) {
 	fix16_t goal_throttle = 0;
 
 	command_input_t input;
-	controller_set_input_failsafe(input); //Failsafe input to be safe
+	controller_set_input_failsafe(&input); //Failsafe input to be safe
 
 	//Handle controller input
 	if(_system_status.state != MAV_STATE_CRITICAL) {
 		if(true) {
 			//Offboard mode
-			input = _command_input;
+			input = _cmd_ob_input;
 		} else if(false) {
 			//Manual stabilize mode
 			//Roll/pitch angle and yaw rate
 			input.input_mask |= CMD_IN_IGNORE_ROLL_RATE;
 			input.input_mask |= CMD_IN_IGNORE_PITCH_RATE;
-
+			/*
 			uint16_t pwm_roll = pwmRead(get_param_uint(RC_MAP_ROLL));
 			uint16_t pwm_pitch = pwmRead(get_param_uint(RC_MAP_PITCH));
 			uint16_t pwm_yaw = pwmRead(get_param_uint(RC_MAP_YAW));
 			uint16_t pwm_throttle = pwmRead(get_param_uint(RC_MAP_THROTTLE));
 
 			fix16_t rc_roll = normalized_input(pwm_roll);
-
+			*/
 		} else if(false) {
 			//Manual acro mode
 			//Roll/pitch/yaw rate
@@ -372,19 +361,19 @@ void controller_run( uint32_t time_now ) {
 	//Roll Rate
 	if( !(_control_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
 		//Use the commanded roll rate goal
-		goal_r = _command_input.r;
+		goal_r = _cmd_ob_input.r;
 	}
 
 	//Pitch Rate
 	if( !(_control_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
 		//Use the commanded pitch rate goal
-		goal_p = _command_input.p;
+		goal_p = _cmd_ob_input.p;
 	}
 
 	//Yaw Rate
 	if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
 		//Use the commanded yaw rate goal
-		goal_y = _command_input.y;
+		goal_y = _cmd_ob_input.y;
 	}
 
 	//Constrain rates to set params
@@ -407,7 +396,7 @@ void controller_run( uint32_t time_now ) {
 	//Trottle
 	if( !(_control_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) {
 		//Use the commanded throttle
-		goal_throttle = _command_input.T;
+		goal_throttle = _cmd_ob_input.T;
 	}
 
 	_control_output.T = goal_throttle;

@@ -244,6 +244,17 @@ PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
     function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
     unit: "Hz"
 ---
+PARAM_STREAM_RATE_RC_CHANNELS_RAW_0:
+  type: "float"
+  name: "STRM0_RC_IN"
+  description: "Communication update rate for RC input channels (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10.0
+    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_RC_CHANNELS_RAW);"
+    unit: "Hz"
+---
 PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
   type: "float"
   name: "STRM0_SRV_OUT"
@@ -1207,6 +1218,280 @@ PARAM_RC_MAP_THROTTLE:
     option: "scalar"
     default: 0
     unit: "channel"
+---
+PARAM_RC_MAP_MODE_SW:
+  type: "uint"
+  name: "RC_MAP_MODE_SW"
+  description: "Channel to use for RC mode select"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC1_MIN:
+  type: "uint"
+  name: "RC1_MIN"
+  description: "RC minimum value for channel 1 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC1_MID:
+  type: "uint"
+  name: "RC1_TRIM"
+  description: "RC median value for channel 1 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC1_MAX:
+  type: "uint"
+  name: "RC1_MAX"
+  description: "RC max value for channel 1 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC2_MIN:
+  type: "uint"
+  name: "RC2_MIN"
+  description: "RC minimum value for channel 2 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC2_MID:
+  type: "uint"
+  name: "RC2_TRIM"
+  description: "RC median value for channel 2 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC2_MAX:
+  type: "uint"
+  name: "RC2_MAX"
+  description: "RC max value for channel 2 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC3_MIN:
+  type: "uint"
+  name: "RC3_MIN"
+  description: "RC minimum value for channel 3 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC3_MID:
+  type: "uint"
+  name: "RC3_TRIM"
+  description: "RC median value for channel 3 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC3_MAX:
+  type: "uint"
+  name: "RC3_MAX"
+  description: "RC max value for channel 3 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC4_MIN:
+  type: "uint"
+  name: "RC4_MIN"
+  description: "RC minimum value for channel 4 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC4_MID:
+  type: "uint"
+  name: "RC4_TRIM"
+  description: "RC median value for channel 4 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC4_MAX:
+  type: "uint"
+  name: "RC4_MAX"
+  description: "RC max value for channel 4 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC5_MIN:
+  type: "uint"
+  name: "RC5_MIN"
+  description: "RC minimum value for channel 5 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC5_MID:
+  type: "uint"
+  name: "RC5_TRIM"
+  description: "RC median value for channel 5 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC5_MAX:
+  type: "uint"
+  name: "RC5_MAX"
+  description: "RC max value for channel 5 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC6_MIN:
+  type: "uint"
+  name: "RC6_MIN"
+  description: "RC minimum value for channel 6 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC6_MID:
+  type: "uint"
+  name: "RC6_TRIM"
+  description: "RC median value for channel 6 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC6_MAX:
+  type: "uint"
+  name: "RC6_MAX"
+  description: "RC max value for channel 6 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC7_MIN:
+  type: "uint"
+  name: "RC7_MIN"
+  description: "RC minimum value for channel 7 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC7_MID:
+  type: "uint"
+  name: "RC7_TRIM"
+  description: "RC median value for channel 7 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC7_MAX:
+  type: "uint"
+  name: "RC7_MAX"
+  description: "RC max value for channel 7 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC8_MIN:
+  type: "uint"
+  name: "RC8_MIN"
+  description: "RC minimum value for channel 8 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC8_MID:
+  type: "uint"
+  name: "RC8_TRIM"
+  description: "RC median value for channel 8 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC8_MAX:
+  type: "uint"
+  name: "RC8_MAX"
+  description: "RC max value for channel 8 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
 ---
 PARAM_DO_ESC_CAL:
   type: "uint"

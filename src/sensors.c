@@ -3,12 +3,14 @@
 #include <stdlib.h>
 
 #include "sensors.h"
+#include "controller.h"
 #include "estimator.h"
 #include "safety.h"
 #include "params.h"
 #include "mavlink_system.h"
 #include "breezystm32.h"
 #include "drv_mpu.h"
+#include "pwm.h"
 #include "adc.h"
 #include "gpio.h"
 
@@ -32,10 +34,13 @@ static int16_t read_accel_raw[3];
 static int16_t read_gyro_raw[3];
 static volatile int16_t read_temp_raw;
 
+static uint8_t rc_cal[8][3];
+
 sensor_readings_t _sensors;
 sensor_calibration_t _sensor_calibration;
 
 system_status_t _system_status;
+command_input_t _cmd_rc_input;
 
 //==-- Functions
 static void clock_init(void) {
@@ -166,6 +171,21 @@ void sensors_init_external(void) {
 
 	//==-- External Pose
 	sensor_status_init( &_sensors.ext_pose.status, false );
+
+	//==-- RC Input
+	sensor_status_init( &_sensors.rc_input.status, true );
+	_sensors.rc_input.p_r = 0;
+	_sensors.rc_input.p_p = 0;
+	_sensors.rc_input.p_y = 0;
+	_sensors.rc_input.p_T = 0;
+	_sensors.rc_input.p_m = 0;
+	_sensors.rc_input.c_r = 0;
+	_sensors.rc_input.c_p = 0;
+	_sensors.rc_input.c_y = 0;
+	_sensors.rc_input.c_T = 0;
+	_sensors.rc_input.c_m = MAIN_MODE_MANUAL;
+	_sensors.rc_input.mode_select_valid = false;
+	sensors_update_rc_cal();
 
 	//==-- Safety button
 	sensor_status_init(&_sensors.safety_button.status, (bool)get_param_uint(PARAM_SENSOR_SAFETY_CBRK));
@@ -517,6 +537,49 @@ static bool sensors_calibrate(void) {
 	return !_sensor_calibration.type;
 }
 
+static fix16_t normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
+	//Center PWMs around 0
+	int16_t pwm_l = min - mid;
+	int16_t pwm_m = pwm - mid;
+	int16_t pwm_h = max - mid;
+
+	//normalize (0 -> 1)
+	return fix16_div(fix16_from_int(pwm_m - pwm_l), fix16_from_int(pwm_h - pwm_l));
+}
+
+static fix16_t dual_normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
+	fix16_t ni = normalized_input(pwm, min, mid, max);
+	//scale (-1 -> 1)
+	return fix16_sub(fix16_mul(ni, _fc_2), _fc_1);
+}
+
+void sensors_update_rc_cal(void) {
+	rc_cal[0][SENSOR_RC_CAL_MIN] = get_param_uint(PARAM_RC1_MIN);
+	rc_cal[0][SENSOR_RC_CAL_MID] = get_param_uint(PARAM_RC1_MID);
+	rc_cal[0][SENSOR_RC_CAL_MAX] = get_param_uint(PARAM_RC1_MAX);
+	rc_cal[1][SENSOR_RC_CAL_MIN] = get_param_uint(PARAM_RC2_MIN);
+	rc_cal[1][SENSOR_RC_CAL_MID] = get_param_uint(PARAM_RC2_MID);
+	rc_cal[1][SENSOR_RC_CAL_MAX] = get_param_uint(PARAM_RC2_MAX);
+	rc_cal[2][SENSOR_RC_CAL_MIN] = get_param_uint(PARAM_RC3_MIN);
+	rc_cal[2][SENSOR_RC_CAL_MID] = get_param_uint(PARAM_RC3_MID);
+	rc_cal[2][SENSOR_RC_CAL_MAX] = get_param_uint(PARAM_RC3_MAX);
+	rc_cal[3][SENSOR_RC_CAL_MIN] = get_param_uint(PARAM_RC4_MIN);
+	rc_cal[3][SENSOR_RC_CAL_MID] = get_param_uint(PARAM_RC4_MID);
+	rc_cal[3][SENSOR_RC_CAL_MAX] = get_param_uint(PARAM_RC4_MAX);
+	rc_cal[4][SENSOR_RC_CAL_MIN] = get_param_uint(PARAM_RC5_MIN);
+	rc_cal[4][SENSOR_RC_CAL_MID] = get_param_uint(PARAM_RC5_MID);
+	rc_cal[4][SENSOR_RC_CAL_MAX] = get_param_uint(PARAM_RC5_MAX);
+	rc_cal[5][SENSOR_RC_CAL_MIN] = get_param_uint(PARAM_RC6_MIN);
+	rc_cal[5][SENSOR_RC_CAL_MID] = get_param_uint(PARAM_RC6_MID);
+	rc_cal[5][SENSOR_RC_CAL_MAX] = get_param_uint(PARAM_RC6_MAX);
+	rc_cal[6][SENSOR_RC_CAL_MIN] = get_param_uint(PARAM_RC7_MIN);
+	rc_cal[6][SENSOR_RC_CAL_MID] = get_param_uint(PARAM_RC7_MID);
+	rc_cal[6][SENSOR_RC_CAL_MAX] = get_param_uint(PARAM_RC7_MAX);
+	rc_cal[7][SENSOR_RC_CAL_MIN] = get_param_uint(PARAM_RC8_MIN);
+	rc_cal[7][SENSOR_RC_CAL_MID] = get_param_uint(PARAM_RC8_MID);
+	rc_cal[7][SENSOR_RC_CAL_MAX] = get_param_uint(PARAM_RC8_MAX);
+}
+
 bool sensors_update(uint32_t time_us) {
 	//bool update_success = false;
 	//TODO: Remember not to expect all sensors to be ready
@@ -554,6 +617,64 @@ bool sensors_update(uint32_t time_us) {
 	_sensors.imu.status.new_data = true;
 
 	safety_update_sensor(&_system_status.sensors.imu);
+
+	//==-- RC Input
+	//Check that all channels have been set
+	if( get_param_uint(PARAM_RC_MAP_ROLL) &&
+		get_param_uint(PARAM_RC_MAP_PITCH) &&
+		get_param_uint(PARAM_RC_MAP_YAW) &&
+		get_param_uint(PARAM_RC_MAP_THROTTLE) ) {
+
+		uint8_t chan_roll = get_param_uint(PARAM_RC_MAP_ROLL) - 1;
+		uint8_t chan_pitch = get_param_uint(PARAM_RC_MAP_PITCH) - 1;
+		uint8_t chan_yaw = get_param_uint(PARAM_RC_MAP_YAW) - 1;
+		uint8_t chan_throttle = get_param_uint(PARAM_RC_MAP_THROTTLE) - 1;
+
+		_sensors.rc_input.p_r = pwmRead(chan_roll);
+		_sensors.rc_input.p_p = pwmRead(chan_pitch);
+		_sensors.rc_input.p_y = pwmRead(chan_yaw);
+		_sensors.rc_input.p_T = pwmRead(chan_throttle);
+
+		if( (_sensors.rc_input.p_r > 0) &&
+			(_sensors.rc_input.p_p > 0) &&
+			(_sensors.rc_input.p_y > 0) &&
+			(_sensors.rc_input.p_T > 0) ) {
+			//We have a valid reading
+			_sensors.rc_input.status.time_read = time_us;
+			_sensors.rc_input.status.new_data = true;
+
+			_sensors.rc_input.c_r = dual_normalized_input(_sensors.rc_input.p_r,
+															rc_cal[chan_roll][SENSOR_RC_CAL_MIN],
+															rc_cal[chan_roll][SENSOR_RC_CAL_MID],
+															rc_cal[chan_roll][SENSOR_RC_CAL_MAX]);
+			_sensors.rc_input.c_p = dual_normalized_input(_sensors.rc_input.p_p,
+															rc_cal[chan_pitch][SENSOR_RC_CAL_MIN],
+															rc_cal[chan_pitch][SENSOR_RC_CAL_MID],
+															rc_cal[chan_pitch][SENSOR_RC_CAL_MAX]);
+			_sensors.rc_input.c_y = dual_normalized_input(_sensors.rc_input.p_y,
+															rc_cal[chan_yaw][SENSOR_RC_CAL_MIN],
+															rc_cal[chan_yaw][SENSOR_RC_CAL_MID],
+															rc_cal[chan_yaw][SENSOR_RC_CAL_MAX]);
+			_sensors.rc_input.c_T = normalized_input(_sensors.rc_input.p_T,
+															rc_cal[chan_throttle][SENSOR_RC_CAL_MIN],
+															rc_cal[chan_throttle][SENSOR_RC_CAL_MID],
+															rc_cal[chan_throttle][SENSOR_RC_CAL_MAX]);
+		}
+
+		_sensors.rc_input.mode_select_valid = false;
+
+		if (get_param_uint(PARAM_RC_MAP_MODE_SW)) {
+			_sensors.rc_input.p_m = pwmRead(get_param_uint(PARAM_RC_MAP_MODE_SW) - 1);
+
+			if( _sensors.rc_input.p_m > 0 ) {
+				//TODO: Handle mode select
+
+				_sensors.rc_input.mode_select_valid = true;	//XXX: TODO: SHOULD GO TO TRUE
+			}
+		}
+
+	}
+
 
 	//==-- Safety Button
 	bool safety_button_reading = false;

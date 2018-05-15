@@ -13,6 +13,7 @@
 #include "params.h"
 #include "param_generator/param_gen.h"
 #include "safety.h"
+#include "pwm.h"
 #include "sensors.h"
 #include "estimator.h"
 #include "controller.h"
@@ -400,6 +401,21 @@ void mavlink_stream_attitude_target(uint8_t port) {
 									 fix16_to_float(_control_input.p),
 									 fix16_to_float(_control_input.y),
 									 fix16_to_float(_control_input.T));
+}
+
+void mavlink_stream_rc_channels_raw(uint8_t port) {
+	mavlink_msg_rc_channels_raw_send(port,
+									  sensors_clock_ls_get(),
+									  0,	//Port 0
+									  pwmRead(0),
+									  pwmRead(1),
+									  pwmRead(2),
+									  pwmRead(3),
+									  pwmRead(4),
+									  pwmRead(5),
+									  pwmRead(6),
+									  pwmRead(7),
+									  255);
 }
 
 void mavlink_stream_servo_output_raw(uint8_t port) {

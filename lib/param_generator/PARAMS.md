@@ -21,6 +21,7 @@ STRM0_HR_IMU | float | Communication update rate for IMU readings (set to 0 to t
 STRM0_ATT | float | Communication update rate for current attitude euler angles (set to 0 to turn off stream) | 0.0 | Hz | scalar | False
 STRM0_ATT_Q | float | Communication update rate for current attitude quaternion (set to 0 to turn off stream) | 50.0 | Hz | scalar | False
 STRM0_ATT_T | float | Communication update rate for current attitude target (set to 0 to turn off stream) | 50.0 | Hz | scalar | False
+STRM0_RC_IN | float | Communication update rate for RC input channels (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_SRV_OUT | float | Communication update rate for commanded servo output (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_BATTSTAT | float | Communication update rate for battery status (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
@@ -112,6 +113,31 @@ RC_MAP_ROLL | uint | Channel to use for RC roll inputs | 0 | channel | scalar | 
 RC_MAP_PITCH | uint | Channel to use for RC pitch inputs | 0 | channel | scalar | False
 RC_MAP_YAW | uint | Channel to use for RC yaw inputs | 0 | channel | scalar | False
 RC_MAP_THROTTLE | uint | Channel to use for RC throttle inputs | 0 | channel | scalar | False
+RC_MAP_MODE_SW | uint | Channel to use for RC mode select | 0 | channel | scalar | False
+RC1_MIN | uint | RC minimum value for channel 1 calibration | 1000 | channel | scalar | False
+RC1_TRIM | uint | RC median value for channel 1 calibration | 1500 | channel | scalar | False
+RC1_MAX | uint | RC max value for channel 1 calibration | 2000 | channel | scalar | False
+RC2_MIN | uint | RC minimum value for channel 2 calibration | 1000 | channel | scalar | False
+RC2_TRIM | uint | RC median value for channel 2 calibration | 1500 | channel | scalar | False
+RC2_MAX | uint | RC max value for channel 2 calibration | 2000 | channel | scalar | False
+RC3_MIN | uint | RC minimum value for channel 3 calibration | 1000 | channel | scalar | False
+RC3_TRIM | uint | RC median value for channel 3 calibration | 1500 | channel | scalar | False
+RC3_MAX | uint | RC max value for channel 3 calibration | 2000 | channel | scalar | False
+RC4_MIN | uint | RC minimum value for channel 4 calibration | 1000 | channel | scalar | False
+RC4_TRIM | uint | RC median value for channel 4 calibration | 1500 | channel | scalar | False
+RC4_MAX | uint | RC max value for channel 4 calibration | 2000 | channel | scalar | False
+RC5_MIN | uint | RC minimum value for channel 5 calibration | 1000 | channel | scalar | False
+RC5_TRIM | uint | RC median value for channel 5 calibration | 1500 | channel | scalar | False
+RC5_MAX | uint | RC max value for channel 5 calibration | 2000 | channel | scalar | False
+RC6_MIN | uint | RC minimum value for channel 6 calibration | 1000 | channel | scalar | False
+RC6_TRIM | uint | RC median value for channel 6 calibration | 1500 | channel | scalar | False
+RC6_MAX | uint | RC max value for channel 6 calibration | 2000 | channel | scalar | False
+RC7_MIN | uint | RC minimum value for channel 7 calibration | 1000 | channel | scalar | False
+RC7_TRIM | uint | RC median value for channel 7 calibration | 1500 | channel | scalar | False
+RC7_MAX | uint | RC max value for channel 7 calibration | 2000 | channel | scalar | False
+RC8_MIN | uint | RC minimum value for channel 8 calibration | 1000 | channel | scalar | False
+RC8_TRIM | uint | RC median value for channel 8 calibration | 1500 | channel | scalar | False
+RC8_MAX | uint | RC max value for channel 8 calibration | 2000 | channel | scalar | False
 DO_ESC_CAL | uint | When set to true, a motor calibration will be performed on the next boot (False:0,True:1) | 0 | 0 / 1 | boolean | True
 FAILSAFE_THRTL | float | Throttle percentage output when in failsafe mode | 0.25 |  | scalar | False
 TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed | 10000000 | us | scalar | False

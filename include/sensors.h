@@ -8,6 +8,13 @@
 #include "fix16.h"
 #include "breezystm32.h"
 
+#include "safety.h"
+
+//RC CAL DEFINES
+#define SENSOR_RC_CAL_MIN 0
+#define SENSOR_RC_CAL_MID 1
+#define SENSOR_RC_CAL_MAX 2
+
 //XXX: Defined in MAV_CMD_PREFLIGHT_CALIBRATION
 //Param1
 #define SENSOR_CAL_CMD_GYRO 1
@@ -110,6 +117,25 @@ typedef struct {
 typedef struct {
 	sensor_status_t status;
 
+	uint16_t p_r;
+	uint16_t p_p;
+	uint16_t p_y;
+	uint16_t p_T;
+	uint16_t p_m;
+
+	fix16_t c_r;
+	fix16_t c_p;
+	fix16_t c_y;
+	fix16_t c_T;
+
+	compat_px4_main_mode_t c_m;
+	bool mode_select_valid;
+
+} sensor_readings_rc_input_t;
+
+typedef struct {
+	sensor_status_t status;
+
 	GPIO_TypeDef *gpio_p;
 	uint16_t pin;
 
@@ -141,6 +167,7 @@ typedef struct {
 	sensor_readings_barometer_t baro;
 	sensor_readings_sonar_t sonar;
 	sensor_readings_ext_pose_t ext_pose;
+	sensor_readings_rc_input_t rc_input;
 	sensor_readings_safety_button_t safety_button;
 	sensor_readings_voltage_monitor_t voltage_monitor;
 } sensor_readings_t;
@@ -244,5 +271,7 @@ float sensors_clock_smooth_time_drift(float tc, float tn);
 uint64_t sensors_clock_rt_get(void);	//Get the current time syncronized real time (good for logging)
 
 uint32_t sensors_clock_imu_int_get(void);	//Get the time of the latest imu interrupt
+
+void sensors_update_rc_cal(void);
 
 bool sensors_update(uint32_t time_us);
