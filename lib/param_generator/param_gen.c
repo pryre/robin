@@ -113,6 +113,10 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_MOTOR_PWM_IDLE, 1150);
 	init_param_uint(PARAM_MOTOR_PWM_MIN, 1000);
 	init_param_uint(PARAM_MOTOR_PWM_MAX, 2000);
+	init_param_uint(PARAM_RC_MAP_ROLL, 0);
+	init_param_uint(PARAM_RC_MAP_PITCH, 0);
+	init_param_uint(PARAM_RC_MAP_YAW, 0);
+	init_param_uint(PARAM_RC_MAP_THROTTLE, 0);
 	init_param_uint(PARAM_DO_ESC_CAL, 0);
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, fix16_from_float(0.25f));
 	init_param_uint(PARAM_THROTTLE_TIMEOUT, 10000000);
@@ -228,6 +232,10 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"PWM_IDLE",
 	"PWM_MIN",
 	"PWM_MAX",
+	"RC_MAP_ROLL",
+	"RC_MAP_PITCH",
+	"RC_MAP_YAW",
+	"RC_MAP_THROTTLE",
 	"DO_ESC_CAL",
 	"FAILSAFE_THRTL",
 	"TIMEOUT_THRTL",

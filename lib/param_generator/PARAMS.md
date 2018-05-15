@@ -108,6 +108,10 @@ PWM_RATE | uint | Update rate for PWM outputs | 400 | ? | scalar | True
 PWM_IDLE | uint | Idle output for motors (when armed) | 1150 | pwm | scalar | False
 PWM_MIN | uint | Minimum output for motors | 1000 | pwm | scalar | False
 PWM_MAX | uint | Maximum output for motors | 2000 | pwm | scalar | False
+RC_MAP_ROLL | uint | Channel to use for RC roll inputs | 0 | channel | scalar | False
+RC_MAP_PITCH | uint | Channel to use for RC pitch inputs | 0 | channel | scalar | False
+RC_MAP_YAW | uint | Channel to use for RC yaw inputs | 0 | channel | scalar | False
+RC_MAP_THROTTLE | uint | Channel to use for RC throttle inputs | 0 | channel | scalar | False
 DO_ESC_CAL | uint | When set to true, a motor calibration will be performed on the next boot (False:0,True:1) | 0 | 0 / 1 | boolean | True
 FAILSAFE_THRTL | float | Throttle percentage output when in failsafe mode | 0.25 |  | scalar | False
 TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed | 10000000 | us | scalar | False

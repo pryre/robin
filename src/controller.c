@@ -5,6 +5,7 @@ extern "C" {
 #include <stdbool.h>
 
 #include "breezystm32.h"
+#include "pwm.h"
 #include "fix16.h"
 #include "fixvector3d.h"
 #include "fixmatrix.h"
@@ -93,16 +94,28 @@ void controller_init(void) {
 	_control_output.T = 0;
 }
 
-static void controller_set_input_failsafe(void) {
-	_command_input.r = 0;
-	_command_input.p = 0;
-	_command_input.y = 0;
-	_command_input.q.a = _fc_1;
-	_command_input.q.b = 0;
-	_command_input.q.c = 0;
-	_command_input.q.d = 0;
-	_command_input.T = get_param_fix16(PARAM_FAILSAFE_THROTTLE);
-	_command_input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
+static void controller_set_input_failsafe(command_input_t &input) {
+	input.r = 0;
+	input.p = 0;
+	input.y = 0;
+	input.q.a = _fc_1;
+	input.q.b = 0;
+	input.q.c = 0;
+	input.q.d = 0;
+	input.T = get_param_fix16(PARAM_FAILSAFE_THROTTLE);
+	input.input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
+}
+
+static fix16_t normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
+	//Center PWMs around 0
+	int16_t pwm_l = min - mid;
+	int16_t pwm_m = pwm - mid;
+	int16_t pwm_h = max - mid;
+
+	//normalize (0 -> 1)
+	fix16_t ni = fix16_div(fix16_from_int(pwm_m - pwm_l), fix16_from_int(pwm_h - pwm_l))
+	//scale (-1 -> 1)
+	return fix16_sub(fix16_mul(ni, _fc_2), _fc_1);
 }
 
 static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
@@ -274,15 +287,40 @@ void controller_run( uint32_t time_now ) {
 	fix16_t goal_y = 0;
 	fix16_t goal_throttle = 0;
 
-	//Handle failsafes
-	if(_system_status.state == MAV_STATE_CRITICAL)
-		controller_set_input_failsafe();	//Hold angle and failsafe throttle
+	command_input_t input;
+	controller_set_input_failsafe(input); //Failsafe input to be safe
+
+	//Handle controller input
+	if(_system_status.state != MAV_STATE_CRITICAL) {
+		if(true) {
+			//Offboard mode
+			input = _command_input;
+		} else if(false) {
+			//Manual stabilize mode
+			//Roll/pitch angle and yaw rate
+			input.input_mask |= CMD_IN_IGNORE_ROLL_RATE;
+			input.input_mask |= CMD_IN_IGNORE_PITCH_RATE;
+
+			uint16_t pwm_roll = pwmRead(get_param_uint(RC_MAP_ROLL));
+			uint16_t pwm_pitch = pwmRead(get_param_uint(RC_MAP_PITCH));
+			uint16_t pwm_yaw = pwmRead(get_param_uint(RC_MAP_YAW));
+			uint16_t pwm_throttle = pwmRead(get_param_uint(RC_MAP_THROTTLE));
+
+			fix16_t rc_roll = normalized_input(pwm_roll);
+
+		} else if(false) {
+			//Manual acro mode
+			//Roll/pitch/yaw rate
+			input.input_mask |= CMD_IN_IGNORE_ATTITUDE;
+
+		} //Else: keep failsafe
+	}
 
 	//Get the control input mask to use
-	_control_input.input_mask = _command_input.input_mask;
+	_control_input.input_mask = input.input_mask;
 
 	//Save intermittent goals
-	_control_input.q = _command_input.q;
+	_control_input.q = input.q;
 
 	//==-- Attitude Control
 	//If we should listen to attitude input

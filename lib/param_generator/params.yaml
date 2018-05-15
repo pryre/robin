@@ -1168,6 +1168,46 @@ PARAM_MOTOR_PWM_MAX:
     default: 2000
     unit: "pwm"
 ---
+PARAM_RC_MAP_ROLL:
+  type: "uint"
+  name: "RC_MAP_ROLL"
+  description: "Channel to use for RC roll inputs"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_PITCH:
+  type: "uint"
+  name: "RC_MAP_PITCH"
+  description: "Channel to use for RC pitch inputs"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_YAW:
+  type: "uint"
+  name: "RC_MAP_YAW"
+  description: "Channel to use for RC yaw inputs"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_THROTTLE:
+  type: "uint"
+  name: "RC_MAP_THROTTLE"
+  description: "Channel to use for RC throttle inputs"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
 PARAM_DO_ESC_CAL:
   type: "uint"
   name: "DO_ESC_CAL"
