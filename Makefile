@@ -236,7 +236,9 @@ mavlink_bootloader:
 	./lib/scripts/reboot_bootloader --device $(SERIAL_DEVICE) --baudrate $(SERIAL_BAUD)
 	sleep 1
 
-reflash: mavlink_bootloader flash
+reflash: reflash_$(TARGET)
+
+reflash_$(TARGET): $(TARGET_IMG) mavlink_bootloader flash_$(TARGET)
 
 unbrick: unbrick_$(TARGET)
 

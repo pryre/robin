@@ -279,7 +279,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 									}
 
 									_motor_test.start = micros();
-									_motor_test.duration = 100*fix16_mul(motor_test_timeout, _fc_100);
+									_motor_test.duration = 10000*fix16_to_int(fix16_mul(motor_test_timeout, _fc_100)); //XXX: Motor test should be accurate to 0.01 seconds, and max out at ~1min
 									_motor_test.throttle = motor_test_throttle;
 
 									//XXX: Override sensor health as autopilot is in control
@@ -288,7 +288,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 									char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
 									char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-									itoa(_motor_test.motor_step, mchar, 3);
+									itoa(_motor_test.motor_step, mchar, 10);
 									strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
 									mavlink_queue_broadcast_notice(text);
 

@@ -228,10 +228,10 @@ void mixer_output() {
 
 	//Handle motor testing
 	if(_motor_test.start > 0) {
-		if( (_motor_test.start + _motor_test.duration) < micros() ) {
+		if( micros() < (_motor_test.start + _motor_test.duration) ) {
 			//Test in progress
-			uint16_t test_pwm_range = fix16_from_int(get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN));
-			uint16_t test_pwm = fix16_to_int(fix16_mul(_motor_test.throttle, test_pwm_range));
+			fix16_t test_pwm_range = fix16_from_int(get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN));
+			uint16_t test_pwm = fix16_to_int(fix16_mul(_motor_test.throttle, test_pwm_range)) + get_param_uint(PARAM_MOTOR_PWM_MIN);
 
 			//Override PWM control
 			for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++) {
@@ -244,14 +244,14 @@ void mixer_output() {
 			//If there are motors left to test
 			if( (_motor_test.test_all) &&
 				(_motor_test.motor_step < (MIXER_NUM_MOTORS - 1) ) ) {
-					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
-					char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-					itoa(_motor_test.motor_step, mchar, 3);
-					strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
-					mavlink_queue_broadcast_notice(text);
-
 					_motor_test.start = micros();
 					_motor_test.motor_step++;
+
+					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
+					char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+					itoa(_motor_test.motor_step, mchar, 10);
+					strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+					mavlink_queue_broadcast_notice(text);
 			} else {
 				//Test is done, reset
 				_motor_test.start = 0;

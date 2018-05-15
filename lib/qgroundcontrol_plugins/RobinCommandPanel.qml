@@ -58,7 +58,7 @@ Rectangle {
             //   component id
             //   confirmation
             //   param 1-7
-            onClicked: controller.sendCommand(209, 1, 1, 255, 0, 0.2, 2, 0, 0, 0)
+            onClicked: controller.sendCommand(209, 1, 1, 255, 0, 0.4, 1.5, 0, 0, 0)
         }
     }
 }
