@@ -13,6 +13,8 @@ ifeq ($(BUILD_REV_OK),0)
 $(error Unsupported board revision: $(NAZE32_REV))
 endif
 
+$(info Building for board revision: $(NAZE32_REV))
+
 GEN_PARAMS := $(shell python3 lib/param_generator/gen_params.py >&2; echo $$?)
 #$(info $$GEN_PARAMS is [${GEN_PARAMS}])
 ifeq ($(GEN_PARAMS),"0")
