@@ -117,6 +117,7 @@ RC_MAP_YAW | uint | Channel to use for RC yaw inputs | 0 | channel | scalar | Fa
 RC_MAP_THROTTLE | uint | Channel to use for RC throttle inputs | 0 | channel | scalar | False
 RC_MAP_MODE_SW | uint | Channel to use for RC mode select | 0 | channel | scalar | False
 RC_DEFAULT_MODE | uint | Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable) | 0 | channel | scalar | False
+COM_RC_ARM_HYST | uint | Time threshold to activate RC arming | 1000000 | us | scalar | False
 RC1_MIN | uint | RC minimum value for channel 1 calibration | 1000 | channel | scalar | False
 RC1_TRIM | uint | RC median value for channel 1 calibration | 1500 | channel | scalar | False
 RC1_MAX | uint | RC max value for channel 1 calibration | 2000 | channel | scalar | False

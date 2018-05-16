@@ -123,6 +123,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_RC_MAP_THROTTLE, 0);
 	init_param_uint(PARAM_RC_MAP_MODE_SW, 0);
 	init_param_uint(PARAM_RC_DEFAULT_MODE, 0);
+	init_param_uint(PARAM_RC_ARM_TIMER, 1000000);
 	init_param_uint(PARAM_RC1_MIN, 1000);
 	init_param_uint(PARAM_RC1_MID, 1500);
 	init_param_uint(PARAM_RC1_MAX, 2000);
@@ -271,6 +272,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"RC_MAP_THROTTLE",
 	"RC_MAP_MODE_SW",
 	"RC_DEFAULT_MODE",
+	"COM_RC_ARM_HYST",
 	"RC1_MIN",
 	"RC1_TRIM",
 	"RC1_MAX",

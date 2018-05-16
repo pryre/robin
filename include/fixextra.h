@@ -19,6 +19,7 @@
 #define _fc_0_5			0x00008000	//0.5
 #define _fc_0_6_		0x0000AAAA	//0.66...
 #define _fc_0_85		0x0000D999	//0.85
+#define _fc_0_95		0x0000F333	//0.95
 #define _fc_1			0x00010000	//1.0
 #define _fc_1_15		0x00012666	//1.15
 #define _fc_2			0x00020000	//2.0

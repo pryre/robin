@@ -678,7 +678,7 @@ static void safety_health_update(uint32_t time_now) {
 
 static void safety_arm_throttle_timeout( uint32_t time_now ) {
 	if( _time_safety_arm_throttle_timeout ) {	//If the timeout is active
-		if( _control_input.T > 0 ) {
+		if( _control_input.T > _fc_0_05 ) {
 			_time_safety_arm_throttle_timeout = 0;	//We have recieved throttle input, disable timeout
 		} else if( ( time_now - _time_safety_arm_throttle_timeout) > get_param_uint(PARAM_THROTTLE_TIMEOUT) ) {
 			mavlink_queue_broadcast_error("[SAFETY] Throttle timeout, disarming!");

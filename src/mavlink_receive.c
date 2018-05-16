@@ -175,8 +175,16 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					switch(command) {
 						case MAV_CMD_PREFLIGHT_CALIBRATION: {
 							if(_system_status.state == MAV_STATE_CALIBRATING) {	//XXX: Only allow one calibration request at a time
-								if( (int)mavlink_msg_command_long_get_param5(&msg) && ( _sensor_calibration.type == SENSOR_CAL_ACCEL ) ) {
+								if( ( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL) && ( _sensor_calibration.type == SENSOR_CAL_ACCEL ) ) {
 									_sensor_calibration.data.accel.waiting = false;
+									command_result = MAV_RESULT_ACCEPTED;
+								} else if( ( (int)mavlink_msg_command_long_get_param4(&msg) == SENSOR_CAL_CMD_RC) && ( _sensor_calibration.type == SENSOR_CAL_RC ) ) {
+									if(_sensor_calibration.data.rc.waiting) {
+										_sensor_calibration.data.rc.waiting = false;
+									} else if(_sensor_calibration.data.rc.step == SENSOR_CAL_RC_RANGE_EXTREMES) {
+										_sensor_calibration.data.rc.step = SENSOR_CAL_RC_RANGE_DONE;
+									}
+
 									command_result = MAV_RESULT_ACCEPTED;
 								} else {
 									command_result = MAV_RESULT_TEMPORARILY_REJECTED;
@@ -186,13 +194,6 @@ static void communication_decode(uint8_t port, uint8_t c) {
 								_sensor_calibration.req_compid = msg.compid;
 
 								command_result = MAV_RESULT_DENIED;
-
-								//Param6
-								#define SENSOR_CAL_CMD_COMPASS_MOTOR 1
-								#define SENSOR_CAL_CMD_AIRPSEED 2
-								//Param7
-								#define SENSOR_CAL_CMD_ESC 1
-								#define SENSOR_CAL_CMD_BAROMETER 3
 
 								if( (int)mavlink_msg_command_long_get_param1(&msg) == SENSOR_CAL_CMD_GYRO ) {
 									_sensor_calibration.type |= SENSOR_CAL_GYRO;

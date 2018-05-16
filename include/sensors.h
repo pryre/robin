@@ -134,6 +134,13 @@ typedef struct {
 typedef struct {
 	sensor_status_t status;
 
+	bool arm_req_made;			//Measured state
+	uint32_t timer_start_us;	//Measured range
+} sensor_readings_rc_safety_toggle_t;
+
+typedef struct {
+	sensor_status_t status;
+
 	GPIO_TypeDef *gpio_p;
 	uint16_t pin;
 
@@ -166,6 +173,7 @@ typedef struct {
 	sensor_readings_sonar_t sonar;
 	sensor_readings_ext_pose_t ext_pose;
 	sensor_readings_rc_input_t rc_input;
+	sensor_readings_rc_safety_toggle_t rc_safety_toggle;
 	sensor_readings_safety_button_t safety_button;
 	sensor_readings_voltage_monitor_t voltage_monitor;
 } sensor_readings_t;
@@ -180,6 +188,20 @@ typedef enum {
 	SENSOR_CAL_INTER = 32,	//TODO: Implement this
 	SENSOR_CAL_ALL = 128
 } sensor_calibration_request_t;
+
+typedef enum {
+	SENSOR_CAL_RC_RANGE_INIT = 0,
+	SENSOR_CAL_RC_RANGE_MIDDOWN,
+	SENSOR_CAL_RC_RANGE_EXTREMES,
+	SENSOR_CAL_RC_RANGE_DONE
+} sensor_calibration_rc_range_t;
+
+typedef struct {
+	bool waiting;
+	sensor_calibration_rc_range_t step;
+	uint16_t rc_ranges[8][3];
+	bool rc_rev[8];	//TODO: reverses, RC mode type
+} sensor_calibration_rc_range_data_t;
 
 typedef struct {
 	uint16_t count;
@@ -236,6 +258,7 @@ typedef struct {
 
 typedef struct {
 	sensor_calibration_gyro_data_t gyro;
+	sensor_calibration_rc_range_data_t rc;
 	sensor_calibration_accel_data_t accel;
 } sensor_calibration_data_t;
 

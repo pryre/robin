@@ -1258,6 +1258,16 @@ PARAM_RC_DEFAULT_MODE:
     default: 0
     unit: "channel"
 ---
+PARAM_RC_ARM_TIMER:
+  type: "uint"
+  name: "COM_RC_ARM_HYST"
+  description: "Time threshold to activate RC arming"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000000
+    unit: "us"
+---
 PARAM_RC1_MIN:
   type: "uint"
   name: "RC1_MIN"

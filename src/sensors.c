@@ -109,6 +109,16 @@ void sensors_cal_init(void) {
 	_sensor_calibration.data.accel.data.z_up_av = 0;
 	_sensor_calibration.data.accel.data.z_down_av = 0;
 
+	_sensor_calibration.data.rc.waiting = false;
+	_sensor_calibration.data.rc.step = SENSOR_CAL_RC_RANGE_INIT;
+	for(int i=0;i<8;i++) {
+		//XXX: Init all to "true stick centre"
+		_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MIN] = 1500;
+		_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MID] = 1500;
+		_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MAX] = 1500;
+		_sensor_calibration.data.rc.rc_rev[i] = false;
+	}
+
 	_sensor_calibration.data.accel.temp_scale = fix16_from_float(340.0f);
 	_sensor_calibration.data.accel.temp_shift = fix16_from_float(36.53f);
 }
@@ -185,6 +195,11 @@ void sensors_init_external(void) {
 	_sensors.rc_input.c_T = 0;
 	_sensors.rc_input.c_m = 0;
 	sensors_update_rc_cal();
+
+	//RC Safety toggle
+	sensor_status_init( &_sensors.rc_safety_toggle.status, true );
+	_sensors.rc_safety_toggle.arm_req_made = false;
+	_sensors.rc_safety_toggle.timer_start_us = 0;
 
 	//==-- Safety button
 	sensor_status_init(&_sensors.safety_button.status, (bool)get_param_uint(PARAM_SENSOR_SAFETY_CBRK));
@@ -350,8 +365,57 @@ static bool sensors_calibrate(void) {
 			break;
 		}
 		case SENSOR_CAL_RC: {
-			//TODO: CAL RC
-			_sensor_calibration.type ^= SENSOR_CAL_RC;
+			if(!_sensor_calibration.data.rc.waiting) {
+				if( _sensor_calibration.data.rc.step == SENSOR_CAL_RC_RANGE_INIT ) {
+					_sensor_calibration.data.rc.waiting = true;
+					_sensor_calibration.data.rc.step = SENSOR_CAL_RC_RANGE_MIDDOWN;
+					mavlink_queue_broadcast_notice("[SENSOR] Set RC to centered, throttle down");
+				} else if( _sensor_calibration.data.rc.step == SENSOR_CAL_RC_RANGE_MIDDOWN ) {
+					for(int i=0;i<8;i++) {
+						_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MID] = pwmRead(i);
+					}
+
+					//XXX Set the params here as it saves overloading the LPQ
+					set_param_uint( PARAM_RC1_MID, _sensor_calibration.data.rc.rc_ranges[0][SENSOR_RC_CAL_MID]);
+					set_param_uint( PARAM_RC2_MID, _sensor_calibration.data.rc.rc_ranges[1][SENSOR_RC_CAL_MID]);
+					set_param_uint( PARAM_RC3_MID, _sensor_calibration.data.rc.rc_ranges[2][SENSOR_RC_CAL_MID]);
+					set_param_uint( PARAM_RC4_MID, _sensor_calibration.data.rc.rc_ranges[3][SENSOR_RC_CAL_MID]);
+					set_param_uint( PARAM_RC5_MID, _sensor_calibration.data.rc.rc_ranges[4][SENSOR_RC_CAL_MID]);
+					set_param_uint( PARAM_RC6_MID, _sensor_calibration.data.rc.rc_ranges[5][SENSOR_RC_CAL_MID]);
+					set_param_uint( PARAM_RC7_MID, _sensor_calibration.data.rc.rc_ranges[6][SENSOR_RC_CAL_MID]);
+					set_param_uint( PARAM_RC8_MID, _sensor_calibration.data.rc.rc_ranges[7][SENSOR_RC_CAL_MID]);
+
+					_sensor_calibration.data.rc.step = SENSOR_CAL_RC_RANGE_EXTREMES;
+					mavlink_queue_broadcast_notice("[SENSOR] Move all sticks and switches to extremes");
+					mavlink_queue_broadcast_notice("[SENSOR] Resend cal command when done");
+				} else if( _sensor_calibration.data.rc.step == SENSOR_CAL_RC_RANGE_EXTREMES ) {
+					for(int i=0;i<8;i++) {
+						uint16_t pwmr = pwmRead(i);
+						_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MIN] = ( pwmr < _sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MIN] ) ? pwmr : _sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MIN];
+						_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MAX] = ( pwmr > _sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MAX] ) ? pwmr : _sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MAX];
+					}
+				} else if( _sensor_calibration.data.rc.step == SENSOR_CAL_RC_RANGE_DONE ) {
+					set_param_uint( PARAM_RC1_MIN, _sensor_calibration.data.rc.rc_ranges[0][SENSOR_RC_CAL_MIN]);
+					set_param_uint( PARAM_RC1_MAX, _sensor_calibration.data.rc.rc_ranges[0][SENSOR_RC_CAL_MAX]);
+					set_param_uint( PARAM_RC2_MIN, _sensor_calibration.data.rc.rc_ranges[1][SENSOR_RC_CAL_MIN]);
+					set_param_uint( PARAM_RC2_MAX, _sensor_calibration.data.rc.rc_ranges[1][SENSOR_RC_CAL_MAX]);
+					set_param_uint( PARAM_RC3_MIN, _sensor_calibration.data.rc.rc_ranges[2][SENSOR_RC_CAL_MIN]);
+					set_param_uint( PARAM_RC3_MAX, _sensor_calibration.data.rc.rc_ranges[2][SENSOR_RC_CAL_MAX]);
+					set_param_uint( PARAM_RC4_MIN, _sensor_calibration.data.rc.rc_ranges[3][SENSOR_RC_CAL_MIN]);
+					set_param_uint( PARAM_RC4_MAX, _sensor_calibration.data.rc.rc_ranges[3][SENSOR_RC_CAL_MAX]);
+					set_param_uint( PARAM_RC5_MIN, _sensor_calibration.data.rc.rc_ranges[4][SENSOR_RC_CAL_MIN]);
+					set_param_uint( PARAM_RC5_MAX, _sensor_calibration.data.rc.rc_ranges[4][SENSOR_RC_CAL_MAX]);
+					set_param_uint( PARAM_RC6_MIN, _sensor_calibration.data.rc.rc_ranges[5][SENSOR_RC_CAL_MIN]);
+					set_param_uint( PARAM_RC6_MAX, _sensor_calibration.data.rc.rc_ranges[5][SENSOR_RC_CAL_MAX]);
+					set_param_uint( PARAM_RC7_MIN, _sensor_calibration.data.rc.rc_ranges[6][SENSOR_RC_CAL_MIN]);
+					set_param_uint( PARAM_RC7_MAX, _sensor_calibration.data.rc.rc_ranges[6][SENSOR_RC_CAL_MAX]);
+					set_param_uint( PARAM_RC8_MIN, _sensor_calibration.data.rc.rc_ranges[7][SENSOR_RC_CAL_MIN]);
+					set_param_uint( PARAM_RC8_MAX, _sensor_calibration.data.rc.rc_ranges[7][SENSOR_RC_CAL_MAX]);
+
+					mavlink_queue_broadcast_notice("[SENSOR] RC calibration complete!");
+					_sensor_calibration.type ^= SENSOR_CAL_RC;
+				}
+			}
 
 			break;
 		}
@@ -616,7 +680,7 @@ bool sensors_update(uint32_t time_us) {
 
 	safety_update_sensor(&_system_status.sensors.imu);
 
-	//==-- RC Input
+	//==-- RC Input & Saftety Toggle
 	//Check that all channels have been set
 	if( get_param_uint(PARAM_RC_MAP_ROLL) &&
 		get_param_uint(PARAM_RC_MAP_PITCH) &&
@@ -657,7 +721,8 @@ bool sensors_update(uint32_t time_us) {
 															rc_cal[chan_yaw][SENSOR_RC_CAL_MAX]);
 			_sensors.rc_input.c_T = normalized_input(_sensors.rc_input.p_T,
 															rc_cal[chan_throttle][SENSOR_RC_CAL_MIN],
-															rc_cal[chan_throttle][SENSOR_RC_CAL_MID],
+															//XXX: Don't use throttle trim: rc_cal[chan_throttle][SENSOR_RC_CAL_MID],
+															1500,
 															rc_cal[chan_throttle][SENSOR_RC_CAL_MAX]);
 		}
 
@@ -691,6 +756,33 @@ bool sensors_update(uint32_t time_us) {
 				if( !safety_request_control_mode(get_param_uint(PARAM_RC_DEFAULT_MODE)) ) {
 					mavlink_queue_broadcast_error("[SAFETY] Error setting RC default mode");
 				}
+			}
+
+			//Handle the logic for saftey toggling
+			_sensors.rc_safety_toggle.status.time_read = time_us;
+			_sensors.rc_safety_toggle.status.new_data = true;
+
+			if( (_sensors.rc_input.c_T < _fc_0_05) &&
+				(fix16_abs(_sensors.rc_input.c_y) > _fc_0_95) ) {
+
+				if(_sensors.rc_safety_toggle.timer_start_us == 0)
+					_sensors.rc_safety_toggle.timer_start_us = time_us;
+
+				if(time_us > (_sensors.rc_safety_toggle.timer_start_us + get_param_uint(PARAM_RC_ARM_TIMER) ) ) {
+					if(!_sensors.rc_safety_toggle.arm_req_made) {
+						if(_sensors.rc_input.c_y < 0) {
+							safety_request_disarm();
+						} else {
+							safety_request_arm();
+						}
+
+						_sensors.rc_safety_toggle.arm_req_made = true;
+					}
+				}
+
+			} else {
+				_sensors.rc_safety_toggle.arm_req_made = false;
+				_sensors.rc_safety_toggle.timer_start_us = 0;
 			}
 		}
 	}
