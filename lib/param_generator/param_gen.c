@@ -44,6 +44,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_IMU_STRM_COUNT, 1000);
 	init_param_uint(PARAM_SENSOR_BARO_STRM_COUNT, 50);
 	init_param_uint(PARAM_SENSOR_SONAR_STRM_COUNT, 50);
+	init_param_uint(PARAM_SENSOR_RC_INPUT_STRM_COUNT, 2000);
 	init_param_uint(PARAM_SENSOR_EXT_POSE_STRM_COUNT, 10);
 	init_param_uint(PARAM_SENSOR_MAG_STRM_COUNT, 50);
 	init_param_uint(PARAM_SENSOR_OFFB_HRBT_STRM_COUNT, 2);
@@ -52,6 +53,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_IMU_TIMEOUT, 2000);
 	init_param_uint(PARAM_SENSOR_BARO_TIMEOUT, 20000);
 	init_param_uint(PARAM_SENSOR_SONAR_TIMEOUT, 20000);
+	init_param_uint(PARAM_SENSOR_RC_INPUT_TIMEOUT, 1000000);
 	init_param_uint(PARAM_SENSOR_EXT_POSE_TIMEOUT, 500000);
 	init_param_uint(PARAM_SENSOR_MAG_TIMEOUT, 20000);
 	init_param_uint(PARAM_SENSOR_OFFB_HRBT_TIMEOUT, 5000000);
@@ -120,6 +122,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_RC_MAP_YAW, 0);
 	init_param_uint(PARAM_RC_MAP_THROTTLE, 0);
 	init_param_uint(PARAM_RC_MAP_MODE_SW, 0);
+	init_param_uint(PARAM_RC_DEFAULT_MODE, 0);
 	init_param_uint(PARAM_RC1_MIN, 1000);
 	init_param_uint(PARAM_RC1_MID, 1500);
 	init_param_uint(PARAM_RC1_MAX, 2000);
@@ -189,6 +192,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"STRM_NUM_IMU",
 	"STRM_NUM_BARO",
 	"STRM_NUM_SONAR",
+	"STRM_NUM_RC_IN",
 	"STRM_NUM_EXT_P",
 	"STRM_NUM_MAG",
 	"STRM_NUM_OB_H",
@@ -197,6 +201,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"TIMEOUT_IMU",
 	"TIMEOUT_BARO",
 	"TIMEOUT_SONAR",
+	"TIMEOUT_RC_IN",
 	"TIMEOUT_EXT_P",
 	"TIMEOUT_MAG",
 	"TIMEOUT_OB_HRBT",
@@ -265,6 +270,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"RC_MAP_YAW",
 	"RC_MAP_THROTTLE",
 	"RC_MAP_MODE_SW",
+	"RC_DEFAULT_MODE",
 	"RC1_MIN",
 	"RC1_TRIM",
 	"RC1_MAX",

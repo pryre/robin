@@ -6,6 +6,7 @@ extern "C" {
 
 #include "mavlink_system.h"
 
+#include "fixextra.h"
 #include "params.h"
 #include "safety.h"
 #include "sensors.h"
@@ -16,6 +17,7 @@ extern "C" {
 system_status_t _system_status;
 sensor_readings_t _sensors;
 command_input_t _cmd_ob_input;
+command_input_t _control_input;
 control_output_t _control_output;
 char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
 char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
@@ -95,6 +97,13 @@ void safety_init() {
 	_system_status.sensors.ext_pose.param_stream_count = PARAM_SENSOR_EXT_POSE_STRM_COUNT;
 	_system_status.sensors.ext_pose.param_timeout = PARAM_SENSOR_EXT_POSE_TIMEOUT;
 	strncpy(_system_status.sensors.ext_pose.name, "External Pose", 24);
+
+	_system_status.sensors.rc_input.health = SYSTEM_HEALTH_UNKNOWN;
+	_system_status.sensors.rc_input.last_read = 0;
+	_system_status.sensors.rc_input.count = 0;
+	_system_status.sensors.rc_input.param_stream_count = PARAM_SENSOR_RC_INPUT_STRM_COUNT;
+	_system_status.sensors.rc_input.param_timeout = PARAM_SENSOR_RC_INPUT_TIMEOUT;
+	strncpy(_system_status.sensors.rc_input.name, "RC Input", 24);
 
 	_system_status.sensors.offboard_heartbeat.health = SYSTEM_HEALTH_UNKNOWN;
 	_system_status.sensors.offboard_heartbeat.last_read = 0;
@@ -252,96 +261,214 @@ bool safety_request_state(uint8_t req_state) {
 	return change_state;
 }
 
-bool safety_request_arm(void) {
-	bool result = false;
-	bool throttle_check = false;
 
-	//Make sure low throttle is being provided
-	if( ( _control_output.T == 0 ) &&
-	  ( ( _cmd_ob_input.T == 0 ) ||
-	    ( _cmd_ob_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) )
-		throttle_check = true;
+bool safety_request_control_mode( uint8_t req_ctrl_mode ) {
+	bool change_ctrl_mode = false;
 
-	if(	( ( _system_status.safety_button_status ) || !_sensors.safety_button.status.present ) &&
-	  ( _system_status.health == SYSTEM_HEALTH_OK ) &&
-	  ( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_GUIDED ) &&
-	  ( throttle_check ) &&
-	  ( safety_request_state( MAV_STATE_ACTIVE ) ) ) {
-		_system_status.arm_status = true;	//ARM!
+	if(_system_status.control_mode == req_ctrl_mode) {	//XXX: State request to same state, just say OK
+		change_ctrl_mode = true;
+	} else {
+		switch(req_ctrl_mode) {
+			case MAIN_MODE_STABILIZED: {
+				if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK )
+					  change_ctrl_mode = true;
 
-		_time_safety_arm_throttle_timeout = micros();	//Record down the arm time for throttle timeout
+				break;
+			}
+			case MAIN_MODE_ACRO: {
+				if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK )
+					change_ctrl_mode = true;
 
-		mavlink_queue_broadcast_notice("[SAFETY] Mav armed!");
+				break;
+			}
+			case MAIN_MODE_OFFBOARD: {
+				if( ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
+					  ( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) )
+					  change_ctrl_mode = true;
 
-		result = true;
+				break;
+			}
+			default: {	// Other control modes cannot be requested
+				break;
+			}
+		}
+	}
 
+
+	if( change_ctrl_mode ) {
+		_system_status.control_mode = req_ctrl_mode;
 		status_buzzer_success();
 	} else {
-		char text_error[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] Arming denied: ";
-		char text_reason[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+		status_buzzer_failure();
+	}
 
-		if( ( !_system_status.safety_button_status ) && ( _sensors.safety_button.status.present ) ) {
-			strncpy(text_reason,
-					 "safety engaged",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-		} else if( _system_status.health != SYSTEM_HEALTH_OK ) {
-			strncpy(text_reason,
-					 "sensor error ",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+	return change_ctrl_mode;
+}
 
-			if(_sensors.imu.status.present && (_system_status.sensors.imu.health != SYSTEM_HEALTH_OK) ){
-				strncpy(text_reason,
-						 "(IMU)",
-						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			} else if(_sensors.mag.status.present && (_system_status.sensors.mag.health != SYSTEM_HEALTH_OK) ) {
-				strncpy(text_reason,
-						 "(mag)",
-						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			} else if(_sensors.baro.status.present && (_system_status.sensors.baro.health != SYSTEM_HEALTH_OK) ) {
-				strncpy(text_reason,
-						 "(baro)",
-						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			} else if(_sensors.sonar.status.present && (_system_status.sensors.sonar.health != SYSTEM_HEALTH_OK) ) {
-				strncpy(text_reason,
-						 "(sonar)",
-						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			} else if(_sensors.ext_pose.status.present && (_system_status.sensors.ext_pose.health != SYSTEM_HEALTH_OK) ) {
-				strncpy(text_reason,
-						 "(ext_pose)",
-						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			} else if(_system_status.sensors.offboard_heartbeat.health != SYSTEM_HEALTH_OK) {
-				strncpy(text_reason,
-						 "(offb_hrbt)",
-						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			} else if(_system_status.sensors.offboard_control.health != SYSTEM_HEALTH_OK) {
-				strncpy(text_reason,
-						 "(offb_ctrl)",
-						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-			} else {
-				strncpy(text_reason,
-						 "(unkown)",
-						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+static void do_safety_arm(void) {
+	_system_status.arm_status = true;	//ARM!
+	mavlink_queue_broadcast_notice("[SAFETY] Mav armed!");
+
+	status_buzzer_success();
+}
+
+bool safety_request_arm(void) {
+	bool result = false;
+	bool control_check = false;
+	bool throttle_check = false;
+	bool mode_check = false;
+
+	char text_error[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] Arming denied: ";
+	char text_reason[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+
+	//Skip all this if we're already armed
+	if(_system_status.arm_status) {
+		do_safety_arm();
+		result = true;
+	} else {
+		switch(_system_status.control_mode) {
+			case MAIN_MODE_STABILIZED: {
+				if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) {
+					control_check = true;
+					mode_check = true;
+
+					if( _sensors.rc_input.c_T < _fc_0_05 )
+						throttle_check = true;
+				}
+
+				break;
 			}
-		} else if( _system_status.state != MAV_STATE_STANDBY ) {
-			strncpy(text_reason,
-					 "state: ",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			case MAIN_MODE_ACRO: {
+				if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) {
+					control_check = true;
+					mode_check = true;
 
-			strncat(text_reason,
-					mav_state_names[_system_status.state],
-					MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);	//XXX: Stops string overflow warnings
-		} else if( !( _system_status.mode & MAV_MODE_FLAG_DECODE_POSITION_GUIDED ) ) {	//TODO: Check this error message works correctly
-			strncpy(text_reason,
-					 "no guidance input",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-		} else if( !throttle_check ) {
-			strncpy(text_reason, "high throttle", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+					if( _sensors.rc_input.c_T < _fc_0_05 )
+						throttle_check = true;
+				}
+
+				break;
+			}
+			case MAIN_MODE_OFFBOARD: {
+				if( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) {
+					control_check = true;
+					mode_check = true;
+
+					if( ( _cmd_ob_input.T == 0 ) || ( _cmd_ob_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) {
+						throttle_check = true;
+					}
+				}
+
+				break;
+			}
+			default: {
+				break;
+			}
 		}
 
-		strncat(text_error, text_reason, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);	//XXX: Stops string overflow errors
-		mavlink_queue_broadcast_error(text_error);
+		//Make sure low throttle is being output
+		throttle_check &= (_control_output.T == 0 );
 
-		status_buzzer_failure();
+		if(	( ( _system_status.safety_button_status ) || !_sensors.safety_button.status.present ) &&
+		  ( _system_status.health == SYSTEM_HEALTH_OK ) &&
+		  ( control_check ) &&
+		  ( throttle_check ) &&
+		  ( mode_check) ) {
+			if(safety_request_state( MAV_STATE_ACTIVE ) ) {
+				do_safety_arm();
+				result = true;
+				_time_safety_arm_throttle_timeout = micros();	//Record down the arm time for throttle timeout
+			} else {
+				strncpy(text_reason,
+						 "state change from ",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+
+				strncat(text_reason,
+						mav_state_names[_system_status.state],
+						MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);	//XXX: Stops string overflow warnings
+
+				strncat(text_error, text_reason, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);	//XXX: Stops string overflow errors
+				mavlink_queue_broadcast_error(text_error);
+			}
+		} else {
+			if( ( !_system_status.safety_button_status ) && ( _sensors.safety_button.status.present ) ) {
+				strncpy(text_reason,
+						 "safety engaged",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else if( _system_status.health != SYSTEM_HEALTH_OK ) {
+				strncpy(text_reason,
+						 "sensor error ",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+
+				if(_sensors.imu.status.present && (_system_status.sensors.imu.health != SYSTEM_HEALTH_OK) ){
+					strncpy(text_reason,
+							 "(IMU)",
+							 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+				} else if(_sensors.mag.status.present && (_system_status.sensors.mag.health != SYSTEM_HEALTH_OK) ) {
+					strncpy(text_reason,
+							 "(mag)",
+							 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+				} else if(_sensors.baro.status.present && (_system_status.sensors.baro.health != SYSTEM_HEALTH_OK) ) {
+					strncpy(text_reason,
+							 "(baro)",
+							 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+				} else if(_sensors.sonar.status.present && (_system_status.sensors.sonar.health != SYSTEM_HEALTH_OK) ) {
+					strncpy(text_reason,
+							 "(sonar)",
+							 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+				} else if(_sensors.ext_pose.status.present && (_system_status.sensors.ext_pose.health != SYSTEM_HEALTH_OK) ) {
+					strncpy(text_reason,
+							 "(ext_pose)",
+							 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+
+				} else if(!control_check) {
+					if( (_system_status.control_mode == MAIN_MODE_STABILIZED) ||
+						(_system_status.control_mode == MAIN_MODE_ACRO) ) {
+						strncpy(text_reason,
+						"(rc_input)",
+						MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+					} else if(_system_status.control_mode == MAIN_MODE_OFFBOARD) {
+						if(_system_status.sensors.offboard_heartbeat.health != SYSTEM_HEALTH_OK) {
+							strncpy(text_reason,
+							"(offb_hrbt)",
+							MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+						} else if(_system_status.sensors.offboard_control.health != SYSTEM_HEALTH_OK) {
+							strncpy(text_reason,
+							"(offb_ctrl)",
+							MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+						}
+					} else {
+						strncpy(text_reason,
+						"(no_ctrl)",
+						MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+					}
+				} else {
+					strncpy(text_reason,
+							 "(unkown)",
+							 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+				}
+			} else if(!mode_check) {
+				strncpy(text_reason,
+				"flight mode not set",
+				MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else if(!control_check) {
+				strncpy(text_reason,
+				"no control for current mode",
+				MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else if( !throttle_check ) {
+				strncpy(text_reason, "high throttle", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			} else {
+				//XXX: Should never get here, but hust in case
+				strncpy(text_reason,
+				 "undefined arming failure",
+				 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			}
+
+			strncat(text_error, text_reason, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);	//XXX: Stops string overflow errors
+			mavlink_queue_broadcast_error(text_error);
+
+			status_buzzer_failure();
+		}
 	}
 
 	return result;
@@ -511,9 +638,24 @@ static void system_state_update(void) {
 		_system_status.mode |= MAV_MODE_FLAG_AUTO_ENABLED;
 
 	//Report offboard input status
+	bool ctrl_mode_ok = false;
+
 	if( ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
-	  ( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) )
+		( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) ) {
 		_system_status.mode |= MAV_MODE_FLAG_GUIDED_ENABLED;
+
+		ctrl_mode_ok = true;
+	  }
+
+	if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) {
+		_system_status.mode |= MAV_MODE_FLAG_MANUAL_INPUT_ENABLED;
+
+		ctrl_mode_ok = true;
+	}
+
+	if(!ctrl_mode_ok) {
+		_system_status.control_mode = 0;
+	}
 }
 
 static void safety_health_update(uint32_t time_now) {
@@ -523,11 +665,11 @@ static void safety_health_update(uint32_t time_now) {
 					  ( !_sensors.sonar.status.present || ( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) ) &&
 					  ( !_sensors.ext_pose.status.present || ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) );
 
-	//XXX: Was going to have a PWM Control health, but it should be fine as an additional
-	bool control_ok = _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK;
+	bool control_ok = ( (_system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK) &&
+						( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) ) ||
+					  (_system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK);
 
-	if( sensors_ok && control_ok &&
-		( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) ) {
+	if( sensors_ok && control_ok ) {
 		_system_status.health = SYSTEM_HEALTH_OK;
 	} else {
 		_system_status.health = SYSTEM_HEALTH_ERROR;
@@ -536,7 +678,7 @@ static void safety_health_update(uint32_t time_now) {
 
 static void safety_arm_throttle_timeout( uint32_t time_now ) {
 	if( _time_safety_arm_throttle_timeout ) {	//If the timeout is active
-		if( _cmd_ob_input.T > 0 ) {
+		if( _control_input.T > 0 ) {
 			_time_safety_arm_throttle_timeout = 0;	//We have recieved throttle input, disable timeout
 		} else if( ( time_now - _time_safety_arm_throttle_timeout) > get_param_uint(PARAM_THROTTLE_TIMEOUT) ) {
 			mavlink_queue_broadcast_error("[SAFETY] Throttle timeout, disarming!");
@@ -560,6 +702,7 @@ void safety_run( uint32_t time_now ) {
 	safety_check_sensor( &_system_status.sensors.baro, time_now );
 	safety_check_sensor( &_system_status.sensors.sonar, time_now );
 	safety_check_sensor( &_system_status.sensors.ext_pose, time_now );
+	safety_check_sensor( &_system_status.sensors.rc_input, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_heartbeat, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_control, time_now );
 	safety_check_sensor( &_system_status.sensors.pwm_control, time_now );

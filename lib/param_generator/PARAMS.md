@@ -38,6 +38,7 @@ CHK_RATE_MAG | float | Sensor update rate for magnetometer (TODO) | 0.0 | Hz | s
 STRM_NUM_IMU | uint | Number of IMU readings that must be recieved before a stream is established | 1000 |  | scalar | False
 STRM_NUM_BARO | uint | Number of barometer readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_SONAR | uint | Number of sonar readings that must be recieved before a stream is established | 50 |  | scalar | False
+STRM_NUM_RC_IN | uint | Number of valid RC input readings that must be recieved before a stream is established | 2000 |  | scalar | False
 STRM_NUM_EXT_P | uint | Number of external pose readings that must be recieved before a stream is established | 10 |  | scalar | False
 STRM_NUM_MAG | uint | Number of magnetometer readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_OB_H | uint | Number of offboard heartbeat messages that must be recieved before a stream is established | 2 |  | scalar | False
@@ -46,6 +47,7 @@ STRM_NUM_RC_C | uint | Number of PWM control messages that must be recieved befo
 TIMEOUT_IMU | uint | Time that new data must be read before an IMU timeout is declared | 2000 | us | scalar | False
 TIMEOUT_BARO | uint | Time that new data must be read before a barometer timeout is declared | 20000 | us | scalar | False
 TIMEOUT_SONAR | uint | Time that new data must be read before a sonar timeout is declared | 20000 | us | scalar | False
+TIMEOUT_RC_IN | uint | Time that new data must be read before a RC input timeout is declared | 1000000 | us | scalar | False
 TIMEOUT_EXT_P | uint | Time that new data must be read before a external pose timeout is declared | 500000 | us | scalar | False
 TIMEOUT_MAG | uint | Time that new data must be read before a magnetometer timeout is declared | 20000 | us | scalar | False
 TIMEOUT_OB_HRBT | uint | Time that new data must be read before a off-board heartbeat timeout is declared | 5000000 | us | scalar | False
@@ -114,6 +116,7 @@ RC_MAP_PITCH | uint | Channel to use for RC pitch inputs | 0 | channel | scalar 
 RC_MAP_YAW | uint | Channel to use for RC yaw inputs | 0 | channel | scalar | False
 RC_MAP_THROTTLE | uint | Channel to use for RC throttle inputs | 0 | channel | scalar | False
 RC_MAP_MODE_SW | uint | Channel to use for RC mode select | 0 | channel | scalar | False
+RC_DEFAULT_MODE | uint | Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable) | 0 | channel | scalar | False
 RC1_MIN | uint | RC minimum value for channel 1 calibration | 1000 | channel | scalar | False
 RC1_TRIM | uint | RC median value for channel 1 calibration | 1500 | channel | scalar | False
 RC1_MAX | uint | RC max value for channel 1 calibration | 2000 | channel | scalar | False

@@ -44,6 +44,7 @@ typedef struct {
 	timeout_status_t baro;
 	timeout_status_t sonar;
 	timeout_status_t ext_pose;
+	timeout_status_t rc_input;
 	timeout_status_t offboard_heartbeat;
 	timeout_status_t offboard_control;
 	timeout_status_t pwm_control;
@@ -65,7 +66,8 @@ typedef struct {
 		//MAV_STATE_POWEROFF:		Shutting down (write EEPROM/SD card logs, alert GCS?)
 	uint8_t state;	//Set with MAV_STATE
 
-	uint8_t mode;	//Purely for reporting to gcs, no actual use
+	uint8_t mode;	//Only used for feedback
+	uint8_t control_mode;
 	bool parameters;
 	bool safety_button_status;	//Safety button to engage and disengage motor output
 	bool arm_status;	//Safety button to engage and disengage motor output
@@ -100,12 +102,12 @@ typedef struct {
 extern char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
 
 extern system_status_t _system_status;
-extern uint8_t _system_operation_control;
 
 void safety_init( void );
 
 bool safety_is_armed( void );
 bool safety_request_state( uint8_t req_state );
+bool safety_request_control_mode( uint8_t req_ctrl_mode );
 bool safety_request_arm( void );
 bool safety_request_disarm( void );
 

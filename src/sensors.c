@@ -34,7 +34,7 @@ static int16_t read_accel_raw[3];
 static int16_t read_gyro_raw[3];
 static volatile int16_t read_temp_raw;
 
-static uint8_t rc_cal[8][3];
+static uint16_t rc_cal[8][3];
 
 sensor_readings_t _sensors;
 sensor_calibration_t _sensor_calibration;
@@ -183,8 +183,7 @@ void sensors_init_external(void) {
 	_sensors.rc_input.c_p = 0;
 	_sensors.rc_input.c_y = 0;
 	_sensors.rc_input.c_T = 0;
-	_sensors.rc_input.c_m = MAIN_MODE_MANUAL;
-	_sensors.rc_input.mode_select_valid = false;
+	_sensors.rc_input.c_m = 0;
 	sensors_update_rc_cal();
 
 	//==-- Safety button
@@ -538,13 +537,12 @@ static bool sensors_calibrate(void) {
 }
 
 static fix16_t normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
-	//Center PWMs around 0
-	int16_t pwm_l = min - mid;
-	int16_t pwm_m = pwm - mid;
-	int16_t pwm_h = max - mid;
+	//Calculate trimed command
+	int16_t trim = 1500 - mid;
+	int16_t pwmt = pwm + trim;
 
 	//normalize (0 -> 1)
-	return fix16_div(fix16_from_int(pwm_m - pwm_l), fix16_from_int(pwm_h - pwm_l));
+	return fix16_div(fix16_from_int(pwmt - min), fix16_from_int(max - min));
 }
 
 static fix16_t dual_normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
@@ -642,6 +640,8 @@ bool sensors_update(uint32_t time_us) {
 			//We have a valid reading
 			_sensors.rc_input.status.time_read = time_us;
 			_sensors.rc_input.status.new_data = true;
+			safety_update_sensor(&_system_status.sensors.rc_input);
+
 
 			_sensors.rc_input.c_r = dual_normalized_input(_sensors.rc_input.p_r,
 															rc_cal[chan_roll][SENSOR_RC_CAL_MIN],
@@ -661,18 +661,38 @@ bool sensors_update(uint32_t time_us) {
 															rc_cal[chan_throttle][SENSOR_RC_CAL_MAX]);
 		}
 
-		_sensors.rc_input.mode_select_valid = false;
+		//Only do this is the RC is healthy
+		if(_system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK) {
+			//If we're using a mode switch
+			if( get_param_uint(PARAM_RC_MAP_MODE_SW) ) {
+				_sensors.rc_input.p_m = pwmRead(get_param_uint(PARAM_RC_MAP_MODE_SW) - 1);
 
-		if (get_param_uint(PARAM_RC_MAP_MODE_SW)) {
-			_sensors.rc_input.p_m = pwmRead(get_param_uint(PARAM_RC_MAP_MODE_SW) - 1);
+				if( _sensors.rc_input.p_m > 0 ) {
+					compat_px4_main_mode_t c_m_last = _sensors.rc_input.c_m;
 
-			if( _sensors.rc_input.p_m > 0 ) {
-				//TODO: Handle mode select
+					_sensors.rc_input.c_m = (_sensors.rc_input.p_m < 1350) ? MAIN_MODE_STABILIZED :
+											(_sensors.rc_input.p_m < 1750) ? MAIN_MODE_ACRO :
+											MAIN_MODE_OFFBOARD;
 
-				_sensors.rc_input.mode_select_valid = true;	//XXX: TODO: SHOULD GO TO TRUE
+					//If a new mode is requested
+					if( _sensors.rc_input.c_m != c_m_last ) {
+						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] Requesting RC mode: ";
+						char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+						itoa(_sensors.rc_input.c_m, mchar, 10);
+						strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+						mavlink_queue_broadcast_notice(text);
+
+						if( !safety_request_control_mode(_sensors.rc_input.c_m) ) {
+							mavlink_queue_broadcast_error("[SAFETY] Rejecting RC mode switch");
+						}
+					}
+				}
+			} else if( get_param_uint(PARAM_RC_DEFAULT_MODE) ) { //Else if RC should trigger a default mode
+				if( !safety_request_control_mode(get_param_uint(PARAM_RC_DEFAULT_MODE)) ) {
+					mavlink_queue_broadcast_error("[SAFETY] Error setting RC default mode");
+				}
 			}
 		}
-
 	}
 
 

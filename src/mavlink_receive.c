@@ -246,6 +246,24 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 							break;
 						}
+						case MAV_CMD_DO_SET_MODE: {
+
+							//XXX: We only use custom mode
+							uint8_t base_mode = (int)mavlink_msg_command_long_get_param1(&msg);
+							uint8_t custom_mode = (int)mavlink_msg_command_long_get_param2(&msg);
+
+							if( base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED ) {
+								if( !safety_request_control_mode(compat_decode_px4_main_mode(custom_mode)) ) {
+									mavlink_queue_broadcast_error("[SAFETY] Rejecting mode switch");
+								}
+							} else {
+								mavlink_send_broadcast_statustext( MAV_SEVERITY_ERROR, "[SAFETY] Unsupported mode" );
+							}
+
+							need_ack = true;
+
+							break;
+						}
 						case MAV_CMD_DO_MOTOR_TEST: {
 							need_ack = true;
 
@@ -441,9 +459,10 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					uint8_t base_mode = mavlink_msg_set_mode_get_base_mode(&msg);
 					uint32_t custom_mode = mavlink_msg_set_mode_get_custom_mode(&msg);
 
-					if( ( base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED ) &&
-						( compat_decode_px4_main_mode( custom_mode ) == MAIN_MODE_OFFBOARD ) ) {
-						mavlink_send_broadcast_statustext( MAV_SEVERITY_NOTICE, "[SAFETY] Mav already in OFFBOARD mode" );
+					if( base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED ) {
+						if( !safety_request_control_mode(compat_decode_px4_main_mode(custom_mode)) ) {
+							mavlink_queue_broadcast_error("[SAFETY] Rejecting mode switch");
+						}
 					} else {
 						mavlink_send_broadcast_statustext( MAV_SEVERITY_ERROR, "[SAFETY] Unsupported mode" );
 					}

@@ -129,8 +129,6 @@ typedef struct {
 	fix16_t c_T;
 
 	compat_px4_main_mode_t c_m;
-	bool mode_select_valid;
-
 } sensor_readings_rc_input_t;
 
 typedef struct {

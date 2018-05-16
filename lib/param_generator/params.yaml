@@ -509,6 +509,15 @@ PARAM_SENSOR_SONAR_STRM_COUNT:
     option: "scalar"
     default: 50
 ---
+PARAM_SENSOR_RC_INPUT_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_RC_IN"
+  description: "Number of valid RC input readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+---
 PARAM_SENSOR_EXT_POSE_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_EXT_P"
@@ -582,6 +591,16 @@ PARAM_SENSOR_SONAR_TIMEOUT:
   value:
     option: "scalar"
     default: 20000
+    unit: "us"
+---
+PARAM_SENSOR_RC_INPUT_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_RC_IN"
+  description: "Time that new data must be read before a RC input timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000000
     unit: "us"
 ---
 PARAM_SENSOR_EXT_POSE_TIMEOUT:
@@ -1223,6 +1242,16 @@ PARAM_RC_MAP_MODE_SW:
   type: "uint"
   name: "RC_MAP_MODE_SW"
   description: "Channel to use for RC mode select"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_DEFAULT_MODE:
+  type: "uint"
+  name: "RC_DEFAULT_MODE"
+  description: "Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable)"
   reboot: false
   value:
     option: "scalar"

@@ -13,6 +13,7 @@
 
 //Quick defines of reused fix16 numbers
 #define _fc_0_01		0x0000028F	//0.01
+#define _fc_0_05		0x00000CCC	//0.05
 #define _fc_0_083_		0x00001555	//0.0833...
 #define _fc_0_46_		0x00006AAA	//0.466...
 #define _fc_0_5			0x00008000	//0.5
