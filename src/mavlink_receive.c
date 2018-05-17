@@ -241,6 +241,12 @@ static void communication_decode(uint8_t port, uint8_t c) {
 								}
 
 								//XXX: MAV_STATE_CALIBRATING is handled in the sensor loop
+							} else {
+								if( _sensor_calibration.type != SENSOR_CAL_NONE ) {
+									mavlink_queue_broadcast_error("[SENSOR] Calibration already in progress");
+								} else {
+									mavlink_queue_broadcast_error("[SENSOR] Cannot enter calibration in this mode!");
+								}
 							}
 
 							need_ack = true;

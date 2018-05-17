@@ -35,6 +35,8 @@ static int16_t read_gyro_raw[3];
 static volatile int16_t read_temp_raw;
 
 static uint16_t rc_cal[8][3];
+static bool rc_rev[8];
+static fix16_t rc_dz[8];
 
 sensor_readings_t _sensors;
 sensor_calibration_t _sensor_calibration;
@@ -385,6 +387,38 @@ static bool sensors_calibrate(void) {
 					set_param_uint( PARAM_RC7_MID, _sensor_calibration.data.rc.rc_ranges[6][SENSOR_RC_CAL_MID]);
 					set_param_uint( PARAM_RC8_MID, _sensor_calibration.data.rc.rc_ranges[7][SENSOR_RC_CAL_MID]);
 
+					_sensor_calibration.data.rc.waiting = true;
+					_sensor_calibration.data.rc.step = SENSOR_CAL_RC_RANGE_CORNERS;
+					mavlink_queue_broadcast_notice("[SENSOR] Set RC to lower inner corners");
+				} else if( _sensor_calibration.data.rc.step == SENSOR_CAL_RC_RANGE_CORNERS ) {
+					if(get_param_uint(PARAM_RC_MAP_ROLL) &&
+						get_param_uint(PARAM_RC_MAP_PITCH) &&
+						get_param_uint(PARAM_RC_MAP_YAW) &&
+						get_param_uint(PARAM_RC_MAP_THROTTLE) ) {
+
+						uint8_t chan_roll = get_param_uint(PARAM_RC_MAP_ROLL) - 1;
+						uint8_t chan_pitch = get_param_uint(PARAM_RC_MAP_PITCH) - 1;
+						uint8_t chan_yaw = get_param_uint(PARAM_RC_MAP_YAW) - 1;
+						uint8_t chan_throttle = get_param_uint(PARAM_RC_MAP_THROTTLE) - 1;
+
+						_sensor_calibration.data.rc.rc_rev[chan_roll] = (pwmRead(chan_roll) > SENSOR_RC_MIDSTICK);
+						_sensor_calibration.data.rc.rc_rev[chan_pitch] = (pwmRead(chan_pitch) < SENSOR_RC_MIDSTICK);
+						_sensor_calibration.data.rc.rc_rev[chan_yaw] = (pwmRead(chan_yaw) < SENSOR_RC_MIDSTICK);
+						_sensor_calibration.data.rc.rc_rev[chan_throttle] = (pwmRead(chan_throttle) > SENSOR_RC_MIDSTICK);
+
+						//XXX Set the params here as it saves overloading the LPQ
+						set_param_uint( PARAM_RC1_REV, _sensor_calibration.data.rc.rc_rev[0]);
+						set_param_uint( PARAM_RC2_REV, _sensor_calibration.data.rc.rc_rev[1]);
+						set_param_uint( PARAM_RC3_REV, _sensor_calibration.data.rc.rc_rev[2]);
+						set_param_uint( PARAM_RC4_REV, _sensor_calibration.data.rc.rc_rev[3]);
+						set_param_uint( PARAM_RC5_REV, _sensor_calibration.data.rc.rc_rev[4]);
+						set_param_uint( PARAM_RC6_REV, _sensor_calibration.data.rc.rc_rev[5]);
+						set_param_uint( PARAM_RC7_REV, _sensor_calibration.data.rc.rc_rev[6]);
+						set_param_uint( PARAM_RC8_REV, _sensor_calibration.data.rc.rc_rev[7]);
+					} else {
+						mavlink_queue_broadcast_error("[SENSOR] Can't cal RC reverse, set RC_MAP params");
+					}
+
 					_sensor_calibration.data.rc.step = SENSOR_CAL_RC_RANGE_EXTREMES;
 					mavlink_queue_broadcast_notice("[SENSOR] Move all sticks and switches to extremes");
 					mavlink_queue_broadcast_notice("[SENSOR] Resend cal command when done");
@@ -602,7 +636,7 @@ static bool sensors_calibrate(void) {
 
 static fix16_t normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
 	//Calculate trimed command
-	int16_t trim = 1500 - mid;
+	int16_t trim = SENSOR_RC_MIDSTICK - mid;
 	int16_t pwmt = pwm + trim;
 
 	//normalize (0 -> 1)
@@ -640,6 +674,24 @@ void sensors_update_rc_cal(void) {
 	rc_cal[7][SENSOR_RC_CAL_MIN] = get_param_uint(PARAM_RC8_MIN);
 	rc_cal[7][SENSOR_RC_CAL_MID] = get_param_uint(PARAM_RC8_MID);
 	rc_cal[7][SENSOR_RC_CAL_MAX] = get_param_uint(PARAM_RC8_MAX);
+
+	rc_rev[0] = get_param_uint(PARAM_RC1_REV);
+	rc_rev[1] = get_param_uint(PARAM_RC2_REV);
+	rc_rev[2] = get_param_uint(PARAM_RC3_REV);
+	rc_rev[3] = get_param_uint(PARAM_RC4_REV);
+	rc_rev[4] = get_param_uint(PARAM_RC5_REV);
+	rc_rev[5] = get_param_uint(PARAM_RC6_REV);
+	rc_rev[6] = get_param_uint(PARAM_RC7_REV);
+	rc_rev[7] = get_param_uint(PARAM_RC8_REV);
+
+	rc_dz[0] = get_param_fix16(PARAM_RC1_DZ);
+	rc_dz[1] = get_param_fix16(PARAM_RC2_DZ);
+	rc_dz[2] = get_param_fix16(PARAM_RC3_DZ);
+	rc_dz[3] = get_param_fix16(PARAM_RC4_DZ);
+	rc_dz[4] = get_param_fix16(PARAM_RC5_DZ);
+	rc_dz[5] = get_param_fix16(PARAM_RC6_DZ);
+	rc_dz[6] = get_param_fix16(PARAM_RC7_DZ);
+	rc_dz[7] = get_param_fix16(PARAM_RC8_DZ);
 }
 
 bool sensors_update(uint32_t time_us) {
@@ -706,28 +758,39 @@ bool sensors_update(uint32_t time_us) {
 			_sensors.rc_input.status.new_data = true;
 			safety_update_sensor(&_system_status.sensors.rc_input);
 
+			fix16_t cmd_roll = dual_normalized_input(_sensors.rc_input.p_r,
+														rc_cal[chan_roll][SENSOR_RC_CAL_MIN],
+														rc_cal[chan_roll][SENSOR_RC_CAL_MID],
+														rc_cal[chan_roll][SENSOR_RC_CAL_MAX]);
+			fix16_t cmd_pitch = dual_normalized_input(_sensors.rc_input.p_p,
+														rc_cal[chan_pitch][SENSOR_RC_CAL_MIN],
+														rc_cal[chan_pitch][SENSOR_RC_CAL_MID],
+														rc_cal[chan_pitch][SENSOR_RC_CAL_MAX]);
+			fix16_t cmd_yaw = dual_normalized_input(_sensors.rc_input.p_y,
+														rc_cal[chan_yaw][SENSOR_RC_CAL_MIN],
+														rc_cal[chan_yaw][SENSOR_RC_CAL_MID],
+														rc_cal[chan_yaw][SENSOR_RC_CAL_MAX]);
+			fix16_t cmd_throttle = normalized_input(_sensors.rc_input.p_T,
+														rc_cal[chan_throttle][SENSOR_RC_CAL_MIN],
+														//XXX: Don't use throttle trim: rc_cal[chan_throttle][SENSOR_RC_CAL_MID],
+														SENSOR_RC_MIDSTICK,
+														rc_cal[chan_throttle][SENSOR_RC_CAL_MAX]);
 
-			_sensors.rc_input.c_r = dual_normalized_input(_sensors.rc_input.p_r,
-															rc_cal[chan_roll][SENSOR_RC_CAL_MIN],
-															rc_cal[chan_roll][SENSOR_RC_CAL_MID],
-															rc_cal[chan_roll][SENSOR_RC_CAL_MAX]);
-			_sensors.rc_input.c_p = dual_normalized_input(_sensors.rc_input.p_p,
-															rc_cal[chan_pitch][SENSOR_RC_CAL_MIN],
-															rc_cal[chan_pitch][SENSOR_RC_CAL_MID],
-															rc_cal[chan_pitch][SENSOR_RC_CAL_MAX]);
-			_sensors.rc_input.c_y = dual_normalized_input(_sensors.rc_input.p_y,
-															rc_cal[chan_yaw][SENSOR_RC_CAL_MIN],
-															rc_cal[chan_yaw][SENSOR_RC_CAL_MID],
-															rc_cal[chan_yaw][SENSOR_RC_CAL_MAX]);
-			_sensors.rc_input.c_T = normalized_input(_sensors.rc_input.p_T,
-															rc_cal[chan_throttle][SENSOR_RC_CAL_MIN],
-															//XXX: Don't use throttle trim: rc_cal[chan_throttle][SENSOR_RC_CAL_MID],
-															1500,
-															rc_cal[chan_throttle][SENSOR_RC_CAL_MAX]);
+			fix16_t cmd_roll_corrected = (rc_rev[chan_roll]) ? fix16_mul(-_fc_1, cmd_roll) : cmd_roll;
+			fix16_t cmd_pitch_corrected = (rc_rev[chan_pitch]) ? fix16_mul(-_fc_1, cmd_pitch) : cmd_pitch;
+			fix16_t cmd_yaw_corrected = (rc_rev[chan_yaw]) ? fix16_mul(-_fc_1, cmd_yaw) : cmd_yaw;
+			//XXX:For throttle, we need to multiply then shift it to ensure it is still 0->1
+			fix16_t cmd_throttle_corrected = (rc_rev[chan_throttle]) ? fix16_add(_fc_1, fix16_mul(-_fc_1, cmd_throttle)) : cmd_throttle;
+
+			_sensors.rc_input.c_r = (fix16_abs(cmd_roll_corrected) < rc_dz[chan_roll]) ? 0 : cmd_roll_corrected;
+			_sensors.rc_input.c_p = (fix16_abs(cmd_pitch_corrected) < rc_dz[chan_pitch]) ? 0 : cmd_pitch_corrected;
+			_sensors.rc_input.c_y = (fix16_abs(cmd_yaw_corrected) < rc_dz[chan_yaw]) ? 0 : cmd_yaw_corrected;
+			_sensors.rc_input.c_T = (fix16_abs(cmd_throttle_corrected) < rc_dz[chan_throttle]) ? 0 : cmd_throttle_corrected;
 		}
 
 		//Only do this is the RC is healthy
-		if(_system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK) {
+		if( (_system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK) &&
+			(_system_status.state != MAV_STATE_CALIBRATING) ) {
 			//If we're using a mode switch
 			if( get_param_uint(PARAM_RC_MAP_MODE_SW) ) {
 				_sensors.rc_input.p_m = pwmRead(get_param_uint(PARAM_RC_MAP_MODE_SW) - 1);

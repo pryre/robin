@@ -15,6 +15,8 @@
 #define SENSOR_RC_CAL_MID 1
 #define SENSOR_RC_CAL_MAX 2
 
+#define SENSOR_RC_MIDSTICK 1500
+
 //XXX: Defined in MAV_CMD_PREFLIGHT_CALIBRATION
 //Param1
 #define SENSOR_CAL_CMD_GYRO 1
@@ -183,7 +185,7 @@ typedef enum {
 	SENSOR_CAL_GYRO = 1,
 	SENSOR_CAL_MAG = 2,
 	SENSOR_CAL_BARO = 4,
-	SENSOR_CAL_RC = 8,		//Calibrate ESCs?
+	SENSOR_CAL_RC = 8,
 	SENSOR_CAL_ACCEL = 16,
 	SENSOR_CAL_INTER = 32,	//TODO: Implement this
 	SENSOR_CAL_ALL = 128
@@ -192,6 +194,7 @@ typedef enum {
 typedef enum {
 	SENSOR_CAL_RC_RANGE_INIT = 0,
 	SENSOR_CAL_RC_RANGE_MIDDOWN,
+	SENSOR_CAL_RC_RANGE_CORNERS,
 	SENSOR_CAL_RC_RANGE_EXTREMES,
 	SENSOR_CAL_RC_RANGE_DONE
 } sensor_calibration_rc_range_t;
@@ -199,8 +202,8 @@ typedef enum {
 typedef struct {
 	bool waiting;
 	sensor_calibration_rc_range_t step;
-	uint16_t rc_ranges[8][3];
-	bool rc_rev[8];	//TODO: reverses, RC mode type
+	uint16_t rc_ranges[8][4];
+	bool rc_rev[8];
 } sensor_calibration_rc_range_data_t;
 
 typedef struct {

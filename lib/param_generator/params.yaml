@@ -1301,6 +1301,25 @@ PARAM_RC1_MAX:
     unit: "channel"
     function: "sensors_update_rc_cal();"
 ---
+PARAM_RC1_REV:
+  type: "uint"
+  name: "RC1_REV"
+  description: "RC reverse reading channel 1 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC1_DZ:
+  type: "float"
+  name: "RC1_DZ"
+  description: "RC deadzone for channel 1"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
 PARAM_RC2_MIN:
   type: "uint"
   name: "RC2_MIN"
@@ -1333,6 +1352,25 @@ PARAM_RC2_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
+---
+PARAM_RC2_REV:
+  type: "uint"
+  name: "RC2_REV"
+  description: "RC reverse reading channel 2 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC2_DZ:
+  type: "float"
+  name: "RC2_DZ"
+  description: "RC deadzone for channel 2"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
 ---
 PARAM_RC3_MIN:
   type: "uint"
@@ -1367,6 +1405,25 @@ PARAM_RC3_MAX:
     unit: "channel"
     function: "sensors_update_rc_cal();"
 ---
+PARAM_RC3_REV:
+  type: "uint"
+  name: "RC3_REV"
+  description: "RC reverse reading channel 3 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC3_DZ:
+  type: "float"
+  name: "RC3_DZ"
+  description: "RC deadzone for channel 3"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
 PARAM_RC4_MIN:
   type: "uint"
   name: "RC4_MIN"
@@ -1399,6 +1456,25 @@ PARAM_RC4_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
+---
+PARAM_RC4_REV:
+  type: "uint"
+  name: "RC4_REV"
+  description: "RC reverse reading channel 4 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC4_DZ:
+  type: "float"
+  name: "RC4_DZ"
+  description: "RC deadzone for channel 4"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
 ---
 PARAM_RC5_MIN:
   type: "uint"
@@ -1433,6 +1509,25 @@ PARAM_RC5_MAX:
     unit: "channel"
     function: "sensors_update_rc_cal();"
 ---
+PARAM_RC5_REV:
+  type: "uint"
+  name: "RC5_REV"
+  description: "RC reverse reading channel 5 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC5_DZ:
+  type: "float"
+  name: "RC5_DZ"
+  description: "RC deadzone for channel 5"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
 PARAM_RC6_MIN:
   type: "uint"
   name: "RC6_MIN"
@@ -1465,6 +1560,25 @@ PARAM_RC6_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
+---
+PARAM_RC6_REV:
+  type: "uint"
+  name: "RC6_REV"
+  description: "RC reverse reading channel 6 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC6_DZ:
+  type: "float"
+  name: "RC6_DZ"
+  description: "RC deadzone for channel 6"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
 ---
 PARAM_RC7_MIN:
   type: "uint"
@@ -1499,6 +1613,25 @@ PARAM_RC7_MAX:
     unit: "channel"
     function: "sensors_update_rc_cal();"
 ---
+PARAM_RC7_REV:
+  type: "uint"
+  name: "RC7_REV"
+  description: "RC reverse reading channel 7 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC7_DZ:
+  type: "float"
+  name: "RC7_DZ"
+  description: "RC deadzone for channel 7"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
 PARAM_RC8_MIN:
   type: "uint"
   name: "RC8_MIN"
@@ -1531,6 +1664,25 @@ PARAM_RC8_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
+---
+PARAM_RC8_REV:
+  type: "uint"
+  name: "RC8_REV"
+  description: "RC reverse reading channel 8 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC8_DZ:
+  type: "float"
+  name: "RC8_DZ"
+  description: "RC deadzone for channel 8"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
 ---
 PARAM_DO_ESC_CAL:
   type: "uint"

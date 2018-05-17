@@ -127,27 +127,43 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_RC1_MIN, 1000);
 	init_param_uint(PARAM_RC1_MID, 1500);
 	init_param_uint(PARAM_RC1_MAX, 2000);
+	init_param_uint(PARAM_RC1_REV, 0);
+	init_param_fix16(PARAM_RC1_DZ, fix16_from_float(0.02f));
 	init_param_uint(PARAM_RC2_MIN, 1000);
 	init_param_uint(PARAM_RC2_MID, 1500);
 	init_param_uint(PARAM_RC2_MAX, 2000);
+	init_param_uint(PARAM_RC2_REV, 0);
+	init_param_fix16(PARAM_RC2_DZ, fix16_from_float(0.02f));
 	init_param_uint(PARAM_RC3_MIN, 1000);
 	init_param_uint(PARAM_RC3_MID, 1500);
 	init_param_uint(PARAM_RC3_MAX, 2000);
+	init_param_uint(PARAM_RC3_REV, 0);
+	init_param_fix16(PARAM_RC3_DZ, fix16_from_float(0.02f));
 	init_param_uint(PARAM_RC4_MIN, 1000);
 	init_param_uint(PARAM_RC4_MID, 1500);
 	init_param_uint(PARAM_RC4_MAX, 2000);
+	init_param_uint(PARAM_RC4_REV, 0);
+	init_param_fix16(PARAM_RC4_DZ, fix16_from_float(0.02f));
 	init_param_uint(PARAM_RC5_MIN, 1000);
 	init_param_uint(PARAM_RC5_MID, 1500);
 	init_param_uint(PARAM_RC5_MAX, 2000);
+	init_param_uint(PARAM_RC5_REV, 0);
+	init_param_fix16(PARAM_RC5_DZ, fix16_from_float(0.02f));
 	init_param_uint(PARAM_RC6_MIN, 1000);
 	init_param_uint(PARAM_RC6_MID, 1500);
 	init_param_uint(PARAM_RC6_MAX, 2000);
+	init_param_uint(PARAM_RC6_REV, 0);
+	init_param_fix16(PARAM_RC6_DZ, fix16_from_float(0.02f));
 	init_param_uint(PARAM_RC7_MIN, 1000);
 	init_param_uint(PARAM_RC7_MID, 1500);
 	init_param_uint(PARAM_RC7_MAX, 2000);
+	init_param_uint(PARAM_RC7_REV, 0);
+	init_param_fix16(PARAM_RC7_DZ, fix16_from_float(0.02f));
 	init_param_uint(PARAM_RC8_MIN, 1000);
 	init_param_uint(PARAM_RC8_MID, 1500);
 	init_param_uint(PARAM_RC8_MAX, 2000);
+	init_param_uint(PARAM_RC8_REV, 0);
+	init_param_fix16(PARAM_RC8_DZ, fix16_from_float(0.02f));
 	init_param_uint(PARAM_DO_ESC_CAL, 0);
 	init_param_fix16(PARAM_FAILSAFE_THROTTLE, fix16_from_float(0.25f));
 	init_param_uint(PARAM_THROTTLE_TIMEOUT, 10000000);
@@ -276,27 +292,43 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"RC1_MIN",
 	"RC1_TRIM",
 	"RC1_MAX",
+	"RC1_REV",
+	"RC1_DZ",
 	"RC2_MIN",
 	"RC2_TRIM",
 	"RC2_MAX",
+	"RC2_REV",
+	"RC2_DZ",
 	"RC3_MIN",
 	"RC3_TRIM",
 	"RC3_MAX",
+	"RC3_REV",
+	"RC3_DZ",
 	"RC4_MIN",
 	"RC4_TRIM",
 	"RC4_MAX",
+	"RC4_REV",
+	"RC4_DZ",
 	"RC5_MIN",
 	"RC5_TRIM",
 	"RC5_MAX",
+	"RC5_REV",
+	"RC5_DZ",
 	"RC6_MIN",
 	"RC6_TRIM",
 	"RC6_MAX",
+	"RC6_REV",
+	"RC6_DZ",
 	"RC7_MIN",
 	"RC7_TRIM",
 	"RC7_MAX",
+	"RC7_REV",
+	"RC7_DZ",
 	"RC8_MIN",
 	"RC8_TRIM",
 	"RC8_MAX",
+	"RC8_REV",
+	"RC8_DZ",
 	"DO_ESC_CAL",
 	"FAILSAFE_THRTL",
 	"TIMEOUT_THRTL",
@@ -390,6 +422,9 @@ void param_change_callback(param_id_t id) {
 		case PARAM_RC1_MAX:
 			sensors_update_rc_cal();
 			break;
+		case PARAM_RC1_REV:
+			sensors_update_rc_cal();
+			break;
 		case PARAM_RC2_MIN:
 			sensors_update_rc_cal();
 			break;
@@ -397,6 +432,9 @@ void param_change_callback(param_id_t id) {
 			sensors_update_rc_cal();
 			break;
 		case PARAM_RC2_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC2_REV:
 			sensors_update_rc_cal();
 			break;
 		case PARAM_RC3_MIN:
@@ -408,6 +446,9 @@ void param_change_callback(param_id_t id) {
 		case PARAM_RC3_MAX:
 			sensors_update_rc_cal();
 			break;
+		case PARAM_RC3_REV:
+			sensors_update_rc_cal();
+			break;
 		case PARAM_RC4_MIN:
 			sensors_update_rc_cal();
 			break;
@@ -415,6 +456,9 @@ void param_change_callback(param_id_t id) {
 			sensors_update_rc_cal();
 			break;
 		case PARAM_RC4_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC4_REV:
 			sensors_update_rc_cal();
 			break;
 		case PARAM_RC5_MIN:
@@ -426,6 +470,9 @@ void param_change_callback(param_id_t id) {
 		case PARAM_RC5_MAX:
 			sensors_update_rc_cal();
 			break;
+		case PARAM_RC5_REV:
+			sensors_update_rc_cal();
+			break;
 		case PARAM_RC6_MIN:
 			sensors_update_rc_cal();
 			break;
@@ -433,6 +480,9 @@ void param_change_callback(param_id_t id) {
 			sensors_update_rc_cal();
 			break;
 		case PARAM_RC6_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC6_REV:
 			sensors_update_rc_cal();
 			break;
 		case PARAM_RC7_MIN:
@@ -444,6 +494,9 @@ void param_change_callback(param_id_t id) {
 		case PARAM_RC7_MAX:
 			sensors_update_rc_cal();
 			break;
+		case PARAM_RC7_REV:
+			sensors_update_rc_cal();
+			break;
 		case PARAM_RC8_MIN:
 			sensors_update_rc_cal();
 			break;
@@ -451,6 +504,9 @@ void param_change_callback(param_id_t id) {
 			sensors_update_rc_cal();
 			break;
 		case PARAM_RC8_MAX:
+			sensors_update_rc_cal();
+			break;
+		case PARAM_RC8_REV:
 			sensors_update_rc_cal();
 			break;
 		case PARAM_MIXER:
