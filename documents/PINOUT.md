@@ -11,7 +11,7 @@ Use the flag `NAZE32_REV5` compile flag while compiling and flashing.
 2. Auxilary outputs
    - GND (unlabeled)
    - 5V (Dot)
-   1. PPM (N/C)
+   1. PPM
    2. N/C
    3. UART2 Tx (N/C)
    4. UART2 Rx (N/C)
@@ -39,7 +39,7 @@ Use the flag `NAZE32_REV6` compile flag while compiling and flashing.
 2. Auxilary outputs (labelled on back)
    - GND
    - 5V
-   1. PPM (N/C)
+   1. PPM
    2. N/C
    3. UART2 Tx (N/C)
    4. UART2 Rx (N/C)
@@ -67,7 +67,7 @@ Use the flag `NAZE32_REV5` compile flag while compiling and flashing.
 2. Auxilary outputs (split accross multiple headers)
    - GND
    - 5V
-   - SIG -> PPM (N/C)
+   - SIG -> PPM
    - N/C
    - UART2 Tx (N/C)
    - UART2 Rx (N/C)
