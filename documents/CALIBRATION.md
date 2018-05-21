@@ -30,7 +30,7 @@ To perform an RC calibration:
 
 ![RC Calibration Stage 1](https://raw.githubusercontent.com/qutas/robin/master/documents/rc_step_1.png)
 
-2. Set RC to centered, throttle down, issue the next calibration command.
+2. Set RC to stick centered, issue the next calibration command.
 
 ![RC Calibration Stage 2](https://raw.githubusercontent.com/qutas/robin/master/documents/rc_step_2.png)
 
