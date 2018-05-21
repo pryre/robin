@@ -371,7 +371,7 @@ static bool sensors_calibrate(void) {
 				if( _sensor_calibration.data.rc.step == SENSOR_CAL_RC_RANGE_INIT ) {
 					_sensor_calibration.data.rc.waiting = true;
 					_sensor_calibration.data.rc.step = SENSOR_CAL_RC_RANGE_MIDDOWN;
-					mavlink_queue_broadcast_notice("[SENSOR] Set RC to centered, throttle down");
+					mavlink_queue_broadcast_notice("[SENSOR] Set RC to stick and switch centres");
 				} else if( _sensor_calibration.data.rc.step == SENSOR_CAL_RC_RANGE_MIDDOWN ) {
 					for(int i=0;i<8;i++) {
 						_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MID] = pwmRead(i);
@@ -634,19 +634,35 @@ static bool sensors_calibrate(void) {
 	return !_sensor_calibration.type;
 }
 
-static fix16_t normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
-	//Calculate trimed command
-	int16_t trim = SENSOR_RC_MIDSTICK - mid;
-	int16_t pwmt = pwm + trim;
+static fix16_t dual_normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
+	//Constrain from min to max
+	int16_t pwmc = (pwm < min) ? min : (pwm > max) ? max : pwm;
+	fix16_t pwmn = 0;
 
-	//normalize (0 -> 1)
-	return fix16_div(fix16_from_int(pwmt - min), fix16_from_int(max - min));
+	//
+	if(pwmc > mid) {
+		pwmn = fix16_div(fix16_from_int(pwmc - mid), fix16_from_int(max - mid));
+	} else if(pwmc < mid) {
+		pwmn = -fix16_div(fix16_from_int(mid - pwmc), fix16_from_int(mid - min));
+	} else {
+		//Stick is perfectly centered
+		pwmn = 0;
+	}
+
+	//Sanity check our dual normalize incase we have bad min/max params
+	pwmn = ((pwmn < -_fc_1) || (pwmn > _fc_1)) ? 0 : pwmn;
+
+	//XXX: Could do deadzone here, but it would mean throttle has a deadzone at 50% instead of 0
+	//XXX: Could also do another deadzone in normalized_input()
+
+	//dual normalized (-1 -> 1), 0 if error
+	return pwmn;
 }
 
-static fix16_t dual_normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
-	fix16_t ni = normalized_input(pwm, min, mid, max);
-	//scale (-1 -> 1)
-	return fix16_sub(fix16_mul(ni, _fc_2), _fc_1);
+static fix16_t normalized_input(uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max) {
+	fix16_t dni = dual_normalized_input(pwm, min, mid, max);
+	//scale (-1 -> 1) to (0 -> 1), just renormalize with a range of 2
+	return fix16_div(fix16_add(dni, _fc_1), _fc_2);
 }
 
 void sensors_update_rc_cal(void) {
@@ -758,6 +774,7 @@ bool sensors_update(uint32_t time_us) {
 			_sensors.rc_input.status.new_data = true;
 			safety_update_sensor(&_system_status.sensors.rc_input);
 
+			//Normailize readings
 			fix16_t cmd_roll = dual_normalized_input(_sensors.rc_input.p_r,
 														rc_cal[chan_roll][SENSOR_RC_CAL_MIN],
 														rc_cal[chan_roll][SENSOR_RC_CAL_MID],
@@ -772,16 +789,17 @@ bool sensors_update(uint32_t time_us) {
 														rc_cal[chan_yaw][SENSOR_RC_CAL_MAX]);
 			fix16_t cmd_throttle = normalized_input(_sensors.rc_input.p_T,
 														rc_cal[chan_throttle][SENSOR_RC_CAL_MIN],
-														//XXX: Don't use throttle trim: rc_cal[chan_throttle][SENSOR_RC_CAL_MID],
-														SENSOR_RC_MIDSTICK,
+														rc_cal[chan_throttle][SENSOR_RC_CAL_MID],
 														rc_cal[chan_throttle][SENSOR_RC_CAL_MAX]);
 
+			//Correct for axis reverse
 			fix16_t cmd_roll_corrected = (rc_rev[chan_roll]) ? fix16_mul(-_fc_1, cmd_roll) : cmd_roll;
 			fix16_t cmd_pitch_corrected = (rc_rev[chan_pitch]) ? fix16_mul(-_fc_1, cmd_pitch) : cmd_pitch;
 			fix16_t cmd_yaw_corrected = (rc_rev[chan_yaw]) ? fix16_mul(-_fc_1, cmd_yaw) : cmd_yaw;
 			//XXX:For throttle, we need to multiply then shift it to ensure it is still 0->1
 			fix16_t cmd_throttle_corrected = (rc_rev[chan_throttle]) ? fix16_add(_fc_1, fix16_mul(-_fc_1, cmd_throttle)) : cmd_throttle;
 
+			//Calculate deadzones and save outputs
 			_sensors.rc_input.c_r = (fix16_abs(cmd_roll_corrected) < rc_dz[chan_roll]) ? 0 : cmd_roll_corrected;
 			_sensors.rc_input.c_p = (fix16_abs(cmd_pitch_corrected) < rc_dz[chan_pitch]) ? 0 : cmd_pitch_corrected;
 			_sensors.rc_input.c_y = (fix16_abs(cmd_yaw_corrected) < rc_dz[chan_yaw]) ? 0 : cmd_yaw_corrected;
