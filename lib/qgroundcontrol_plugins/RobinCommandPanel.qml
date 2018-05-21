@@ -52,6 +52,16 @@ Rectangle {
         }
 
         QGCButton {
+            text: "Send RC calibration command"
+            // Arguments to CustomCommandWidgetController::sendCommand (MAVLink COMMAND_LONG)
+            //   command id
+            //   component id
+            //   confirmation
+            //   param 1-7
+            onClicked: controller.sendCommand(241, 1, 1, 0, 0, 0, 1, 0, 0, 0)
+        }
+
+        QGCButton {
             text: "Run motor test"
             // Arguments to CustomCommandWidgetController::sendCommand (MAVLink COMMAND_LONG)
             //   command id
