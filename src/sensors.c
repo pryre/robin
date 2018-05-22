@@ -369,7 +369,7 @@ static bool sensors_do_cal_mag(void) {
 static bool sensors_do_cal_baro(void) {
 	bool failed = false;
 
-	//TODO CAL MAG
+	//TODO CAL BAROMETER
 	sensors_calibration_done();
 
 	return !failed;
@@ -656,7 +656,7 @@ static bool sensors_do_cal_accel(void) {
 static bool sensors_do_cal_level_horizon(void) {
 	bool failed = false;
 
-	//TODO CAL MAG
+	//TODO CAL LEVEL HORIZON
 	sensors_calibration_done();
 
 	return !failed;
@@ -665,7 +665,7 @@ static bool sensors_do_cal_level_horizon(void) {
 static bool sensors_do_cal_inter(void) {
 	bool failed = false;
 
-	//TODO CAL MAG
+	//TODO CAL INTERFERENCE
 	sensors_calibration_done();
 
 	return !failed;
