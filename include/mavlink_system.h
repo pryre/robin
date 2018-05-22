@@ -3,7 +3,7 @@
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
 //XXX: LPQ was 12
-#define LOW_PRIORITY_QUEUE_SIZE 20
+#define LOW_PRIORITY_QUEUE_SIZE 25
 
 #include "breezystm32.h"
 #include "serial.h"
