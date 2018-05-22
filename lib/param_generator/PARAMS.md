@@ -116,6 +116,10 @@ RC_MAP_PITCH | uint | Channel to use for RC pitch inputs | 0 | channel | scalar 
 RC_MAP_YAW | uint | Channel to use for RC yaw inputs | 0 | channel | scalar | False
 RC_MAP_THROTTLE | uint | Channel to use for RC throttle inputs | 0 | channel | scalar | False
 RC_MAP_MODE_SW | uint | Channel to use for RC mode select | 0 | channel | scalar | False
+RC_MAP_AUX1 | uint | RC channel to use for AUX1 passthrough, if there are free mixer channels (set to 0 to disable) | 0 | channel | scalar | True
+RC_MAP_AUX2 | uint | RC channel to use for AUX2 passthrough, if there are free mixer channels (set to 0 to disable) | 0 | channel | scalar | True
+RC_MAP_AUX3 | uint | RC channel to use for AUX3 passthrough, if there are free mixer channels (set to 0 to disable) | 0 | channel | scalar | True
+RC_MAP_AUX4 | uint | RC channel to use for AUX4 passthrough, if there are free mixer channels (set to 0 to disable) | 0 | channel | scalar | True
 RC_MODE_DEFAULT | uint | Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable) | 0 | channel | scalar | False
 RC_MODE_PWM_RNG | uint | Sets the range (+ or -) that counts as a selection for any PWM mode selection | 100 | channel | scalar | False
 RC_MODE_PWM_STAB | uint | The PWM value to use to select manual stabilized mode (set to 0 to disable) | 1100 | channel | scalar | False

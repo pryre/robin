@@ -30,6 +30,7 @@ int32_t _pwm_output[MIXER_NUM_MOTORS];
 mixer_motor_test_t _motor_test;
 
 static const mixer_t *mixer_to_use;
+static int16_t pwm_aux_map[MIXER_NUM_AUX];
 
 void mixer_init() {
 	switch( get_param_uint(PARAM_MIXER) ) {
@@ -77,6 +78,11 @@ void mixer_init() {
 		_GPIO_outputs[i] = 0;
 		_GPIO_output_type[i] = MT_NONE;
 	}
+
+	pwm_aux_map[0] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX1) - 1;
+	pwm_aux_map[1] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX2) - 1;
+	pwm_aux_map[2] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX3) - 1;
+	pwm_aux_map[3] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX4) - 1;
 
 	_motor_test.start = 0;
 	_motor_test.throttle = 0;
@@ -162,6 +168,8 @@ void write_servo(uint8_t index, int32_t value) {
 
 //Used to send a PWM while
 static void pwm_output() {
+	int aux_counter = 0;
+
 	// Add in GPIO inputs from Onboard Computer
 	for (int8_t i=0; i<MIXER_NUM_MOTORS; i++) {
 		output_type_t output_type = mixer_to_use->output_type[i];
@@ -173,6 +181,8 @@ static void pwm_output() {
 			output_type = _GPIO_output_type[i];
 		}
 
+		//XXX: This is getting pretty messy, but it looks like a good spot for AUX passthrough as well
+
 		// Write output to motors
 		if (output_type == MT_S) {
 			//write_servo(i, _pwm_output_requested[i]);
@@ -180,6 +190,18 @@ static void pwm_output() {
 			write_motor(i, _pwm_output_requested[i]);
 		} else if (output_type == MT_G) {
 			//write_servo(i, _pwm_output_requested[i]);	//XXX: Could have another function here to handle GPIO cases
+		} else {
+			//If we haven't run out of AUX channels
+			if(aux_counter < MIXER_NUM_AUX) {
+				//If a valid channel is set
+				if(pwm_aux_map[aux_counter] >= 0) {
+					write_output_pwm(i, pwmRead(pwm_aux_map[aux_counter]), 1500);
+				}
+
+				//Move on to the next aux channel for the next output loop
+				//May be that AUX 2 is set, but not 1
+				aux_counter++;
+			}
 		}
 	}
 }

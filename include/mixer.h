@@ -8,6 +8,7 @@
 
 #define MIXER_NUM_MOTORS 8
 #define MIXER_TEST_MOTORS_ALL 0xFF
+#define MIXER_NUM_AUX 4
 
 //TODO: Need to add support later for more mixing types
 //http://autoquad.org/wiki/wiki/configuring-autoquad-flightcontroller/frame-motor-mixing-table/
