@@ -182,13 +182,14 @@ typedef struct {
 
 typedef enum {
 	SENSOR_CAL_NONE = 0,
-	SENSOR_CAL_GYRO = 1,
-	SENSOR_CAL_MAG = 2,
-	SENSOR_CAL_BARO = 4,
-	SENSOR_CAL_RC = 8,
-	SENSOR_CAL_ACCEL = 16,
-	SENSOR_CAL_INTER = 32,	//TODO: Implement this
-	SENSOR_CAL_ALL = 128
+	SENSOR_CAL_GYRO,
+	SENSOR_CAL_MAG,
+	SENSOR_CAL_BARO,
+	SENSOR_CAL_RC,
+	SENSOR_CAL_ACCEL,
+	SENSOR_CAL_LEVEL_HORIZON,
+	SENSOR_CAL_INTER,	//TODO: Implement this
+	SENSOR_CAL_INVALID
 } sensor_calibration_request_t;
 
 typedef enum {

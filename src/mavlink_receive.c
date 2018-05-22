@@ -196,39 +196,37 @@ static void communication_decode(uint8_t port, uint8_t c) {
 								command_result = MAV_RESULT_DENIED;
 
 								if( (int)mavlink_msg_command_long_get_param1(&msg) == SENSOR_CAL_CMD_GYRO ) {
-									_sensor_calibration.type |= SENSOR_CAL_GYRO;
+									_sensor_calibration.type = SENSOR_CAL_GYRO;
 									command_result = MAV_RESULT_ACCEPTED;
 								//XXX: } else if( (int)mavlink_msg_command_long_get_param1(&msg) == SENSOR_CAL_CMD_GYRO_TEMP ) {
 								//XXX: TODO: GYRO TEMP
 								} else if( (int)mavlink_msg_command_long_get_param2(&msg) == SENSOR_CAL_CMD_MAG ) {
-									_sensor_calibration.type |= SENSOR_CAL_MAG;
+									_sensor_calibration.type = SENSOR_CAL_MAG;
 									command_result = MAV_RESULT_ACCEPTED;
 								} else if( (int)mavlink_msg_command_long_get_param3(&msg) == SENSOR_CAL_CMD_PRESSURE_GND) {
-									_sensor_calibration.type |= SENSOR_CAL_BARO;
+									_sensor_calibration.type = SENSOR_CAL_BARO;
 									command_result = MAV_RESULT_ACCEPTED;
 								} else if( (int)mavlink_msg_command_long_get_param4(&msg) == SENSOR_CAL_CMD_RC ) {
-									_sensor_calibration.type |= SENSOR_CAL_RC;
+									_sensor_calibration.type = SENSOR_CAL_RC;
 									command_result = MAV_RESULT_ACCEPTED;
-								//XXX: } else if( (int)mavlink_msg_command_long_get_param4(&msg) == SENSOR_CAL_CMD_RC_TRIM ) {
-								//XXX: TODO: RC TRIM
+								//: } else if( (int)mavlink_msg_command_long_get_param4(&msg) == SENSOR_CAL_CMD_RC_TRIM ) {
+								//XXX: RC is done during normal RC cal, maybe it shouldn't?
 								} else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL ) {
-									_sensor_calibration.type |= SENSOR_CAL_ACCEL;
+									_sensor_calibration.type = SENSOR_CAL_ACCEL;
 									command_result = MAV_RESULT_ACCEPTED;
-								//XXX: } else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL_LEVEL ) {
-								//XXX: TODO: ACCEL LEVEL
+								} else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL_LEVEL ) {
+									_sensor_calibration.type = SENSOR_CAL_LEVEL_HORIZON;
+									command_result = MAV_RESULT_ACCEPTED;
 								//XXX: } else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL_TEMP ) {
 								//XXX: TODO: ACCEL TEMP
 								} else if( (int)mavlink_msg_command_long_get_param6(&msg) == SENSOR_CAL_CMD_COMPASS_MOTOR ) {
-									_sensor_calibration.type |= SENSOR_CAL_INTER;
+									_sensor_calibration.type = SENSOR_CAL_INTER;
 									command_result = MAV_RESULT_ACCEPTED;
 								//XXX:} else if( (int)mavlink_msg_command_long_get_param6(&msg) == SENSOR_CAL_CMD_AIRPSEED ) {
 								//XXX: TODO: Airpspeed?
 								} else if( (int)mavlink_msg_command_long_get_param7(&msg) == SENSOR_CAL_CMD_ESC ) {
 									//Manually reset calibration mode
-									if( set_param_uint( PARAM_DO_ESC_CAL, 1 ) &&
-										safety_request_state( MAV_STATE_STANDBY ) ) {
-										sensors_cal_init();
-
+									if( set_param_uint( PARAM_DO_ESC_CAL, 1 ) ) {
 										write_params();
 
 										command_result = MAV_RESULT_ACCEPTED;
