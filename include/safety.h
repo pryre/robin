@@ -4,13 +4,9 @@
 #include "mavlink/mavlink_types.h"
 #include "params.h"
 
-#define MAV_STATE_NUM_STATES (8 + 1)
-#define MAV_STATE_NAME_LEN 10
-#define MAV_MODE_NUM_MODES (7 + 1)
-#define MAV_MODE_NAME_LEN 10
-
 typedef enum {
-	MAIN_MODE_MANUAL = 1,
+	MAIN_MODE_UNSET = 0,
+	MAIN_MODE_MANUAL,
 	MAIN_MODE_ALTCTL,
 	MAIN_MODE_POSCTL,
 	MAIN_MODE_AUTO,
@@ -19,6 +15,11 @@ typedef enum {
 	MAIN_MODE_STABILIZED,
 	MAIN_MODE_RATTITUDE
 } compat_px4_main_mode_t;
+
+#define MAV_MODE_NUM_MODES (MAIN_MODE_RATTITUDE + 1)
+#define MAV_MODE_NAME_LEN 11
+#define MAV_STATE_NUM_STATES (MAV_STATE_FLIGHT_TERMINATION + 1)
+#define MAV_STATE_NAME_LEN 10
 
 //General UAV health status
 typedef enum {
@@ -100,6 +101,7 @@ typedef struct {
 } status_buzzer_t;
 
 extern char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
+extern char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
 
 extern system_status_t _system_status;
 

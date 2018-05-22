@@ -19,7 +19,9 @@
 #include "fixquat.h"
 #include "fixextra.h"
 
-#include "stdio.h"
+//#include "stdio.h"
+#include <stdlib.h>
+
 
 //Number of itterations of averaging to use with IMU calibrations
 //#define SENSOR_CAL_IMU_PASSES 1000
@@ -924,26 +926,24 @@ bool sensors_update(uint32_t time_us) {
 				if( _sensors.rc_input.p_m > 0 ) {
 					compat_px4_main_mode_t c_m_last = _sensors.rc_input.c_m;
 
-					_sensors.rc_input.c_m = (_sensors.rc_input.p_m < 1350) ? MAIN_MODE_STABILIZED :
-											(_sensors.rc_input.p_m < 1750) ? MAIN_MODE_ACRO :
-											MAIN_MODE_OFFBOARD;
+					if( abs( (int16_t)get_param_uint(PARAM_RC_MODE_PWM_STAB) - _sensors.rc_input.p_m ) < get_param_uint(PARAM_RC_MODE_PWM_RANGE) ) {
+						_sensors.rc_input.c_m = MAIN_MODE_STABILIZED;
+					} else if( abs( (int16_t)get_param_uint(PARAM_RC_MODE_PWM_ACRO) - _sensors.rc_input.p_m ) < get_param_uint(PARAM_RC_MODE_PWM_RANGE) ) {
+						_sensors.rc_input.c_m = MAIN_MODE_ACRO;
+					} else if( abs( (int16_t)get_param_uint(PARAM_RC_MODE_PWM_OFFBOARD) - _sensors.rc_input.p_m ) < get_param_uint(PARAM_RC_MODE_PWM_RANGE) ) {
+						_sensors.rc_input.c_m = MAIN_MODE_OFFBOARD;
+					} //Else no mode select match, don't change mode
 
 					//If a new mode is requested
 					if( _sensors.rc_input.c_m != c_m_last ) {
-						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] Requesting RC mode: ";
-						char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-						itoa(_sensors.rc_input.c_m, mchar, 10);
-						strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
-						mavlink_queue_broadcast_notice(text);
-
 						if( !safety_request_control_mode(_sensors.rc_input.c_m) ) {
-							mavlink_queue_broadcast_error("[SAFETY] Rejecting RC mode switch");
+							mavlink_queue_broadcast_error("[SENSOR] RC mode switch rejected");
 						}
 					}
 				}
-			} else if( get_param_uint(PARAM_RC_DEFAULT_MODE) ) { //Else if RC should trigger a default mode
-				if( !safety_request_control_mode(get_param_uint(PARAM_RC_DEFAULT_MODE)) ) {
-					mavlink_queue_broadcast_error("[SAFETY] Error setting RC default mode");
+			} else if( get_param_uint(PARAM_RC_MODE_DEFAULT) ) { //Else if RC should trigger a default mode
+				if( !safety_request_control_mode(get_param_uint(PARAM_RC_MODE_DEFAULT)) ) {
+					mavlink_queue_broadcast_error("[SENSOR] Error setting RC default mode");
 				}
 			}
 

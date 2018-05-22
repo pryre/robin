@@ -122,7 +122,11 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_RC_MAP_YAW, 0);
 	init_param_uint(PARAM_RC_MAP_THROTTLE, 0);
 	init_param_uint(PARAM_RC_MAP_MODE_SW, 0);
-	init_param_uint(PARAM_RC_DEFAULT_MODE, 0);
+	init_param_uint(PARAM_RC_MODE_DEFAULT, 0);
+	init_param_uint(PARAM_RC_MODE_PWM_RANGE, 100);
+	init_param_uint(PARAM_RC_MODE_PWM_STAB, 1100);
+	init_param_uint(PARAM_RC_MODE_PWM_ACRO, 0);
+	init_param_uint(PARAM_RC_MODE_PWM_OFFBOARD, 1900);
 	init_param_uint(PARAM_RC_ARM_TIMER, 1000000);
 	init_param_uint(PARAM_RC1_MIN, 1000);
 	init_param_uint(PARAM_RC1_MID, 1500);
@@ -287,7 +291,11 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"RC_MAP_YAW",
 	"RC_MAP_THROTTLE",
 	"RC_MAP_MODE_SW",
-	"RC_DEFAULT_MODE",
+	"RC_MODE_DEFAULT",
+	"RC_MODE_PWM_RNG",
+	"RC_MODE_PWM_STAB",
+	"RC_MODE_PWM_ACRO",
+	"RC_MODE_PWM_OFFB",
 	"COM_RC_ARM_HYST",
 	"RC1_MIN",
 	"RC1_TRIM",

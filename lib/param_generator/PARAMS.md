@@ -116,7 +116,11 @@ RC_MAP_PITCH | uint | Channel to use for RC pitch inputs | 0 | channel | scalar 
 RC_MAP_YAW | uint | Channel to use for RC yaw inputs | 0 | channel | scalar | False
 RC_MAP_THROTTLE | uint | Channel to use for RC throttle inputs | 0 | channel | scalar | False
 RC_MAP_MODE_SW | uint | Channel to use for RC mode select | 0 | channel | scalar | False
-RC_DEFAULT_MODE | uint | Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable) | 0 | channel | scalar | False
+RC_MODE_DEFAULT | uint | Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable) | 0 | channel | scalar | False
+RC_MODE_PWM_RNG | uint | Sets the range (+ or -) that counts as a selection for any PWM mode selection | 100 | channel | scalar | False
+RC_MODE_PWM_STAB | uint | The PWM value to use to select manual stabilized mode (set to 0 to disable) | 1100 | channel | scalar | False
+RC_MODE_PWM_ACRO | uint | The PWM value to use to select manual acro mode (set to 0 to disable) | 0 | channel | scalar | False
+RC_MODE_PWM_OFFB | uint | The PWM value to use to select offboard mode (set to 0 to disable) | 1900 | channel | scalar | False
 COM_RC_ARM_HYST | uint | Time threshold to activate RC arming | 1000000 | us | scalar | False
 RC1_MIN | uint | RC minimum value for channel 1 calibration | 1000 | channel | scalar | False
 RC1_TRIM | uint | RC median value for channel 1 calibration | 1500 | channel | scalar | False

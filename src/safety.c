@@ -131,15 +131,25 @@ void safety_init() {
 	_new_safety_button_press = false;
 	_time_safety_button_pressed = 0;
 
-	strncpy( mav_state_names[0], "UNINIT", MAV_STATE_NAME_LEN);
-	strncpy( mav_state_names[1], "BOOT", MAV_STATE_NAME_LEN);
-	strncpy( mav_state_names[2], "CALIBRATE", MAV_STATE_NAME_LEN);
-	strncpy( mav_state_names[3], "STANDBY", MAV_STATE_NAME_LEN);
-	strncpy( mav_state_names[4], "ACTIVE", MAV_STATE_NAME_LEN);
-	strncpy( mav_state_names[5], "CRITICAL", MAV_STATE_NAME_LEN);
-	strncpy( mav_state_names[6], "EMERGENCY", MAV_STATE_NAME_LEN);
-	strncpy( mav_state_names[7], "POWEROFF", MAV_STATE_NAME_LEN);
-	strncpy( mav_state_names[8], "ERROR!", MAV_STATE_NAME_LEN);
+	strncpy( mav_state_names[MAV_STATE_UNINIT], "UNINIT", MAV_STATE_NAME_LEN);
+	strncpy( mav_state_names[MAV_STATE_BOOT], "BOOT", MAV_STATE_NAME_LEN);
+	strncpy( mav_state_names[MAV_STATE_CALIBRATING], "CALIBRATE", MAV_STATE_NAME_LEN);
+	strncpy( mav_state_names[MAV_STATE_STANDBY], "STANDBY", MAV_STATE_NAME_LEN);
+	strncpy( mav_state_names[MAV_STATE_ACTIVE], "ACTIVE", MAV_STATE_NAME_LEN);
+	strncpy( mav_state_names[MAV_STATE_CRITICAL], "CRITICAL", MAV_STATE_NAME_LEN);
+	strncpy( mav_state_names[MAV_STATE_EMERGENCY], "EMERGENCY", MAV_STATE_NAME_LEN);
+	strncpy( mav_state_names[MAV_STATE_POWEROFF], "POWEROFF", MAV_STATE_NAME_LEN);
+	strncpy( mav_state_names[MAV_STATE_FLIGHT_TERMINATION], "TERMINATE", MAV_STATE_NAME_LEN);
+
+	strncpy( mav_mode_names[MAIN_MODE_UNSET], "UNSET", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[MAIN_MODE_MANUAL], "MANUAL", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[MAIN_MODE_ALTCTL], "ALTCTL", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[MAIN_MODE_POSCTL], "POSCTL", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[MAIN_MODE_AUTO], "AUTO", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[MAIN_MODE_ACRO], "ACRO", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[MAIN_MODE_OFFBOARD], "OFFBOARD", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[MAIN_MODE_STABILIZED], "STABILIZED", MAV_MODE_NAME_LEN);
+	strncpy( mav_mode_names[MAIN_MODE_RATTITUDE], "RATTITUDE", MAV_MODE_NAME_LEN);
 
 	status_led_init();
 
@@ -265,6 +275,7 @@ bool safety_request_state(uint8_t req_state) {
 bool safety_request_control_mode( uint8_t req_ctrl_mode ) {
 	bool change_ctrl_mode = false;
 
+
 	if(_system_status.control_mode == req_ctrl_mode) {	//XXX: State request to same state, just say OK
 		change_ctrl_mode = true;
 	} else {
@@ -297,8 +308,25 @@ bool safety_request_control_mode( uint8_t req_ctrl_mode ) {
 
 	if( change_ctrl_mode ) {
 		_system_status.control_mode = req_ctrl_mode;
+
+		char text_success[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] Control changed: ";
+
+		strncat(text_success,
+				mav_mode_names[_system_status.control_mode],
+				MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);	//XXX: Stops string overflow warnings
+
+		mavlink_queue_broadcast_notice(text_success);
+
 		status_buzzer_success();
 	} else {
+		char text_error[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] Control change denied: ";
+
+		strncat(text_error,
+				mav_mode_names[req_ctrl_mode],
+				MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);	//XXX: Stops string overflow warnings
+
+		mavlink_queue_broadcast_error(text_error);
+
 		status_buzzer_failure();
 	}
 

@@ -1248,14 +1248,54 @@ PARAM_RC_MAP_MODE_SW:
     default: 0
     unit: "channel"
 ---
-PARAM_RC_DEFAULT_MODE:
+PARAM_RC_MODE_DEFAULT:
   type: "uint"
-  name: "RC_DEFAULT_MODE"
+  name: "RC_MODE_DEFAULT"
   description: "Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable)"
   reboot: false
   value:
     option: "scalar"
     default: 0
+    unit: "channel"
+---
+PARAM_RC_MODE_PWM_RANGE:
+  type: "uint"
+  name: "RC_MODE_PWM_RNG"
+  description: "Sets the range (+ or -) that counts as a selection for any PWM mode selection"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100
+    unit: "channel"
+---
+PARAM_RC_MODE_PWM_STAB:
+  type: "uint"
+  name: "RC_MODE_PWM_STAB"
+  description: "The PWM value to use to select manual stabilized mode (set to 0 to disable)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1100
+    unit: "channel"
+---
+PARAM_RC_MODE_PWM_ACRO:
+  type: "uint"
+  name: "RC_MODE_PWM_ACRO"
+  description: "The PWM value to use to select manual acro mode (set to 0 to disable)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MODE_PWM_OFFBOARD:
+  type: "uint"
+  name: "RC_MODE_PWM_OFFB"
+  description: "The PWM value to use to select offboard mode (set to 0 to disable)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1900
     unit: "channel"
 ---
 PARAM_RC_ARM_TIMER:
