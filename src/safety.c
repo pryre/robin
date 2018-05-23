@@ -512,7 +512,7 @@ bool safety_request_disarm(void) {
 	mavlink_queue_broadcast_notice("[SAFETY] Mav disarmed!");
 
 	if( safety_request_state( MAV_STATE_STANDBY ) ) {
-		mavlink_queue_broadcast_notice("[SAFETY] Mav returned to standby state");
+		mavlink_queue_broadcast_info("[SAFETY] Mav returned to standby state");
 	} else {
 		mavlink_queue_broadcast_error("[SAFETY] Unable to return to standby state!");
 	}
@@ -584,7 +584,7 @@ void safety_update_sensor( timeout_status_t *sensor ) {
 		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Connected: ";
 		strncat(text, sensor->name, (MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 20) );	//Magic number is size of the message start
 		//mavlink_send_statustext_notice(MAV_SEVERITY_NOTICE, &text[0]);
-		mavlink_queue_broadcast_notice( &text[0] );
+		mavlink_queue_broadcast_info( &text[0] );
 	} else if( sensor->health == SYSTEM_HEALTH_UNKNOWN ) {
 		sensor->health = SYSTEM_HEALTH_TIMEOUT;
 	}

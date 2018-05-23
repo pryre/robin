@@ -184,11 +184,12 @@ typedef enum {
 	SENSOR_CAL_NONE = 0,
 	SENSOR_CAL_GYRO,
 	SENSOR_CAL_MAG,
-	SENSOR_CAL_BARO,
+	SENSOR_CAL_GND_PRESSURE,
 	SENSOR_CAL_RC,
 	SENSOR_CAL_ACCEL,
 	SENSOR_CAL_LEVEL_HORIZON,
-	SENSOR_CAL_INTER,	//TODO: Implement this
+	SENSOR_CAL_INTER,
+	SENSOR_CAL_BARO,
 	SENSOR_CAL_INVALID
 } sensor_calibration_request_t;
 
@@ -283,6 +284,7 @@ void sensors_deinit_imu(void);
 void sensors_init_internal(void);
 void sensors_init_external(void);
 void sensors_cal_init(void);
+bool sensors_request_cal(sensor_calibration_request_t req);
 bool sensors_read(void);
 bool i2c_job_queued(void);
 

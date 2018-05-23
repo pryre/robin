@@ -22,9 +22,7 @@
 //#include "stdio.h"
 #include <stdlib.h>
 
-
-//Number of itterations of averaging to use with IMU calibrations
-//#define SENSOR_CAL_IMU_PASSES 1000
+#define GYRO_HIGH_BIAS_WARN 200
 
 //==-- Local Variables
 int32_t _imu_time_read = 0;
@@ -323,6 +321,131 @@ uint32_t sensors_clock_imu_int_get(void) {
 	return _sensors.clock.imu_time_read;
 }
 
+static bool sensors_request_cal_state(void) {
+	bool success = safety_request_state( MAV_STATE_CALIBRATING );
+
+	if(!success) {
+		mavlink_queue_broadcast_error("[SENSOR] Cannot enter calibration in this mode!");
+	}
+
+	return success;
+}
+
+bool sensors_request_cal(sensor_calibration_request_t req) {
+	bool success = false;
+	char text_reason[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+
+	switch(req) {
+		case SENSOR_CAL_GYRO: {
+			if( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
+				success = sensors_request_cal_state();
+			} else {
+				strncpy(text_reason,
+						 "gyro",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			}
+
+			break;
+		}
+		case SENSOR_CAL_MAG: {
+			if( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) {
+				success = sensors_request_cal_state();
+			} else {
+				strncpy(text_reason,
+						 "mag",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			}
+
+			break;
+		}
+		case SENSOR_CAL_GND_PRESSURE: {
+			if( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) {
+				success = sensors_request_cal_state();
+			} else {
+				strncpy(text_reason,
+						 "gnd press",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			}
+
+			break;
+		}
+		case SENSOR_CAL_RC: {
+			if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) {
+				success = sensors_request_cal_state();
+			} else {
+
+				if( !get_param_uint(PARAM_RC_MAP_ROLL) ||
+					!get_param_uint(PARAM_RC_MAP_PITCH) ||
+					!get_param_uint(PARAM_RC_MAP_YAW) ||
+					!get_param_uint(PARAM_RC_MAP_THROTTLE) ) {
+
+					mavlink_queue_broadcast_error("[SENSOR] RC mapping params no set");
+				}
+
+				strncpy(text_reason,
+						 "rc",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			}
+
+			break;
+		}
+		case SENSOR_CAL_ACCEL: {
+			if( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
+				success = sensors_request_cal_state();
+			} else {
+				strncpy(text_reason,
+						 "accel",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			}
+
+			break;
+		}
+		case SENSOR_CAL_LEVEL_HORIZON: {
+			if( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
+				success = sensors_request_cal_state();
+			} else {
+				strncpy(text_reason,
+						 "level",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			}
+
+			break;
+		}
+		case SENSOR_CAL_INTER: {
+			//TODO: Need to check sensors required are present
+			success = sensors_request_cal_state();
+
+			break;
+		}
+		case SENSOR_CAL_BARO: {
+			if( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) {
+				success = sensors_request_cal_state();
+			} else {
+				strncpy(text_reason,
+						 "baro",
+						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			}
+
+			break;
+		}
+		default: {
+
+			break;
+		}
+	}
+
+	if(success) {
+		_sensor_calibration.type = req;
+	} else {
+		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Cannot cal ";
+		strncat(text, text_reason, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+		strncat(text, " no input detected!", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+		mavlink_queue_broadcast_error(text);
+	}
+
+	return success;
+}
+
 static void sensors_calibration_done(void) {
 	safety_request_state( MAV_STATE_STANDBY );
 
@@ -339,18 +462,21 @@ static bool sensors_do_cal_gyro(void) {
 	_sensor_calibration.data.gyro.count++;
 
 	if (_sensor_calibration.data.gyro.count >= get_param_uint(PARAM_CAL_IMU_PASSES)) {
-		set_param_int(PARAM_GYRO_X_BIAS, (_sensor_calibration.data.gyro.sum_x / _sensor_calibration.data.gyro.count));
-		set_param_int(PARAM_GYRO_Y_BIAS, (_sensor_calibration.data.gyro.sum_y / _sensor_calibration.data.gyro.count));
-		set_param_int(PARAM_GYRO_Z_BIAS, (_sensor_calibration.data.gyro.sum_z / _sensor_calibration.data.gyro.count));
+		int gyro_x_bias = _sensor_calibration.data.gyro.sum_x / _sensor_calibration.data.gyro.count;
+		int gyro_y_bias = _sensor_calibration.data.gyro.sum_y / _sensor_calibration.data.gyro.count;
+		int gyro_z_bias = _sensor_calibration.data.gyro.sum_z / _sensor_calibration.data.gyro.count;
 
-		_sensor_calibration.data.gyro.count = 0;
-		_sensor_calibration.data.gyro.sum_x = 0;
-		_sensor_calibration.data.gyro.sum_y = 0;
-		_sensor_calibration.data.gyro.sum_z = 0;
+		if( ( abs(gyro_x_bias) > GYRO_HIGH_BIAS_WARN ) ||
+			( abs(gyro_y_bias) > GYRO_HIGH_BIAS_WARN ) ||
+			( abs(gyro_z_bias) > GYRO_HIGH_BIAS_WARN ) ) {
+			mavlink_queue_broadcast_error("[SENSOR] Warning: high gyro biases detected!");
+		}
+
+		set_param_int(PARAM_GYRO_X_BIAS, gyro_x_bias);
+		set_param_int(PARAM_GYRO_Y_BIAS, gyro_y_bias);
+		set_param_int(PARAM_GYRO_Z_BIAS, gyro_z_bias);
 
 		reset_adaptive_gyro_bias();
-
-		//TODO: "we could do some sanity checking here if we wanted to."
 
 		sensors_calibration_done();
 		mavlink_queue_broadcast_notice("[SENSOR] Gyro calibration complete!");
@@ -368,7 +494,7 @@ static bool sensors_do_cal_mag(void) {
 	return !failed;
 }
 
-static bool sensors_do_cal_baro(void) {
+static bool sensors_do_cal_gnd_press(void) {
 	bool failed = false;
 
 	//TODO CAL BAROMETER
@@ -392,6 +518,14 @@ static bool sensors_do_cal_rc(void) {
 			case SENSOR_CAL_RC_RANGE_MIDDOWN: {
 				for(int i=0;i<8;i++) {
 					_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MID] = pwmRead(i);
+
+					if( ( pwmRead(i) < 1300 ) || ( pwmRead(i) > 1700 ) ) {
+						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Possible bad trim on channel ";
+						char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+						itoa(i + 1, mchar, 10);
+						strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+						mavlink_queue_broadcast_error(text);
+					}
 				}
 
 				//XXX Set the params here as it saves overloading the LPQ
@@ -411,33 +545,25 @@ static bool sensors_do_cal_rc(void) {
 				break;
 			}
 			case SENSOR_CAL_RC_RANGE_CORNERS : {
-				if(get_param_uint(PARAM_RC_MAP_ROLL) &&
-					get_param_uint(PARAM_RC_MAP_PITCH) &&
-					get_param_uint(PARAM_RC_MAP_YAW) &&
-					get_param_uint(PARAM_RC_MAP_THROTTLE) ) {
+				uint8_t chan_roll = get_param_uint(PARAM_RC_MAP_ROLL) - 1;
+				uint8_t chan_pitch = get_param_uint(PARAM_RC_MAP_PITCH) - 1;
+				uint8_t chan_yaw = get_param_uint(PARAM_RC_MAP_YAW) - 1;
+				uint8_t chan_throttle = get_param_uint(PARAM_RC_MAP_THROTTLE) - 1;
 
-					uint8_t chan_roll = get_param_uint(PARAM_RC_MAP_ROLL) - 1;
-					uint8_t chan_pitch = get_param_uint(PARAM_RC_MAP_PITCH) - 1;
-					uint8_t chan_yaw = get_param_uint(PARAM_RC_MAP_YAW) - 1;
-					uint8_t chan_throttle = get_param_uint(PARAM_RC_MAP_THROTTLE) - 1;
+				_sensor_calibration.data.rc.rc_rev[chan_roll] = (pwmRead(chan_roll) > SENSOR_RC_MIDSTICK);
+				_sensor_calibration.data.rc.rc_rev[chan_pitch] = (pwmRead(chan_pitch) < SENSOR_RC_MIDSTICK);
+				_sensor_calibration.data.rc.rc_rev[chan_yaw] = (pwmRead(chan_yaw) < SENSOR_RC_MIDSTICK);
+				_sensor_calibration.data.rc.rc_rev[chan_throttle] = (pwmRead(chan_throttle) > SENSOR_RC_MIDSTICK);
 
-					_sensor_calibration.data.rc.rc_rev[chan_roll] = (pwmRead(chan_roll) > SENSOR_RC_MIDSTICK);
-					_sensor_calibration.data.rc.rc_rev[chan_pitch] = (pwmRead(chan_pitch) < SENSOR_RC_MIDSTICK);
-					_sensor_calibration.data.rc.rc_rev[chan_yaw] = (pwmRead(chan_yaw) < SENSOR_RC_MIDSTICK);
-					_sensor_calibration.data.rc.rc_rev[chan_throttle] = (pwmRead(chan_throttle) > SENSOR_RC_MIDSTICK);
-
-					//XXX Set the params here as it saves overloading the LPQ
-					set_param_uint( PARAM_RC1_REV, _sensor_calibration.data.rc.rc_rev[0]);
-					set_param_uint( PARAM_RC2_REV, _sensor_calibration.data.rc.rc_rev[1]);
-					set_param_uint( PARAM_RC3_REV, _sensor_calibration.data.rc.rc_rev[2]);
-					set_param_uint( PARAM_RC4_REV, _sensor_calibration.data.rc.rc_rev[3]);
-					set_param_uint( PARAM_RC5_REV, _sensor_calibration.data.rc.rc_rev[4]);
-					set_param_uint( PARAM_RC6_REV, _sensor_calibration.data.rc.rc_rev[5]);
-					set_param_uint( PARAM_RC7_REV, _sensor_calibration.data.rc.rc_rev[6]);
-					set_param_uint( PARAM_RC8_REV, _sensor_calibration.data.rc.rc_rev[7]);
-				} else {
-					mavlink_queue_broadcast_error("[SENSOR] Can't cal RC reverse, set RC_MAP params");
-				}
+				//XXX Set the params here as it saves overloading the LPQ
+				set_param_uint( PARAM_RC1_REV, _sensor_calibration.data.rc.rc_rev[0]);
+				set_param_uint( PARAM_RC2_REV, _sensor_calibration.data.rc.rc_rev[1]);
+				set_param_uint( PARAM_RC3_REV, _sensor_calibration.data.rc.rc_rev[2]);
+				set_param_uint( PARAM_RC4_REV, _sensor_calibration.data.rc.rc_rev[3]);
+				set_param_uint( PARAM_RC5_REV, _sensor_calibration.data.rc.rc_rev[4]);
+				set_param_uint( PARAM_RC6_REV, _sensor_calibration.data.rc.rc_rev[5]);
+				set_param_uint( PARAM_RC7_REV, _sensor_calibration.data.rc.rc_rev[6]);
+				set_param_uint( PARAM_RC8_REV, _sensor_calibration.data.rc.rc_rev[7]);
 
 				_sensor_calibration.data.rc.step = SENSOR_CAL_RC_RANGE_EXTREMES;
 				mavlink_queue_broadcast_notice("[SENSOR] Move all sticks and switches to extremes");
@@ -454,6 +580,18 @@ static bool sensors_do_cal_rc(void) {
 				break;
 			}
 			case SENSOR_CAL_RC_RANGE_DONE: {
+				for(int i=0;i<8;i++) {
+					if( ( _sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MIN] > 1300 ) ||
+						( _sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MAX] < 1700 ) ) {
+
+						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Possible bad min/max on channel ";
+						char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+						itoa(i + 1, mchar, 10);
+						strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+						mavlink_queue_broadcast_error(text);
+					}
+				}
+
 				set_param_uint( PARAM_RC1_MIN, _sensor_calibration.data.rc.rc_ranges[0][SENSOR_RC_CAL_MIN]);
 				set_param_uint( PARAM_RC1_MAX, _sensor_calibration.data.rc.rc_ranges[0][SENSOR_RC_CAL_MAX]);
 				set_param_uint( PARAM_RC2_MIN, _sensor_calibration.data.rc.rc_ranges[1][SENSOR_RC_CAL_MIN]);
@@ -519,9 +657,6 @@ static bool sensors_do_cal_accel(void) {
 			int32_t y_bias = _sensor_calibration.data.accel.data.y_flat_av_sum / 4;
 			int32_t z_bias = _sensor_calibration.data.accel.data.z_flat_av_sum / 4;
 
-			set_param_int( PARAM_ACC_X_BIAS, x_bias );
-			set_param_int( PARAM_ACC_Y_BIAS, y_bias );
-			set_param_int( PARAM_ACC_Z_BIAS, z_bias );
 
 			//Correct for measurement biases
 			fix16_t accel_x_down_1g = fix16_mul(fix16_from_int(_sensor_calibration.data.accel.data.x_down_av - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
@@ -531,17 +666,40 @@ static bool sensors_do_cal_accel(void) {
 			fix16_t accel_y_up_1g = fix16_mul(fix16_from_int(_sensor_calibration.data.accel.data.y_up_av - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
 			fix16_t accel_z_up_1g = fix16_mul(fix16_from_int(_sensor_calibration.data.accel.data.z_up_av - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
 
-			set_param_fix16( PARAM_ACC_X_SCALE_POS, fix16_div( _fc_gravity, accel_x_down_1g ) );
-			set_param_fix16( PARAM_ACC_Y_SCALE_POS, fix16_div( _fc_gravity, accel_y_down_1g ) );
-			set_param_fix16( PARAM_ACC_Z_SCALE_POS, fix16_div( _fc_gravity, accel_z_down_1g ) );
-			set_param_fix16( PARAM_ACC_X_SCALE_NEG, fix16_div( -_fc_gravity, accel_x_up_1g ) );
-			set_param_fix16( PARAM_ACC_Y_SCALE_NEG, fix16_div( -_fc_gravity, accel_y_up_1g ) );
-			set_param_fix16( PARAM_ACC_Z_SCALE_NEG, fix16_div( -_fc_gravity, accel_z_up_1g ) );
+			fix16_t accel_x_scale_p = fix16_div( _fc_gravity, accel_x_down_1g );
+			fix16_t accel_y_scale_p = fix16_div( _fc_gravity, accel_y_down_1g );
+			fix16_t accel_z_scale_p = fix16_div( _fc_gravity, accel_z_down_1g );
+			fix16_t accel_x_scale_n = fix16_div( -_fc_gravity, accel_x_up_1g );
+			fix16_t accel_y_scale_n = fix16_div( -_fc_gravity, accel_y_up_1g );
+			fix16_t accel_z_scale_n = fix16_div( -_fc_gravity, accel_z_up_1g );
 
-			//TODO: "we SHOULD do some sanity checking here if we wanted to."
+			//Sanity check to make sure the scaling is positive and not far too large
+			if( ( ( accel_x_scale_p > _fc_0_5 ) && ( accel_x_scale_p < _fc_2 ) ) &&
+				( ( accel_y_scale_p > _fc_0_5 ) && ( accel_y_scale_p < _fc_2 ) ) &&
+				( ( accel_z_scale_p > _fc_0_5 ) && ( accel_z_scale_p < _fc_2 ) ) &&
+				( ( accel_x_scale_n > _fc_0_5 ) && ( accel_x_scale_n < _fc_2 ) ) &&
+				( ( accel_y_scale_n > _fc_0_5 ) && ( accel_y_scale_n < _fc_2 ) ) &&
+				( ( accel_z_scale_n > _fc_0_5 ) && ( accel_z_scale_n < _fc_2 ) ) ) {
+
+				set_param_int( PARAM_ACC_X_BIAS, x_bias );
+				set_param_int( PARAM_ACC_Y_BIAS, y_bias );
+				set_param_int( PARAM_ACC_Z_BIAS, z_bias );
+
+				set_param_fix16( PARAM_ACC_X_SCALE_POS, accel_x_scale_p );
+				set_param_fix16( PARAM_ACC_Y_SCALE_POS, accel_y_scale_p );
+				set_param_fix16( PARAM_ACC_Z_SCALE_POS, accel_z_scale_p );
+				set_param_fix16( PARAM_ACC_X_SCALE_NEG, accel_x_scale_n );
+				set_param_fix16( PARAM_ACC_Y_SCALE_NEG, accel_y_scale_n );
+				set_param_fix16( PARAM_ACC_Z_SCALE_NEG, accel_z_scale_n );
+
+				mavlink_queue_broadcast_notice("[SENSOR] Accel calibration complete!");
+			} else {
+				failed = true;
+
+				mavlink_queue_broadcast_error("[SENSOR] Accel calibration failed, bad scaling!");
+			}
 
 			sensors_calibration_done();
-			mavlink_queue_broadcast_notice("[SENSOR] Accel calibration complete!");
 		} else {
 			_sensor_calibration.data.accel.data.t_sum += _sensors.imu.temp_raw;
 			_sensor_calibration.data.accel.data.x_sum += _sensors.imu.accel_raw.x;
@@ -673,6 +831,15 @@ static bool sensors_do_cal_inter(void) {
 	return !failed;
 }
 
+static bool sensors_do_cal_baro(void) {
+	bool failed = false;
+
+	//TODO CAL BAROMETER
+	sensors_calibration_done();
+
+	return !failed;
+}
+
 //TODO: This does not take into account temperature
 //Returns true if all calibrations are complete
 static void sensors_calibrate(void) {
@@ -691,8 +858,8 @@ static void sensors_calibrate(void) {
 
 				break;
 			}
-			case SENSOR_CAL_BARO: {
-				cal_mode_error = sensors_do_cal_baro();
+			case SENSOR_CAL_GND_PRESSURE: {
+				cal_mode_error = sensors_do_cal_gnd_press();
 
 				break;
 			}
@@ -716,6 +883,11 @@ static void sensors_calibrate(void) {
 
 				break;
 			}
+			case SENSOR_CAL_BARO: {
+				cal_mode_error = sensors_do_cal_baro();
+
+				break;
+			}
 			default: {
 				sensors_calibration_done();
 				cal_mode_error = true;
@@ -728,6 +900,11 @@ static void sensors_calibrate(void) {
 		//If there was a calibration running, but it finished this pass
 		if( _sensor_calibration.type == SENSOR_CAL_NONE ) {
 			mavlink_message_t msg;
+
+			if( _system_status.state == MAV_STATE_CALIBRATING ) {
+				sensors_calibration_done();
+				mavlink_queue_broadcast_error("[SENSOR] Invalid calibration state, clearing");
+			}
 
 			if(cal_mode_error) {
 				//Send a message saying that it has failed

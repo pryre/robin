@@ -187,41 +187,35 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 									command_result = MAV_RESULT_ACCEPTED;
 								} else {
+									mavlink_queue_broadcast_error("[SENSOR] Automatic calibration in progress");
 									command_result = MAV_RESULT_TEMPORARILY_REJECTED;
 								}
-							} else if( safety_request_state( MAV_STATE_CALIBRATING ) && ( _sensor_calibration.type == SENSOR_CAL_NONE ) ) {
+							} else if ( _sensor_calibration.type == SENSOR_CAL_NONE ) {
 								_sensor_calibration.req_sysid = msg.sysid;
 								_sensor_calibration.req_compid = msg.compid;
 
 								command_result = MAV_RESULT_DENIED;
 
 								if( (int)mavlink_msg_command_long_get_param1(&msg) == SENSOR_CAL_CMD_GYRO ) {
-									_sensor_calibration.type = SENSOR_CAL_GYRO;
-									command_result = MAV_RESULT_ACCEPTED;
+									command_result = sensors_request_cal( SENSOR_CAL_GYRO ) ? MAV_RESULT_ACCEPTED : MAV_RESULT_TEMPORARILY_REJECTED;
 								//XXX: } else if( (int)mavlink_msg_command_long_get_param1(&msg) == SENSOR_CAL_CMD_GYRO_TEMP ) {
 								//XXX: TODO: GYRO TEMP
 								} else if( (int)mavlink_msg_command_long_get_param2(&msg) == SENSOR_CAL_CMD_MAG ) {
-									_sensor_calibration.type = SENSOR_CAL_MAG;
-									command_result = MAV_RESULT_ACCEPTED;
+									command_result = sensors_request_cal( SENSOR_CAL_MAG ) ? MAV_RESULT_ACCEPTED : MAV_RESULT_TEMPORARILY_REJECTED;
 								} else if( (int)mavlink_msg_command_long_get_param3(&msg) == SENSOR_CAL_CMD_PRESSURE_GND) {
-									_sensor_calibration.type = SENSOR_CAL_BARO;
-									command_result = MAV_RESULT_ACCEPTED;
+									command_result = sensors_request_cal( SENSOR_CAL_GND_PRESSURE ) ? MAV_RESULT_ACCEPTED : MAV_RESULT_TEMPORARILY_REJECTED;
 								} else if( (int)mavlink_msg_command_long_get_param4(&msg) == SENSOR_CAL_CMD_RC ) {
-									_sensor_calibration.type = SENSOR_CAL_RC;
-									command_result = MAV_RESULT_ACCEPTED;
+									command_result = sensors_request_cal( SENSOR_CAL_RC ) ? MAV_RESULT_ACCEPTED : MAV_RESULT_TEMPORARILY_REJECTED;
 								//: } else if( (int)mavlink_msg_command_long_get_param4(&msg) == SENSOR_CAL_CMD_RC_TRIM ) {
 								//XXX: RC is done during normal RC cal, maybe it shouldn't?
 								} else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL ) {
-									_sensor_calibration.type = SENSOR_CAL_ACCEL;
-									command_result = MAV_RESULT_ACCEPTED;
+									command_result = sensors_request_cal( SENSOR_CAL_ACCEL ) ? MAV_RESULT_ACCEPTED : MAV_RESULT_TEMPORARILY_REJECTED;
 								} else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL_LEVEL ) {
-									_sensor_calibration.type = SENSOR_CAL_LEVEL_HORIZON;
-									command_result = MAV_RESULT_ACCEPTED;
+									command_result = sensors_request_cal( SENSOR_CAL_LEVEL_HORIZON ) ? MAV_RESULT_ACCEPTED : MAV_RESULT_TEMPORARILY_REJECTED;
 								//XXX: } else if( (int)mavlink_msg_command_long_get_param5(&msg) == SENSOR_CAL_CMD_ACCEL_TEMP ) {
 								//XXX: TODO: ACCEL TEMP
 								} else if( (int)mavlink_msg_command_long_get_param6(&msg) == SENSOR_CAL_CMD_COMPASS_MOTOR ) {
-									_sensor_calibration.type = SENSOR_CAL_INTER;
-									command_result = MAV_RESULT_ACCEPTED;
+									command_result = sensors_request_cal( SENSOR_CAL_INTER ) ? MAV_RESULT_ACCEPTED : MAV_RESULT_TEMPORARILY_REJECTED;
 								//XXX:} else if( (int)mavlink_msg_command_long_get_param6(&msg) == SENSOR_CAL_CMD_AIRPSEED ) {
 								//XXX: TODO: Airpspeed?
 								} else if( (int)mavlink_msg_command_long_get_param7(&msg) == SENSOR_CAL_CMD_ESC ) {
@@ -234,17 +228,11 @@ static void communication_decode(uint8_t port, uint8_t c) {
 									} else {
 										mavlink_queue_broadcast_error("[SENSOR] Failed to configure ESC cal!");
 									}
-								//XXX:} else if( (int)mavlink_msg_command_long_get_param7(&msg) == SENSOR_CAL_CMD_BAROMETER ) {
-								//XXX: TODO: BARO
+								} else if( (int)mavlink_msg_command_long_get_param7(&msg) == SENSOR_CAL_CMD_BAROMETER ) {
+									command_result = sensors_request_cal( SENSOR_CAL_BARO ) ? MAV_RESULT_ACCEPTED : MAV_RESULT_TEMPORARILY_REJECTED;
 								}
-
-								//XXX: MAV_STATE_CALIBRATING is handled in the sensor loop
 							} else {
-								if( _sensor_calibration.type != SENSOR_CAL_NONE ) {
-									mavlink_queue_broadcast_error("[SENSOR] Calibration already in progress");
-								} else {
-									mavlink_queue_broadcast_error("[SENSOR] Cannot enter calibration in this mode!");
-								}
+								mavlink_queue_broadcast_error("[SENSOR] Calibration already in progress");
 							}
 
 							need_ack = true;
