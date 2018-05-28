@@ -30,7 +30,15 @@ A windows binary of `stm32flash` can be found on the [official repository](https
 ## Flashing Pre-Compiled Releases
 Pre-compiled releases can be found in [Releases](https://github.com/qutas/robin/releases) section. Make sure to get the correct release revision for your board model.
 
-Use the following command to flash the firmware to your flight controller. You will need to replace the filename (`robin_naze32_rX.hex`) and device name (`/dev/ttyUSBX` or `COMX`) with the correct options for your setup.
+Before you can flash the the Naze32, you must first put it into bootloader mode. For the initial flash, you must connect the bootloader pins while powering on the device. The location of the boot pins is detailed [here](documents/PINOUT.md).
+
+Depending on your version of `stm32flash`, you may have to call the flash command multiple times before the flashing will actually start. If the flash is not successful, try using a slower baud rate, such as `115200`. Another common problem is that `stm32flash` sometimes misses the initializer message from the autopilot if plugged in via USB, or it gets confused by other data in the serial buffer. The best work around for this is to do the following:
+- Unplug and unpower the autopilot completely
+- Plug a USB-Serial adaptor into your computer
+- Connect the USB-Serial Tx/Rx to the autopilot
+- Power on the autopilot directly into bootloader mode
+
+Use the following commands to flash the firmware to your flight controller. You will need to replace the filename (`robin_naze32_rX.hex`) and device name (`/dev/ttyUSBX` or `COMX`) with the correct options for your setup.
 
 #### Manually Flashing (Linux)
 ```sh
@@ -64,26 +72,14 @@ If you are constantly reflashing the firmware, you can adjust the default on the
 
 #### Flashing
 
----
-**Note:** Some Naze32 models do not allow for flashing to be done via USB, and need to be connected to the UART1 port directly
+Read the notes above on flashing the
 
----
-
-Before you can flash the the Naze32, you must first put it into bootloader mode. For the initial flash, you can short out the bootloader pins and power on the device.
-
-The makefile assumes that the device is connected as `/dev/ttyUSB0` and will use a baud rate of `921600`. You may have to adjust these to suit your device. If the flash is not successful, try using a slower baud rate, such as `115200`.
+The makefile assumes that the device is connected as `/dev/ttyUSB0` and will use a baud rate of `921600`. You may have to adjust these to suit your device.
 
 Once in bootloader mode run the following command:
 ```sh
 make flash
 ```
-
-Depending on your version of `stm32flash`, you may have to call the flash command multiple times before the flashing will actually start. Another common problem is that `stm32flash` sometimes misses the initializer message from the autopilot if plugged in via USB, or it gets confused by other data in the serial buffer. The best work around for this is to do the following:
-- Unplug and unpower the autopilot completely
-- Plug a USB-Serial adaptor into your computer
-- Connect the USB-Serial Tx/Rx to the autopilot
-- Power on the autopilot directly into bootloader mode
-
 After the initial flash, you can use the MAVLINK command `MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN` to put the device into bootloader mode through the software. Additionally, the following command will attempt to send this directly from the CLI (but requires `pymavlink` to be installed):
 ```sh
 make reflash

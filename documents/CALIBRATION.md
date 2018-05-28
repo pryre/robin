@@ -1,4 +1,6 @@
 # Calibration
+[Back to index](README.md).
+
 The robin flight software supports the `MAV_CMD_PREFLIGHT_CALIBRATION` command, and will issue instructions through the `STATUSTEXT` messages for the user to follow. It is recommended that you leave the flight controller on for ~5 minutes to allow all of the components to heat up, as IMU temperature compensation is currently not implemented. It should also be noted that to ensure correct procedure, only 1 calibration can be performed at a time.
 
 If using QGCS, the [custom interface](TOOLS.md#qgroundcontrol) can be used to issue the corresponding commands. It is recommended that you open the _notices_ menu so you can easily see the calibration instructions.

@@ -1,4 +1,6 @@
 # Parameters
+[Back to index](README.md).
+
 A parameter listing is dynamically generated on compile. During this time, the parameter headers, initializing functions, update funcitons, and a parameter reference document are generated and placed in `lib/param_generator`.
 
 ## Parameter Reference Document
@@ -30,7 +32,7 @@ SYS_AUTOSTART - Sets the mixer to use based on the airframe type
 SYS_AUTOCONFIG - Tells the autopilot to reset to default on the next boot
 BOARD_REV - Sets the board revision, primarily for sensors and pinouts
 VERSION_[FW,SW] - Generated during the build process, helps with debugging
-RELAXED_SET - Relaxes specified vs. expected parameter type during parameter changes (required for mavros and QGCS) 
+RELAXED_SET - Relaxes specified vs. expected parameter type during parameter changes (required for mavros and QGCS)
 ```
 
 #### MAVLINK Input/Output
@@ -40,7 +42,7 @@ MAV_[SYS,COMP]_ID - Sets the system and component IDs of this system
 COMMS_WAIT - Tells the system to silently wait until it is contacted before sending telemetry
 GCS_MATCH - Tells the system to only accept commands from a single GCS (set by GCS_[SYS,COMP]_ID)
 GCS_[SYS,COMP]_ID - Sets the GCS expected if only listening to a single GCS (GCS_MATCH)
-STRM0_[HRTBT,SYS_STAT,HR_IMU,ATT_Q,ATT_T,RC_IN,SRV_OUT,BATTSTAT,LPQ] - Sets the update rate of streamed telemetry 
+STRM0_[HRTBT,SYS_STAT,HR_IMU,ATT_Q,ATT_T,RC_IN,SRV_OUT,BATTSTAT,LPQ] - Sets the update rate of streamed telemetry
 ```
 
 #### Sensors
@@ -53,7 +55,7 @@ TIMEOUT_[IMU,BARO,SONAR,RC_IN,EXT_P,MAG,OB_HRBT,OB_CTRL,RC_CTRL] - Sets the peri
 #### Control & Tuning
 ```
 MC_[ROLLRATE,PITCHRATE,YAWRATE]_[P,I,D,MAX] - Low level tuning for roll, pitch, and yaw (tune this if there are issues holding steady)
-MC_[ROLL,PITCH,YAW]_P - High level tuning for roll, pitch, and yaw (will affect how aggressive the response is in angular/stabilized mode 
+MC_[ROLL,PITCH,YAW]_P - High level tuning for roll, pitch, and yaw (will affect how aggressive the response is in angular/stabilized mode
 MAX_[ROLL,PITCH]_A - Sets the maximum bank angles for input commands (affects RC command range too)
 ```
 

@@ -1,4 +1,6 @@
 # Mixers
+[Back to index](README.md).
+
 Mixer profiles currently mirror those available in the [PX4 Airframe Reference](https://dev.px4.io/en/airframes/airframe_reference.html) (as of April 2018). As the PX4 documentation may change in the future, take care and test motor directions before flight!
 
 The mixer profiles can be found in `./include/mixers/`. Custom configurations require modification to both `./include/mixer.h` and `./src/mixer.c`.

@@ -1,4 +1,5 @@
 # Additional Information
+[Back to index](README.md).
 
 ## Rebooting and Rebooting to Bootloader
 The autopilot can be commanded to reboot (when not in flight) using the `MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN` message, and optionally, can be put into bootloader mode for flashing.
