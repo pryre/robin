@@ -118,11 +118,6 @@ static float magGain[3] = { 1.0f, 1.0f, 1.0f };
 bool hmc5883lInit(int boardVersion)
 {
     gpio_config_t gpio;
-    int16_t magADC[3];
-    int i;
-    int32_t xyz_total[3] = { 0, 0, 0 }; // 32 bit totals so they won't overflow.
-    bool bret = true;           // Error indicator
-
     gpio.speed = Speed_2MHz;
     gpio.mode = Mode_IN_FLOATING;
     if (boardVersion == 4) {
@@ -134,6 +129,13 @@ bool hmc5883lInit(int boardVersion)
         gpio.pin = Pin_14;
         gpioInit(GPIOC, &gpio);
     }
+
+	//====================================
+	// XXX: TODO: CALIBRATION
+	int16_t magADC[3];
+    int i;
+    int32_t xyz_total[3] = { 0, 0, 0 }; // 32 bit totals so they won't overflow.
+    bool bret = true;           // Error indicator
 
     delay(50);
     i2cWriteRegister(MAG_ADDRESS, HMC58X3_R_CONFA, 0x010 + HMC_POS_BIAS);   // Reg A DOR = 0x010 + MS1, MS0 set to pos bias
@@ -194,11 +196,12 @@ bool hmc5883lInit(int boardVersion)
         magGain[1] = 1.0f;
         magGain[2] = 1.0f;
     }
+	//====================================
 
     bool ack = false;
     uint8_t sig = 0;
 
-    ack = i2cReadBuffer(MAG_ADDRESS, 0x0A, 1, &sig);
+    ack = i2cReadBuffer(MAG_ADDRESS, 0x0A, 1, &sig);	//Check the identification register to make sure it is the correct device
     if (!ack || sig != 'H')
         return false;
 

@@ -178,6 +178,8 @@ void sensors_init_internal(void) {
 void sensors_init_external(void) {
 	//==-- Mag
 	if( (bool)get_param_uint( PARAM_SENSOR_MAG_CBRK ) ) {
+		mavlink_queue_broadcast_error("[SENSOR] Mag support is not stable!");
+
 		sensor_status_init( &_sensors.mag.status, hmc5883lInit(get_param_uint( PARAM_BOARD_REVISION ) ) );
 
 		//If we expected it to be present, but it failed
