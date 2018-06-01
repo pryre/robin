@@ -344,9 +344,9 @@ bool sensors_read(void) {
 		_sensors.mag.raw.y = -read_mag_raw[2];
 		_sensors.mag.raw.z = read_mag_raw[1];
 
-		_sensors.mag.scaled.x = fix16_mul(_fc_100,fix16_div(fix16_from_int(_sensors.mag.raw.x),fix16_from_int(HMC5883L_GAIN_FACTOR)));
-		_sensors.mag.scaled.y = fix16_mul(_fc_100,fix16_div(fix16_from_int(_sensors.mag.raw.y),fix16_from_int(HMC5883L_GAIN_FACTOR)));
-		_sensors.mag.scaled.z = fix16_mul(_fc_100,fix16_div(fix16_from_int(_sensors.mag.raw.z),fix16_from_int(HMC5883L_GAIN_FACTOR)));
+		_sensors.mag.scaled.x = fix16_div(fix16_from_int(_sensors.mag.raw.x),fix16_from_int(HMC5883L_GAIN_FACTOR));
+		_sensors.mag.scaled.y = fix16_div(fix16_from_int(_sensors.mag.raw.y),fix16_from_int(HMC5883L_GAIN_FACTOR));
+		_sensors.mag.scaled.z = fix16_div(fix16_from_int(_sensors.mag.raw.z),fix16_from_int(HMC5883L_GAIN_FACTOR));
 
 		//TODO: Do remaining mag scaling / calibration steps
 
