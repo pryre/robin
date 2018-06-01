@@ -60,6 +60,8 @@ static void status_buzzer_init() {
 	_status_buzzer.last_beep = 0;	//Time last beep started
 
     digitalLo( _status_buzzer.gpio_p, _status_buzzer.pin );
+
+	//TODO: Make this play a startup tune
 }
 
 void safety_init() {
@@ -75,7 +77,7 @@ void safety_init() {
 	_system_status.sensors.mag.count = 0;
 	_system_status.sensors.mag.param_stream_count = PARAM_SENSOR_MAG_STRM_COUNT;
 	_system_status.sensors.mag.param_timeout = PARAM_SENSOR_MAG_TIMEOUT;
-	strncpy(_system_status.sensors.mag.name, "Magnatometer", 24);
+	strncpy(_system_status.sensors.mag.name, "Magnetometer", 24);
 
 	_system_status.sensors.baro.health = SYSTEM_HEALTH_UNKNOWN;
 	_system_status.sensors.baro.last_read = 0;

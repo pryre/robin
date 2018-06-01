@@ -40,7 +40,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, 1);
 	init_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_SENSOR_SONAR_UPDATE_RATE, fix16_from_float(0.0f));
-	init_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE, fix16_from_float(0.0f));
+	init_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE, fix16_from_float(15.0f));
 	init_param_uint(PARAM_SENSOR_IMU_STRM_COUNT, 1000);
 	init_param_uint(PARAM_SENSOR_BARO_STRM_COUNT, 50);
 	init_param_uint(PARAM_SENSOR_SONAR_STRM_COUNT, 50);
@@ -55,7 +55,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_SONAR_TIMEOUT, 20000);
 	init_param_uint(PARAM_SENSOR_RC_INPUT_TIMEOUT, 1000000);
 	init_param_uint(PARAM_SENSOR_EXT_POSE_TIMEOUT, 500000);
-	init_param_uint(PARAM_SENSOR_MAG_TIMEOUT, 20000);
+	init_param_uint(PARAM_SENSOR_MAG_TIMEOUT, 100000);
 	init_param_uint(PARAM_SENSOR_OFFB_HRBT_TIMEOUT, 5000000);
 	init_param_uint(PARAM_SENSOR_OFFB_CTRL_TIMEOUT, 200000);
 	init_param_uint(PARAM_SENSOR_PWM_CTRL_TIMEOUT, 200000);
@@ -70,6 +70,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_GYRO_ALPHA, fix16_from_float(0.6f));
 	init_param_fix16(PARAM_ACC_ALPHA, fix16_from_float(0.6f));
 	init_param_fix16(PARAM_FUSE_EXT_HDG_W, fix16_from_float(0.2f));
+	init_param_fix16(PARAM_FUSE_MAG_HDG_W, fix16_from_float(0.5f));
 	init_param_int(PARAM_GYRO_X_BIAS, 0);
 	init_param_int(PARAM_GYRO_Y_BIAS, 0);
 	init_param_int(PARAM_GYRO_Z_BIAS, 0);
@@ -243,6 +244,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"EST_LPF_GYRO_A",
 	"EST_LPF_ACC_A",
 	"FSE_EXT_HDG_W",
+	"FSE_MAG_HDG_W",
 	"GYRO_X_BIAS",
 	"GYRO_Y_BIAS",
 	"GYRO_Z_BIAS",

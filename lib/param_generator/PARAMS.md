@@ -33,8 +33,8 @@ CBRK_SONAR | uint | Sensor circuit breaker arming check for sonar (set to 0 to d
 CBRK_EXT_POSE | uint | Sensor circuit breaker arming check for external pose estimate (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CHK_RATE_BARO | float | Sensor update rate for barometer (TODO) | 0.0 | Hz | scalar | False
-CHK_RATE_SONAR | float | Sensor update rate for sonar (TODO) | 0.0 | Hz | scalar | False
-CHK_RATE_MAG | float | Sensor update rate for magnetometer (TODO) | 0.0 | Hz | scalar | False
+CHK_RATE_SONAR | float | Sensor update rate for sonar (TODO) | 0.0 | Hz | scalar | True
+CHK_RATE_MAG | float | Sensor update rate for magnetometer | 15.0 | Hz | scalar | False
 STRM_NUM_IMU | uint | Number of IMU readings that must be recieved before a stream is established | 1000 |  | scalar | False
 STRM_NUM_BARO | uint | Number of barometer readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_SONAR | uint | Number of sonar readings that must be recieved before a stream is established | 50 |  | scalar | False
@@ -49,7 +49,7 @@ TIMEOUT_BARO | uint | Time that new data must be read before a barometer timeout
 TIMEOUT_SONAR | uint | Time that new data must be read before a sonar timeout is declared | 20000 | us | scalar | False
 TIMEOUT_RC_IN | uint | Time that new data must be read before a RC input timeout is declared | 1000000 | us | scalar | False
 TIMEOUT_EXT_P | uint | Time that new data must be read before a external pose timeout is declared | 500000 | us | scalar | False
-TIMEOUT_MAG | uint | Time that new data must be read before a magnetometer timeout is declared | 20000 | us | scalar | False
+TIMEOUT_MAG | uint | Time that new data must be read before a magnetometer timeout is declared | 100000 | us | scalar | False
 TIMEOUT_OB_HRBT | uint | Time that new data must be read before a off-board heartbeat timeout is declared | 5000000 | us | scalar | False
 TIMEOUT_OB_CTRL | uint | Time that new data must be read before a off-board control timeout is declared | 200000 | us | scalar | False
 TIMEOUT_RC_CTRL | uint | Time that new data must be read before a PWM control timeout is declared | 200000 | us | scalar | False
@@ -63,7 +63,8 @@ FILTER_KP | float | Adjusts the amount of proportional filtering done on the att
 FILTER_KI | float | Adjusts the amount of integral filtering done on the attitude estimation | 0.05 |  | scalar | False
 EST_LPF_GYRO_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.6 |  | scalar | False
 EST_LPF_ACC_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.6 |  | scalar | False
-FSE_EXT_HDG_W | float | TODO: Weighting for external heading fusion (0 means don't trust, 1 means trust fully) | 0.2 |  | scalar | False
+FSE_EXT_HDG_W | float | Weighting for external heading fusion (0 means don't trust, 1 means trust fully) | 0.2 |  | scalar | False
+FSE_MAG_HDG_W | float | Weighting for compass heading fusion (0 means don't trust, 1 means trust fully) | 0.5 |  | scalar | False
 GYRO_X_BIAS | int | Bias correction for gyroscope measurements (X axis) | 0 |  | scalar | False
 GYRO_Y_BIAS | int | Bias correction for gyroscope measurements (Y axis) | 0 |  | scalar | False
 GYRO_Z_BIAS | int | Bias correction for gyroscope measurements (Z axis) | 0 |  | scalar | False

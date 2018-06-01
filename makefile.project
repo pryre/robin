@@ -36,6 +36,7 @@ PROJECT_SRC_FILES = ./src/main.c \
 					./src/drv_mpu.c \
 					./src/drv_mpu6050.c \
 					./src/drv_mpu6500.c \
+					./src/drv_hmc5883l.c \
 					./src/sensors.c \
 					./src/estimator.c \
 					./src/pid_controller.c \

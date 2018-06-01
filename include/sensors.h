@@ -92,8 +92,11 @@ typedef struct {
 
 typedef struct {
 	sensor_status_t status;
+	uint32_t period_update;	//update rate in ms
 
-	fix16_t bearing;		//Magnometer reading
+	vector_int32_t raw;
+	v3d scaled;
+	qf16 q;
 } sensor_readings_magnometer_t;
 
 typedef struct {

@@ -8,6 +8,7 @@ extern "C" {
 
 #include "breezystm32.h"
 #include "sensors.h"
+#include "safety.h"
 #include "params.h"
 #include "estimator.h"
 
@@ -111,6 +112,37 @@ static void lpf_update(void) {
 	_gyro_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _sensors.imu.gyro.x), fix16_smul(alpha_gyro, _gyro_LPF.x));
 	_gyro_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _sensors.imu.gyro.y), fix16_smul(alpha_gyro, _gyro_LPF.y));
 	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
+}
+
+static void fuse_heading_estimate( qf16 *q_est, const qf16 *q_mes, const fix16_t alpha) {
+	qf16 q_temp;
+	qf16 dq;
+
+	qf16_inverse(&q_temp, q_est);
+	qf16_mul(&dq, q_mes, &q_temp);	//Difference between current estimate and measured
+	qf16_normalize_to_unit(&dq, &dq);
+
+	v3d fv;
+	fv.x = _fc_1;
+	fv.y = 0;
+	fv.z = 0;
+
+	qf16_rotate(&fv, &dq, &fv);
+	fv.z = 0;
+	v3d_normalize(&fv, &fv);	//Rotated vector in the XY plane
+
+	fix16_t rot_a = fix16_atan2(fv.y, fv.x);
+	rot_a = fix16_mul(alpha, rot_a);
+	v3d rot_axis;
+	rot_axis.x = 0;
+	rot_axis.y = 0;
+	rot_axis.z = _fc_1;
+	qf16_from_axis_angle(&q_temp, &rot_axis, rot_a);	//Create a rotation quaternion for the flat rotation around Z axis
+
+	qf16_mul(q_est, &q_temp, q_est);	//Rotate the estimate
+
+	//Normalize quaternion
+	qf16_normalize_to_unit(q_est, q_est);
 }
 
 void estimator_update( uint32_t time_now ) {
@@ -318,39 +350,15 @@ void estimator_update( uint32_t time_now ) {
 	}
 
 
-	//==-- External pose data fusion
-	if( get_param_uint( PARAM_SENSOR_EXT_POSE_CBRK ) && _sensors.ext_pose.status.new_data ) {
-		qf16 q_temp;
-		qf16 dq;
-
-		qf16_inverse(&q_temp, &q_hat);
-		qf16_mul(&dq, &_sensors.ext_pose.q, &q_temp);	//Difference between est and mocap
-		qf16_normalize_to_unit(&dq, &dq);
-
-		v3d fv;
-		fv.x = _fc_1;
-		fv.y = 0;
-		fv.z = 0;
-
-		qf16_rotate(&fv, &dq, &fv);
-		fv.z = 0;
-		v3d_normalize(&fv, &fv);	//Rotated vector in the XY plane
-
-		fix16_t rot_a = fix16_atan2(fv.y, fv.x);
-		rot_a = fix16_mul(get_param_fix16( PARAM_FUSE_EXT_HDG_W ), rot_a);
-		v3d rot_axis;
-		rot_axis.x = 0;
-		rot_axis.y = 0;
-		rot_axis.z = _fc_1;
-		qf16_from_axis_angle(&q_temp, &rot_axis, rot_a);	//Create a rotation quaternion for the flat rotation around Z axis
-
-		qf16_mul(&q_hat, &q_temp, &q_hat);	//Rotate the estimate
-
-		//Normalize quaternion
-		qf16_normalize_to_unit(&q_hat, &q_hat);
-
-		//Unset the new data flag
+	//==-- Heading data fusion
+	if( ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) &&
+		_sensors.ext_pose.status.new_data ) {
+		fuse_heading_estimate( &q_hat, &_sensors.ext_pose.q, get_param_fix16( PARAM_FUSE_EXT_HDG_W ));
 		_sensors.ext_pose.status.new_data = false;
+	} else if( ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) &&
+		_sensors.mag.status.new_data ) {
+		fuse_heading_estimate( &q_hat, &_sensors.mag.q, get_param_fix16( PARAM_FUSE_MAG_HDG_W ));
+		_sensors.mag.status.new_data = false;
 	}
 
 

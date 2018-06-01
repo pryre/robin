@@ -10,6 +10,7 @@
 #include "mavlink_system.h"
 #include "breezystm32.h"
 #include "drv_mpu.h"
+#include "drv_hmc5883l.h"
 #include "pwm.h"
 #include "adc.h"
 #include "gpio.h"
@@ -33,6 +34,9 @@ static volatile uint8_t temp_status = 0;
 static int16_t read_accel_raw[3];
 static int16_t read_gyro_raw[3];
 static volatile int16_t read_temp_raw;
+
+static volatile uint8_t mag_status = 0;
+static int16_t read_mag_raw[3];
 
 static uint16_t rc_cal[8][3];
 static bool rc_rev[8];
@@ -173,7 +177,28 @@ void sensors_init_internal(void) {
 
 void sensors_init_external(void) {
 	//==-- Mag
-	sensor_status_init( &_sensors.mag.status, (bool)get_param_uint( PARAM_SENSOR_MAG_CBRK ) );
+	if( (bool)get_param_uint( PARAM_SENSOR_MAG_CBRK ) ) {
+		sensor_status_init( &_sensors.mag.status, hmc5883lInit(get_param_uint( PARAM_BOARD_REVISION ) ) );
+
+		//If we expected it to be present, but it failed
+		if(!_sensors.mag.status.present)
+			mavlink_queue_broadcast_error("[SENSOR] Unable to configure mag, disabling!");
+	} else {
+		sensor_status_init( &_sensors.mag.status, false );
+	}
+
+	_sensors.mag.period_update = fix16_to_int( fix16_div(_fc_1000, get_param_fix16(PARAM_SENSOR_SONAR_UPDATE_RATE)));
+
+	_sensors.mag.raw.x = 0;
+	_sensors.mag.raw.y = 0;
+	_sensors.mag.raw.z = 0;
+	_sensors.mag.scaled.x = 0;
+	_sensors.mag.scaled.y = 0;
+	_sensors.mag.scaled.z = 0;
+	_sensors.mag.q.a = _fc_1;
+	_sensors.mag.q.b = 0;
+	_sensors.mag.q.c = 0;
+	_sensors.mag.q.d = 0;
 
 	//==-- Baro
 	sensor_status_init( &_sensors.baro.status, (bool)get_param_uint( PARAM_SENSOR_BARO_CBRK ) );
@@ -242,15 +267,19 @@ bool i2c_job_queued(void) {
 	bool a_done = (accel_status == I2C_JOB_DEFAULT) || (accel_status == I2C_JOB_COMPLETE);
 	bool g_done = (gyro_status == I2C_JOB_DEFAULT) || (gyro_status == I2C_JOB_COMPLETE);
 	bool t_done = (temp_status == I2C_JOB_DEFAULT) || (temp_status == I2C_JOB_COMPLETE);
+	bool m_done = (mag_status == I2C_JOB_DEFAULT) || (mag_status == I2C_JOB_COMPLETE);
 
-	return !a_done || !g_done || !t_done;
+	return !a_done || !g_done || !t_done || !m_done;
 }
 
 bool sensors_read(void) {
 	bool imu_job_complete = false;
+	bool mag_job_complete = false;
 
 	//Check IMU status
-	if(accel_status == I2C_JOB_COMPLETE && gyro_status == I2C_JOB_COMPLETE && temp_status == I2C_JOB_COMPLETE) {
+	if( (accel_status == I2C_JOB_COMPLETE) &&
+		(gyro_status == I2C_JOB_COMPLETE) &&
+		(temp_status == I2C_JOB_COMPLETE) ) {
 		imu_job_complete = true;
 		accel_status = I2C_JOB_DEFAULT;
 		gyro_status = I2C_JOB_DEFAULT;
@@ -258,6 +287,7 @@ bool sensors_read(void) {
 
 		_sensors.clock.imu_time_read = _imu_time_read;
 
+		//==-- Save raw data
 		//XXX: Some values need to be inversed to be in the NED frame
 		_sensors.imu.accel_raw.x = -read_accel_raw[0];
 		_sensors.imu.accel_raw.y = read_accel_raw[1];
@@ -268,13 +298,98 @@ bool sensors_read(void) {
 		_sensors.imu.gyro_raw.z = -read_gyro_raw[2];
 
 		_sensors.imu.temp_raw = read_temp_raw;
+
+		//==-- Handle raw data
+		//Convert temperature SI units (degC, m/s^2, rad/s)
+		// value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
+		_sensors.imu.temperature = fix16_add(fix16_div(fix16_from_int(_sensors.imu.temp_raw), _sensor_calibration.data.accel.temp_scale), _sensor_calibration.data.accel.temp_shift);
+
+		//Accel
+		//TODO: value = (raw - BIAS - (EMP_COMP * TEMP)) * scale
+		// value = (raw - BIAS) * scale
+
+		//Correct for measurement biases
+		fix16_t accel_x_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.x - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
+		fix16_t accel_y_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.y - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
+		fix16_t accel_z_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.z - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
+
+		//Scale the accelerometer to match 1G
+		_sensors.imu.accel.x = fix16_mul(accel_x_tmp, ( accel_x_tmp > 0 ) ? get_param_fix16(PARAM_ACC_X_SCALE_POS) : get_param_fix16(PARAM_ACC_X_SCALE_NEG) );
+		_sensors.imu.accel.y = fix16_mul(accel_y_tmp, ( accel_y_tmp > 0 ) ? get_param_fix16(PARAM_ACC_Y_SCALE_POS) : get_param_fix16(PARAM_ACC_Y_SCALE_NEG) );
+		_sensors.imu.accel.z = fix16_mul(accel_z_tmp, ( accel_z_tmp > 0 ) ? get_param_fix16(PARAM_ACC_Z_SCALE_POS) : get_param_fix16(PARAM_ACC_Z_SCALE_NEG) );
+
+		//Gyro
+		// value = (raw - BIAS) * scale
+		_sensors.imu.gyro.x = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.x - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
+		_sensors.imu.gyro.y = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.y - get_param_int(PARAM_GYRO_Y_BIAS)), _sensors.imu.gyro_scale);
+		_sensors.imu.gyro.z = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.z - get_param_int(PARAM_GYRO_Z_BIAS)), _sensors.imu.gyro_scale);
+
+
+		//Other IMU updates
+		_sensors.imu.status.time_read = sensors_clock_imu_int_get();
+		_sensors.imu.status.new_data = true;
+		safety_update_sensor(&_system_status.sensors.imu);
+	}
+
+	if(mag_status == I2C_JOB_DEFAULT) {
+		mag_job_complete = true;
+	} else if(mag_status == I2C_JOB_COMPLETE) {
+		mag_job_complete = true;
+
+		mag_status = I2C_JOB_DEFAULT;
+
+		//==-- Handle raw values
+		//XXX: Some values need to be switched to be in the NED frame
+		_sensors.mag.raw.x = -read_mag_raw[0];
+		_sensors.mag.raw.y = -read_mag_raw[2];
+		_sensors.mag.raw.z = read_mag_raw[1];
+
+		_sensors.mag.scaled.x = fix16_mul(_fc_100,fix16_div(fix16_from_int(_sensors.mag.raw.x),fix16_from_int(HMC5883L_GAIN_FACTOR)));
+		_sensors.mag.scaled.y = fix16_mul(_fc_100,fix16_div(fix16_from_int(_sensors.mag.raw.y),fix16_from_int(HMC5883L_GAIN_FACTOR)));
+		_sensors.mag.scaled.z = fix16_mul(_fc_100,fix16_div(fix16_from_int(_sensors.mag.raw.z),fix16_from_int(HMC5883L_GAIN_FACTOR)));
+
+		//TODO: Do remaining mag scaling / calibration steps
+
+		//==-- Get a north estimate
+		//Build a rotation matrix
+		v3d mag_body_x;
+		v3d_normalize(&mag_body_x, &_sensors.mag.scaled);
+		v3d mag_body_y;
+		v3d mag_body_z;
+		v3d tmp_z;
+		tmp_z.x = 0;
+		tmp_z.y = 0;
+		tmp_z.z = _fc_1;//(_sensors.imu.accel.z > 0) ? _fc_1 : -_fc_1; //XXX: Correct for the FC being upside-down
+
+		v3d_cross(&mag_body_y, &tmp_z, &mag_body_x);
+		v3d_normalize(&mag_body_y, &mag_body_y);
+
+		v3d_cross(&mag_body_z, &mag_body_x, &mag_body_y);
+		v3d_normalize(&mag_body_z, &mag_body_z);
+
+		mf16 mag_body;
+		dcm_from_basis(&mag_body, &mag_body_x, &mag_body_y, &mag_body_z);
+
+		qf16 mag_q_body;
+		matrix_to_qf16(&mag_q_body, &mag_body );
+		qf16_normalize_to_unit(&mag_q_body, &mag_q_body);
+
+		//De-rotate from the body back to the world
+		qf16 q_tmp;
+		qf16_inverse(&q_tmp, &mag_q_body);
+		qf16_normalize_to_unit(&_sensors.mag.q, &q_tmp);
+
+		//Other Mag updates
+		_sensors.mag.status.time_read = micros();
+		_sensors.mag.status.new_data = true;
+		safety_update_sensor(&_system_status.sensors.mag);
 	}
 
 	//TODO: Check other status
 	//TODO: May need to offset these so they don't all check at once(?)
 
 	//Return the results
-	return imu_job_complete;
+	return ( imu_job_complete && mag_job_complete );
 }
 
 uint32_t sensors_clock_ls_get(void) {
@@ -1002,38 +1117,16 @@ bool sensors_update(uint32_t time_us) {
 	//TODO: Remember not to expect all sensors to be ready
 
 	//==-- Update IMU
-    //Convert temperature SI units (degC, m/s^2, rad/s)
+	//XXX: Nothing to do, but could do a present check for posix if we go there
 
-	//Temperature in degC
-	// value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
-	_sensors.imu.temperature = fix16_add(fix16_div(fix16_from_int(_sensors.imu.temp_raw), _sensor_calibration.data.accel.temp_scale), _sensor_calibration.data.accel.temp_shift);
-
-	//Accel
-	//TODO: value = (raw - BIAS - (EMP_COMP * TEMP)) * scale
-	// value = (raw - BIAS) * scale
-
-	//Correct for measurement biases
-	fix16_t accel_x_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.x - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
-	fix16_t accel_y_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.y - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
-	fix16_t accel_z_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.z - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
-
-	//Scale the accelerometer to match 1G
-	_sensors.imu.accel.x = fix16_mul(accel_x_tmp, ( accel_x_tmp > 0 ) ? get_param_fix16(PARAM_ACC_X_SCALE_POS) : get_param_fix16(PARAM_ACC_X_SCALE_NEG) );
-	_sensors.imu.accel.y = fix16_mul(accel_y_tmp, ( accel_y_tmp > 0 ) ? get_param_fix16(PARAM_ACC_Y_SCALE_POS) : get_param_fix16(PARAM_ACC_Y_SCALE_NEG) );
-	_sensors.imu.accel.z = fix16_mul(accel_z_tmp, ( accel_z_tmp > 0 ) ? get_param_fix16(PARAM_ACC_Z_SCALE_POS) : get_param_fix16(PARAM_ACC_Z_SCALE_NEG) );
-
-	//Gyro
-	// value = (raw - BIAS) * scale
-	_sensors.imu.gyro.x = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.x - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
-	_sensors.imu.gyro.y = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.y - get_param_int(PARAM_GYRO_Y_BIAS)), _sensors.imu.gyro_scale);
-	_sensors.imu.gyro.z = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.z - get_param_int(PARAM_GYRO_Z_BIAS)), _sensors.imu.gyro_scale);
-
-
-	//Other IMU updates
-	_sensors.imu.status.time_read = sensors_clock_imu_int_get();
-	_sensors.imu.status.new_data = true;
-
-	safety_update_sensor(&_system_status.sensors.imu);
+	//Mag
+	if(_sensors.mag.status.present) {
+		//Update the sensor if it's time (and it's not currently reading)
+		if( ( (time_us - _sensors.mag.status.time_read) > _sensors.mag.period_update ) &&
+			(mag_status == I2C_JOB_DEFAULT) ) {
+			hmc5883l_request_async_read(read_mag_raw, &mag_status);
+		}
+	}
 
 	//==-- RC Input & Saftety Toggle
 	//Check that all channels have been set

@@ -42,6 +42,8 @@ void setup(void) {
 
 	communications_system_init();
 
+	safety_init();
+
 	delay(500);	//Wait for i2c devices to boot properly
 
     i2cInit(I2CDEV);
@@ -50,15 +52,14 @@ void setup(void) {
 
 	estimator_init();
 
-	safety_init();
-
 	controller_init();
 
 	mixer_init();
 
 	pwm_init();
 
-	sensors_init_external(); //XXX: Overrides settings made by pwm backend
+	//XXX: Overrides settings made by pwm backend, so must be after pwm_init()
+	sensors_init_external();
 
 	//==============================================================
 
@@ -87,7 +88,7 @@ void loop(void) {
 	communication_transmit( micros() );
 
 	//==-- Update Sensor Data
-	sensors_update( micros() );	//XXX: This takes ~230us with just IMU //TODO: Recalc
+	sensors_update( micros() );
 
 	//==-- Timeout Checks
 	safety_run( micros() );

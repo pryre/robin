@@ -340,18 +340,56 @@ void mavlink_stream_sys_status(uint8_t port) {
 //==-- Sends the latest IMU reading
 void mavlink_stream_highres_imu(uint8_t port) {
 	//TODO: Need to add temp, pressure measurements
+	float xacc = 0;
+	float yacc = 0;
+	float zacc = 0;
+	float xgyro = 0;
+	float ygyro = 0;
+	float zgyro = 0;
+	float xmag = 0;
+	float ymag = 0;
+	float zmag = 0;
+	float abs_pressure = 0;
+	float diff_pressure = 0;
+	float pressure_alt = 0;
+	float temperature = 0;
+	uint16_t fields_updated = 0;
+
+	if( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
+		xacc = fix16_to_float(_sensors.imu.accel.x);
+		yacc = fix16_to_float(_sensors.imu.accel.y);
+		zacc = fix16_to_float(_sensors.imu.accel.z);
+		xgyro = fix16_to_float(_sensors.imu.gyro.x);
+		ygyro = fix16_to_float(_sensors.imu.gyro.y);
+		zgyro = fix16_to_float(_sensors.imu.gyro.z);
+
+		fields_updated |= (1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5);
+	}
+
+	if( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) {
+		xmag = fix16_to_float(_sensors.mag.scaled.x);
+		ymag = fix16_to_float(_sensors.mag.scaled.y);
+		zmag = fix16_to_float(_sensors.mag.scaled.z);
+
+		fields_updated |= (1<<6)|(1<<7)|(1<<8);
+	}
+
 	mavlink_msg_highres_imu_send(port,
 								 _sensors.imu.status.time_read,
-								 fix16_to_float(_sensors.imu.accel.x),
-								 fix16_to_float(_sensors.imu.accel.y),
-								 fix16_to_float(_sensors.imu.accel.z),
-								 fix16_to_float(_sensors.imu.gyro.x),
-								 fix16_to_float(_sensors.imu.gyro.y),
-								 fix16_to_float(_sensors.imu.gyro.z),
-								 0, 0, 0,
-								 0, 0, 0,
-								 0,
-								 ((1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5)) );
+								 xacc,
+								 yacc,
+								 zacc,
+								 xgyro,
+								 ygyro,
+								 zgyro,
+								 xmag,
+								 ymag,
+								 zmag,
+								 abs_pressure,
+								 diff_pressure,
+								 pressure_alt,
+								 temperature,
+								 fields_updated );
 }
 
 void mavlink_stream_attitude(uint8_t port) {
