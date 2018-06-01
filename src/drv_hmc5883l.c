@@ -229,9 +229,10 @@ static uint8_t mag_buffer[6];
 static int16_t *mag_data;
 
 void mag_read_CB(void) {
-    mag_data[0] = (int16_t)(mag_buffer[0] << 8 | mag_buffer[1]) * magGain[0];
-    mag_data[1] = (int16_t)(mag_buffer[2] << 8 | mag_buffer[3]) * magGain[0];
-    mag_data[2] = (int16_t)(mag_buffer[4] << 8 | mag_buffer[5]) * magGain[0];
+	//XXX: Packet is structured XZY
+    mag_data[0] = (mag_buffer[0] << 8 | mag_buffer[1]);	//X Data
+    mag_data[2] = (mag_buffer[2] << 8 | mag_buffer[3]);	//Z Data
+    mag_data[1] = (mag_buffer[4] << 8 | mag_buffer[5]);	//Y Data
 }
 
 

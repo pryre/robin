@@ -342,9 +342,9 @@ bool sensors_read(void) {
 
 		//==-- Handle raw values
 		//XXX: Some values need to be switched to be in the NED frame
-		_sensors.mag.raw.x = -read_mag_raw[0];
-		_sensors.mag.raw.y = -read_mag_raw[2];
-		_sensors.mag.raw.z = read_mag_raw[1];
+		_sensors.mag.raw.x = read_mag_raw[0];
+		_sensors.mag.raw.y = -read_mag_raw[1];
+		_sensors.mag.raw.z = -read_mag_raw[2];
 
 		_sensors.mag.scaled.x = fix16_div(fix16_from_int(_sensors.mag.raw.x),fix16_from_int(HMC5883L_GAIN_FACTOR));
 		_sensors.mag.scaled.y = fix16_div(fix16_from_int(_sensors.mag.raw.y),fix16_from_int(HMC5883L_GAIN_FACTOR));
