@@ -101,9 +101,10 @@ typedef struct {
 
 typedef struct {
 	sensor_status_t status;
+	uint32_t period_update;	//update rate in ms
 
-	int16_t pressure;		//Barometer reading
-	int16_t temperature;	//Sensor temperature reading
+	int32_t raw_press;		//Barometer reading
+	int32_t raw_temp;	//Sensor temperature reading
 } sensor_readings_barometer_t;
 
 typedef struct {

@@ -11,6 +11,7 @@
 #include "breezystm32.h"
 #include "drv_mpu.h"
 #include "drv_hmc5883l.h"
+#include "drv_bmp280.h"
 #include "pwm.h"
 #include "adc.h"
 #include "gpio.h"
@@ -37,6 +38,8 @@ static volatile int16_t read_temp_raw;
 
 static volatile uint8_t mag_status = 0;
 static int16_t read_mag_raw[3];
+static volatile uint8_t baro_status = 0;
+static int32_t read_baro_raw[2];
 
 static uint16_t rc_cal[8][3];
 static bool rc_rev[8];
@@ -189,7 +192,7 @@ void sensors_init_external(void) {
 		sensor_status_init( &_sensors.mag.status, false );
 	}
 
-	_sensors.mag.period_update = fix16_to_int( fix16_div(_fc_1000, get_param_fix16(PARAM_SENSOR_SONAR_UPDATE_RATE)));
+	_sensors.mag.period_update = fix16_to_int( fix16_div(_fc_1000, get_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE)));
 
 	_sensors.mag.raw.x = 0;
 	_sensors.mag.raw.y = 0;
@@ -203,7 +206,19 @@ void sensors_init_external(void) {
 	_sensors.mag.q.d = 0;
 
 	//==-- Baro
-	sensor_status_init( &_sensors.baro.status, (bool)get_param_uint( PARAM_SENSOR_BARO_CBRK ) );
+	if( (bool)get_param_uint( PARAM_SENSOR_BARO_CBRK ) ) {
+			sensor_status_init( &_sensors.baro.status, bmp280Init(get_param_uint( PARAM_BOARD_REVISION ) ) );
+
+		//If we expected it to be present, but it failed
+		if(!_sensors.baro.status.present)
+			mavlink_queue_broadcast_error("[SENSOR] Unable to configure baro, disabling!");
+	} else {
+		sensor_status_init( &_sensors.baro.status, false );
+	}
+
+	_sensors.baro.period_update = fix16_to_int( fix16_div(_fc_1000, get_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE)));
+	_sensors.baro.raw_press = 0;
+	_sensors.baro.raw_temp = 0;
 
 	//==-- Sonar
 	sensor_status_init( &_sensors.sonar.status, (bool)get_param_uint( PARAM_SENSOR_SONAR_CBRK ) );
@@ -277,6 +292,7 @@ bool i2c_job_queued(void) {
 bool sensors_read(void) {
 	bool imu_job_complete = false;
 	bool mag_job_complete = false;
+	bool baro_job_complete = false;
 
 	//Check IMU status
 	if( (accel_status == I2C_JOB_COMPLETE) &&
@@ -337,10 +353,9 @@ bool sensors_read(void) {
 		mag_job_complete = true;
 	} else if(mag_status == I2C_JOB_COMPLETE) {
 		mag_job_complete = true;
-
 		mag_status = I2C_JOB_DEFAULT;
 
-		//==-- Handle raw values
+		//Handle raw values
 		//XXX: Some values need to be switched to be in the NED frame
 		_sensors.mag.raw.x = read_mag_raw[0];
 		_sensors.mag.raw.y = -read_mag_raw[1];
@@ -352,7 +367,7 @@ bool sensors_read(void) {
 
 		//TODO: Do remaining mag scaling / calibration steps
 
-		//==-- Get a north estimate
+		//Get a north estimate
 		//Build a rotation matrix
 		v3d mag_body_x;
 		v3d_normalize(&mag_body_x, &_sensors.mag.scaled);
@@ -387,11 +402,27 @@ bool sensors_read(void) {
 		safety_update_sensor(&_system_status.sensors.mag);
 	}
 
+	if(baro_status == I2C_JOB_DEFAULT) {
+		baro_job_complete = true;
+	} else if(baro_status == I2C_JOB_COMPLETE) {
+		baro_job_complete = true;
+		baro_status = I2C_JOB_DEFAULT;
+
+		//Handle raw values
+		_sensors.baro.raw_press = read_baro_raw[0];
+		_sensors.baro.raw_temp = read_baro_raw[1];
+
+		//Other Baro updates
+		_sensors.baro.status.time_read = micros();
+		_sensors.baro.status.new_data = true;
+		safety_update_sensor(&_system_status.sensors.baro);
+	}
+
 	//TODO: Check other status
 	//TODO: May need to offset these so they don't all check at once(?)
 
 	//Return the results
-	return ( imu_job_complete && mag_job_complete );
+	return ( imu_job_complete && mag_job_complete && baro_job_complete );
 }
 
 uint32_t sensors_clock_ls_get(void) {
@@ -1121,12 +1152,28 @@ bool sensors_update(uint32_t time_us) {
 	//==-- Update IMU
 	//XXX: Nothing to do, but could do a present check for posix if we go there
 
-	//Mag
+	//Only allow a single i2c device to be queued each loop
+	bool i2c_extra_read = false;
+
+	//==-- Update Mag
 	if(_sensors.mag.status.present) {
 		//Update the sensor if it's time (and it's not currently reading)
 		if( ( (time_us - _sensors.mag.status.time_read) > _sensors.mag.period_update ) &&
-			(mag_status == I2C_JOB_DEFAULT) ) {
+			(mag_status == I2C_JOB_DEFAULT) &&
+			!i2c_extra_read ) {
 			hmc5883l_request_async_read(read_mag_raw, &mag_status);
+			i2c_extra_read = true;
+		}
+	}
+
+	//==-- Update Baro
+	if(_sensors.baro.status.present) {
+		//Update the sensor if it's time (and it's not currently reading)
+		if( ( (time_us - _sensors.baro.status.time_read) > _sensors.baro.period_update ) &&
+			(baro_status == I2C_JOB_DEFAULT) &&
+			!i2c_extra_read ) {
+			bmp280_request_async_read(read_baro_raw, &baro_status);
+			i2c_extra_read = true;
 		}
 	}
 

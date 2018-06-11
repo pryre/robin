@@ -455,11 +455,11 @@ PARAM_SENSOR_SAFETY_CBRK:
 PARAM_SENSOR_BARO_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_BARO"
-  description: "Sensor update rate for barometer (TODO)"
-  reboot: false
+  description: "Sensor update rate for barometer"
+  reboot: true
   value:
     option: "scalar"
-    default: 0.0
+    default: 20.0
     unit: "Hz"
 ---
 PARAM_SENSOR_SONAR_UPDATE_RATE:
@@ -476,7 +476,7 @@ PARAM_SENSOR_MAG_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_MAG"
   description: "Sensor update rate for magnetometer"
-  reboot: false
+  reboot: true
   value:
     option: "scalar"
     default: 15.0
