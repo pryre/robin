@@ -336,6 +336,14 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 							break;
 						}
+						case MAV_CMD_GET_HOME_POSITION: {
+							//XXX: Just give a false message to have it handled if it is requested
+							mavlink_message_t msg_out;
+							mavlink_prepare_home_position(&msg_out);
+							lpq_queue_msg(port, &msg_out);
+
+							break;
+						}
 						case MAV_CMD_PREFLIGHT_STORAGE: {
 							need_ack = true;
 

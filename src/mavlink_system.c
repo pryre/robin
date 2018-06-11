@@ -676,3 +676,18 @@ void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index) {
 		mavlink_queue_broadcast_error(text);
 	}
 }
+
+void mavlink_prepare_home_position(mavlink_message_t *msg) {
+	//XXX: Just give a false message to have it handled if it is requested
+	float blank_quaternion[4] = {1.0, 0.0, 0.0, 0.0};
+
+	mavlink_msg_home_position_pack(mavlink_system.sysid,
+								   mavlink_system.compid,
+								   msg,
+								   0, 0, 0, //Lat, long, alt
+								   0.0, 0.0, 0.0, //X (m), Y (m), Z (m)
+								   &blank_quaternion[0],
+								   0.0, 0.0, 0.0, //Appraoch vector (m)
+								   micros());
+
+}
