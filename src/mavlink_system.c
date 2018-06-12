@@ -378,6 +378,12 @@ void mavlink_stream_highres_imu(uint8_t port) {
 		fields_updated |= (1<<6)|(1<<7)|(1<<8);
 	}
 
+	if( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) {
+		abs_pressure = fix16_to_float(_sensors.baro.raw_press);
+
+		fields_updated |= (1<<9);
+	}
+
 	mavlink_msg_highres_imu_send(port,
 								 _sensors.imu.status.time_read,
 								 xacc,
@@ -696,6 +702,7 @@ void mavlink_prepare_home_position(mavlink_message_t *msg) {
 
 }
 
+/*
 void mavlink_prepare_scaled_pressure(mavlink_message_t *msg) {
 	mavlink_msg_scaled_pressure_pack(mavlink_system.sysid,
 								   mavlink_system.compid,
@@ -705,3 +712,4 @@ void mavlink_prepare_scaled_pressure(mavlink_message_t *msg) {
 								   0.0,	//diff pressure
 								   _sensors.baro.raw_temp); //TODO: Should be a scaled value
 }
+*/

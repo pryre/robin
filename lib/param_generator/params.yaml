@@ -416,6 +416,16 @@ PARAM_SENSOR_SAFETY_CBRK:
     option: "bool"
     default: 1
 ---
+PARAM_SENSOR_MAG_UPDATE_RATE:
+  type: "float"
+  name: "CHK_RATE_MAG"
+  description: "Sensor update rate for magnetometer (set to 0 to disable, typical is 20Hz)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0.0
+    unit: "Hz"
+---
 PARAM_SENSOR_BARO_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_BARO"
@@ -423,23 +433,13 @@ PARAM_SENSOR_BARO_UPDATE_RATE:
   reboot: true
   value:
     option: "scalar"
-    default: 20.0
+    default: 0.0
     unit: "Hz"
 ---
 PARAM_SENSOR_SONAR_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_SONAR"
   description: "Sensor update rate for sonar (TODO) (set to 0 to disable, typical is 5Hz)"
-  reboot: true
-  value:
-    option: "scalar"
-    default: 0.0
-    unit: "Hz"
----
-PARAM_SENSOR_MAG_UPDATE_RATE:
-  type: "float"
-  name: "CHK_RATE_MAG"
-  description: "Sensor update rate for magnetometer (set to 0 to disable, typical is 20Hz)"
   reboot: true
   value:
     option: "scalar"

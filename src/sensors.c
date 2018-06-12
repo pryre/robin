@@ -387,9 +387,9 @@ bool sensors_read(void) {
 
 		//Handle raw values
 		//XXX: Some values need to be switched to be in the NED frame
-		_sensors.mag.raw.x = read_mag_raw[0];
-		_sensors.mag.raw.y = -read_mag_raw[1];
-		_sensors.mag.raw.z = -read_mag_raw[2];
+		_sensors.mag.raw.x = -read_mag_raw[0];
+		_sensors.mag.raw.y = read_mag_raw[1];
+		_sensors.mag.raw.z = read_mag_raw[2];
 
 		_sensors.mag.scaled.x = fix16_div(fix16_from_int(_sensors.mag.raw.x),fix16_from_int(HMC5883L_GAIN_FACTOR));
 		_sensors.mag.scaled.y = fix16_div(fix16_from_int(_sensors.mag.raw.y),fix16_from_int(HMC5883L_GAIN_FACTOR));
@@ -402,17 +402,10 @@ bool sensors_read(void) {
 		v3d mag_body_x;
 		v3d_normalize(&mag_body_x, &_sensors.mag.scaled);
 		v3d mag_body_y;
-		v3d mag_body_z;
-		v3d tmp_z;
-		tmp_z.x = 0;
-		tmp_z.y = 0;
-		tmp_z.z = _fc_1;//(_sensors.imu.accel.z > 0) ? _fc_1 : -_fc_1; //XXX: Correct for the FC being upside-down
+		v3d mag_body_z = _sensors.imu.accel;
 
-		v3d_cross(&mag_body_y, &tmp_z, &mag_body_x);
+		v3d_cross(&mag_body_y, &mag_body_z, &mag_body_x);
 		v3d_normalize(&mag_body_y, &mag_body_y);
-
-		v3d_cross(&mag_body_z, &mag_body_x, &mag_body_y);
-		v3d_normalize(&mag_body_z, &mag_body_z);
 
 		mf16 mag_body;
 		dcm_from_basis(&mag_body, &mag_body_x, &mag_body_y, &mag_body_z);
@@ -1241,6 +1234,7 @@ bool sensors_update(uint32_t time_us) {
 
 	//==-- Update Barometer
 	if( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) {
+		/*
 		if(_sensors.baro.status.new_data) {
 			_sensors.baro.status.new_data = false;
 
@@ -1248,6 +1242,7 @@ bool sensors_update(uint32_t time_us) {
 			mavlink_prepare_scaled_pressure(&baro_msg_out);
 			lpq_queue_broadcast_msg(&baro_msg_out);
 		}
+		*/
 	}
 
 	//==-- Update Sonar
