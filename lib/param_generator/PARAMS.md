@@ -27,14 +27,10 @@ STRM0_TIMESYNC | float | Communication update rate for timesync (set to 0 to tur
 STRM0_BATTSTAT | float | Communication update rate for battery status (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
 STRM0_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 100.0 | Hz | scalar | False
 CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
-CBRK_MAG | uint | Sensor circuit breaker arming check for magnetometer (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
-CBRK_BARO | uint | Sensor circuit breaker arming check for barometer (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
-CBRK_SONAR | uint | Sensor circuit breaker arming check for sonar (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
-CBRK_EXT_POSE | uint | Sensor circuit breaker arming check for external pose estimate (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
-CHK_RATE_BARO | float | Sensor update rate for barometer | 20.0 | Hz | scalar | True
-CHK_RATE_SONAR | float | Sensor update rate for sonar (TODO) | 0.0 | Hz | scalar | True
-CHK_RATE_MAG | float | Sensor update rate for magnetometer | 15.0 | Hz | scalar | True
+CHK_RATE_BARO | float | Sensor update rate for barometer (set to 0 to disable, typical is 20Hz) | 20.0 | Hz | scalar | True
+CHK_RATE_SONAR | float | Sensor update rate for sonar (TODO) (set to 0 to disable, typical is 5Hz) | 0.0 | Hz | scalar | True
+CHK_RATE_MAG | float | Sensor update rate for magnetometer (set to 0 to disable, typical is 20Hz) | 0.0 | Hz | scalar | True
 STRM_NUM_IMU | uint | Number of IMU readings that must be recieved before a stream is established | 1000 |  | scalar | False
 STRM_NUM_BARO | uint | Number of barometer readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_SONAR | uint | Number of sonar readings that must be recieved before a stream is established | 50 |  | scalar | False

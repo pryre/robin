@@ -64,69 +64,25 @@ static void status_buzzer_init() {
 	//TODO: Make this play a startup tune
 }
 
+static void init_sensor_state(timeout_status_t *sensor, const char *name, const param_id_t param_stream_count, const param_id_t param_timeout) {
+	sensor->health = SYSTEM_HEALTH_UNKNOWN;
+	sensor->last_read = 0;
+	sensor->count = 0;
+	sensor->param_stream_count = param_stream_count;
+	sensor->param_timeout = param_timeout;
+	strncpy(sensor->name, name, SAFETY_SENSOR_NAME_LEN);
+}
+
 void safety_init() {
-	_system_status.sensors.imu.health = SYSTEM_HEALTH_UNKNOWN;
-	_system_status.sensors.imu.last_read = 0;
-	_system_status.sensors.imu.count = 0;
-	_system_status.sensors.imu.param_stream_count = PARAM_SENSOR_IMU_STRM_COUNT;
-	_system_status.sensors.imu.param_timeout = PARAM_SENSOR_IMU_TIMEOUT;
-	strncpy(_system_status.sensors.imu.name, "IMU", 24);
-
-	_system_status.sensors.mag.health = SYSTEM_HEALTH_UNKNOWN;
-	_system_status.sensors.mag.last_read = 0;
-	_system_status.sensors.mag.count = 0;
-	_system_status.sensors.mag.param_stream_count = PARAM_SENSOR_MAG_STRM_COUNT;
-	_system_status.sensors.mag.param_timeout = PARAM_SENSOR_MAG_TIMEOUT;
-	strncpy(_system_status.sensors.mag.name, "Magnetometer", 24);
-
-	_system_status.sensors.baro.health = SYSTEM_HEALTH_UNKNOWN;
-	_system_status.sensors.baro.last_read = 0;
-	_system_status.sensors.baro.count = 0;
-	_system_status.sensors.baro.param_stream_count = PARAM_SENSOR_BARO_STRM_COUNT;
-	_system_status.sensors.baro.param_timeout = PARAM_SENSOR_BARO_TIMEOUT;
-	strncpy(_system_status.sensors.baro.name, "Barometer", 24);
-
-	_system_status.sensors.sonar.health = SYSTEM_HEALTH_UNKNOWN;
-	_system_status.sensors.sonar.last_read = 0;
-	_system_status.sensors.sonar.count = 0;
-	_system_status.sensors.sonar.param_stream_count = PARAM_SENSOR_SONAR_STRM_COUNT;
-	_system_status.sensors.sonar.param_timeout = PARAM_SENSOR_SONAR_TIMEOUT;
-	strncpy(_system_status.sensors.sonar.name, "Sonar", 24);
-
-	_system_status.sensors.ext_pose.health = SYSTEM_HEALTH_UNKNOWN;
-	_system_status.sensors.ext_pose.last_read = 0;
-	_system_status.sensors.ext_pose.count = 0;
-	_system_status.sensors.ext_pose.param_stream_count = PARAM_SENSOR_EXT_POSE_STRM_COUNT;
-	_system_status.sensors.ext_pose.param_timeout = PARAM_SENSOR_EXT_POSE_TIMEOUT;
-	strncpy(_system_status.sensors.ext_pose.name, "External Pose", 24);
-
-	_system_status.sensors.rc_input.health = SYSTEM_HEALTH_UNKNOWN;
-	_system_status.sensors.rc_input.last_read = 0;
-	_system_status.sensors.rc_input.count = 0;
-	_system_status.sensors.rc_input.param_stream_count = PARAM_SENSOR_RC_INPUT_STRM_COUNT;
-	_system_status.sensors.rc_input.param_timeout = PARAM_SENSOR_RC_INPUT_TIMEOUT;
-	strncpy(_system_status.sensors.rc_input.name, "RC Input", 24);
-
-	_system_status.sensors.offboard_heartbeat.health = SYSTEM_HEALTH_UNKNOWN;
-	_system_status.sensors.offboard_heartbeat.last_read = 0;
-	_system_status.sensors.offboard_heartbeat.count = 0;
-	_system_status.sensors.offboard_heartbeat.param_stream_count = PARAM_SENSOR_OFFB_HRBT_STRM_COUNT;
-	_system_status.sensors.offboard_heartbeat.param_timeout = PARAM_SENSOR_OFFB_HRBT_TIMEOUT;
-	strncpy(_system_status.sensors.offboard_heartbeat.name, "Offboard Heartbeat", 24);
-
-	_system_status.sensors.offboard_control.health = SYSTEM_HEALTH_UNKNOWN;
-	_system_status.sensors.offboard_control.last_read = 0;
-	_system_status.sensors.offboard_control.count = 0;
-	_system_status.sensors.offboard_control.param_stream_count = PARAM_SENSOR_OFFB_CTRL_STRM_COUNT;
-	_system_status.sensors.offboard_control.param_timeout = PARAM_SENSOR_OFFB_CTRL_TIMEOUT;
-	strncpy(_system_status.sensors.offboard_control.name, "Offboard Control", 24);
-
-	_system_status.sensors.pwm_control.health = SYSTEM_HEALTH_UNKNOWN;
-	_system_status.sensors.pwm_control.last_read = 0;
-	_system_status.sensors.pwm_control.count = 0;
-	_system_status.sensors.pwm_control.param_stream_count = PARAM_SENSOR_PWM_CTRL_STRM_COUNT;
-	_system_status.sensors.pwm_control.param_timeout = PARAM_SENSOR_PWM_CTRL_TIMEOUT;
-	strncpy(_system_status.sensors.pwm_control.name, "PWM Control", 24);
+	init_sensor_state(&_system_status.sensors.imu, "IMU", PARAM_SENSOR_IMU_STRM_COUNT, PARAM_SENSOR_IMU_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.mag, "Magnetometer", PARAM_SENSOR_MAG_STRM_COUNT, PARAM_SENSOR_MAG_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.baro, "Barometer", PARAM_SENSOR_BARO_STRM_COUNT, PARAM_SENSOR_BARO_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.sonar, "Sonar", PARAM_SENSOR_SONAR_STRM_COUNT, PARAM_SENSOR_SONAR_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.ext_pose, "External Pose", PARAM_SENSOR_EXT_POSE_STRM_COUNT, PARAM_SENSOR_EXT_POSE_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.rc_input, "RC Input", PARAM_SENSOR_RC_INPUT_STRM_COUNT, PARAM_SENSOR_RC_INPUT_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.offboard_heartbeat, "Offboard Heartbeat", PARAM_SENSOR_OFFB_HRBT_STRM_COUNT, PARAM_SENSOR_OFFB_HRBT_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.offboard_control, "Offboard Control", PARAM_SENSOR_OFFB_CTRL_STRM_COUNT, PARAM_SENSOR_OFFB_CTRL_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.pwm_control, "PWM Control", PARAM_SENSOR_PWM_CTRL_STRM_COUNT, PARAM_SENSOR_PWM_CTRL_TIMEOUT);
 
 	_time_safety_arm_throttle_timeout = 0;
 

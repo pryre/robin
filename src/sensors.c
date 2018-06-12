@@ -179,8 +179,34 @@ void sensors_init_internal(void) {
 }
 
 void sensors_init_external(void) {
+	/*
+	// XXX: I2C Sniffer
+    uint8_t addr;
+	for (addr=0; addr<128; ++addr) {
+		if (i2cWriteRegister(addr, 0x00, 0x00)) {
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PARAM] I2C sniff found: 0x";
+			char text_addr[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+			itoa(addr, text_addr, 16);
+			strncat(text, text_addr, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1); //XXX: Stops overflow warnings
+			mavlink_queue_broadcast_notice(text);
+		}
+	}
+	*/
+	bool ack = false;
+	uint8_t sig = 0;
+
+	//Check we have the right device
+	ack = i2cReadBuffer(0x76, 0x0D, 1, &sig);	//Check the identification register to make sure it is the correct device
+	if(ack) {
+		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PARAM] baro reply: 0x";
+		char text_addr[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+		itoa(sig, text_addr, 16);
+		strncat(text, text_addr, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1); //XXX: Stops overflow warnings
+		mavlink_queue_broadcast_notice(text);
+	}
+
 	//==-- Mag
-	if( (bool)get_param_uint( PARAM_SENSOR_MAG_CBRK ) ) {
+	if( get_param_fix16( PARAM_SENSOR_MAG_UPDATE_RATE ) > 0 ) {
 		mavlink_queue_broadcast_error("[SENSOR] Mag support is not stable!");
 
 		sensor_status_init( &_sensors.mag.status, hmc5883lInit(get_param_uint( PARAM_BOARD_REVISION ) ) );
@@ -206,7 +232,7 @@ void sensors_init_external(void) {
 	_sensors.mag.q.d = 0;
 
 	//==-- Baro
-	if( (bool)get_param_uint( PARAM_SENSOR_BARO_CBRK ) ) {
+	if( get_param_fix16( PARAM_SENSOR_BARO_UPDATE_RATE ) > 0 ) {
 			sensor_status_init( &_sensors.baro.status, bmp280Init(get_param_uint( PARAM_BOARD_REVISION ) ) );
 
 		//If we expected it to be present, but it failed
@@ -221,7 +247,17 @@ void sensors_init_external(void) {
 	_sensors.baro.raw_temp = 0;
 
 	//==-- Sonar
-	sensor_status_init( &_sensors.sonar.status, (bool)get_param_uint( PARAM_SENSOR_SONAR_CBRK ) );
+	if( get_param_fix16( PARAM_SENSOR_SONAR_UPDATE_RATE ) > 0 ) {
+		mavlink_queue_broadcast_error("[SENSOR] Sonar feature is not developed yet!");
+
+		//XXX:sensor_status_init( &_sensors.sonar.status, sonarInit() );
+
+		//If we expected it to be present, but it failed
+		if(!_sensors.sonar.status.present)
+			mavlink_queue_broadcast_error("[SENSOR] Unable to configure sonar, disabling!");
+	} else {
+		sensor_status_init( &_sensors.sonar.status, false );
+	}
 
 	//==-- External Pose
 	sensor_status_init( &_sensors.ext_pose.status, false );

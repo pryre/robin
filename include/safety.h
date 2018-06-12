@@ -21,6 +21,8 @@ typedef enum {
 #define MAV_STATE_NUM_STATES (MAV_STATE_FLIGHT_TERMINATION + 1)
 #define MAV_STATE_NAME_LEN 10
 
+#define SAFETY_SENSOR_NAME_LEN 24
+
 //General UAV health status
 typedef enum {
 	SYSTEM_HEALTH_UNKNOWN,	//Have not made contact with sensor
@@ -36,7 +38,7 @@ typedef struct {
 	uint32_t count;
 	param_id_t param_stream_count;
 	param_id_t param_timeout;
-	char name[25];
+	char name[SAFETY_SENSOR_NAME_LEN + 1];
 } timeout_status_t;
 
 typedef struct {

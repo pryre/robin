@@ -33,14 +33,10 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_STREAM_RATE_BATTERY_STATUS_0, fix16_from_float(2.0f));
 	init_param_fix16(PARAM_STREAM_RATE_LOW_PRIORITY_0, fix16_from_float(100.0f));
 	init_param_uint(PARAM_SENSOR_IMU_CBRK, 1);
-	init_param_uint(PARAM_SENSOR_MAG_CBRK, 0);
-	init_param_uint(PARAM_SENSOR_BARO_CBRK, 0);
-	init_param_uint(PARAM_SENSOR_SONAR_CBRK, 0);
-	init_param_uint(PARAM_SENSOR_EXT_POSE_CBRK, 1);
 	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, 1);
 	init_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE, fix16_from_float(20.0f));
 	init_param_fix16(PARAM_SENSOR_SONAR_UPDATE_RATE, fix16_from_float(0.0f));
-	init_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE, fix16_from_float(15.0f));
+	init_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE, fix16_from_float(0.0f));
 	init_param_uint(PARAM_SENSOR_IMU_STRM_COUNT, 1000);
 	init_param_uint(PARAM_SENSOR_BARO_STRM_COUNT, 50);
 	init_param_uint(PARAM_SENSOR_SONAR_STRM_COUNT, 50);
@@ -207,10 +203,6 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"STRM0_BATTSTAT",
 	"STRM0_LPQ",
 	"CBRK_IMU",
-	"CBRK_MAG",
-	"CBRK_BARO",
-	"CBRK_SONAR",
-	"CBRK_EXT_POSE",
 	"CBRK_SAFETY",
 	"CHK_RATE_BARO",
 	"CHK_RATE_SONAR",
