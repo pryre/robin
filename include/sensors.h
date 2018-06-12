@@ -109,6 +109,7 @@ typedef struct {
 
 typedef struct {
 	sensor_status_t status;
+	uint32_t period_update;	//update rate in ms
 
 	int16_t range;	//Measured range
 } sensor_readings_sonar_t;
@@ -304,5 +305,7 @@ uint64_t sensors_clock_rt_get(void);	//Get the current time syncronized real tim
 uint32_t sensors_clock_imu_int_get(void);	//Get the time of the latest imu interrupt
 
 void sensors_update_rc_cal(void);
+
+void sensors_poll(uint32_t time_us);
 
 bool sensors_update(uint32_t time_us);

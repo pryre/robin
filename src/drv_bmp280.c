@@ -70,7 +70,7 @@
  */
 
 #define BARO_ADDRESS 0x76 //might be: 0xEC or 0xEE
-#define BARO_REG_ID 0x0D
+#define BARO_REG_ID 0xD0
 #define BARO_REG_CTRL_MEAS 0xF4
 #define BARO_REG_CONFIG 0xF5
 #define BARO_REG_DATA 0xF7 //6 bytes of info: press_msb, press_lsb, press_xlsb, temp_msb, temp_lsb, temp_xlsb

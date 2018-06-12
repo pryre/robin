@@ -40,6 +40,8 @@ static volatile uint8_t mag_status = 0;
 static int16_t read_mag_raw[3];
 static volatile uint8_t baro_status = 0;
 static int32_t read_baro_raw[2];
+static volatile uint8_t sonar_status = 0;
+//static int32_t read_baro_raw[2];
 
 static uint16_t rc_cal[8][3];
 static bool rc_rev[8];
@@ -183,6 +185,7 @@ void sensors_init_external(void) {
 	// XXX: I2C Sniffer
     uint8_t addr;
 	for (addr=0; addr<128; ++addr) {
+		delay(50);
 		if (i2cWriteRegister(addr, 0x00, 0x00)) {
 			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PARAM] I2C sniff found: 0x";
 			char text_addr[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
@@ -192,18 +195,6 @@ void sensors_init_external(void) {
 		}
 	}
 	*/
-	bool ack = false;
-	uint8_t sig = 0;
-
-	//Check we have the right device
-	ack = i2cReadBuffer(0x76, 0x0D, 1, &sig);	//Check the identification register to make sure it is the correct device
-	if(ack) {
-		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PARAM] baro reply: 0x";
-		char text_addr[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-		itoa(sig, text_addr, 16);
-		strncat(text, text_addr, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1); //XXX: Stops overflow warnings
-		mavlink_queue_broadcast_notice(text);
-	}
 
 	//==-- Mag
 	if( get_param_fix16( PARAM_SENSOR_MAG_UPDATE_RATE ) > 0 ) {
@@ -218,7 +209,7 @@ void sensors_init_external(void) {
 		sensor_status_init( &_sensors.mag.status, false );
 	}
 
-	_sensors.mag.period_update = fix16_to_int( fix16_div(_fc_1000, get_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE)));
+	_sensors.mag.period_update = 1000*fix16_to_int( fix16_div(_fc_1000, get_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE)));
 
 	_sensors.mag.raw.x = 0;
 	_sensors.mag.raw.y = 0;
@@ -242,7 +233,7 @@ void sensors_init_external(void) {
 		sensor_status_init( &_sensors.baro.status, false );
 	}
 
-	_sensors.baro.period_update = fix16_to_int( fix16_div(_fc_1000, get_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE)));
+	_sensors.baro.period_update = 1000*fix16_to_int( fix16_div(_fc_1000, get_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE)));
 	_sensors.baro.raw_press = 0;
 	_sensors.baro.raw_temp = 0;
 
@@ -321,14 +312,17 @@ bool i2c_job_queued(void) {
 	bool g_done = (gyro_status == I2C_JOB_DEFAULT) || (gyro_status == I2C_JOB_COMPLETE);
 	bool t_done = (temp_status == I2C_JOB_DEFAULT) || (temp_status == I2C_JOB_COMPLETE);
 	bool m_done = (mag_status == I2C_JOB_DEFAULT) || (mag_status == I2C_JOB_COMPLETE);
+	bool b_done = (baro_status == I2C_JOB_DEFAULT) || (baro_status == I2C_JOB_COMPLETE);
+	bool s_done = (sonar_status == I2C_JOB_DEFAULT) || (sonar_status == I2C_JOB_COMPLETE);
 
-	return !a_done || !g_done || !t_done || !m_done;
+	return !a_done || !g_done || !t_done || !m_done || !b_done || !s_done;
 }
 
 bool sensors_read(void) {
 	bool imu_job_complete = false;
 	bool mag_job_complete = false;
 	bool baro_job_complete = false;
+	bool sonar_job_complete = false;
 
 	//Check IMU status
 	if( (accel_status == I2C_JOB_COMPLETE) &&
@@ -454,11 +448,28 @@ bool sensors_read(void) {
 		safety_update_sensor(&_system_status.sensors.baro);
 	}
 
+	if(sonar_status == I2C_JOB_DEFAULT) {
+		sonar_job_complete = true;
+	} else if(sonar_status == I2C_JOB_COMPLETE) {
+		sonar_job_complete = true;
+		sonar_status = I2C_JOB_DEFAULT;
+		/*
+		//Handle raw values
+		_sensors.baro.raw_press = read_baro_raw[0];
+		_sensors.baro.raw_temp = read_baro_raw[1];
+
+		//Other Baro updates
+		_sensors.baro.status.time_read = micros();
+		_sensors.baro.status.new_data = true;
+		safety_update_sensor(&_system_status.sensors.baro);
+		*/
+	}
+
 	//TODO: Check other status
 	//TODO: May need to offset these so they don't all check at once(?)
 
 	//Return the results
-	return ( imu_job_complete && mag_job_complete && baro_job_complete );
+	return ( imu_job_complete && mag_job_complete && baro_job_complete && sonar_job_complete );
 }
 
 uint32_t sensors_clock_ls_get(void) {
@@ -1181,6 +1192,41 @@ void sensors_update_rc_cal(void) {
 	rc_dz[7] = get_param_fix16(PARAM_RC8_DZ);
 }
 
+void sensors_poll(uint32_t time_us) {
+	//Only allow a single i2c device to be queued each loop
+	bool i2c_read_requested = false;
+
+	//==-- Update Mag
+	if(_sensors.mag.status.present && !i2c_read_requested) {
+		//Update the sensor if it's time (and it's not currently reading)
+		if( ( (time_us - _sensors.mag.status.time_read) > _sensors.mag.period_update ) &&
+			(mag_status == I2C_JOB_DEFAULT) ) {
+			hmc5883l_request_async_read(read_mag_raw, &mag_status);
+			i2c_read_requested = true;
+		}
+	}
+
+	//==-- Update Baro
+	if(_sensors.baro.status.present && !i2c_read_requested) {
+		//Update the sensor if it's time (and it's not currently reading)
+		if( ( (time_us - _sensors.baro.status.time_read) > _sensors.baro.period_update ) &&
+			(baro_status == I2C_JOB_DEFAULT) ) {
+			bmp280_request_async_read(read_baro_raw, &baro_status);
+			i2c_read_requested = true;
+		}
+	}
+
+	//==-- Update Sonar
+	if(_sensors.sonar.status.present && !i2c_read_requested) {
+		//Update the sensor if it's time (and it's not currently reading)
+		if( ( (time_us - _sensors.sonar.status.time_read) > _sensors.sonar.period_update ) &&
+			(sonar_status == I2C_JOB_DEFAULT) ) {
+			//sonar_request_async_read(read_baro_raw, &baro_status);
+			i2c_read_requested = true;
+		}
+	}
+}
+
 bool sensors_update(uint32_t time_us) {
 	//bool update_success = false;
 	//TODO: Remember not to expect all sensors to be ready
@@ -1188,29 +1234,25 @@ bool sensors_update(uint32_t time_us) {
 	//==-- Update IMU
 	//XXX: Nothing to do, but could do a present check for posix if we go there
 
-	//Only allow a single i2c device to be queued each loop
-	bool i2c_extra_read = false;
+	//==-- Update Magnetometer
+	if( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) {
+		//Anything?
+	}
 
-	//==-- Update Mag
-	if(_sensors.mag.status.present) {
-		//Update the sensor if it's time (and it's not currently reading)
-		if( ( (time_us - _sensors.mag.status.time_read) > _sensors.mag.period_update ) &&
-			(mag_status == I2C_JOB_DEFAULT) &&
-			!i2c_extra_read ) {
-			hmc5883l_request_async_read(read_mag_raw, &mag_status);
-			i2c_extra_read = true;
+	//==-- Update Barometer
+	if( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) {
+		if(_sensors.baro.status.new_data) {
+			_sensors.baro.status.new_data = false;
+
+			mavlink_message_t baro_msg_out;
+			mavlink_prepare_scaled_pressure(&baro_msg_out);
+			lpq_queue_broadcast_msg(&baro_msg_out);
 		}
 	}
 
-	//==-- Update Baro
-	if(_sensors.baro.status.present) {
-		//Update the sensor if it's time (and it's not currently reading)
-		if( ( (time_us - _sensors.baro.status.time_read) > _sensors.baro.period_update ) &&
-			(baro_status == I2C_JOB_DEFAULT) &&
-			!i2c_extra_read ) {
-			bmp280_request_async_read(read_baro_raw, &baro_status);
-			i2c_extra_read = true;
-		}
+	//==-- Update Sonar
+	if( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) {
+		//Anything?
 	}
 
 	//==-- RC Input & Saftety Toggle

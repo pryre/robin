@@ -537,6 +537,16 @@ PARAM_SENSOR_IMU_TIMEOUT:
     default: 2000
     unit: "us"
 ---
+PARAM_SENSOR_MAG_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_MAG"
+  description: "Time that new data must be read before a magnetometer timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100000
+    unit: "us"
+---
 PARAM_SENSOR_BARO_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_BARO"
@@ -544,7 +554,7 @@ PARAM_SENSOR_BARO_TIMEOUT:
   reboot: false
   value:
     option: "scalar"
-    default: 20000
+    default: 100000
     unit: "us"
 ---
 PARAM_SENSOR_SONAR_TIMEOUT:
@@ -554,7 +564,7 @@ PARAM_SENSOR_SONAR_TIMEOUT:
   reboot: false
   value:
     option: "scalar"
-    default: 20000
+    default: 100000
     unit: "us"
 ---
 PARAM_SENSOR_RC_INPUT_TIMEOUT:
@@ -575,16 +585,6 @@ PARAM_SENSOR_EXT_POSE_TIMEOUT:
   value:
     option: "scalar"
     default: 500000
-    unit: "us"
----
-PARAM_SENSOR_MAG_TIMEOUT:
-  type: "uint"
-  name: "TIMEOUT_MAG"
-  description: "Time that new data must be read before a magnetometer timeout is declared"
-  reboot: false
-  value:
-    option: "scalar"
-    default: 100000
     unit: "us"
 ---
 PARAM_SENSOR_OFFB_HRBT_TIMEOUT:

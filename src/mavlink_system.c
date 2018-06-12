@@ -199,7 +199,7 @@ static void lpq_queue_all_params(mavlink_queue_t* queue) {
 	mavlink_message_t msg;
 	mavlink_prepare_param_value( &msg, queue->request_all_params );
 
-	//Don't flood the buffer
+	//Double check to not flood the buffer
 	if( lpq_queue_msg( queue->port, &msg ) ) {
 		queue->request_all_params++;
 
@@ -233,8 +233,12 @@ void lpq_send(mavlink_queue_t* queue) {
 //==-- Streams
 void mavlink_stream_low_priority(uint8_t port) {
 	if( port == _lpq_port_0.port ) {
-		if( _lpq_port_0.request_all_params >= 0 )
+		//If there is params to queue, and the queue is reasonably empty
+		//  we can afford to interject more parameters this pass
+		if( ( _lpq_port_0.request_all_params >= 0 ) &&
+			( _lpq_port_0.length < (LOW_PRIORITY_QUEUE_SIZE / 2) ) ) {
 			lpq_queue_all_params(&_lpq_port_0);
+		}
 
 		lpq_send(&_lpq_port_0);
 	//XXX: } else if( port == _lpq_port_1.port ) {
@@ -690,4 +694,14 @@ void mavlink_prepare_home_position(mavlink_message_t *msg) {
 								   0.0, 0.0, 0.0, //Appraoch vector (m)
 								   micros());
 
+}
+
+void mavlink_prepare_scaled_pressure(mavlink_message_t *msg) {
+	mavlink_msg_scaled_pressure_pack(mavlink_system.sysid,
+								   mavlink_system.compid,
+								   msg,
+								   _sensors.baro.status.time_read,
+								   _sensors.baro.raw_press, //TODO: Should be a scaled value
+								   0.0,	//diff pressure
+								   _sensors.baro.raw_temp); //TODO: Should be a scaled value
 }

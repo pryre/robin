@@ -95,6 +95,7 @@ void mavlink_prepare_protocol_version(mavlink_message_t *msg);
 void mavlink_prepare_autopilot_version(mavlink_message_t *msg);
 
 void mavlink_prepare_home_position(mavlink_message_t *msg);
+void mavlink_prepare_scaled_pressure(mavlink_message_t *msg);
 
 void mavlink_prepare_command_ack(mavlink_message_t *msg, uint16_t command, uint8_t result, uint8_t sender_sysid, uint8_t sender_compid, uint8_t progress);
 void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index);

@@ -41,11 +41,11 @@ STRM_NUM_OB_H | uint | Number of offboard heartbeat messages that must be reciev
 STRM_NUM_OB_C | uint | Number of offboard control messages that must be recieved before a stream is established | 100 |  | scalar | False
 STRM_NUM_RC_C | uint | Number of PWM control messages that must be recieved before a stream is established | 100 |  | scalar | False
 TIMEOUT_IMU | uint | Time that new data must be read before an IMU timeout is declared | 2000 | us | scalar | False
-TIMEOUT_BARO | uint | Time that new data must be read before a barometer timeout is declared | 20000 | us | scalar | False
-TIMEOUT_SONAR | uint | Time that new data must be read before a sonar timeout is declared | 20000 | us | scalar | False
+TIMEOUT_MAG | uint | Time that new data must be read before a magnetometer timeout is declared | 100000 | us | scalar | False
+TIMEOUT_BARO | uint | Time that new data must be read before a barometer timeout is declared | 100000 | us | scalar | False
+TIMEOUT_SONAR | uint | Time that new data must be read before a sonar timeout is declared | 100000 | us | scalar | False
 TIMEOUT_RC_IN | uint | Time that new data must be read before a RC input timeout is declared | 1000000 | us | scalar | False
 TIMEOUT_EXT_P | uint | Time that new data must be read before a external pose timeout is declared | 500000 | us | scalar | False
-TIMEOUT_MAG | uint | Time that new data must be read before a magnetometer timeout is declared | 100000 | us | scalar | False
 TIMEOUT_OB_HRBT | uint | Time that new data must be read before a off-board heartbeat timeout is declared | 5000000 | us | scalar | False
 TIMEOUT_OB_CTRL | uint | Time that new data must be read before a off-board control timeout is declared | 200000 | us | scalar | False
 TIMEOUT_RC_CTRL | uint | Time that new data must be read before a PWM control timeout is declared | 200000 | us | scalar | False

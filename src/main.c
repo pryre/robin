@@ -75,19 +75,20 @@ void loop(void) {
 	sensors_clock_ls_set( micros() );
 
 	//Sensor Poll
-	//Take a poll of any sensors (that aren't the IMU) that need to be updated
-	//sensors_poll();	//TODO: Good time to check other sensors for more raw data
-						//TODO: This should alert sensors_read() somhow to let it know there's more data to wait for
+	//Take a poll of any optional sensors (that aren't the IMU) that need to be updated
+	sensors_poll( micros() );
 
 	//==-- Check Serial
 	communication_receive();	//XXX: Could be moved to a UART callback, but may cause issues with async I2C
 
-	//==-- Send Serial
+	//==-- Transmit Serial
 	//Check to see if a message has been sent this loop, then see if a message should be sent
 	//Only allow this once per loop due to buffer risks (see serial define above)
 	communication_transmit( micros() );
 
 	//==-- Update Sensor Data
+	//Updates any additional sensors or logic that needs to be taken care of
+	//  like RC command input and safety button
 	sensors_update( micros() );
 
 	//==-- Timeout Checks
