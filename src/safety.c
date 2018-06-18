@@ -79,6 +79,7 @@ void safety_init() {
 	init_sensor_state(&_system_status.sensors.baro, "Barometer", PARAM_SENSOR_BARO_STRM_COUNT, PARAM_SENSOR_BARO_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.sonar, "Sonar", PARAM_SENSOR_SONAR_STRM_COUNT, PARAM_SENSOR_SONAR_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.ext_pose, "External Pose", PARAM_SENSOR_EXT_POSE_STRM_COUNT, PARAM_SENSOR_EXT_POSE_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.torque_comp, "Torque Compensation", PARAM_SENSOR_TORQUE_COMP_STRM_COUNT, PARAM_SENSOR_TORQUE_COMP_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.rc_input, "RC Input", PARAM_SENSOR_RC_INPUT_STRM_COUNT, PARAM_SENSOR_RC_INPUT_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.offboard_heartbeat, "Offboard Heartbeat", PARAM_SENSOR_OFFB_HRBT_STRM_COUNT, PARAM_SENSOR_OFFB_HRBT_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.offboard_control, "Offboard Control", PARAM_SENSOR_OFFB_CTRL_STRM_COUNT, PARAM_SENSOR_OFFB_CTRL_TIMEOUT);
@@ -688,6 +689,7 @@ void safety_run( uint32_t time_now ) {
 	safety_check_sensor( &_system_status.sensors.baro, time_now );
 	safety_check_sensor( &_system_status.sensors.sonar, time_now );
 	safety_check_sensor( &_system_status.sensors.ext_pose, time_now );
+	safety_check_sensor( &_system_status.sensors.torque_comp, time_now );
 	safety_check_sensor( &_system_status.sensors.rc_input, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_heartbeat, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_control, time_now );

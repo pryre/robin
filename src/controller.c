@@ -433,6 +433,14 @@ void controller_run( uint32_t time_now ) {
 
 	//Save intermittent goals
 	_control_input.T = goal_throttle;
+
+
+	//==-- Torque Compensation
+	if( _system_status.sensors.torque_comp.health == SYSTEM_HEALTH_OK ) {
+		_control_output.r = fix16_add(_control_output.r, _sensors.torque_comp.torque.x);
+		_control_output.p = fix16_add(_control_output.p, _sensors.torque_comp.torque.y);
+		_control_output.y = fix16_add(_control_output.y, _sensors.torque_comp.torque.z);
+	}
 }
 
 #ifdef __cplusplus

@@ -553,6 +553,36 @@ static void communication_decode(uint8_t port, uint8_t c) {
 
 					break;
 				}
+				case MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED: {
+					if( (mavlink_msg_set_position_target_local_ned_get_target_system(&msg) == mavlink_system.sysid) &&
+						(mavlink_msg_set_position_target_local_ned_get_target_component(&msg) == mavlink_system.compid) ) {
+
+						uint16_t type_mask = mavlink_msg_set_position_target_local_ned_get_type_mask(&msg);
+						uint8_t coordinate_frame = mavlink_msg_set_position_target_local_ned_get_coordinate_frame(&msg);
+
+						//Check if this should be treated as a torque compensation message
+						uint16_t type_mask_torque_comp = 0x3C0; //See message definition for explaination
+
+						if( (coordinate_frame == MAV_FRAME_BODY_NED) &&
+							(type_mask == type_mask_torque_comp) ) {
+
+							_sensors.torque_comp.status.present = true;
+							//TODO: Check timestamp was recent before accepting
+							_sensors.torque_comp.status.time_read = micros();
+
+							//Position
+							_sensors.torque_comp.torque.x = fix16_from_float(mavlink_msg_set_position_target_local_ned_get_afx(&msg));
+							_sensors.torque_comp.torque.y = fix16_from_float(mavlink_msg_set_position_target_local_ned_get_afy(&msg));
+							_sensors.torque_comp.torque.z = fix16_from_float(mavlink_msg_set_position_target_local_ned_get_afz(&msg));
+
+							//Update Sensor
+							safety_update_sensor(&_system_status.sensors.torque_comp);
+							_sensors.torque_comp.status.new_data = true;
+						} //XXX: Else the message could be handeld another way
+					}
+
+					break;
+				}
 				case MAVLINK_MSG_ID_MISSION_REQUEST_LIST: {
 					//XXX: We don't support missions, so just send back 0
 					mavlink_message_t msg_out;

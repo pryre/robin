@@ -491,6 +491,15 @@ PARAM_SENSOR_EXT_POSE_STRM_COUNT:
     option: "scalar"
     default: 10
 ---
+PARAM_SENSOR_TORQUE_COMP_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_TORC"
+  description: "Number of torque compensation readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50
+---
 PARAM_SENSOR_MAG_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_MAG"
@@ -581,6 +590,16 @@ PARAM_SENSOR_EXT_POSE_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_EXT_P"
   description: "Time that new data must be read before a external pose timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 500000
+    unit: "us"
+---
+PARAM_SENSOR_TORQUE_COMP_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_TORC"
+  description: "Time that new data must be read before a torque compensation timeout is declared"
   reboot: false
   value:
     option: "scalar"

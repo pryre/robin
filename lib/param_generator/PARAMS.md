@@ -36,6 +36,7 @@ STRM_NUM_BARO | uint | Number of barometer readings that must be recieved before
 STRM_NUM_SONAR | uint | Number of sonar readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_RC_IN | uint | Number of valid RC input readings that must be recieved before a stream is established | 2000 |  | scalar | False
 STRM_NUM_EXT_P | uint | Number of external pose readings that must be recieved before a stream is established | 10 |  | scalar | False
+STRM_NUM_TORC | uint | Number of torque compensation readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_MAG | uint | Number of magnetometer readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_OB_H | uint | Number of offboard heartbeat messages that must be recieved before a stream is established | 2 |  | scalar | False
 STRM_NUM_OB_C | uint | Number of offboard control messages that must be recieved before a stream is established | 100 |  | scalar | False
@@ -46,6 +47,7 @@ TIMEOUT_BARO | uint | Time that new data must be read before a barometer timeout
 TIMEOUT_SONAR | uint | Time that new data must be read before a sonar timeout is declared | 100000 | us | scalar | False
 TIMEOUT_RC_IN | uint | Time that new data must be read before a RC input timeout is declared | 1000000 | us | scalar | False
 TIMEOUT_EXT_P | uint | Time that new data must be read before a external pose timeout is declared | 500000 | us | scalar | False
+TIMEOUT_TORC | uint | Time that new data must be read before a torque compensation timeout is declared | 500000 | us | scalar | False
 TIMEOUT_OB_HRBT | uint | Time that new data must be read before a off-board heartbeat timeout is declared | 5000000 | us | scalar | False
 TIMEOUT_OB_CTRL | uint | Time that new data must be read before a off-board control timeout is declared | 200000 | us | scalar | False
 TIMEOUT_RC_CTRL | uint | Time that new data must be read before a PWM control timeout is declared | 200000 | us | scalar | False

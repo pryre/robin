@@ -124,6 +124,12 @@ typedef struct {
 typedef struct {
 	sensor_status_t status;
 
+	v3d torque;	//External torque input
+} sensor_readings_torque_comp_t;
+
+typedef struct {
+	sensor_status_t status;
+
 	uint16_t p_r;
 	uint16_t p_p;
 	uint16_t p_y;
@@ -179,6 +185,7 @@ typedef struct {
 	sensor_readings_barometer_t baro;
 	sensor_readings_sonar_t sonar;
 	sensor_readings_ext_pose_t ext_pose;
+	sensor_readings_torque_comp_t torque_comp;
 	sensor_readings_rc_input_t rc_input;
 	sensor_readings_rc_safety_toggle_t rc_safety_toggle;
 	sensor_readings_safety_button_t safety_button;

@@ -253,6 +253,12 @@ void sensors_init_external(void) {
 	//==-- External Pose
 	sensor_status_init( &_sensors.ext_pose.status, false );
 
+	//==-- Torque Compensation
+	sensor_status_init( &_sensors.torque_comp.status, false );
+	_sensors.torque_comp.torque.x = 0;
+	_sensors.torque_comp.torque.y = 0;
+	_sensors.torque_comp.torque.z = 0;
+
 	//==-- RC Input
 	sensor_status_init( &_sensors.rc_input.status, true );
 	_sensors.rc_input.p_r = 0;
