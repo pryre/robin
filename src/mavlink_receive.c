@@ -561,7 +561,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						uint8_t coordinate_frame = mavlink_msg_set_position_target_local_ned_get_coordinate_frame(&msg);
 
 						//Check if this should be treated as a torque compensation message
-						uint16_t type_mask_torque_comp = 0x3C0; //See message definition for explaination
+						uint16_t type_mask_torque_comp = 0xE3F; //See message definition for explaination
 
 						if( (coordinate_frame == MAV_FRAME_BODY_NED) &&
 							(type_mask == type_mask_torque_comp) ) {
