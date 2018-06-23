@@ -62,25 +62,22 @@ void controller_init(void) {
 			 get_param_fix16(PARAM_PID_ROLL_RATE_P),
 			 get_param_fix16(PARAM_PID_ROLL_RATE_I),
 			 get_param_fix16(PARAM_PID_ROLL_RATE_D),
-			 get_param_fix16(PARAM_PID_TAU),
 			 _state_estimator.p,
-			 0, 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
+			 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
 
 	pid_init(&_pid_pitch_rate,
 			 get_param_fix16(PARAM_PID_PITCH_RATE_P),
 			 get_param_fix16(PARAM_PID_PITCH_RATE_I),
 			 get_param_fix16(PARAM_PID_PITCH_RATE_D),
-			 get_param_fix16(PARAM_PID_TAU),
 			 _state_estimator.q,
-			 0, 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
+			 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
 
 	pid_init(&_pid_yaw_rate,
 			 get_param_fix16(PARAM_PID_YAW_RATE_P),
 			 get_param_fix16(PARAM_PID_YAW_RATE_I),
 			 get_param_fix16(PARAM_PID_YAW_RATE_D),
-			 get_param_fix16(PARAM_PID_TAU),
 			 _state_estimator.r,
-			 0, 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
+			 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
 
 	_cmd_ob_input.r = 0;
 	_cmd_ob_input.p = 0;
@@ -417,9 +414,9 @@ void controller_run( uint32_t time_now ) {
 	_control_input.y = goal_y;
 
 	//Rate PID Controllers
-	_control_output.r = pid_step(&_pid_roll_rate, time_now, goal_r, _state_estimator.p, 0, false);
-	_control_output.p = pid_step(&_pid_pitch_rate, time_now, goal_p, _state_estimator.q, 0, false);
-	_control_output.y = pid_step(&_pid_yaw_rate, time_now, goal_y, _state_estimator.r, 0, false);
+	_control_output.r = pid_step(&_pid_roll_rate, time_now, goal_r, _state_estimator.p);
+	_control_output.p = pid_step(&_pid_pitch_rate, time_now, goal_p, _state_estimator.q);
+	_control_output.y = pid_step(&_pid_yaw_rate, time_now, goal_y, _state_estimator.r);
 
 	//==-- Throttle Control
 

@@ -99,7 +99,6 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_PID_PITCH_ANGLE_P, fix16_from_float(6.5f));
 	init_param_fix16(PARAM_MAX_PITCH_ANGLE, fix16_from_float(0.786f));
 	init_param_fix16(PARAM_PID_YAW_ANGLE_P, fix16_from_float(2.8f));
-	init_param_fix16(PARAM_PID_TAU, fix16_from_float(0.05f));
 	init_param_uint(PARAM_BATTERY_TYPE, 0);
 	init_param_uint(PARAM_BATTERY_FUNCTION, 0);
 	init_param_uint(PARAM_BATTERY_CELL_NUM, 0);
@@ -269,7 +268,6 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"MC_PITCH_P",
 	"MAX_PITCH_A",
 	"MC_YAW_P",
-	"PID_TAU",
 	"BAT_TYPE",
 	"BAT_FUNC",
 	"BAT_N_CELLS",
@@ -417,11 +415,6 @@ void param_change_callback(param_id_t id) {
 			break;
 		case PARAM_MAX_YAW_RATE:
 			pid_set_min_max(&_pid_yaw_rate, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
-			break;
-		case PARAM_PID_TAU:
-			pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));
-			pid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));
-			pid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));
 			break;
 		case PARAM_RC1_MIN:
 			sensors_update_rc_cal();
