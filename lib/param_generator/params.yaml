@@ -1050,16 +1050,6 @@ PARAM_PID_YAW_ANGLE_P:
     option: "scalar"
     default: 2.8
 ---
-PARAM_PID_TAU:
-  type: "float"
-  name: "PID_TAU"
-  description: "Time parameter for PID controllers"
-  reboot: false
-  value:
-    option: "scalar"
-    default: 0.05
-    function: "pid_set_gain_tau(&_pid_roll_rate, get_param_fix16(PARAM_PID_TAU));\n\t\t\tpid_set_gain_tau(&_pid_pitch_rate, get_param_fix16(PARAM_PID_TAU));\n\t\t\tpid_set_gain_tau(&_pid_yaw_rate, get_param_fix16(PARAM_PID_TAU));"
----
 PARAM_BATTERY_TYPE:
   type: "uint"
   name: "BAT_TYPE"

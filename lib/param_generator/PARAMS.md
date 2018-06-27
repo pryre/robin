@@ -95,7 +95,6 @@ MAX_ROLL_A | float | Maximum allowed command roll angle (TODO) | 0.786 | rad | s
 MC_PITCH_P | float | Feed-forward gain for pitch angle | 6.5 |  | scalar | False
 MAX_PITCH_A | float | Maximum allowed command pitch angle (TODO) | 0.786 | rad | scalar | False
 MC_YAW_P | float | Feed-forward gain for yaw angle | 2.8 |  | scalar | False
-PID_TAU | float | Time parameter for PID controllers | 0.05 |  | scalar | False
 BAT_TYPE | uint | See the MAV_BATTERY_TYPE enum | 0 |  | scalar | False
 BAT_FUNC | uint | See the MAV_BATTERY_FUNCTION enum | 0 |  | scalar | False
 BAT_N_CELLS | uint | Number of cells in the battery | 0 |  | scalar | False
