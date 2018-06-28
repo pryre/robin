@@ -697,7 +697,7 @@ PARAM_GYRO_ALPHA:
   reboot: false
   value:
     option: "scalar"
-    default: 0.6
+    default: 0.04
 ---
 PARAM_ACC_ALPHA:
   type: "float"
@@ -706,7 +706,7 @@ PARAM_ACC_ALPHA:
   reboot: false
   value:
     option: "scalar"
-    default: 0.6
+    default: 0.04
 ---
 PARAM_FUSE_EXT_HDG_W:
   type: "float"
@@ -860,6 +860,15 @@ PARAM_ACC_Z_TEMP_COMP:
   value:
     option: "scalar"
     default: 0.0
+---
+PARAM_RATE_CONTROL:
+  type: "float"
+  name: "RATE_CONTROL"
+  description: "Update rate of the controller"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 250.0
 ---
 PARAM_PID_ROLL_RATE_P:
   type: "float"

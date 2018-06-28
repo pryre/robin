@@ -372,7 +372,6 @@ bool sensors_read(void) {
 		_sensors.imu.gyro.y = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.y - get_param_int(PARAM_GYRO_Y_BIAS)), _sensors.imu.gyro_scale);
 		_sensors.imu.gyro.z = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.z - get_param_int(PARAM_GYRO_Z_BIAS)), _sensors.imu.gyro_scale);
 
-
 		//Other IMU updates
 		_sensors.imu.status.time_read = sensors_clock_imu_int_get();
 		_sensors.imu.status.new_data = true;

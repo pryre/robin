@@ -39,6 +39,9 @@ static v3d _accel_LPF;
 static v3d _gyro_LPF;
 
 void estimator_init( void ) {
+	_state_estimator.ax = 0;
+	_state_estimator.ay = 0;
+	_state_estimator.az = 0;
 	_state_estimator.p = 0;
 	_state_estimator.q = 0;
 	_state_estimator.r = 0;
@@ -104,14 +107,14 @@ void reset_adaptive_gyro_bias() {
 static void lpf_update(void) {
 	//value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
 	fix16_t alpha_acc = get_param_fix16(PARAM_ACC_ALPHA);
-	_accel_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _sensors.imu.accel.x), fix16_smul(alpha_acc, _accel_LPF.x));
-	_accel_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _sensors.imu.accel.y), fix16_smul(alpha_acc, _accel_LPF.y));;
-	_accel_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _sensors.imu.accel.z), fix16_smul(alpha_acc, _accel_LPF.z));;
+	_accel_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.x), fix16_smul(alpha_acc, _sensors.imu.accel.x));
+	_accel_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.y), fix16_smul(alpha_acc, _sensors.imu.accel.y));;
+	_accel_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.z), fix16_smul(alpha_acc, _sensors.imu.accel.z));;
 
 	fix16_t alpha_gyro = get_param_fix16(PARAM_GYRO_ALPHA);
-	_gyro_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _sensors.imu.gyro.x), fix16_smul(alpha_gyro, _gyro_LPF.x));
-	_gyro_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _sensors.imu.gyro.y), fix16_smul(alpha_gyro, _gyro_LPF.y));
-	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _sensors.imu.gyro.z), fix16_smul(alpha_gyro, _gyro_LPF.z));
+	_gyro_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.x), fix16_smul(alpha_gyro, _sensors.imu.gyro.x));
+	_gyro_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.y), fix16_smul(alpha_gyro, _sensors.imu.gyro.y));
+	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.z), fix16_smul(alpha_gyro, _sensors.imu.gyro.z));
 }
 
 static void fuse_heading_estimate( qf16 *q_est, const qf16 *q_mes, const fix16_t alpha) {
@@ -377,6 +380,10 @@ void estimator_update( uint32_t time_now ) {
 	_state_estimator.p = fix16_sub( _gyro_LPF.x, _adaptive_gyro_bias.x );
 	_state_estimator.q = fix16_sub( _gyro_LPF.y, _adaptive_gyro_bias.y );
 	_state_estimator.r = fix16_sub( _gyro_LPF.z, _adaptive_gyro_bias.z );
+
+	_state_estimator.ax = _accel_LPF.x;
+	_state_estimator.ay = _accel_LPF.y;
+	_state_estimator.az = _accel_LPF.z;
 
 	// Save gyro biases for streaming to computer
 	_adaptive_gyro_bias.x = b.x;

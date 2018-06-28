@@ -112,7 +112,7 @@ bool write_params(void) {
 
 	if( state_ok ) {
 		if( writeEEPROM() ) {
-			mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[PARAM] EEPROM written");
+			mavlink_send_broadcast_statustext(MAV_SEVERITY_INFO, "[PARAM] EEPROM written");
 			success = true;
 		} else {
 			mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[PARAM] EEPROM write failed");

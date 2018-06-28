@@ -25,10 +25,11 @@ extern "C" {
 system_status_t _system_status;
 sensor_readings_t _sensors;
 state_t _state_estimator;
+
+control_timing_t _control_timing;
 command_input_t _cmd_ob_input;
 command_input_t _control_input;
 control_output_t _control_output;
-system_status_t _system_status;
 
 pid_controller_t _pid_roll_rate;
 pid_controller_t _pid_pitch_rate;
@@ -57,6 +58,8 @@ void controller_reset(void) {
 
 void controller_init(void) {
 	_system_status.control_mode = 0;
+	_control_timing.time_last = 0;
+	_control_timing.period_update = 1000*fix16_to_int( fix16_div( _fc_1000, get_param_fix16(PARAM_RATE_CONTROL) ) );
 
 	pid_init(&_pid_roll_rate,
 			 get_param_fix16(PARAM_PID_ROLL_RATE_P),

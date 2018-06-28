@@ -12,6 +12,9 @@ extern "C" {
 #include "fixquat.h"
 
 typedef struct {
+  fix16_t ax;		//X Acceleration
+  fix16_t ay;		//Y Acceleration
+  fix16_t az;		//Z Acceleration
   fix16_t p;		//Roll Rate
   fix16_t q;		//Pitch Rate
   fix16_t r;		//Yaw Rate

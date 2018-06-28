@@ -57,8 +57,8 @@ EST_QUAD_INT | uint | Toggle to enable quadratic integration (adds a small amoun
 EST_ADPT_BIAS | uint | Toggle to enable adaptive bias estimation (accounts for some additional sensor fluctuations) in the attitude estimator (0:false,1:true) | 0 |  | scalar | False
 FILTER_KP | float | Adjusts the amount of proportional filtering done on the attitude estimation | 1.0 |  | scalar | False
 FILTER_KI | float | Adjusts the amount of integral filtering done on the attitude estimation | 0.05 |  | scalar | False
-EST_LPF_GYRO_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.6 |  | scalar | False
-EST_LPF_ACC_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.6 |  | scalar | False
+EST_LPF_GYRO_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.04 |  | scalar | False
+EST_LPF_ACC_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.04 |  | scalar | False
 FSE_EXT_HDG_W | float | Weighting for external heading fusion (0 means don't trust, 1 means trust fully) | 0.2 |  | scalar | False
 FSE_MAG_HDG_W | float | Weighting for compass heading fusion (0 means don't trust, 1 means trust fully) | 0.5 |  | scalar | False
 GYRO_X_BIAS | int | Bias correction for gyroscope measurements (X axis) | 0 |  | scalar | False
@@ -76,6 +76,7 @@ ACC_Z_S_NEG | float | Scaling correction for accelerometer measurements (Z negat
 ACC_X_TEMP_COMP | float | Temperature correction for accelerometer measurements (X axis) | 0.0 |  | scalar | False
 ACC_Y_TEMP_COMP | float | Temperature correction for accelerometer measurements (Y axis) | 0.0 |  | scalar | False
 ACC_Z_TEMP_COMP | float | Temperature correction for accelerometer measurements (Z axis) | 0.0 |  | scalar | False
+RATE_CONTROL | float | Update rate of the controller | 250.0 |  | scalar | True
 MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 0.05 |  | scalar | False
 MC_ROLLRATE_I | float | Integral gain for roll rate PID | 0.0 |  | scalar | False
 MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.005 |  | scalar | False

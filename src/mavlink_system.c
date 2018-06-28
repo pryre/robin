@@ -360,12 +360,21 @@ void mavlink_stream_highres_imu(uint8_t port) {
 	uint16_t fields_updated = 0;
 
 	if( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
+		/*
 		xacc = fix16_to_float(_sensors.imu.accel.x);
 		yacc = fix16_to_float(_sensors.imu.accel.y);
 		zacc = fix16_to_float(_sensors.imu.accel.z);
 		xgyro = fix16_to_float(_sensors.imu.gyro.x);
 		ygyro = fix16_to_float(_sensors.imu.gyro.y);
 		zgyro = fix16_to_float(_sensors.imu.gyro.z);
+		*/
+		//Output our estimated values here
+		xacc = fix16_to_float(_state_estimator.ax);
+		yacc = fix16_to_float(_state_estimator.ay);
+		zacc = fix16_to_float(_state_estimator.az);
+		xgyro = fix16_to_float(_state_estimator.p);
+		ygyro = fix16_to_float(_state_estimator.q);
+		zgyro = fix16_to_float(_state_estimator.r);
 
 		fields_updated |= (1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5);
 	}
