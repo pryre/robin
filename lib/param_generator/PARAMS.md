@@ -50,13 +50,18 @@ TIMEOUT_OB_HRBT | uint | Time that new data must be read before a off-board hear
 TIMEOUT_OB_CTRL | uint | Time that new data must be read before a off-board control timeout is declared | 200000 | us | scalar | False
 TIMEOUT_RC_CTRL | uint | Time that new data must be read before a PWM control timeout is declared | 200000 | us | scalar | False
 CAL_IMU_PASSES | uint | Number of samples to collect for IMU calibrations | 1000 |  | scalar | False
-FILTER_INIT_T | uint | Time from boot where the estimator will use quick convergence | 3000 | ms | scalar | True
+EST_FLTR_INIT | uint | Time from boot where the estimator will use quick convergence | 3000 | ms | scalar | True
 EST_ACC_COR | uint | Toggle to enable accelerometer correction (required for angular control) in the attitude estimator (0:false,1:true) | 1 |  | scalar | False
 EST_MAT_EXP | uint | Toggle to enable matrix expotential approximation (adds decent estimation accuracy) in the attitude estimator (0:false,1:true) | 1 |  | scalar | False
 EST_QUAD_INT | uint | Toggle to enable quadratic integration (adds a small amount of additional accuracy) in the attitude estimator (0:false,1:true) | 1 |  | scalar | False
 EST_ADPT_BIAS | uint | Toggle to enable adaptive bias estimation (accounts for some additional sensor fluctuations) in the attitude estimator (0:false,1:true) | 0 |  | scalar | False
-FILTER_KP | float | Adjusts the amount of proportional filtering done on the attitude estimation | 1.0 |  | scalar | False
-FILTER_KI | float | Adjusts the amount of integral filtering done on the attitude estimation | 0.05 |  | scalar | False
+EST_LVL_HORZ | uint | Toggle to enable level horizon calibration for the attitude estimation (0:false,1:true) | 1 |  | scalar | False
+EST_LVL_HORZ_W | float | Level horizon offset quaternion calibration data (W) | 1.0 |  | scalar | False
+EST_LVL_HORZ_X | float | Level horizon offset quaternion calibration data (X) | 0.0 |  | scalar | False
+EST_LVL_HORZ_Y | float | Level horizon offset quaternion calibration data (Y) | 0.0 |  | scalar | False
+EST_LVL_HORZ_Z | float | Level horizon offset quaternion calibration data (Z) | 0.0 |  | scalar | False
+EST_FLTR_KP | float | Adjusts the amount of proportional filtering done on the attitude estimation | 1.0 |  | scalar | False
+EST_FLTR_KI | float | Adjusts the amount of integral filtering done on the attitude estimation | 0.05 |  | scalar | False
 EST_LPF_GYRO_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.04 |  | scalar | False
 EST_LPF_ACC_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.04 |  | scalar | False
 FSE_EXT_HDG_W | float | Weighting for external heading fusion (0 means don't trust, 1 means trust fully) | 0.2 |  | scalar | False
@@ -77,16 +82,16 @@ ACC_X_TEMP_COMP | float | Temperature correction for accelerometer measurements 
 ACC_Y_TEMP_COMP | float | Temperature correction for accelerometer measurements (Y axis) | 0.0 |  | scalar | False
 ACC_Z_TEMP_COMP | float | Temperature correction for accelerometer measurements (Z axis) | 0.0 |  | scalar | False
 RATE_CONTROL | float | Update rate of the controller | 250.0 |  | scalar | True
-MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 0.05 |  | scalar | False
+MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 0.01 |  | scalar | False
 MC_ROLLRATE_I | float | Integral gain for roll rate PID | 0.0 |  | scalar | False
-MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.005 |  | scalar | False
+MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.001 |  | scalar | False
 MC_ROLLRATE_MAX | float | Maximum allowed command for roll rate | 3.14159 | rad/s | scalar | False
-MC_PITCHRATE_P | float | Proportional gain for pitch rate PID | 0.05 |  | scalar | False
+MC_PITCHRATE_P | float | Proportional gain for pitch rate PID | 0.01 |  | scalar | False
 MC_PITCHRATE_I | float | Integral gain for pitch rate PID | 0.0 |  | scalar | False
-MC_PITCHRATE_D | float | Derivative gain for pitch rate PID | 0.005 |  | scalar | False
+MC_PITCHRATE_D | float | Derivative gain for pitch rate PID | 0.001 |  | scalar | False
 MC_PITCHRATE_MAX | float | Maximum allowed command for pitch rate | 3.14159 | rad/s | scalar | False
-MC_YAWRATE_P | float | Proportional gain for yaw rate PID | 0.2 |  | scalar | False
-MC_YAWRATE_I | float | Integral gain for yaw rate PID | 0.1 |  | scalar | False
+MC_YAWRATE_P | float | Proportional gain for yaw rate PID | 0.05 |  | scalar | False
+MC_YAWRATE_I | float | Integral gain for yaw rate PID | 0.01 |  | scalar | False
 MC_YAWRATE_D | float | Derivative gain for yaw rate PID | 0.0 |  | scalar | False
 MC_YAWRATE_MAX | float | Maximum allowed command for yaw rate | 1.57079 | rad/s | scalar | False
 MC_ROLL_P | float | Feed-forward gain for roll angle | 6.5 |  | scalar | False

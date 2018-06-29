@@ -1003,7 +1003,14 @@ static bool sensors_do_cal_accel(void) {
 static bool sensors_do_cal_level_horizon(void) {
 	bool failed = false;
 
-	//TODO CAL LEVEL HORIZON
+	qf16 q_lh;
+	estimator_calc_lvl_horz(&q_lh);
+
+	set_param_fix16( PARAM_EST_LEVEL_HORIZON_W, q_lh.a );
+	set_param_fix16( PARAM_EST_LEVEL_HORIZON_X, q_lh.b );
+	set_param_fix16( PARAM_EST_LEVEL_HORIZON_Y, q_lh.c );
+	set_param_fix16( PARAM_EST_LEVEL_HORIZON_Z, q_lh.d );
+
 	sensors_calibration_done();
 
 	return !failed;

@@ -38,6 +38,7 @@ typedef struct {
 
 typedef struct {
 	uint32_t period_update;
+	uint32_t period_stale;
 	uint32_t time_last;
 } control_timing_t;
 

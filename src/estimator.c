@@ -149,8 +149,8 @@ static void fuse_heading_estimate( qf16 *q_est, const qf16 *q_mes, const fix16_t
 }
 
 void estimator_update( uint32_t time_now ) {
-	fix16_t kp = get_param_fix16( PARAM_FILTER_KP );
-	fix16_t ki = get_param_fix16( PARAM_FILTER_KI );
+	fix16_t kp = get_param_fix16( PARAM_EST_FILTER_KP );
+	fix16_t ki = get_param_fix16( PARAM_EST_FILTER_KI );
 
 	//XXX: This will exit on the first loop, not a nice way of doing it though
 	if ( time_last == 0 ) {
@@ -366,7 +366,25 @@ void estimator_update( uint32_t time_now ) {
 
 
 	//q_hat is given as z-down (NED)
-	_state_estimator.attitude = q_hat;
+
+	//Perform level horizon measurements
+	if( get_param_uint( PARAM_EST_USE_LEVEL_HORIZON ) ) {
+		qf16 q_lh;
+		qf16 q_lh_inv;
+		qf16 q_hat_lvl;
+		q_lh.a = get_param_fix16( PARAM_EST_LEVEL_HORIZON_W );
+		q_lh.b = get_param_fix16( PARAM_EST_LEVEL_HORIZON_X );
+		q_lh.c = get_param_fix16( PARAM_EST_LEVEL_HORIZON_Y );
+		q_lh.d = get_param_fix16( PARAM_EST_LEVEL_HORIZON_Z );
+		qf16_normalize_to_unit(&q_lh, &q_lh);
+		qf16_inverse(&q_lh_inv, &q_lh);
+
+		qf16_mul(&q_hat_lvl, &q_hat, &q_lh_inv);
+		qf16_normalize_to_unit(&_state_estimator.attitude, &q_hat_lvl);
+	} else {
+		_state_estimator.attitude = q_hat;
+	}
+
 	// Extract Euler Angles for controller
 	//euler_from_quat(&q_hat, &_state_estimator.phi, &_state_estimator.theta, &_state_estimator.psi);
 
@@ -389,6 +407,38 @@ void estimator_update( uint32_t time_now ) {
 	_adaptive_gyro_bias.x = b.x;
 	_adaptive_gyro_bias.y = b.y;
 	_adaptive_gyro_bias.z = b.z;
+}
+
+
+void estimator_calc_lvl_horz(qf16* qlh) {
+	mf16 ratt;
+	mf16 rlh;
+	v3d bx;
+	v3d by;
+	v3d bz;
+	v3d lhx;
+	v3d lhy;
+	v3d lhz;
+	//Get DCM of current attitude estimate and extract axes
+	qf16_to_matrix(&ratt, &q_hat);
+	dcm_to_basis(&bx, &by, &bz, &ratt);
+
+	//Build the new rotation matrix with pure roll/pitch
+	lhy.x = 0;
+	lhy.y = _fc_1;
+	lhy.z = 0;
+	lhz = bz;
+
+	v3d_cross(&lhx, &lhy, &lhz);
+	v3d_normalize(&lhx, &lhx);
+
+	v3d_cross(&lhy, &lhz, &lhx);
+	v3d_normalize(&lhy, &lhy);
+
+	dcm_from_basis(&rlh, &lhx, &lhy, &lhz);
+
+	matrix_to_qf16(qlh, &rlh );
+	qf16_normalize_to_unit(qlh, qlh);
 }
 
 #ifdef __cplusplus

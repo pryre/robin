@@ -628,7 +628,7 @@ PARAM_CAL_IMU_PASSES:
 ---
 PARAM_INIT_TIME:
   type: "uint"
-  name: "FILTER_INIT_T"
+  name: "EST_FLTR_INIT"
   description: "Time from boot where the estimator will use quick convergence"
   reboot: true
   value:
@@ -672,18 +672,63 @@ PARAM_EST_USE_ADPT_BIAS:
     option: "scalar"
     default: 0
 ---
-PARAM_FILTER_KP:
+PARAM_EST_USE_LEVEL_HORIZON:
+  type: "uint"
+  name: "EST_LVL_HORZ"
+  description: "Toggle to enable level horizon calibration for the attitude estimation (0:false,1:true)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1
+---
+PARAM_EST_LEVEL_HORIZON_W:
   type: "float"
-  name: "FILTER_KP"
+  name: "EST_LVL_HORZ_W"
+  description: "Level horizon offset quaternion calibration data (W)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+---
+PARAM_EST_LEVEL_HORIZON_X:
+  type: "float"
+  name: "EST_LVL_HORZ_X"
+  description: "Level horizon offset quaternion calibration data (X)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+---
+PARAM_EST_LEVEL_HORIZON_Y:
+  type: "float"
+  name: "EST_LVL_HORZ_Y"
+  description: "Level horizon offset quaternion calibration data (Y)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+---
+PARAM_EST_LEVEL_HORIZON_Z:
+  type: "float"
+  name: "EST_LVL_HORZ_Z"
+  description: "Level horizon offset quaternion calibration data (Z)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+---
+PARAM_EST_FILTER_KP:
+  type: "float"
+  name: "EST_FLTR_KP"
   description: "Adjusts the amount of proportional filtering done on the attitude estimation"
   reboot: false
   value:
     option: "scalar"
     default: 1.0
 ---
-PARAM_FILTER_KI:
+PARAM_EST_FILTER_KI:
   type: "float"
-  name: "FILTER_KI"
+  name: "EST_FLTR_KI"
   description: "Adjusts the amount of integral filtering done on the attitude estimation"
   reboot: false
   value:
@@ -877,7 +922,7 @@ PARAM_PID_ROLL_RATE_P:
   reboot: false
   value:
     option: "scalar"
-    default: 0.05
+    default: 0.01
     function: "pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));"
 ---
 PARAM_PID_ROLL_RATE_I:
@@ -897,7 +942,7 @@ PARAM_PID_ROLL_RATE_D:
   reboot: false
   value:
     option: "scalar"
-    default: 0.005
+    default: 0.001
     function: "pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));"
 ---
 PARAM_MAX_ROLL_RATE:
@@ -918,7 +963,7 @@ PARAM_PID_PITCH_RATE_P:
   reboot: false
   value:
     option: "scalar"
-    default: 0.05
+    default: 0.01
     function: "pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));"
 ---
 PARAM_PID_PITCH_RATE_I:
@@ -938,7 +983,7 @@ PARAM_PID_PITCH_RATE_D:
   reboot: false
   value:
     option: "scalar"
-    default: 0.005
+    default: 0.001
     function: "pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));"
 ---
 PARAM_MAX_PITCH_RATE:
@@ -959,7 +1004,7 @@ PARAM_PID_YAW_RATE_P:
   reboot: false
   value:
     option: "scalar"
-    default: 0.2
+    default: 0.05
     function: "pid_set_gain_p(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_P));"
 ---
 PARAM_PID_YAW_RATE_I:
@@ -969,7 +1014,7 @@ PARAM_PID_YAW_RATE_I:
   reboot: false
   value:
     option: "scalar"
-    default: 0.1
+    default: 0.01
     function: "pid_set_gain_i(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_I));"
 ---
 PARAM_PID_YAW_RATE_D:
