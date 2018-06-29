@@ -378,7 +378,6 @@ bool sensors_read(void) {
 		_sensors.imu.gyro.y = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.y - get_param_int(PARAM_GYRO_Y_BIAS)), _sensors.imu.gyro_scale);
 		_sensors.imu.gyro.z = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.z - get_param_int(PARAM_GYRO_Z_BIAS)), _sensors.imu.gyro_scale);
 
-
 		//Other IMU updates
 		_sensors.imu.status.time_read = sensors_clock_imu_int_get();
 		_sensors.imu.status.new_data = true;
@@ -1010,7 +1009,14 @@ static bool sensors_do_cal_accel(void) {
 static bool sensors_do_cal_level_horizon(void) {
 	bool failed = false;
 
-	//TODO CAL LEVEL HORIZON
+	qf16 q_lh;
+	estimator_calc_lvl_horz(&q_lh);
+
+	set_param_fix16( PARAM_EST_LEVEL_HORIZON_W, q_lh.a );
+	set_param_fix16( PARAM_EST_LEVEL_HORIZON_X, q_lh.b );
+	set_param_fix16( PARAM_EST_LEVEL_HORIZON_Y, q_lh.c );
+	set_param_fix16( PARAM_EST_LEVEL_HORIZON_Z, q_lh.d );
+
 	sensors_calibration_done();
 
 	return !failed;

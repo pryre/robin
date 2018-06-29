@@ -9,7 +9,6 @@ extern "C" {
 //By default, pass prev_x as 0, unless you know the first measurement
 void pid_reset(pid_controller_t *pid, fix16_t prev_x) {
 	pid->integrator = 0;
-	pid->prev_time = 0;
 	pid->prev_e = 0;
 	pid->prev_x = prev_x;
 }
@@ -66,20 +65,7 @@ void pid_init(pid_controller_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t
 //	- Whether to use the measured derivative state (previous arg) or (PID) estimated derivative state
 // Returns:
 //	- Output Command
-fix16_t pid_step(pid_controller_t *pid, uint32_t time_now, fix16_t sp, fix16_t x) {
-	fix16_t dt = fix16_from_float((float)(time_now - pid->prev_time) * 1e-6);	//Delta time in milliseconds
-
-	if(dt > _fc_0_01) {
-		// This means that this is a ''stale'' controller and needs to be reset.
-		// This would happen if we have been operating in a different mode for a while
-		// and will result in some enormous integrator.
-		// Or, it means we are disarmed and shouldn't integrate
-		// Setting dt for this loop will mean that the integrator and dirty derivative
-		// doesn't do anything this time but will keep it from exploding.
-		pid_reset(pid, x);
-		dt = 0;
-	}
-
+fix16_t pid_step(pid_controller_t *pid, fix16_t dt, fix16_t sp, fix16_t x) {
 	pid->x = x;
 	pid->setpoint = sp;
 
@@ -111,7 +97,8 @@ fix16_t pid_step(pid_controller_t *pid, uint32_t time_now, fix16_t sp, fix16_t x
 	}
 
 	//Sum three terms: u = p_term + i_term - d_term
-	fix16_t u = fix16_sub( p_term, d_term );
+	//Sum three terms: u = p_term + i_term + de_term
+	fix16_t u = fix16_add( p_term, d_term );
 	fix16_t ui = fix16_add( u, i_term );
 
 	//Output Saturation
@@ -119,14 +106,13 @@ fix16_t pid_step(pid_controller_t *pid, uint32_t time_now, fix16_t sp, fix16_t x
 
 	//Integrator anti-windup
 	//If the pid controller has saturated and if the integrator is the cause
-	if( ( ui != u_sat ) && ( fix16_abs( i_term ) > fix16_abs( fix16_sub(u_sat, u) ) ) )
+	if( ( ui != u_sat ) && (pid->ki > 0) && ( fix16_abs( i_term ) > fix16_abs( fix16_sub(u_sat, u) ) ) )
 		pid->integrator = fix16_div(fix16_sub( u_sat, u ), pid->ki);	//Trim the integrator to what it should currently be to only just hit the maximum
 
 	//Set output
 	pid->output = u_sat;
 
 	//Save running values
-	pid->prev_time = time_now;
 	pid->prev_x = pid->x;
 	pid->prev_e = error;
 

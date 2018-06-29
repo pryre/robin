@@ -25,10 +25,11 @@ extern "C" {
 system_status_t _system_status;
 sensor_readings_t _sensors;
 state_t _state_estimator;
+
+control_timing_t _control_timing;
 command_input_t _cmd_ob_input;
 command_input_t _control_input;
 control_output_t _control_output;
-system_status_t _system_status;
 
 pid_controller_t _pid_roll_rate;
 pid_controller_t _pid_pitch_rate;
@@ -57,6 +58,9 @@ void controller_reset(void) {
 
 void controller_init(void) {
 	_system_status.control_mode = 0;
+	_control_timing.time_last = 0;
+	_control_timing.period_update = 1000*fix16_to_int( fix16_div( _fc_1000, get_param_fix16(PARAM_RATE_CONTROL) ) );
+	_control_timing.period_stale = 4*_control_timing.period_update;	//Allow for some variance in update rate
 
 	pid_init(&_pid_roll_rate,
 			 get_param_fix16(PARAM_PID_ROLL_RATE_P),
@@ -332,13 +336,38 @@ void controller_run( uint32_t time_now ) {
 		}
 	}
 
+	fix16_t dt = fix16_from_float((float)(time_now - _control_timing.time_last) * 1e-6);	//Delta time in seconds
+
+	if( (dt == 0) || (time_now - _control_timing.time_last > _control_timing.period_stale) ) {
+		dt = 0;
+		controller_reset();
+	}
+
 	//Get the control input mask to use
 	_control_input.input_mask = input.input_mask;
 
+	//==-- Throttle Control
+	//Trottle
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) {
+		//Use the commanded throttle
+		goal_throttle = input.T;
+	}
+
+	_control_output.T = goal_throttle;
+
+	//Save intermittent goals
+	_control_input.T = goal_throttle;
+
+	//Don't allow for derivative or integral calculations if
+	// there is a very low throttle
+	if(goal_throttle < _fc_0_05) {
+		dt = 0;
+	}
+
+	//==-- Attitude Control
 	//Save intermittent goals
 	_control_input.q = input.q;
 
-	//==-- Attitude Control
 	//If we should listen to attitude input
 	if( !(_control_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
 		//======== Body Frame Lock ========//
@@ -414,23 +443,9 @@ void controller_run( uint32_t time_now ) {
 	_control_input.y = goal_y;
 
 	//Rate PID Controllers
-	_control_output.r = pid_step(&_pid_roll_rate, time_now, goal_r, _state_estimator.p);
-	_control_output.p = pid_step(&_pid_pitch_rate, time_now, goal_p, _state_estimator.q);
-	_control_output.y = pid_step(&_pid_yaw_rate, time_now, goal_y, _state_estimator.r);
-
-	//==-- Throttle Control
-
-	//Trottle
-	if( !(_control_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) {
-		//Use the commanded throttle
-		goal_throttle = input.T;
-	}
-
-	_control_output.T = goal_throttle;
-
-	//Save intermittent goals
-	_control_input.T = goal_throttle;
-
+	_control_output.r = pid_step(&_pid_roll_rate, dt, goal_r, _state_estimator.p);
+	_control_output.p = pid_step(&_pid_pitch_rate, dt, goal_p, _state_estimator.q);
+	_control_output.y = pid_step(&_pid_yaw_rate, dt, goal_y, _state_estimator.r);
 
 	//==-- Torque Compensation
 	if( _system_status.sensors.torque_comp.health == SYSTEM_HEALTH_OK ) {

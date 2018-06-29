@@ -63,10 +63,15 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_EST_USE_MAT_EXP, 1);
 	init_param_uint(PARAM_EST_USE_QUAD_INT, 1);
 	init_param_uint(PARAM_EST_USE_ADPT_BIAS, 0);
-	init_param_fix16(PARAM_FILTER_KP, fix16_from_float(1.0f));
-	init_param_fix16(PARAM_FILTER_KI, fix16_from_float(0.05f));
-	init_param_fix16(PARAM_GYRO_ALPHA, fix16_from_float(0.6f));
-	init_param_fix16(PARAM_ACC_ALPHA, fix16_from_float(0.6f));
+	init_param_uint(PARAM_EST_USE_LEVEL_HORIZON, 1);
+	init_param_fix16(PARAM_EST_LEVEL_HORIZON_W, fix16_from_float(1.0f));
+	init_param_fix16(PARAM_EST_LEVEL_HORIZON_X, fix16_from_float(0.0f));
+	init_param_fix16(PARAM_EST_LEVEL_HORIZON_Y, fix16_from_float(0.0f));
+	init_param_fix16(PARAM_EST_LEVEL_HORIZON_Z, fix16_from_float(0.0f));
+	init_param_fix16(PARAM_EST_FILTER_KP, fix16_from_float(1.0f));
+	init_param_fix16(PARAM_EST_FILTER_KI, fix16_from_float(0.05f));
+	init_param_fix16(PARAM_GYRO_ALPHA, fix16_from_float(0.04f));
+	init_param_fix16(PARAM_ACC_ALPHA, fix16_from_float(0.04f));
 	init_param_fix16(PARAM_FUSE_EXT_HDG_W, fix16_from_float(0.2f));
 	init_param_fix16(PARAM_FUSE_MAG_HDG_W, fix16_from_float(0.5f));
 	init_param_int(PARAM_GYRO_X_BIAS, 0);
@@ -84,16 +89,17 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_ACC_X_TEMP_COMP, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_ACC_Y_TEMP_COMP, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_ACC_Z_TEMP_COMP, fix16_from_float(0.0f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_P, fix16_from_float(0.05f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_I, fix16_from_float(0.0f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_D, fix16_from_float(0.005f));
+	init_param_fix16(PARAM_RATE_CONTROL, fix16_from_float(250.0f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_P, fix16_from_float(0.02f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_I, fix16_from_float(0.01f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_D, fix16_from_float(0.001f));
 	init_param_fix16(PARAM_MAX_ROLL_RATE, fix16_from_float(3.14159f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_P, fix16_from_float(0.05f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_I, fix16_from_float(0.0f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_D, fix16_from_float(0.005f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_P, fix16_from_float(0.02f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_I, fix16_from_float(0.01f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_D, fix16_from_float(0.001f));
 	init_param_fix16(PARAM_MAX_PITCH_RATE, fix16_from_float(3.14159f));
-	init_param_fix16(PARAM_PID_YAW_RATE_P, fix16_from_float(0.2f));
-	init_param_fix16(PARAM_PID_YAW_RATE_I, fix16_from_float(0.1f));
+	init_param_fix16(PARAM_PID_YAW_RATE_P, fix16_from_float(0.05f));
+	init_param_fix16(PARAM_PID_YAW_RATE_I, fix16_from_float(0.01f));
 	init_param_fix16(PARAM_PID_YAW_RATE_D, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_MAX_YAW_RATE, fix16_from_float(1.57079f));
 	init_param_fix16(PARAM_PID_ROLL_ANGLE_P, fix16_from_float(6.5f));
@@ -229,13 +235,18 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"TIMEOUT_OB_CTRL",
 	"TIMEOUT_RC_CTRL",
 	"CAL_IMU_PASSES",
-	"FILTER_INIT_T",
+	"EST_FLTR_INIT",
 	"EST_ACC_COR",
 	"EST_MAT_EXP",
 	"EST_QUAD_INT",
 	"EST_ADPT_BIAS",
-	"FILTER_KP",
-	"FILTER_KI",
+	"EST_LVL_HORZ",
+	"EST_LVL_HORZ_W",
+	"EST_LVL_HORZ_X",
+	"EST_LVL_HORZ_Y",
+	"EST_LVL_HORZ_Z",
+	"EST_FLTR_KP",
+	"EST_FLTR_KI",
 	"EST_LPF_GYRO_A",
 	"EST_LPF_ACC_A",
 	"FSE_EXT_HDG_W",
@@ -255,6 +266,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"ACC_X_TEMP_COMP",
 	"ACC_Y_TEMP_COMP",
 	"ACC_Z_TEMP_COMP",
+	"RATE_CONTROL",
 	"MC_ROLLRATE_P",
 	"MC_ROLLRATE_I",
 	"MC_ROLLRATE_D",

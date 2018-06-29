@@ -104,24 +104,27 @@ void pwm_init() {
 	pwmInit(useCPPM, false, false, motor_refresh_rate, pwm_disarm);
 
 	if( get_param_uint( PARAM_DO_ESC_CAL ) ) {
+		mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[MIXER] Performing ESC calibration");
+
 		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
 			if (mixer_to_use->output_type[i] == MT_M)
 				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MAX ) );
 
-		LED0_ON;
 		LED1_OFF;
-		delay(5000);
+		for (uint8_t i = 0; i < 20; i++) {
+			LED0_TOGGLE;
+			delay(100);
+		}
 
 		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
 			if (mixer_to_use->output_type[i] == MT_M)
 				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MIN ) );
 
-		LED0_ON;
-		LED1_ON;
-		delay(1000);
-
 		LED0_OFF;
 		LED1_OFF;
+
+		status_buzzer_success();
+		mavlink_send_broadcast_statustext(MAV_SEVERITY_INFO, "[MIXER] ESC calibration complete!");
 
 		set_param_uint( PARAM_DO_ESC_CAL, 0 );
 
