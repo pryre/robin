@@ -36,7 +36,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_STREAM_RATE_SYS_STATUS_1, fix16_from_float(0.2f));
 	init_param_fix16(PARAM_STREAM_RATE_HIGHRES_IMU_1, fix16_from_float(20.0f));
 	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_1, fix16_from_float(0.0f));
-	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1, fix16_from_float(10.0f));
+	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1, fix16_from_float(20.0f));
 	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_TARGET_1, fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_RC_CHANNELS_RAW_1, fix16_from_float(5.0f));
 	init_param_fix16(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1, fix16_from_float(5.0f));

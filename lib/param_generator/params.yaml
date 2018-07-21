@@ -350,7 +350,7 @@ PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1:
   reboot: false
   value:
     option: "scalar"
-    default: 10.0
+    default: 20.0
     function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
     unit: "Hz"
 ---

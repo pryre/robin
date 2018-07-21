@@ -30,7 +30,7 @@ STRM1_HRTBT | float | Communication update rate for system heartbeat (set to 0 t
 STRM1_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
 STRM1_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
 STRM1_ATT | float | Communication update rate for current attitude euler angles (set to 0 to turn off stream) | 0.0 | Hz | scalar | False
-STRM1_ATT_Q | float | Communication update rate for current attitude quaternion (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
+STRM1_ATT_Q | float | Communication update rate for current attitude quaternion (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
 STRM1_ATT_T | float | Communication update rate for current attitude target (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM1_RC_IN | float | Communication update rate for RC input channels (set to 0 to turn off stream) | 5.0 | Hz | scalar | False
 STRM1_SRV_OUT | float | Communication update rate for commanded servo output (set to 0 to turn off stream) | 5.0 | Hz | scalar | False
