@@ -3,7 +3,7 @@
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
 //XXX: LPQ was 12
-#define LOW_PRIORITY_QUEUE_SIZE 25
+#define LOW_PRIORITY_QUEUE_SIZE 8
 
 #include "breezystm32.h"
 #include "serial.h"
@@ -26,13 +26,15 @@
 #define MAVLINK_VERSION_MAX 200
 
 #define COMM_CH_0 (uint8_t)0x01	//0b00000001
-//XXX:#define COMM_CH_1 (uint8_t)0x02	//0b00000010
+#define COMM_CH_1 (uint8_t)0x02	//0b00000010
 
 serialPort_t* Serial1;
-//XXX:serialPort_t* Serial2;
+serialPort_t* Serial2;
 
 extern mavlink_system_t mavlink_system;
 extern mavlink_system_t mavlink_gcs;
+extern bool _ch_0_have_heartbeat;
+extern bool _ch_1_have_heartbeat;
 
 void communications_system_init(void);
 bool comm_is_open( uint8_t ch );
@@ -68,12 +70,13 @@ typedef struct {
 } mavlink_queue_t;
 
 extern mavlink_queue_t _lpq_port_0;
-//XXX:extern mavlink_queue_t _lpq_port_1;
+extern mavlink_queue_t _lpq_port_1;
 
 bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg);
 void lpq_queue_broadcast_msg(mavlink_message_t *msg);
 
 //==-- Streams
+bool mavlink_stream_ready(uint8_t port);
 void mavlink_stream_low_priority(uint8_t port);
 void mavlink_stream_heartbeat(uint8_t port);
 void mavlink_stream_sys_status(uint8_t port);

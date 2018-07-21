@@ -15,7 +15,9 @@
 uint8_t _system_operation_control;
 sensor_calibration_t _sensor_calibration;
 mavlink_queue_t _lpq_port_0;
-//XXX: mavlink_queue_t _lpq_port_1;
+mavlink_queue_t _lpq_port_1;
+bool _ch_0_have_heartbeat;
+bool _ch_1_have_heartbeat;
 
 int32_t _pwm_control[MIXER_NUM_MOTORS];
 mixer_motor_test_t _motor_test;
@@ -44,6 +46,21 @@ static void communication_decode(uint8_t port, uint8_t c) {
 				case MAVLINK_MSG_ID_HEARTBEAT: {
 					safety_update_sensor(&_system_status.sensors.offboard_heartbeat);
 
+					//XXX: This won't operate each independently, which is probably not a good thing
+					if(_system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK) {
+						if(port == MAVLINK_COMM_0) {
+							_ch_0_have_heartbeat = true;
+						} else if(port == MAVLINK_COMM_1) {
+							_ch_1_have_heartbeat = true;
+						}
+					} else {
+						if(port == MAVLINK_COMM_0) {
+							_ch_0_have_heartbeat = false;
+						} else if(port == MAVLINK_COMM_1) {
+							_ch_1_have_heartbeat = false;
+						}
+					}
+
 					break;
 				}
 				case MAVLINK_MSG_ID_PARAM_REQUEST_LIST: {
@@ -53,8 +70,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						//Set the new request flag
 						if(port == MAVLINK_COMM_0) {
 							_lpq_port_0.request_all_params = 0;
-						//XXX: } else if(port == MAVLINK_COMM_1) {
-						//XXX: 	_lpq_port_1.request_all_params = 0;
+						} else if(port == MAVLINK_COMM_1) {
+							_lpq_port_1.request_all_params = 0;
 						}
 
 						mavlink_queue_broadcast_notice("[PARAM] Caution: Broadcasting param list!");
@@ -636,11 +653,11 @@ void communication_receive(void) {
 		while( serialTotalRxBytesWaiting( Serial1 ) && ( (micros() - time_start_read ) < time_read_max ) )
 				communication_decode( MAVLINK_COMM_0, serialRead(Serial1) );
 
-	//XXX: time_start_read = micros();
+	time_start_read = micros();
 
-	//XXX: if( comm_is_open( COMM_CH_1 ) )
-	//XXX: 	while( serialTotalRxBytesWaiting( Serial2 ) && ( (micros() - time_start_read ) < time_read_max ) )
-	//XXX: 			communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
+	if( comm_is_open( COMM_CH_1 ) )
+		while( serialTotalRxBytesWaiting( Serial2 ) && ( (micros() - time_start_read ) < time_read_max ) )
+				communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
 
 	//TODO: Update global packet drops counter
 	//packet_drops += status.packet_rx_drop_count;

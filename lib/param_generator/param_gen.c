@@ -12,8 +12,8 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_VERSION_FIRMWARE, strtoll(GIT_VERSION_FLIGHT_STR, NULL, 16));
 	init_param_uint(PARAM_VERSION_SOFTWARE, strtoll(GIT_VERSION_OS_STR, NULL, 16));
 	init_param_uint(PARAM_BAUD_RATE_0, 921600);
-	init_param_uint(PARAM_BAUD_RATE_1, 0);
-	init_param_uint(PARAM_WAIT_FOR_HEARTBEAT, 0);
+	init_param_uint(PARAM_BAUD_RATE_1, 115200);
+	init_param_uint(PARAM_WAIT_FOR_HEARTBEAT, 1);
 	init_param_fix16(PARAM_TIMESYNC_ALPHA, fix16_from_float(0.8f));
 	init_param_uint(PARAM_SYSTEM_ID, 1);
 	init_param_uint(PARAM_COMPONENT_ID, 1);
@@ -32,6 +32,17 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_STREAM_RATE_TIMESYNC_0, fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_BATTERY_STATUS_0, fix16_from_float(2.0f));
 	init_param_fix16(PARAM_STREAM_RATE_LOW_PRIORITY_0, fix16_from_float(100.0f));
+	init_param_fix16(PARAM_STREAM_RATE_HEARTBEAT_1, fix16_from_float(1.0f));
+	init_param_fix16(PARAM_STREAM_RATE_SYS_STATUS_1, fix16_from_float(0.2f));
+	init_param_fix16(PARAM_STREAM_RATE_HIGHRES_IMU_1, fix16_from_float(20.0f));
+	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_1, fix16_from_float(0.0f));
+	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1, fix16_from_float(10.0f));
+	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_TARGET_1, fix16_from_float(10.0f));
+	init_param_fix16(PARAM_STREAM_RATE_RC_CHANNELS_RAW_1, fix16_from_float(5.0f));
+	init_param_fix16(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1, fix16_from_float(5.0f));
+	init_param_fix16(PARAM_STREAM_RATE_TIMESYNC_1, fix16_from_float(2.0f));
+	init_param_fix16(PARAM_STREAM_RATE_BATTERY_STATUS_1, fix16_from_float(2.0f));
+	init_param_fix16(PARAM_STREAM_RATE_LOW_PRIORITY_1, fix16_from_float(40.0f));
 	init_param_uint(PARAM_SENSOR_IMU_CBRK, 1);
 	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, 1);
 	init_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE, fix16_from_float(0.0f));
@@ -207,6 +218,17 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"STRM0_TIMESYNC",
 	"STRM0_BATTSTAT",
 	"STRM0_LPQ",
+	"STRM1_HRTBT",
+	"STRM1_SYS_STAT",
+	"STRM1_HR_IMU",
+	"STRM1_ATT",
+	"STRM1_ATT_Q",
+	"STRM1_ATT_T",
+	"STRM1_RC_IN",
+	"STRM1_SRV_OUT",
+	"STRM1_TIMESYNC",
+	"STRM1_BATTSTAT",
+	"STRM1_LPQ",
 	"CBRK_IMU",
 	"CBRK_SAFETY",
 	"CHK_RATE_MAG",
@@ -391,6 +413,39 @@ void param_change_callback(param_id_t id) {
 			break;
 		case PARAM_STREAM_RATE_LOW_PRIORITY_0:
 			communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_LOW_PRIORITY);
+			break;
+		case PARAM_STREAM_RATE_HEARTBEAT_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HEARTBEAT);
+			break;
+		case PARAM_STREAM_RATE_SYS_STATUS_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SYS_STATUS);
+			break;
+		case PARAM_STREAM_RATE_HIGHRES_IMU_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HIGHRES_IMU);
+			break;
+		case PARAM_STREAM_RATE_ATTITUDE_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE);
+			break;
+		case PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);
+			break;
+		case PARAM_STREAM_RATE_ATTITUDE_TARGET_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_TARGET);
+			break;
+		case PARAM_STREAM_RATE_RC_CHANNELS_RAW_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_RC_CHANNELS_RAW);
+			break;
+		case PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);
+			break;
+		case PARAM_STREAM_RATE_TIMESYNC_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_TIMESYNC);
+			break;
+		case PARAM_STREAM_RATE_BATTERY_STATUS_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_BATTERY_STATUS);
+			break;
+		case PARAM_STREAM_RATE_LOW_PRIORITY_1:
+			communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_LOW_PRIORITY);
 			break;
 		case PARAM_PID_ROLL_RATE_P:
 			pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));

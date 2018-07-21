@@ -33,10 +33,12 @@
  */
 
 mavlink_queue_t _lpq_port_0;
-//XXX: mavlink_queue_t _lpq_port_1;
+mavlink_queue_t _lpq_port_1;
 
 mavlink_system_t _mavlink_gcs;
 mavlink_system_t mavlink_system;
+bool _ch_0_have_heartbeat;
+bool _ch_1_have_heartbeat;
 
 system_status_t _system_status;
 sensor_readings_t _sensors;
@@ -64,32 +66,32 @@ void communications_system_init(void) {
 	_lpq_port_0.request_all_params = -1;
 	_lpq_port_0.timer_warn_full = 0;
 
-	//XXX: _lpq_port_1.port = MAVLINK_COMM_1;
-	//XXX: _lpq_port_1.position = 0;
-	//XXX: _lpq_port_1.length = 0;
-	//XXX: _lpq_port_1.request_all_params = -1;
-	//XXX: _lpq_port_1.timer_warn_full = 0;
+	_lpq_port_1.port = MAVLINK_COMM_1;
+	_lpq_port_1.position = 0;
+	_lpq_port_1.length = 0;
+	_lpq_port_1.request_all_params = -1;
+	_lpq_port_1.timer_warn_full = 0;
 
 	if( get_param_uint( PARAM_BAUD_RATE_0 ) > 0 ) {
 		Serial1 = uartOpen( USART1, NULL, get_param_uint(PARAM_BAUD_RATE_0 ), MODE_RXTX, SERIAL_NOT_INVERTED );
 		comm_set_open( COMM_CH_0 );
 	}
 
-	//XXX: if( get_param_uint( PARAM_BAUD_RATE_1 ) > 0 ) {
-	//XXX: 	Serial2 = uartOpen( USART2, NULL, get_param_uint( PARAM_BAUD_RATE_1 ), MODE_RXTX, SERIAL_NOT_INVERTED );
-	//XXX: 	comm_set_open( COMM_CH_1 );
-	//XXX: }
+	if( get_param_uint( PARAM_BAUD_RATE_1 ) > 0 ) {
+		Serial2 = uartOpen( USART2, NULL, get_param_uint( PARAM_BAUD_RATE_1 ), MODE_RXTX, SERIAL_NOT_INVERTED );
+		comm_set_open( COMM_CH_1 );
+	}
 
+	_ch_0_have_heartbeat = false;
+	_ch_1_have_heartbeat = false;
 
-	for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++)
+	for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++) {
 		communication_calc_period_update(COMM_CH_0, i);
-
-	//XXX: for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++)
-	//XXX: 	communication_calc_period_update(COMM_CH_1, i);
-
+		communication_calc_period_update(COMM_CH_1, i);
+	}
 
 	mavlink_set_proto_version(MAVLINK_COMM_0, 1);
-	//XXX: mavlink_set_proto_version(MAVLINK_COMM_1, 1);
+	mavlink_set_proto_version(MAVLINK_COMM_1, 1);
 }
 
 bool comm_is_open( uint8_t ch ) {
@@ -111,12 +113,10 @@ void comm_set_closed( uint8_t ch ) {
  * @param ch Character to send
  */
 void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
-	if( !get_param_uint( PARAM_WAIT_FOR_HEARTBEAT ) || ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) ) {
-		if( (chan == MAVLINK_COMM_0 ) && comm_is_open( COMM_CH_0 ) ) {
-			serialWrite(Serial1, ch);
-		//XXX: } else if( (chan == MAVLINK_COMM_1 ) && comm_is_open( COMM_CH_1 ) ) {
-		//XXX: 	serialWrite(Serial2, ch);
-		}
+	if( (chan == MAVLINK_COMM_0 ) && comm_is_open( COMM_CH_0 ) ) {
+		serialWrite(Serial1, ch);
+	} else if( (chan == MAVLINK_COMM_1 ) && comm_is_open( COMM_CH_1 ) ) {
+	 	serialWrite(Serial2, ch);
 	}
 }
 
@@ -131,8 +131,8 @@ void mavlink_send_broadcast_statustext(uint8_t severity, char* text) {
 	if( comm_is_open( COMM_CH_0 ) )
 		mavlink_send_statustext(MAVLINK_COMM_0, severity, text);
 
-	//XXX: if( comm_is_open( COMM_CH_1 ) )
-	//XXX: 	mavlink_send_statustext(MAVLINK_COMM_1, severity, text);
+	if( comm_is_open( COMM_CH_1 ) )
+		mavlink_send_statustext(MAVLINK_COMM_1, severity, text);
 }
 
 void mavlink_send_timesync(uint8_t port, uint64_t tc1, uint64_t ts1) {
@@ -175,8 +175,8 @@ bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg) {
 
 	if( port == _lpq_port_0.port ) {
 		queue = &_lpq_port_0;
-	//XXX: } else if( port == _lpq_port_1.port ) {
-	//XXX: 	queue = &_lpq_port_1;
+	} else if( port == _lpq_port_1.port ) {
+	 	queue = &_lpq_port_1;
 	}
 
 	if( check_lpq_space_free( queue ) && ( queue != NULL) ) {
@@ -213,8 +213,8 @@ void lpq_queue_broadcast_msg(mavlink_message_t *msg) {
 	if( comm_is_open( COMM_CH_0 ) )
 		lpq_queue_msg(MAVLINK_COMM_0, msg);
 
-	//XXX: if( comm_is_open( COMM_CH_1 ) )
-	//XXX: 	lpq_queue_msg(MAVLINK_COMM_1, msg);
+	if( comm_is_open( COMM_CH_1 ) )
+	 	lpq_queue_msg(MAVLINK_COMM_1, msg);
 }
 
 void lpq_send(mavlink_queue_t* queue) {
@@ -231,7 +231,23 @@ void lpq_send(mavlink_queue_t* queue) {
 }
 
 //==-- Streams
+
+bool mavlink_stream_ready(uint8_t port) {
+	bool ready = !get_param_uint( PARAM_WAIT_FOR_HEARTBEAT );
+
+	if(!ready) {
+		if( port == MAVLINK_COMM_0 ) {
+			ready = _ch_0_have_heartbeat;
+		} else if( port == MAVLINK_COMM_1 ) {
+			ready = _ch_1_have_heartbeat;
+		}
+	}
+
+	return ready;
+}
+
 void mavlink_stream_low_priority(uint8_t port) {
+	//XXX: Always send LPQ
 	if( port == _lpq_port_0.port ) {
 		//If there is params to queue, and the queue is reasonably empty
 		//  we can afford to interject more parameters this pass
@@ -241,15 +257,19 @@ void mavlink_stream_low_priority(uint8_t port) {
 		}
 
 		lpq_send(&_lpq_port_0);
-	//XXX: } else if( port == _lpq_port_1.port ) {
-	//XXX: 	if( _lpq_port_1.request_all_params >= 0 )
-	//XXX: 		lpq_queue_all_params(&_lpq_port_1);
-	//XXX:
-	//XXX: 	lpq_send(&_lpq_port_1);
+	} else if( port == _lpq_port_1.port ) {
+		if( ( _lpq_port_1.request_all_params >= 0 ) &&
+			( _lpq_port_1.length < (LOW_PRIORITY_QUEUE_SIZE / 2) ) ) {
+			lpq_queue_all_params(&_lpq_port_1);
+		}
+
+		lpq_send(&_lpq_port_1);
 	}
 }
 
 void mavlink_stream_heartbeat(uint8_t port) {
+	//XXX: Always send heartbeat
+
 	mavlink_msg_heartbeat_send(port,
 							   get_param_uint(PARAM_MAV_TYPE),
 							   MAV_AUTOPILOT_PX4,	//XXX: This is to get compatibility for offboard software
@@ -259,288 +279,306 @@ void mavlink_stream_heartbeat(uint8_t port) {
 }
 
 void mavlink_stream_sys_status(uint8_t port) {
-	uint32_t onboard_control_sensors_present = 0;
-	uint32_t onboard_control_sensors_enabled = 0;
-	uint32_t onboard_control_sensors_health = 0;
-	uint16_t load = 0;
-	uint16_t voltage_battery = fix16_to_int(fix16_mul(_fc_1000,_sensors.voltage_monitor.state_filtered));
-	uint16_t current_battery = -1;
-	uint8_t battery_remaining = fix16_to_int(fix16_mul(_fc_100,_sensors.voltage_monitor.precentage));
-	uint16_t drop_rate_comm = 0;
-	uint16_t errors_comm = 0;	//TODO: Make an alert to say if the UART overflows
-	uint16_t errors_count1 = _lpq_port_0.length;
-	uint16_t errors_count2 = 0;
-	uint16_t errors_count3 = _sensors.clock.min;
-	uint16_t errors_count4 = _sensors.clock.max;
+	if( mavlink_stream_ready(port) ) {
+		uint32_t onboard_control_sensors_present = 0;
+		uint32_t onboard_control_sensors_enabled = 0;
+		uint32_t onboard_control_sensors_health = 0;
+		uint16_t load = 0;
+		uint16_t voltage_battery = fix16_to_int(fix16_mul(_fc_1000,_sensors.voltage_monitor.state_filtered));
+		uint16_t current_battery = -1;
+		uint8_t battery_remaining = fix16_to_int(fix16_mul(_fc_100,_sensors.voltage_monitor.precentage));
+		uint16_t drop_rate_comm = 0;
+		uint16_t errors_comm = 0;	//TODO: Make an alert to say if the UART overflows
+		uint16_t errors_count1 = _lpq_port_0.length;
+		uint16_t errors_count2 = 0;
+		uint16_t errors_count3 = _sensors.clock.min;
+		uint16_t errors_count4 = _sensors.clock.max;
 
-	load = _sensors.clock.average_time/_sensors.clock.counter;
+		load = _sensors.clock.average_time/_sensors.clock.counter;
 
-	_sensors.clock.counter = 0;
-	_sensors.clock.average_time = 0;
-	_sensors.clock.max = 0;
-	_sensors.clock.min = 1000;
+		_sensors.clock.counter = 0;
+		_sensors.clock.average_time = 0;
+		_sensors.clock.max = 0;
+		_sensors.clock.min = 1000;
 
-	//==-- Sensors Present
-	if(_sensors.imu.status.present) {
-		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
-		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
+		//==-- Sensors Present
+		if(_sensors.imu.status.present) {
+			onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
+			onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
+		}
+
+		if(_sensors.mag.status.present)
+			onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_MAG;
+
+		if(_sensors.baro.status.present)
+			onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
+
+		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS;
+		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL;
+		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
+
+		//TODO: We should have params for enabling specific sensors
+		//==-- Sensors Present
+		onboard_control_sensors_enabled = MAV_SYS_STATUS_SENSOR_3D_GYRO |
+										  MAV_SYS_STATUS_SENSOR_3D_ACCEL |
+										  MAV_SYS_STATUS_SENSOR_3D_MAG |
+										  MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE |
+										  MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS |
+										  MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL |
+										  MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
+
+		//==-- Sensor Health
+		if(_system_status.sensors.imu.health == SYSTEM_HEALTH_OK) {
+			onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
+			onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
+		}
+
+		if(_system_status.sensors.mag.health == SYSTEM_HEALTH_OK)
+			onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_MAG;
+
+		if(_system_status.sensors.baro.health == SYSTEM_HEALTH_OK)
+			onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
+
+		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS;
+		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL;
+		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
+
+		//TODO: Other sensors?
+		// MAV_SYS_STATUS_SENSOR_BATTERY, MAV_SYS_STATUS_SENSOR_OPTICAL_FLOW, MAV_SYS_STATUS_SENSOR_VISION_POSITION ...?
+
+		mavlink_msg_sys_status_send(port,
+									onboard_control_sensors_present,
+									onboard_control_sensors_enabled,
+									onboard_control_sensors_health,
+									load,
+									voltage_battery,
+									current_battery,
+									battery_remaining,
+									drop_rate_comm,
+									errors_comm,
+									errors_count1,
+									errors_count2,
+									errors_count3,
+									errors_count4);
 	}
-
-	if(_sensors.mag.status.present)
-		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_MAG;
-
-	if(_sensors.baro.status.present)
-		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
-
-	onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS;
-	onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL;
-	onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
-
-	//TODO: We should have params for enabling specific sensors
-	//==-- Sensors Present
-	onboard_control_sensors_enabled = MAV_SYS_STATUS_SENSOR_3D_GYRO |
-									  MAV_SYS_STATUS_SENSOR_3D_ACCEL |
-									  MAV_SYS_STATUS_SENSOR_3D_MAG |
-									  MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE |
-									  MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS |
-									  MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL |
-									  MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
-
-	//==-- Sensor Health
-	if(_system_status.sensors.imu.health == SYSTEM_HEALTH_OK) {
-		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
-		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
-	}
-
-	if(_system_status.sensors.mag.health == SYSTEM_HEALTH_OK)
-		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_MAG;
-
-	if(_system_status.sensors.baro.health == SYSTEM_HEALTH_OK)
-		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
-
-	onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS;
-	onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL;
-	onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
-
-	//TODO: Other sensors?
-	// MAV_SYS_STATUS_SENSOR_BATTERY, MAV_SYS_STATUS_SENSOR_OPTICAL_FLOW, MAV_SYS_STATUS_SENSOR_VISION_POSITION ...?
-
-	mavlink_msg_sys_status_send(port,
-								onboard_control_sensors_present,
-								onboard_control_sensors_enabled,
-								onboard_control_sensors_health,
-								load,
-								voltage_battery,
-								current_battery,
-								battery_remaining,
-								drop_rate_comm,
-								errors_comm,
-								errors_count1,
-								errors_count2,
-								errors_count3,
-								errors_count4);
 }
 
 //==-- Sends the latest IMU reading
 void mavlink_stream_highres_imu(uint8_t port) {
-	//TODO: Need to add temp, pressure measurements
-	float xacc = 0;
-	float yacc = 0;
-	float zacc = 0;
-	float xgyro = 0;
-	float ygyro = 0;
-	float zgyro = 0;
-	float xmag = 0;
-	float ymag = 0;
-	float zmag = 0;
-	float abs_pressure = 0;
-	float diff_pressure = 0;
-	float pressure_alt = 0;
-	float temperature = 0;
-	uint16_t fields_updated = 0;
+	if( mavlink_stream_ready(port) ) {
+		//TODO: Need to add temp, pressure measurements
+		float xacc = 0;
+		float yacc = 0;
+		float zacc = 0;
+		float xgyro = 0;
+		float ygyro = 0;
+		float zgyro = 0;
+		float xmag = 0;
+		float ymag = 0;
+		float zmag = 0;
+		float abs_pressure = 0;
+		float diff_pressure = 0;
+		float pressure_alt = 0;
+		float temperature = 0;
+		uint16_t fields_updated = 0;
 
-	if( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
-		/*
-		xacc = fix16_to_float(_sensors.imu.accel.x);
-		yacc = fix16_to_float(_sensors.imu.accel.y);
-		zacc = fix16_to_float(_sensors.imu.accel.z);
-		xgyro = fix16_to_float(_sensors.imu.gyro.x);
-		ygyro = fix16_to_float(_sensors.imu.gyro.y);
-		zgyro = fix16_to_float(_sensors.imu.gyro.z);
-		*/
-		//Output our estimated values here
-		xacc = fix16_to_float(_state_estimator.ax);
-		yacc = fix16_to_float(_state_estimator.ay);
-		zacc = fix16_to_float(_state_estimator.az);
-		xgyro = fix16_to_float(_state_estimator.p);
-		ygyro = fix16_to_float(_state_estimator.q);
-		zgyro = fix16_to_float(_state_estimator.r);
+		if( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
+			/*
+			xacc = fix16_to_float(_sensors.imu.accel.x);
+			yacc = fix16_to_float(_sensors.imu.accel.y);
+			zacc = fix16_to_float(_sensors.imu.accel.z);
+			xgyro = fix16_to_float(_sensors.imu.gyro.x);
+			ygyro = fix16_to_float(_sensors.imu.gyro.y);
+			zgyro = fix16_to_float(_sensors.imu.gyro.z);
+			*/
+			//Output our estimated values here
+			xacc = fix16_to_float(_state_estimator.ax);
+			yacc = fix16_to_float(_state_estimator.ay);
+			zacc = fix16_to_float(_state_estimator.az);
+			xgyro = fix16_to_float(_state_estimator.p);
+			ygyro = fix16_to_float(_state_estimator.q);
+			zgyro = fix16_to_float(_state_estimator.r);
 
-		fields_updated |= (1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5);
+			fields_updated |= (1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5);
+		}
+
+		if( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) {
+			xmag = fix16_to_float(_sensors.mag.scaled.x);
+			ymag = fix16_to_float(_sensors.mag.scaled.y);
+			zmag = fix16_to_float(_sensors.mag.scaled.z);
+
+			fields_updated |= (1<<6)|(1<<7)|(1<<8);
+		}
+
+		if( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) {
+			abs_pressure = fix16_to_float(_sensors.baro.raw_press);
+
+			fields_updated |= (1<<9);
+		}
+
+		mavlink_msg_highres_imu_send(port,
+									 _sensors.imu.status.time_read,
+									 xacc,
+									 yacc,
+									 zacc,
+									 xgyro,
+									 ygyro,
+									 zgyro,
+									 xmag,
+									 ymag,
+									 zmag,
+									 abs_pressure,
+									 diff_pressure,
+									 pressure_alt,
+									 temperature,
+									 fields_updated );
 	}
-
-	if( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) {
-		xmag = fix16_to_float(_sensors.mag.scaled.x);
-		ymag = fix16_to_float(_sensors.mag.scaled.y);
-		zmag = fix16_to_float(_sensors.mag.scaled.z);
-
-		fields_updated |= (1<<6)|(1<<7)|(1<<8);
-	}
-
-	if( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) {
-		abs_pressure = fix16_to_float(_sensors.baro.raw_press);
-
-		fields_updated |= (1<<9);
-	}
-
-	mavlink_msg_highres_imu_send(port,
-								 _sensors.imu.status.time_read,
-								 xacc,
-								 yacc,
-								 zacc,
-								 xgyro,
-								 ygyro,
-								 zgyro,
-								 xmag,
-								 ymag,
-								 zmag,
-								 abs_pressure,
-								 diff_pressure,
-								 pressure_alt,
-								 temperature,
-								 fields_updated );
 }
 
 void mavlink_stream_attitude(uint8_t port) {
-	fix16_t roll;
-	fix16_t pitch;
-	fix16_t yaw;
+	if( mavlink_stream_ready(port) ) {
+		fix16_t roll;
+		fix16_t pitch;
+		fix16_t yaw;
 
-	//Extract Euler Angles for controller
-	euler_from_quat(&_state_estimator.attitude, &roll, &pitch, &yaw);
+		//Extract Euler Angles for controller
+		euler_from_quat(&_state_estimator.attitude, &roll, &pitch, &yaw);
 
-	mavlink_msg_attitude_send(port,
-							  _sensors.imu.status.time_read,
-							  fix16_to_float(roll),
-							  fix16_to_float(pitch),
-							  fix16_to_float(yaw),
-							  fix16_to_float(_state_estimator.p),
-							  fix16_to_float(_state_estimator.q),
-							  fix16_to_float(_state_estimator.r));
+		mavlink_msg_attitude_send(port,
+								  _sensors.imu.status.time_read,
+								  fix16_to_float(roll),
+								  fix16_to_float(pitch),
+								  fix16_to_float(yaw),
+								  fix16_to_float(_state_estimator.p),
+								  fix16_to_float(_state_estimator.q),
+								  fix16_to_float(_state_estimator.r));
+	}
 }
 
 void mavlink_stream_attitude_quaternion(uint8_t port) {
-	mavlink_msg_attitude_quaternion_send(port,
-										 _sensors.imu.status.time_read,
-										 fix16_to_float(_state_estimator.attitude.a),
-										 fix16_to_float(_state_estimator.attitude.b),
-										 fix16_to_float(_state_estimator.attitude.c),
-										 fix16_to_float(_state_estimator.attitude.d),
-										 fix16_to_float(_state_estimator.p),
-										 fix16_to_float(_state_estimator.q),
-										 fix16_to_float(_state_estimator.r));
+	if( mavlink_stream_ready(port) ) {
+		mavlink_msg_attitude_quaternion_send(port,
+											 _sensors.imu.status.time_read,
+											 fix16_to_float(_state_estimator.attitude.a),
+											 fix16_to_float(_state_estimator.attitude.b),
+											 fix16_to_float(_state_estimator.attitude.c),
+											 fix16_to_float(_state_estimator.attitude.d),
+											 fix16_to_float(_state_estimator.p),
+											 fix16_to_float(_state_estimator.q),
+											 fix16_to_float(_state_estimator.r));
+	}
 }
 
 void mavlink_stream_attitude_target(uint8_t port) {
-	float q[4] = {fix16_to_float(_control_input.q.a),
-				  fix16_to_float(_control_input.q.b),
-				  fix16_to_float(_control_input.q.c),
-				  fix16_to_float(_control_input.q.d)};
+	if( mavlink_stream_ready(port) ) {
+		float q[4] = {fix16_to_float(_control_input.q.a),
+					  fix16_to_float(_control_input.q.b),
+					  fix16_to_float(_control_input.q.c),
+					  fix16_to_float(_control_input.q.d)};
 
-	//Use the control output for some of these commands as they reflect the actual goals
-	// The input mask applied is included, but the information will still potentially be useful
-	// The timestamp used is the one that is used to generate the commands
-	mavlink_msg_attitude_target_send(port,
-									 sensors_clock_ls_get(),
-									 _control_input.input_mask,
-									 &q[0],
-									 fix16_to_float(_control_input.r),
-									 fix16_to_float(_control_input.p),
-									 fix16_to_float(_control_input.y),
-									 fix16_to_float(_control_input.T));
+		//Use the control output for some of these commands as they reflect the actual goals
+		// The input mask applied is included, but the information will still potentially be useful
+		// The timestamp used is the one that is used to generate the commands
+		mavlink_msg_attitude_target_send(port,
+										 sensors_clock_ls_get(),
+										 _control_input.input_mask,
+										 &q[0],
+										 fix16_to_float(_control_input.r),
+										 fix16_to_float(_control_input.p),
+										 fix16_to_float(_control_input.y),
+										 fix16_to_float(_control_input.T));
+	}
 }
 
 void mavlink_stream_rc_channels_raw(uint8_t port) {
-	mavlink_msg_rc_channels_raw_send(port,
-									  sensors_clock_ls_get(),
-									  0,	//Port 0
-									  pwmRead(0),
-									  pwmRead(1),
-									  pwmRead(2),
-									  pwmRead(3),
-									  pwmRead(4),
-									  pwmRead(5),
-									  pwmRead(6),
-									  pwmRead(7),
-									  255);
+	if( mavlink_stream_ready(port) ) {
+		mavlink_msg_rc_channels_raw_send(port,
+										  sensors_clock_ls_get(),
+										  0,	//Port 0
+										  pwmRead(0),
+										  pwmRead(1),
+										  pwmRead(2),
+										  pwmRead(3),
+										  pwmRead(4),
+										  pwmRead(5),
+										  pwmRead(6),
+										  pwmRead(7),
+										  255);
+	}
 }
 
 void mavlink_stream_servo_output_raw(uint8_t port) {
-	mavlink_msg_servo_output_raw_send(port,
-									  sensors_clock_ls_get(),
-									  0,	//Port 0
-									  _pwm_output[0],
-									  _pwm_output[1],
-									  _pwm_output[2],
-									  _pwm_output[3],
-									  _pwm_output[4],
-									  _pwm_output[5],
-									  _pwm_output[6],
-									  _pwm_output[7],
-									  0,0,0,0,0,0,0,0);	//XXX: We don't even have enough ports
+	if( mavlink_stream_ready(port) ) {
+		mavlink_msg_servo_output_raw_send(port,
+										  sensors_clock_ls_get(),
+										  0,	//Port 0
+										  _pwm_output[0],
+										  _pwm_output[1],
+										  _pwm_output[2],
+										  _pwm_output[3],
+										  _pwm_output[4],
+										  _pwm_output[5],
+										  _pwm_output[6],
+										  _pwm_output[7],
+										  0,0,0,0,0,0,0,0);	//XXX: We don't even have enough ports
+	}
 }
 
 void mavlink_stream_timesync(uint8_t port) {
-	mavlink_msg_timesync_send(port,
-							  0,
-							  ( (uint64_t)micros() ) * 1000);
+	if( mavlink_stream_ready(port) ) {
+		mavlink_msg_timesync_send(port,
+								  0,
+								  ( (uint64_t)micros() ) * 1000);
+	}
 }
 
 void mavlink_stream_battery_status(uint8_t port) {
-	uint8_t batt_id = 0;
+	if( mavlink_stream_ready(port) ) {
+		uint8_t batt_id = 0;
 
-	uint16_t voltages[10];
-	fix16_t voltage_cell = fix16_div( _sensors.voltage_monitor.state_filtered, fix16_from_int(get_param_uint(PARAM_BATTERY_CELL_NUM)) );
-	uint16_t voltage_cell_int = fix16_to_int( fix16_mul( _fc_1000, voltage_cell ) );
-	for(int i = 0; i < 10; i++) {
-		if(i < (int)get_param_uint(PARAM_BATTERY_CELL_NUM)) {
-			voltages[i] = voltage_cell_int;
-		} else {
-			voltages[i] = UINT16_MAX;
+		uint16_t voltages[10];
+		fix16_t voltage_cell = fix16_div( _sensors.voltage_monitor.state_filtered, fix16_from_int(get_param_uint(PARAM_BATTERY_CELL_NUM)) );
+		uint16_t voltage_cell_int = fix16_to_int( fix16_mul( _fc_1000, voltage_cell ) );
+		for(int i = 0; i < 10; i++) {
+			if(i < (int)get_param_uint(PARAM_BATTERY_CELL_NUM)) {
+				voltages[i] = voltage_cell_int;
+			} else {
+				voltages[i] = UINT16_MAX;
+			}
 		}
-	}
 
-	//TODO: This could be done better
-	uint8_t charge_state = MAV_BATTERY_CHARGE_STATE_UNDEFINED;
+		//TODO: This could be done better
+		uint8_t charge_state = MAV_BATTERY_CHARGE_STATE_UNDEFINED;
 
-	if(get_param_uint(PARAM_BATTERY_CELL_NUM) > 0) {
-		if(_sensors.voltage_monitor.precentage > _fc_1) {
-			charge_state = MAV_BATTERY_CHARGE_STATE_UNHEALTHY;
-		} else if(_sensors.voltage_monitor.precentage > get_param_fix16(PARAM_BATTERY_CHARGE_STATE_LOW)) {
-			charge_state = MAV_BATTERY_CHARGE_STATE_OK;
-		} else if(_sensors.voltage_monitor.precentage > get_param_fix16(PARAM_BATTERY_CHARGE_STATE_CRITICAL)) {
-			charge_state = MAV_BATTERY_CHARGE_STATE_LOW;
-		} else if(_sensors.voltage_monitor.precentage > get_param_fix16(PARAM_BATTERY_CHARGE_STATE_EMERGENCY)) {
-			charge_state = MAV_BATTERY_CHARGE_STATE_CRITICAL;
-		} else if(_sensors.voltage_monitor.precentage > 0) {
-			charge_state = MAV_BATTERY_CHARGE_STATE_EMERGENCY;
-		} else {
-			charge_state = MAV_BATTERY_CHARGE_STATE_FAILED;
+		if(get_param_uint(PARAM_BATTERY_CELL_NUM) > 0) {
+			if(_sensors.voltage_monitor.precentage > _fc_1) {
+				charge_state = MAV_BATTERY_CHARGE_STATE_UNHEALTHY;
+			} else if(_sensors.voltage_monitor.precentage > get_param_fix16(PARAM_BATTERY_CHARGE_STATE_LOW)) {
+				charge_state = MAV_BATTERY_CHARGE_STATE_OK;
+			} else if(_sensors.voltage_monitor.precentage > get_param_fix16(PARAM_BATTERY_CHARGE_STATE_CRITICAL)) {
+				charge_state = MAV_BATTERY_CHARGE_STATE_LOW;
+			} else if(_sensors.voltage_monitor.precentage > get_param_fix16(PARAM_BATTERY_CHARGE_STATE_EMERGENCY)) {
+				charge_state = MAV_BATTERY_CHARGE_STATE_CRITICAL;
+			} else if(_sensors.voltage_monitor.precentage > 0) {
+				charge_state = MAV_BATTERY_CHARGE_STATE_EMERGENCY;
+			} else {
+				charge_state = MAV_BATTERY_CHARGE_STATE_FAILED;
+			}
 		}
-	}
 
-	mavlink_msg_battery_status_send(port,
-								   batt_id,
-								   get_param_uint(PARAM_BATTERY_FUNCTION),
-								   get_param_uint(PARAM_BATTERY_TYPE),
-								   INT16_MAX,
-								   &voltages[0],
-								   -1,
-								   -1,
-								   -1,
-								   fix16_to_int(fix16_mul(_fc_100,_sensors.voltage_monitor.precentage)),
-								   0,
-								   charge_state);
+		mavlink_msg_battery_status_send(port,
+									   batt_id,
+									   get_param_uint(PARAM_BATTERY_FUNCTION),
+									   get_param_uint(PARAM_BATTERY_TYPE),
+									   INT16_MAX,
+									   &voltages[0],
+									   -1,
+									   -1,
+									   -1,
+									   fix16_to_int(fix16_mul(_fc_100,_sensors.voltage_monitor.precentage)),
+									   0,
+									   charge_state);
+	}
 }
 
 //==-- Low Priority Messages
