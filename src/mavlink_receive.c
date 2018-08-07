@@ -14,8 +14,7 @@
 
 uint8_t _system_operation_control;
 sensor_calibration_t _sensor_calibration;
-mavlink_queue_t _lpq_port_0;
-mavlink_queue_t _lpq_port_1;
+mavlink_queue_t _lpq;
 bool _ch_0_have_heartbeat;
 bool _ch_1_have_heartbeat;
 
@@ -69,9 +68,9 @@ static void communication_decode(uint8_t port, uint8_t c) {
 						  (mavlink_msg_param_request_list_get_target_component(&msg) == MAV_COMP_ID_ALL) ) ) {
 						//Set the new request flag
 						if(port == MAVLINK_COMM_0) {
-							_lpq_port_0.request_all_params = 0;
+							_lpq.request_all_params_port0 = 0;
 						} else if(port == MAVLINK_COMM_1) {
-							_lpq_port_1.request_all_params = 0;
+							_lpq.request_all_params_port1 = 0;
 						}
 
 						mavlink_queue_broadcast_notice("[PARAM] Caution: Broadcasting param list!");
@@ -104,8 +103,6 @@ static void communication_decode(uint8_t port, uint8_t c) {
 					if((mavlink_msg_param_set_get_target_system(&msg) == mavlink_system.sysid) &&
 						(mavlink_msg_param_set_get_target_component(&msg) == mavlink_system.compid)) {
 
-						bool set_complete = false;
-
 						char param_id[MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1];
 						mavlink_msg_param_set_get_param_id(&msg, param_id);
 						param_id_t index = lookup_param_id(param_id);
@@ -136,7 +133,7 @@ static void communication_decode(uint8_t port, uint8_t c) {
 										} u;
 
 										u.f = mavlink_msg_param_set_get_param_value(&msg);
-										set_complete = set_param_by_name_uint(param_id, u.u);
+										set_param_by_name_uint(param_id, u.u);
 
 										break;
 									}
@@ -149,16 +146,16 @@ static void communication_decode(uint8_t port, uint8_t c) {
 										u.f = mavlink_msg_param_set_get_param_value(&msg);
 
 										if(!int_uint_conversion) {
-											set_complete = set_param_by_name_int(param_id, u.i);
+											set_param_by_name_int(param_id, u.i);
 										} else {
-											set_complete = set_param_by_name_uint(param_id, (uint32_t)u.i);
+											set_param_by_name_uint(param_id, (uint32_t)u.i);
 										}
 
 										break;
 									}
 									case MAV_PARAM_TYPE_REAL32: {
 										float value = mavlink_msg_param_set_get_param_value(&msg);
-										set_complete = set_param_fix16(index, fix16_from_float(value));
+										set_param_fix16(index, fix16_from_float(value));
 
 										break;
 									}
@@ -171,13 +168,6 @@ static void communication_decode(uint8_t port, uint8_t c) {
 								//XXX: This may be caused if a GCS sends a UINT32 param as INT32
 								mavlink_queue_broadcast_error("[PARAM] Paramater type mismatch!");
 							}
-						}
-
-						if(set_complete) {
-							mavlink_message_t msg_out;
-							mavlink_prepare_param_value(&msg_out, index);
-
-							lpq_queue_broadcast_msg(&msg_out);
 						}
 					} //Else this message is for someone else
 

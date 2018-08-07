@@ -58,19 +58,20 @@ void mavlink_send_timesync(uint8_t port, uint64_t tc1, uint64_t ts1);
 
 //==-- Low priority message queue
 typedef struct {
-	uint8_t port;
-	int32_t request_all_params;
+	int32_t request_all_params_port0;
+	int32_t request_all_params_port1;
 
 	uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE][MAVLINK_MAX_PACKET_LEN];	//List of buffered messages
 	uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE];						//Lengths of buffered messages
+	uint8_t port[LOW_PRIORITY_QUEUE_SIZE];								//List representing which comm port to send message to
+
 	uint16_t position;	//Current position in the queue
 	uint16_t length;	//Current length of the queue
 
 	uint32_t timer_warn_full;
 } mavlink_queue_t;
 
-extern mavlink_queue_t _lpq_port_0;
-extern mavlink_queue_t _lpq_port_1;
+extern mavlink_queue_t _lpq;
 
 bool lpq_queue_msg(uint8_t port, mavlink_message_t *msg);
 void lpq_queue_broadcast_msg(mavlink_message_t *msg);
@@ -88,6 +89,8 @@ void mavlink_stream_rc_channels_raw(uint8_t port);
 void mavlink_stream_servo_output_raw(uint8_t port);
 void mavlink_stream_timesync(uint8_t port);
 void mavlink_stream_battery_status(uint8_t port);
+
+void mavlink_stream_broadcast_param_value( uint32_t index );
 
 //==-- Low Priority Messages
 void mavlink_queue_broadcast_info(char* text);

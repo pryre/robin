@@ -32,6 +32,7 @@ static volatile uint8_t accel_status = 0;
 static volatile uint8_t gyro_status = 0;
 static volatile uint8_t temp_status = 0;
 
+static bool use_imu;
 static int16_t read_accel_raw[3];
 static int16_t read_gyro_raw[3];
 static volatile int16_t read_temp_raw;
@@ -135,39 +136,44 @@ void sensors_cal_init(void) {
 }
 
 void sensors_deinit_imu(void) {
-	mpu_register_interrupt_cb(&sensors_imu_disable, get_param_uint(PARAM_BOARD_REVISION));
-	while( i2c_job_queued() ); //Wait for jobs to finish
-    //mpuWriteRegisterI2C(MPU_RA_PWR_MGMT_1, MPU_BIT_DEVICE_RESET);
-	//delay(500);
+	if(use_imu) {
+		mpu_register_interrupt_cb(&sensors_imu_disable, get_param_uint(PARAM_BOARD_REVISION));
+		while( i2c_job_queued() ); //Wait for jobs to finish
+		//mpuWriteRegisterI2C(MPU_RA_PWR_MGMT_1, MPU_BIT_DEVICE_RESET);
+		//delay(500);
+	}
 }
 
 void sensors_init_imu(void) {
-	sensor_status_init(&_sensors.imu.status, (bool)get_param_uint(PARAM_SENSOR_IMU_CBRK));
-	mpu_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
+	if( use_imu ) {
+		sensor_status_init(&_sensors.imu.status, true);
+		mpu_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
 
-	switch(get_param_uint(PARAM_BOARD_REVISION)) {
-		case 5: {
-			//Get the 1g gravity scale (raw->g's)
-			_sensor_calibration.data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);
-			break;
+		switch(get_param_uint(PARAM_BOARD_REVISION)) {
+			case 5: {
+				//Get the 1g gravity scale (raw->g's)
+				_sensor_calibration.data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);
+				break;
+			}
+			case 6: {
+				//Get the 1g gravity scale (raw->g's)
+				_sensor_calibration.data.accel.acc1G = mpu6500_init(INV_FSR_8G, INV_FSR_2000DPS);
+				break;
+			}
+			default: {
+				//Could not determine IMU!
+				failureMode(5);
+			}
 		}
-		case 6: {
-			//Get the 1g gravity scale (raw->g's)
-			_sensor_calibration.data.accel.acc1G = mpu6500_init(INV_FSR_8G, INV_FSR_2000DPS);
-			break;
-		}
-		default: {
-			//Could not determine IMU!
-			failureMode(5);
-		}
+
+		_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_sensor_calibration.data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
+		_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 	}
-
-	_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_sensor_calibration.data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
-	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 }
 
 void sensors_init_internal(void) {
 	//==-- IMU-MPU6050
+	use_imu = (bool)get_param_uint(PARAM_SENSOR_IMU_CBRK);
 	sensors_init_imu();
 
 	//==-- Calibrations
@@ -704,7 +710,11 @@ static bool sensors_do_cal_rc(void) {
 			}
 			case SENSOR_CAL_RC_RANGE_MIDDOWN: {
 				for(int i=0;i<8;i++) {
-					_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MID] = pwmRead(i);
+					if( (unsigned int)i == (get_param_uint(PARAM_RC_MAP_THROTTLE) - 1)) {
+						_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MID] = SENSOR_RC_MIDSTICK;
+					} else {
+						_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MID] = pwmRead(i);
+					}
 
 					if( ( pwmRead(i) < 1300 ) || ( pwmRead(i) > 1700 ) ) {
 						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Possible bad trim on channel ";
@@ -715,7 +725,6 @@ static bool sensors_do_cal_rc(void) {
 					}
 				}
 
-				//XXX Set the params here as it saves overloading the LPQ
 				set_param_uint( PARAM_RC1_MID, _sensor_calibration.data.rc.rc_ranges[0][SENSOR_RC_CAL_MID]);
 				set_param_uint( PARAM_RC2_MID, _sensor_calibration.data.rc.rc_ranges[1][SENSOR_RC_CAL_MID]);
 				set_param_uint( PARAM_RC3_MID, _sensor_calibration.data.rc.rc_ranges[2][SENSOR_RC_CAL_MID]);
@@ -742,7 +751,6 @@ static bool sensors_do_cal_rc(void) {
 				_sensor_calibration.data.rc.rc_rev[chan_yaw] = (pwmRead(chan_yaw) < SENSOR_RC_MIDSTICK);
 				_sensor_calibration.data.rc.rc_rev[chan_throttle] = (pwmRead(chan_throttle) > SENSOR_RC_MIDSTICK);
 
-				//XXX Set the params here as it saves overloading the LPQ
 				set_param_uint( PARAM_RC1_REV, _sensor_calibration.data.rc.rc_rev[0]);
 				set_param_uint( PARAM_RC2_REV, _sensor_calibration.data.rc.rc_rev[1]);
 				set_param_uint( PARAM_RC3_REV, _sensor_calibration.data.rc.rc_rev[2]);
@@ -843,7 +851,6 @@ static bool sensors_do_cal_accel(void) {
 			int32_t x_bias = _sensor_calibration.data.accel.data.x_flat_av_sum / 4;
 			int32_t y_bias = _sensor_calibration.data.accel.data.y_flat_av_sum / 4;
 			int32_t z_bias = _sensor_calibration.data.accel.data.z_flat_av_sum / 4;
-
 
 			//Correct for measurement biases
 			fix16_t accel_x_down_1g = fix16_mul(fix16_from_int(_sensor_calibration.data.accel.data.x_down_av - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);

@@ -587,7 +587,5 @@ void param_change_callback(param_id_t id) {
 			break;
 	}
 
-	mavlink_message_t msg_out;
-	mavlink_prepare_param_value( &msg_out, id );
-	lpq_queue_broadcast_msg( &msg_out );
+	mavlink_stream_broadcast_param_value(id);
 }

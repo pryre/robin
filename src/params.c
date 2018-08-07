@@ -13,7 +13,6 @@
 #include "safety.h"
 #include "mavlink_system.h"
 
-
 // global variable definitions
 params_t _params;
 const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
@@ -99,7 +98,6 @@ bool write_params(void) {
 	bool state_ok = false;
 	//XXX
 	//Deinit imu as writing EEPROM messes up the callback
-
 	if( (_system_status.state != MAV_STATE_UNINIT ) &&
 		(_system_status.state != MAV_STATE_BOOT ) ) {
 		sensors_deinit_imu();
