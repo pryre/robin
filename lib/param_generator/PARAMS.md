@@ -5,8 +5,8 @@ Name | Type | Description | Default | Unit | Options | Reboot
 BOARD_REV | uint | A compile-time selector for what version of the board to setup sensors for |  | | | False
 VERSION_FW | uint | A compile-time stamp for the flight firmware version |  | | | False
 VERSION_SW | uint | A compile-time stamp for the OS firmware version |  | | | False
-BAUD_RATE_0 | uint | Baud rate for the the COMM_0 port - set to 0 to disable | 921600 |  | [0, 9600, 57600, 115200, 921600] | True
-BAUD_RATE_1 | uint | Baud rate for the the COMM_1 port - set to 0 to disable | 115200 |  | [0, 9600, 57600, 115200, 921600] | True
+BAUD_RATE_0 | uint | Baud rate for the the COMM_0 port - set to 0 to disable | 115200 |  | [0, 9600, 57600, 115200, 921600] | True
+BAUD_RATE_1 | uint | Baud rate for the the COMM_1 port - set to 0 to disable | 0 |  | [0, 9600, 57600, 115200, 921600] | True
 COMMS_WAIT | uint | Instructs autopilot to remain silent until it receives a valid heartbeat message (False:0,True:1) | 1 | 0 / 1 | boolean | True
 TIMESYNC_ALPHA | float | TODO - also check min-max values | 0.8 |  | [min:0.0, max:1.0] | False
 MAV_SYS_ID | uint | Sets the MAVLINK System ID parameter for this mav | 1 |  | [min:0, max:255] | True
@@ -17,15 +17,15 @@ GCS_COMP_ID | uint | Sets the MAVLINK Component ID parameter for the ground stat
 RELAXED_SET | uint | Allows for 'unit' type parameters to be set when send as 'int' type | 1 | 0 / 1 | boolean | False
 STRM0_HRTBT | float | Communication update rate for system heartbeat (set to 0 to turn off stream) | 1.0 | Hz | scalar | False
 STRM0_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
-STRM0_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 100.0 | Hz | scalar | False
+STRM0_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
 STRM0_ATT | float | Communication update rate for current attitude euler angles (set to 0 to turn off stream) | 0.0 | Hz | scalar | False
-STRM0_ATT_Q | float | Communication update rate for current attitude quaternion (set to 0 to turn off stream) | 50.0 | Hz | scalar | False
-STRM0_ATT_T | float | Communication update rate for current attitude target (set to 0 to turn off stream) | 50.0 | Hz | scalar | False
+STRM0_ATT_Q | float | Communication update rate for current attitude quaternion (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
+STRM0_ATT_T | float | Communication update rate for current attitude target (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_RC_IN | float | Communication update rate for RC input channels (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_SRV_OUT | float | Communication update rate for commanded servo output (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
-STRM0_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
+STRM0_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 0.0 | Hz | scalar | False
 STRM0_BATTSTAT | float | Communication update rate for battery status (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
-STRM0_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 100.0 | Hz | scalar | False
+STRM0_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 40.0 | Hz | scalar | False
 STRM1_HRTBT | float | Communication update rate for system heartbeat (set to 0 to turn off stream) | 1.0 | Hz | scalar | False
 STRM1_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
 STRM1_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
@@ -36,7 +36,7 @@ STRM1_RC_IN | float | Communication update rate for RC input channels (set to 0 
 STRM1_SRV_OUT | float | Communication update rate for commanded servo output (set to 0 to turn off stream) | 5.0 | Hz | scalar | False
 STRM1_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
 STRM1_BATTSTAT | float | Communication update rate for battery status (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
-STRM1_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 40.0 | Hz | scalar | False
+STRM1_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
 CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CHK_RATE_MAG | float | Sensor update rate for magnetometer (set to 0 to disable, typical is 20Hz) | 0.0 | Hz | scalar | True

@@ -63,40 +63,43 @@ void communications_system_init(void) {
 	_lpq.length = 0;
 	_lpq.request_all_params_port0 = -1;
 	_lpq.request_all_params_port1 = -1;
+	_lpq.param_position = 0;
+	_lpq.param_length = 0;
 	_lpq.timer_warn_full = 0;
+	_lpq.timer_param_warn_full = 0;
 
 	if( get_param_uint( PARAM_BAUD_RATE_0 ) > 0 ) {
 		Serial1 = uartOpen( USART1, NULL, get_param_uint(PARAM_BAUD_RATE_0 ), MODE_RXTX, SERIAL_NOT_INVERTED );
-		comm_set_open( COMM_CH_0 );
+		comm_set_open( COMM_PORT_0 );
 	}
 
 	if( get_param_uint( PARAM_BAUD_RATE_1 ) > 0 ) {
 		Serial2 = uartOpen( USART2, NULL, get_param_uint( PARAM_BAUD_RATE_1 ), MODE_RXTX, SERIAL_NOT_INVERTED );
-		comm_set_open( COMM_CH_1 );
+		comm_set_open( COMM_PORT_1 );
 	}
 
 	_ch_0_have_heartbeat = false;
 	_ch_1_have_heartbeat = false;
 
 	for(mavlink_stream_id_t i = 0; i < MAVLINK_STREAM_COUNT; i++) {
-		communication_calc_period_update(COMM_CH_0, i);
-		communication_calc_period_update(COMM_CH_1, i);
+		communication_calc_period_update(COMM_PORT_0, i);
+		communication_calc_period_update(COMM_PORT_1, i);
 	}
 
 	mavlink_set_proto_version(MAVLINK_COMM_0, 1);
 	mavlink_set_proto_version(MAVLINK_COMM_1, 1);
 }
 
-bool comm_is_open( uint8_t ch ) {
-	return comms_open_status_ & ch;
+bool comm_is_open( uint8_t port ) {
+	return comms_open_status_ & port;
 }
 
-void comm_set_open( uint8_t ch ) {
-	comms_open_status_ |= ch;
+void comm_set_open( uint8_t port ) {
+	comms_open_status_ |= port;
 }
 
-void comm_set_closed( uint8_t ch ) {
-	comms_open_status_ &= ~ch;
+void comm_set_closed( uint8_t port ) {
+	comms_open_status_ &= ~port;
 }
 
 /*
@@ -120,34 +123,34 @@ static void comm_wait_ready( mavlink_channel_t chan ) {
  * @param ch Character to send
  */
 void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
-	if( (chan == MAVLINK_COMM_0 ) && comm_is_open( COMM_CH_0 ) ) {
+	if( (chan == MAVLINK_COMM_0 ) && comm_is_open( COMM_PORT_0 ) ) {
 		serialWrite(Serial1, ch);
-	} else if( (chan == MAVLINK_COMM_1 ) && comm_is_open( COMM_CH_1 ) ) {
+	} else if( (chan == MAVLINK_COMM_1 ) && comm_is_open( COMM_PORT_1 ) ) {
 	 	serialWrite(Serial2, ch);
 	}
 }
 
 //==-- On-demand messages
-void mavlink_send_statustext(uint8_t port, uint8_t severity, char* text) {
+void mavlink_send_statustext(mavlink_channel_t chan, uint8_t severity, char* text) {
 	//comm_wait_ready(port);
 
-	mavlink_msg_statustext_send(port,
+	mavlink_msg_statustext_send(chan,
 								severity,
 								&text[0]);
 }
 
 void mavlink_send_broadcast_statustext(uint8_t severity, char* text) {
-	if( comm_is_open( COMM_CH_0 ) )
+	if( comm_is_open( COMM_PORT_0 ) )
 		mavlink_send_statustext(MAVLINK_COMM_0, severity, text);
 
-	if( comm_is_open( COMM_CH_1 ) )
+	if( comm_is_open( COMM_PORT_1 ) )
 		mavlink_send_statustext(MAVLINK_COMM_1, severity, text);
 }
 
-void mavlink_send_timesync(uint8_t port, uint64_t tc1, uint64_t ts1) {
+void mavlink_send_timesync(mavlink_channel_t chan, uint64_t tc1, uint64_t ts1) {
 	//comm_wait_ready(port);
 
-	mavlink_msg_timesync_send(port,
+	mavlink_msg_timesync_send(chan,
 							  tc1,
 							  ts1);
 }
@@ -180,19 +183,57 @@ static void remove_current_lpq_message() {
 		_lpq.length--;
 }
 
-bool lpq_queue_msg(mavlink_channel_t port, mavlink_message_t *msg) {
+static uint16_t get_lpq_param_next_slot() {
+	uint16_t next_slot = 0;
+
+	next_slot = _lpq.param_position + _lpq.param_length;
+
+	//See if the queue needs to wrap around the circular buffer
+	if (next_slot >= LOW_PRIORITY_QUEUE_PARAMS_SIZE)
+		next_slot = next_slot - LOW_PRIORITY_QUEUE_PARAMS_SIZE;
+
+	return next_slot;
+}
+
+static bool check_lpq_param_space_free() {
+	//If the count is at the queue size limit, return false
+	return (_lpq.param_length < LOW_PRIORITY_QUEUE_PARAMS_SIZE);
+}
+
+static void remove_current_lpq_param_message() {
+	_lpq.param_position++;
+
+	if(_lpq.param_position >= LOW_PRIORITY_QUEUE_PARAMS_SIZE)
+		_lpq.param_position = 0;
+
+	if(_lpq.param_length > 0)
+		_lpq.param_length--;
+}
+
+static bool lpq_queue_msg_port( uint8_t port, mavlink_message_t *msg ) {
 	bool success = false;
 
-	if( check_lpq_space_free( _lpq ) ) {
-		uint8_t i = get_lpq_next_slot(_lpq);
+	//Only add in port if it is open
+	if( !comm_is_open(port & COMM_PORT_0) )
+		port &= ~COMM_PORT_0;
+
+	if( !comm_is_open(port & COMM_PORT_1) )
+		port &= ~COMM_PORT_1;
+
+	//Only add param if port is valid and there is room
+	if( port && check_lpq_space_free() ) {
+		uint8_t i = get_lpq_next_slot();
 		_lpq.buffer_len[i] = mavlink_msg_to_send_buffer(_lpq.buffer[i], msg);	//Copy message struct data to buffer
-		_lpq.port[i] = port;
+		_lpq.buffer_port[i] = port;
 		_lpq.length++;
 
 		success = true;
-	} else {
+	} else if(!port) {
+		//Return an accept, even though no ports were open
+		success = true;
+	}else {
 		if( micros() - _lpq.timer_warn_full > 1000000) {	//XXX: Only outout the error at 1/s maximum otherwise buffer will never catch up
-			mavlink_send_statustext(port, MAV_SEVERITY_ERROR, "[COMMS] LPQ message dropped!");
+			mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[COMMS] LPQ message dropped!");
 			_lpq.timer_warn_full = micros();
 		}
 	}
@@ -200,20 +241,81 @@ bool lpq_queue_msg(mavlink_channel_t port, mavlink_message_t *msg) {
 	return success;
 }
 
+bool lpq_queue_msg(mavlink_channel_t chan, mavlink_message_t *msg) {
+	uint8_t port = 0;
+
+	if(chan == MAVLINK_COMM_0) {
+		port = COMM_PORT_0;
+	} else if(chan == MAVLINK_COMM_1) {
+		port = COMM_PORT_1;
+	}
+
+	return lpq_queue_msg_port(port, msg);
+}
+
+void lpq_queue_broadcast_msg(mavlink_message_t *msg) {
+	uint8_t port = 0;
+
+	if( comm_is_open( COMM_PORT_0 ) )
+		port |= COMM_PORT_0;
+
+	if( comm_is_open( COMM_PORT_1 ) )
+		port |= COMM_PORT_1;
+
+	lpq_queue_msg_port(port, msg);
+}
+
+static bool lpq_queue_param_port( uint8_t port, uint32_t index ) {
+	bool success = false;
+
+	//Only add in port if it is open
+	if( !comm_is_open(port & COMM_PORT_0) )
+		port &= ~COMM_PORT_0;
+
+	if( !comm_is_open(port & COMM_PORT_1) )
+		port &= ~COMM_PORT_1;
+
+	//Only add param if port is valid and there is room
+	if( port && check_lpq_param_space_free() ) {
+		uint8_t i = get_lpq_param_next_slot();
+		_lpq.param_buffer[i] = index;
+		_lpq.param_buffer_port[i] = port;
+		_lpq.param_length++;
+
+		success = true;
+	} else if(!port) {
+		//Return an accept, even though no ports were open
+		success = true;
+	}
+	/*
+	} else {
+		if( micros() - _lpq.timer_param_warn_full > 1000000) {	//XXX: Only outout the error at 1/s maximum otherwise buffer will never catch up
+			mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[COMMS] LPQ param message dropped!");
+			_lpq.timer_param_warn_full = micros();
+		}
+	}
+	*/
+	return success;
+}
+
+bool lpq_queue_param_broadcast( uint32_t index ) {
+	return lpq_queue_param_port( (COMM_PORT_0 | COMM_PORT_1), index);	//XXX: Needs all comms listed here
+}
+
 static void lpq_queue_all_params(mavlink_channel_t chan) {
-	mavlink_message_t msg;
 	int32_t* req;
+	uint8_t port = 0;
 
 	if(chan == MAVLINK_COMM_0) {
 		req = &_lpq.request_all_params_port0;
+		port = COMM_PORT_0;
 	} else if(chan == MAVLINK_COMM_1) {
 		req = &_lpq.request_all_params_port1;
+		port = COMM_PORT_1;
 	}
 
-	mavlink_prepare_param_value( &msg, *req );
-
-	//Double check to not flood the buffer
-	if( lpq_queue_msg( chan, &msg ) ) {
+	//Don't increase count if the add failed
+	if(lpq_queue_param_port(port, *req)) {
 		(*req)++;
 
 		if( *req >= PARAMS_COUNT ) {
@@ -222,38 +324,77 @@ static void lpq_queue_all_params(mavlink_channel_t chan) {
 	}
 }
 
-void lpq_queue_broadcast_msg(mavlink_message_t *msg) {
-	if( comm_is_open( COMM_CH_0 ) )
-		lpq_queue_msg(MAVLINK_COMM_0, msg);
-
-	if( comm_is_open( COMM_CH_1 ) )
-	 	lpq_queue_msg(MAVLINK_COMM_1, msg);
-}
-
-static void lpq_send(mavlink_channel_t port) {
+static void lpq_send(mavlink_channel_t chan) {
 	//comm_wait_ready(port);
 
 	//If there are messages in the queue
-	if( (_lpq.port[_lpq.position] == port) && _lpq.length > 0) {
-		//Transmit the message
-		for(uint16_t i = 0; i < _lpq.buffer_len[_lpq.position]; i++) {
-			comm_send_ch(_lpq.port[_lpq.position], _lpq.buffer[_lpq.position][i]);
+	if(_lpq.length > 0) {
+		if( (chan == MAVLINK_COMM_0) && (_lpq.buffer_port[_lpq.position] | COMM_PORT_0) ) {
+			//Transmit the message to channel 0
+			for(uint16_t i = 0; i < _lpq.buffer_len[_lpq.position]; i++) {
+				comm_send_ch(chan, _lpq.buffer[_lpq.position][i]);
+			}
+
+			//Unset this channel
+			_lpq.buffer_port[_lpq.position] &= ~COMM_PORT_0;
+		} else if( (chan == MAVLINK_COMM_1) && (_lpq.buffer_port[_lpq.position] | COMM_PORT_1) ) {
+			//Transmit the message to channel 1
+			for(uint16_t i = 0; i < _lpq.buffer_len[_lpq.position]; i++) {
+				comm_send_ch(chan, _lpq.buffer[_lpq.position][i]);
+			}
+
+			//Unset this channel
+			_lpq.buffer_port[_lpq.position] &= ~COMM_PORT_1;
 		}
 
+		//If there are no more ports left to send this message to
 		//Move the queue along
-		remove_current_lpq_message();
+		if( !_lpq.buffer_port[_lpq.position] )
+			remove_current_lpq_message();
+	} else if(_lpq.param_length > 0) {
+		//Check to see if there's parameters to send out
+		mavlink_message_t msg_out;
+		mavlink_prepare_param_value( &msg_out, _lpq.param_buffer[_lpq.param_position] );
+		uint8_t msg_buf[MAVLINK_MAX_PACKET_LEN];
+		uint8_t msg_len = mavlink_msg_to_send_buffer(msg_buf, &msg_out);
+
+		if( (chan == MAVLINK_COMM_0) && (_lpq.param_buffer_port[_lpq.param_position] | COMM_PORT_0) ) {
+			//Transmit the message to channel 0
+			for(uint16_t i = 0; i < msg_len; i++) {
+				comm_send_ch(chan, msg_buf[i]);
+			}
+
+			//Unset this channel
+			_lpq.param_buffer_port[_lpq.param_position] &= ~COMM_PORT_0;
+		} else if( (chan == MAVLINK_COMM_1) && (_lpq.param_buffer_port[_lpq.param_position] | COMM_PORT_1) ) {
+			//Transmit the message to channel 1
+			for(uint16_t i = 0; i < msg_len; i++) {
+				comm_send_ch(chan, msg_buf[i]);
+			}
+
+			//Unset this channel
+			_lpq.param_buffer_port[_lpq.param_position] &= ~COMM_PORT_1;
+		}
+
+		//If there are no more ports left to send this message to
+		//Move the queue along
+		if( !_lpq.param_buffer_port[_lpq.param_position] ) {
+			//mavlink_send_broadcast_statustext(MAV_SEVERITY_INFO, "[COMMS] REMOVE PARAM!");
+			remove_current_lpq_param_message();
+		}
 	}
+
 }
 
 //==-- Streams
 
-bool mavlink_stream_ready(uint8_t port) {
+bool mavlink_stream_ready(mavlink_channel_t chan) {
 	bool ready = !get_param_uint( PARAM_WAIT_FOR_HEARTBEAT );
 
 	if(!ready) {
-		if( port == MAVLINK_COMM_0 ) {
+		if( chan == MAVLINK_COMM_0 ) {
 			ready = _ch_0_have_heartbeat;
-		} else if( port == MAVLINK_COMM_1 ) {
+		} else if( chan == MAVLINK_COMM_1 ) {
 			ready = _ch_1_have_heartbeat;
 		}
 	}
@@ -264,30 +405,33 @@ bool mavlink_stream_ready(uint8_t port) {
 	return ready;
 }
 
-void mavlink_stream_low_priority(uint8_t port) {
+void mavlink_stream_low_priority(mavlink_channel_t chan) {
 	//XXX: Always send LPQ
-	if( port == MAVLINK_COMM_0 ) {
-		//If there is params to queue, and the queue is reasonably empty
-		//  we can afford to interject more parameters this pass
+
+	//If there is params to queue, and the queue is empty
+	//  we can afford to interject more parameters this pass
+	if( chan == MAVLINK_COMM_0 ) {
 		if( ( _lpq.request_all_params_port0 >= 0 ) &&
-			( _lpq.length < (LOW_PRIORITY_QUEUE_SIZE / 4) ) ) {
-			lpq_queue_all_params(port);
+			( _lpq.length == 0 ) &&
+			( _lpq.param_length == 0 ) ) {
+			lpq_queue_all_params(chan);
 		}
-	} else if( port == MAVLINK_COMM_1 ) {
+	} else if( chan == MAVLINK_COMM_1 ) {
 		if( ( _lpq.request_all_params_port1 >= 0 ) &&
-			( _lpq.length < (LOW_PRIORITY_QUEUE_SIZE / 4) ) ) {
-			lpq_queue_all_params(port);
+			( _lpq.length == 0 ) &&
+			( _lpq.param_length == 0 ) ) {
+			lpq_queue_all_params(chan);
 		}
 	}
 
-	lpq_send(port);
+	lpq_send(chan);
 }
 
-void mavlink_stream_heartbeat(uint8_t port) {
+void mavlink_stream_heartbeat(mavlink_channel_t chan) {
 	//XXX: Always send heartbeat
 	//comm_wait_ready(port);
 
-	mavlink_msg_heartbeat_send(port,
+	mavlink_msg_heartbeat_send(chan,
 							   get_param_uint(PARAM_MAV_TYPE),
 							   MAV_AUTOPILOT_PX4,	//XXX: This is to get compatibility for offboard software
 							   _system_status.mode | MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,	//XXX: Set custom mode to allow for the pretend mode
@@ -295,8 +439,8 @@ void mavlink_stream_heartbeat(uint8_t port) {
 							   _system_status.state);
 }
 
-void mavlink_stream_sys_status(uint8_t port) {
-	if( mavlink_stream_ready(port) ) {
+void mavlink_stream_sys_status(mavlink_channel_t chan) {
+	if( mavlink_stream_ready(chan) ) {
 		uint32_t onboard_control_sensors_present = 0;
 		uint32_t onboard_control_sensors_enabled = 0;
 		uint32_t onboard_control_sensors_health = 0;
@@ -304,10 +448,18 @@ void mavlink_stream_sys_status(uint8_t port) {
 		uint16_t voltage_battery = fix16_to_int(fix16_mul(_fc_1000,_sensors.voltage_monitor.state_filtered));
 		uint16_t current_battery = -1;
 		uint8_t battery_remaining = fix16_to_int(fix16_mul(_fc_100,_sensors.voltage_monitor.precentage));
+		/*
+		uint16_t num_packets_drop = mavlink_get_channel_status(MAVLINK_COMM_0)->packet_rx_drop_count +
+									mavlink_get_channel_status(MAVLINK_COMM_1)->packet_rx_drop_count;
+		uint16_t num_packets_success = mavlink_get_channel_status(MAVLINK_COMM_0)->packet_rx_success_count +
+									   mavlink_get_channel_status(MAVLINK_COMM_1)->packet_rx_success_count;
+		uint16_t drop_rate_comm = (100*num_packets_drop) / (num_packets_drop + num_packets_success);
+		uint16_t errors_comm = num_packets_success;
+		*/
 		uint16_t drop_rate_comm = 0;
-		uint16_t errors_comm = 0;	//TODO: Make an alert to say if the UART overflows
+		uint16_t errors_comm = 0;
 		uint16_t errors_count1 = _lpq.length;
-		uint16_t errors_count2 = 0;
+		uint16_t errors_count2 = _lpq.param_length;
 		uint16_t errors_count3 = _sensors.clock.min;
 		uint16_t errors_count4 = _sensors.clock.max;
 
@@ -363,7 +515,7 @@ void mavlink_stream_sys_status(uint8_t port) {
 		//TODO: Other sensors?
 		// MAV_SYS_STATUS_SENSOR_BATTERY, MAV_SYS_STATUS_SENSOR_OPTICAL_FLOW, MAV_SYS_STATUS_SENSOR_VISION_POSITION ...?
 
-		mavlink_msg_sys_status_send(port,
+		mavlink_msg_sys_status_send(chan,
 									onboard_control_sensors_present,
 									onboard_control_sensors_enabled,
 									onboard_control_sensors_health,
@@ -381,8 +533,8 @@ void mavlink_stream_sys_status(uint8_t port) {
 }
 
 //==-- Sends the latest IMU reading
-void mavlink_stream_highres_imu(uint8_t port) {
-	if( mavlink_stream_ready(port) ) {
+void mavlink_stream_highres_imu(mavlink_channel_t chan) {
+	if( mavlink_stream_ready(chan) ) {
 		//TODO: Need to add temp, pressure measurements
 		float xacc = 0;
 		float yacc = 0;
@@ -433,7 +585,7 @@ void mavlink_stream_highres_imu(uint8_t port) {
 			fields_updated |= (1<<9);
 		}
 
-		mavlink_msg_highres_imu_send(port,
+		mavlink_msg_highres_imu_send(chan,
 									 _sensors.imu.status.time_read,
 									 xacc,
 									 yacc,
@@ -452,8 +604,8 @@ void mavlink_stream_highres_imu(uint8_t port) {
 	}
 }
 
-void mavlink_stream_attitude(uint8_t port) {
-	if( mavlink_stream_ready(port) ) {
+void mavlink_stream_attitude(mavlink_channel_t chan) {
+	if( mavlink_stream_ready(chan) ) {
 		fix16_t roll;
 		fix16_t pitch;
 		fix16_t yaw;
@@ -461,7 +613,7 @@ void mavlink_stream_attitude(uint8_t port) {
 		//Extract Euler Angles for controller
 		euler_from_quat(&_state_estimator.attitude, &roll, &pitch, &yaw);
 
-		mavlink_msg_attitude_send(port,
+		mavlink_msg_attitude_send(chan,
 								  _sensors.imu.status.time_read,
 								  fix16_to_float(roll),
 								  fix16_to_float(pitch),
@@ -472,9 +624,9 @@ void mavlink_stream_attitude(uint8_t port) {
 	}
 }
 
-void mavlink_stream_attitude_quaternion(uint8_t port) {
-	if( mavlink_stream_ready(port) ) {
-		mavlink_msg_attitude_quaternion_send(port,
+void mavlink_stream_attitude_quaternion(mavlink_channel_t chan) {
+	if( mavlink_stream_ready(chan) ) {
+		mavlink_msg_attitude_quaternion_send(chan,
 											 _sensors.imu.status.time_read,
 											 fix16_to_float(_state_estimator.attitude.a),
 											 fix16_to_float(_state_estimator.attitude.b),
@@ -486,8 +638,8 @@ void mavlink_stream_attitude_quaternion(uint8_t port) {
 	}
 }
 
-void mavlink_stream_attitude_target(uint8_t port) {
-	if( mavlink_stream_ready(port) ) {
+void mavlink_stream_attitude_target(mavlink_channel_t chan) {
+	if( mavlink_stream_ready(chan) ) {
 		float q[4] = {fix16_to_float(_control_input.q.a),
 					  fix16_to_float(_control_input.q.b),
 					  fix16_to_float(_control_input.q.c),
@@ -496,7 +648,7 @@ void mavlink_stream_attitude_target(uint8_t port) {
 		//Use the control output for some of these commands as they reflect the actual goals
 		// The input mask applied is included, but the information will still potentially be useful
 		// The timestamp used is the one that is used to generate the commands
-		mavlink_msg_attitude_target_send(port,
+		mavlink_msg_attitude_target_send(chan,
 										 sensors_clock_ls_get(),
 										 _control_input.input_mask,
 										 &q[0],
@@ -507,9 +659,9 @@ void mavlink_stream_attitude_target(uint8_t port) {
 	}
 }
 
-void mavlink_stream_rc_channels_raw(uint8_t port) {
-	if( mavlink_stream_ready(port) ) {
-		mavlink_msg_rc_channels_raw_send(port,
+void mavlink_stream_rc_channels_raw(mavlink_channel_t chan) {
+	if( mavlink_stream_ready(chan) ) {
+		mavlink_msg_rc_channels_raw_send(chan,
 										  sensors_clock_ls_get(),
 										  0,	//Port 0
 										  pwmRead(0),
@@ -524,9 +676,9 @@ void mavlink_stream_rc_channels_raw(uint8_t port) {
 	}
 }
 
-void mavlink_stream_servo_output_raw(uint8_t port) {
-	if( mavlink_stream_ready(port) ) {
-		mavlink_msg_servo_output_raw_send(port,
+void mavlink_stream_servo_output_raw(mavlink_channel_t chan) {
+	if( mavlink_stream_ready(chan) ) {
+		mavlink_msg_servo_output_raw_send(chan,
 										  sensors_clock_ls_get(),
 										  0,	//Port 0
 										  _pwm_output[0],
@@ -541,16 +693,16 @@ void mavlink_stream_servo_output_raw(uint8_t port) {
 	}
 }
 
-void mavlink_stream_timesync(uint8_t port) {
-	if( mavlink_stream_ready(port) ) {
-		mavlink_msg_timesync_send(port,
+void mavlink_stream_timesync(mavlink_channel_t chan) {
+	if( mavlink_stream_ready(chan) ) {
+		mavlink_msg_timesync_send(chan,
 								  0,
 								  ( (uint64_t)micros() ) * 1000);
 	}
 }
 
-void mavlink_stream_battery_status(uint8_t port) {
-	if( mavlink_stream_ready(port) ) {
+void mavlink_stream_battery_status(mavlink_channel_t chan) {
+	if( mavlink_stream_ready(chan) ) {
 		uint8_t batt_id = 0;
 
 		uint16_t voltages[10];
@@ -583,7 +735,7 @@ void mavlink_stream_battery_status(uint8_t port) {
 			}
 		}
 
-		mavlink_msg_battery_status_send(port,
+		mavlink_msg_battery_status_send(chan,
 									   batt_id,
 									   get_param_uint(PARAM_BATTERY_FUNCTION),
 									   get_param_uint(PARAM_BATTERY_TYPE),
@@ -595,67 +747,6 @@ void mavlink_stream_battery_status(uint8_t port) {
 									   fix16_to_int(fix16_mul(_fc_100,_sensors.voltage_monitor.precentage)),
 									   0,
 									   charge_state);
-	}
-}
-
-void mavlink_stream_broadcast_param_value( uint32_t index ) {
-	//char param_name[PARAMS_NAME_LENGTH];
-	bool param_ok = false;
-
-	union {
-		float f;
-		int32_t i;
-		uint32_t u;
-	} u;	//The bytes are translated to the right unit on receiving, but need to be sent as a "float"
-
-	switch(_params.types[index]) {
-		case MAVLINK_TYPE_UINT32_T: {
-			u.u = get_param_uint(index);
-			param_ok = true;
-
-			break;
-		}
-		case MAVLINK_TYPE_INT32_T : {
-			u.i = get_param_int(index);
-			param_ok = true;
-
-			break;
-		}
-		case MAVLINK_TYPE_FLOAT: {
-			u.f = fix16_to_float(get_param_fix16(index));
-			param_ok = true;
-
-			break;
-		}
-		default: {
-			break;
-		}
-	}
-
-	if( param_ok ) {
-		if( mavlink_stream_ready(MAVLINK_COMM_0) ) {
-			mavlink_msg_param_value_send(MAVLINK_COMM_0,
-										 &_param_names[index][0],		//String of name
-										 u.f,			//Value (always as float)
-										 _params.types[index],		//From MAV_PARAM_TYPE
-										 PARAMS_COUNT,	//Total number of parameters
-										 index);
-		}
-
-		if( mavlink_stream_ready(MAVLINK_COMM_1) ) {
-			mavlink_msg_param_value_send(MAVLINK_COMM_1,
-										 &_param_names[index][0],		//String of name
-										 u.f,			//Value (always as float)
-										 _params.types[index],		//From MAV_PARAM_TYPE
-										 PARAMS_COUNT,	//Total number of parameters
-										 index);
-		}
-	} else {
-		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PARAM] Unknown paramater type found: ";
-		char bad_param_id[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-		itoa(index, bad_param_id, 10);
-		strncat(text, bad_param_id, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1); //XXX: Stops overflow warnings
-		mavlink_queue_broadcast_error(text);
 	}
 }
 

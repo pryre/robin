@@ -12,7 +12,7 @@ typedef struct {
 	param_id_t param_rate;
 	uint32_t period_update;
 	uint32_t last_time_us;
-	void (*send_function)(uint8_t port);
+	void (*send_function)(mavlink_channel_t port);
 } mavlink_stream_t;
 
 // type definitions

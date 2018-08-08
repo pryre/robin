@@ -42,7 +42,7 @@ static mavlink_stream_t mavlink_stream_comm_1[MAVLINK_STREAM_COUNT] = {
 };
 
 void communication_calc_period_update(uint8_t comm_port, mavlink_stream_id_t stream_id) {
-	if(comm_port == COMM_CH_0) {
+	if(comm_port == COMM_PORT_0) {
 		fix16_t rate = get_param_fix16(mavlink_stream_comm_0[stream_id].param_rate);
 
 		if(rate == 0) {
@@ -51,7 +51,7 @@ void communication_calc_period_update(uint8_t comm_port, mavlink_stream_id_t str
 			uint32_t val = fix16_to_int( fix16_div(_fc_1000, rate));
 			mavlink_stream_comm_0[stream_id].period_update = 1000 * val;
 		}
-	} else if(comm_port == COMM_CH_1) {
+	} else if(comm_port == COMM_PORT_1) {
 		fix16_t rate = get_param_fix16(mavlink_stream_comm_1[stream_id].param_rate);
 
 		if(rate == 0) {
@@ -81,8 +81,8 @@ void communication_transmit(uint32_t time_us) {
 	// otherwise we risk overloading the serial buffer. This
 	// will also offset the message streams so they are all staggered
 	//Disable checking for outputs if port disabled
-	bool message_sent_comm_0 = !comm_is_open( COMM_CH_0 );
-	bool message_sent_comm_1 = !comm_is_open( COMM_CH_1 );
+	bool message_sent_comm_0 = !comm_is_open( COMM_PORT_0 );
+	bool message_sent_comm_1 = !comm_is_open( COMM_PORT_1 );
 
 	for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
 

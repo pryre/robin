@@ -83,7 +83,7 @@ PARAM_BAUD_RATE_0:
   reboot: true
   value:
     option: "list"
-    default: 4
+    default: 3
     list: [0, 9600, 57600, 115200, 921600]
 ---
 PARAM_BAUD_RATE_1:
@@ -93,7 +93,7 @@ PARAM_BAUD_RATE_1:
   reboot: true
   value:
     option: "list"
-    default: 3
+    default: 0
     list: [0, 9600, 57600, 115200, 921600]
 ---
 PARAM_WAIT_FOR_HEARTBEAT:
@@ -186,7 +186,7 @@ PARAM_STREAM_RATE_HEARTBEAT_0:
   value:
     option: "scalar"
     default: 1.0
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_HEARTBEAT);"
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_HEARTBEAT);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_SYS_STATUS_0:
@@ -197,7 +197,7 @@ PARAM_STREAM_RATE_SYS_STATUS_0:
   value:
     option: "scalar"
     default: 0.2
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_SYS_STATUS);"
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_SYS_STATUS);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_HIGHRES_IMU_0:
@@ -207,8 +207,8 @@ PARAM_STREAM_RATE_HIGHRES_IMU_0:
   reboot: false
   value:
     option: "scalar"
-    default: 100.0
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_HIGHRES_IMU);"
+    default: 20.0
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_HIGHRES_IMU);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_0:
@@ -219,7 +219,7 @@ PARAM_STREAM_RATE_ATTITUDE_0:
   value:
     option: "scalar"
     default: 0.0
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE);"
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_ATTITUDE);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0:
@@ -229,8 +229,8 @@ PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0:
   reboot: false
   value:
     option: "scalar"
-    default: 50.0
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
+    default: 20.0
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
@@ -240,8 +240,8 @@ PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
   reboot: false
   value:
     option: "scalar"
-    default: 50.0
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
+    default: 10.0
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_RC_CHANNELS_RAW_0:
@@ -252,7 +252,7 @@ PARAM_STREAM_RATE_RC_CHANNELS_RAW_0:
   value:
     option: "scalar"
     default: 10.0
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_RC_CHANNELS_RAW);"
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_RC_CHANNELS_RAW);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
@@ -263,7 +263,7 @@ PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
   value:
     option: "scalar"
     default: 10.0
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_TIMESYNC_0:
@@ -273,8 +273,8 @@ PARAM_STREAM_RATE_TIMESYNC_0:
   reboot: false
   value:
     option: "scalar"
-    default: 10.0
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_TIMESYNC);"
+    default: 0.0
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_TIMESYNC);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_BATTERY_STATUS_0:
@@ -285,7 +285,7 @@ PARAM_STREAM_RATE_BATTERY_STATUS_0:
   value:
     option: "scalar"
     default: 2.0
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_BATTERY_STATUS);"
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_BATTERY_STATUS);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_LOW_PRIORITY_0:
@@ -295,8 +295,8 @@ PARAM_STREAM_RATE_LOW_PRIORITY_0:
   reboot: false
   value:
     option: "scalar"
-    default: 100.0
-    function: "communication_calc_period_update(COMM_CH_0, MAVLINK_STREAM_ID_LOW_PRIORITY);"
+    default: 40.0
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_LOW_PRIORITY);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_HEARTBEAT_1:
@@ -307,7 +307,7 @@ PARAM_STREAM_RATE_HEARTBEAT_1:
   value:
     option: "scalar"
     default: 1.0
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HEARTBEAT);"
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_HEARTBEAT);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_SYS_STATUS_1:
@@ -318,7 +318,7 @@ PARAM_STREAM_RATE_SYS_STATUS_1:
   value:
     option: "scalar"
     default: 0.2
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SYS_STATUS);"
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_SYS_STATUS);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_HIGHRES_IMU_1:
@@ -329,7 +329,7 @@ PARAM_STREAM_RATE_HIGHRES_IMU_1:
   value:
     option: "scalar"
     default: 20.0
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_HIGHRES_IMU);"
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_HIGHRES_IMU);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_1:
@@ -340,7 +340,7 @@ PARAM_STREAM_RATE_ATTITUDE_1:
   value:
     option: "scalar"
     default: 0.0
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE);"
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_ATTITUDE);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1:
@@ -351,7 +351,7 @@ PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1:
   value:
     option: "scalar"
     default: 20.0
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_TARGET_1:
@@ -362,7 +362,7 @@ PARAM_STREAM_RATE_ATTITUDE_TARGET_1:
   value:
     option: "scalar"
     default: 10.0
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_RC_CHANNELS_RAW_1:
@@ -373,7 +373,7 @@ PARAM_STREAM_RATE_RC_CHANNELS_RAW_1:
   value:
     option: "scalar"
     default: 5.0
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_RC_CHANNELS_RAW);"
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_RC_CHANNELS_RAW);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1:
@@ -384,7 +384,7 @@ PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1:
   value:
     option: "scalar"
     default: 5.0
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_TIMESYNC_1:
@@ -395,7 +395,7 @@ PARAM_STREAM_RATE_TIMESYNC_1:
   value:
     option: "scalar"
     default: 2.0
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_TIMESYNC);"
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_TIMESYNC);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_BATTERY_STATUS_1:
@@ -406,7 +406,7 @@ PARAM_STREAM_RATE_BATTERY_STATUS_1:
   value:
     option: "scalar"
     default: 2.0
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_BATTERY_STATUS);"
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_BATTERY_STATUS);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_LOW_PRIORITY_1:
@@ -416,8 +416,8 @@ PARAM_STREAM_RATE_LOW_PRIORITY_1:
   reboot: false
   value:
     option: "scalar"
-    default: 40.0
-    function: "communication_calc_period_update(COMM_CH_1, MAVLINK_STREAM_ID_LOW_PRIORITY);"
+    default: 20.0
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_LOW_PRIORITY);"
     unit: "Hz"
 ---
 PARAM_SENSOR_IMU_CBRK:
