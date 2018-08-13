@@ -336,7 +336,7 @@ void controller_run( uint32_t time_now ) {
 		}
 	}
 
-	fix16_t dt = fix16_from_float((float)(time_now - _control_timing.time_last) * 1e-6);	//Delta time in seconds
+	fix16_t dt = fix16_from_float(1e-6 * (float)(time_now - _control_timing.time_last));	//Delta time in seconds
 
 	if( (dt == 0) || (time_now - _control_timing.time_last > _control_timing.period_stale) ) {
 		dt = 0;

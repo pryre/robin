@@ -710,11 +710,7 @@ static bool sensors_do_cal_rc(void) {
 			}
 			case SENSOR_CAL_RC_RANGE_MIDDOWN: {
 				for(int i=0;i<8;i++) {
-					if( (unsigned int)i == (get_param_uint(PARAM_RC_MAP_THROTTLE) - 1)) {
-						_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MID] = SENSOR_RC_MIDSTICK;
-					} else {
-						_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MID] = pwmRead(i);
-					}
+					_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MID] = pwmRead(i);
 
 					if( ( pwmRead(i) < 1300 ) || ( pwmRead(i) > 1700 ) ) {
 						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Possible bad trim on channel ";
@@ -772,6 +768,7 @@ static bool sensors_do_cal_rc(void) {
 					_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MIN] = ( pwmr < _sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MIN] ) ? pwmr : _sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MIN];
 					_sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MAX] = ( pwmr > _sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MAX] ) ? pwmr : _sensor_calibration.data.rc.rc_ranges[i][SENSOR_RC_CAL_MAX];
 				}
+
 				break;
 			}
 			case SENSOR_CAL_RC_RANGE_DONE: {

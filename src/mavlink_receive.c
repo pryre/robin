@@ -111,59 +111,87 @@ static void communication_decode(uint8_t port, uint8_t c) {
 							MAV_PARAM_TYPE send_type = mavlink_msg_param_set_get_param_type(&msg);
 							MAV_PARAM_TYPE known_type = get_param_type(index);
 
-							bool int_uint_conversion = false;
-
-							//XXX: Some GCS won't send correct parameter types, so we allow relaxed setting
-							if( get_param_uint( PARAM_RELAXED_PARAM_SET ) ) {
-								if( (send_type == MAV_PARAM_TYPE_INT32 ) && (known_type == MAV_PARAM_TYPE_UINT32 ) ) {
-									int_uint_conversion = true;
-									known_type = send_type;
-
-									mavlink_queue_broadcast_notice("[PARAM] Using relaxed parameter saving");
-								}
-
+							bool right_type = (known_type == send_type);
+							if( (!right_type) && get_param_uint( PARAM_RELAXED_PARAM_SET ) ) {
+								right_type = true;
+								mavlink_queue_broadcast_notice("[PARAM] Using relaxed parameter saving");
 							}
 
-							if( send_type == known_type ) {
+							if(right_type) {
+								bool set_failed = false;
+
+								union {
+									float f;
+									int32_t i;
+									uint32_t u;
+								} u;
+
+								u.f = mavlink_msg_param_set_get_param_value(&msg);
+
 								switch( send_type ) {
 									case MAV_PARAM_TYPE_UINT32: {
-										union {
-											float f;
-											uint32_t u;
-										} u;
+										uint32_t val = 0;
 
-										u.f = mavlink_msg_param_set_get_param_value(&msg);
-										set_param_by_name_uint(param_id, u.u);
+										if(known_type == MAV_PARAM_TYPE_UINT32) {
+											val = u.u;
+										} else if(known_type == MAV_PARAM_TYPE_INT32) {
+											val = (uint32_t)u.i;
+										} else if(known_type == MAV_PARAM_TYPE_REAL32) {
+											val = (uint32_t)u.f;
+										} else { //Must be real
+											set_failed = true;
+										}
+
+										if(!set_failed)
+											set_param_by_name_uint(param_id, val);
 
 										break;
 									}
 									case MAV_PARAM_TYPE_INT32: {
-										union {
-											float f;
-											int32_t i;
-										} u;
+										int32_t val = 0;
 
-										u.f = mavlink_msg_param_set_get_param_value(&msg);
-
-										if(!int_uint_conversion) {
-											set_param_by_name_int(param_id, u.i);
-										} else {
-											set_param_by_name_uint(param_id, (uint32_t)u.i);
+										if(known_type == MAV_PARAM_TYPE_UINT32) {
+											val = u.u;
+										} else if(known_type == MAV_PARAM_TYPE_INT32) {
+											val = u.i;
+										} else if(known_type == MAV_PARAM_TYPE_REAL32) {
+											val = u.f;
+										} else { //Must be real
+											set_failed = true;
 										}
+
+										if(!set_failed)
+											set_param_by_name_int(param_id, val);
 
 										break;
 									}
 									case MAV_PARAM_TYPE_REAL32: {
-										float value = mavlink_msg_param_set_get_param_value(&msg);
-										set_param_fix16(index, fix16_from_float(value));
+										float val = 0;
+
+										if(known_type == MAV_PARAM_TYPE_UINT32) {
+											val = u.u;
+										} else if(known_type == MAV_PARAM_TYPE_INT32) {
+											val = u.i;
+										} else if(known_type == MAV_PARAM_TYPE_REAL32) {
+											val = u.f;
+										} else { //Must be real
+											set_failed = true;
+										}
+
+										if(!set_failed)
+											set_param_by_name_fix16(param_id, fix16_from_float(val));
 
 										break;
 									}
-									default:
-										mavlink_queue_broadcast_notice("[PARAM] Do not know how to handle read paramater type!");
+									default: {
+										mavlink_queue_broadcast_notice("[PARAM] Do not know how to handle sent paramater type!");
 
 										break;
+									}
 								}
+
+								if(set_failed)
+									mavlink_queue_broadcast_error("[PARAM] Failed to determine known parameter type!");
 							} else {
 								//XXX: This may be caused if a GCS sends a UINT32 param as INT32
 								mavlink_queue_broadcast_error("[PARAM] Paramater type mismatch!");
