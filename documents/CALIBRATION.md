@@ -10,7 +10,9 @@ If using MAVROS, you should be able to use the following process to perform a ca
 ## Gyroscope
 To perform a gyroscope calibration:
 1. Place the autopilot on a flat surface
-2. Do not bump the device then issue the calibration command (for MAVROS: `rosrun mavros mavcmd long 241 1 0 0 0 0 0 0`)
+2. Do not bump the device then issue the calibration command:
+   - MAVROS: `rosrun mavros mavcmd long 241 1 0 0 0 0 0 0`
+   - QGCS Widget: Press `Send gyroscope calibration command`
 3. The calibration should only take a few seconds
 
 ## Accelerometer
@@ -20,7 +22,9 @@ The flight controller uses the NED frame of reference. During the calibration st
 
 To perform a accelerometer calibration:
 1. Place the autopilot on a flat surface, with the Z-axis pointing down (in the NED frame)
-2. Hold the device steady, then issue the calibration command (for MAVROS: `rosrun mavros mavcmd long 241 0 0 0 0 1 0 0`)
+2. Hold the device steady, then issue the calibration command:
+   - MAVROS: `rosrun mavros mavcmd long 241 0 0 0 0 1 0 0`
+   - QGCS Widget: Press `Send accelerometer calibration command`
 3. Repeat step 2, following the instructions sent back from the autopilot
 4. The calibration should only take a few seconds per axis, but it will need to be done for each axis, in both directions
 
@@ -28,18 +32,20 @@ To perform a accelerometer calibration:
 Before performing a radio control calibration, you must first connect a PPM compatible RC reciever. For the complete calibtation, you should also set the parameters `PARAM_RC_MAP_ROLL`, `PARAM_RC_MAP_PITCH`, `PARAM_RC_MAP_YAW`, and `PARAM_RC_MAP_THROTTLE` before proceding.
 
 To perform an RC calibration:
-1. Ensure RC transmitter and reciever are bound and ready. Send the initial RC calibration command.
+1. Ensure RC transmitter and reciever are bound and ready. Send the initial RC calibration command:
+   - MAVROS: `rosrun mavros mavcmd long 241 0 0 0 1 0 0 0`
+   - QGCS Widget: Press `Send RC calibration command`
 
 ![RC Calibration Stage 1](https://raw.githubusercontent.com/qutas/robin/master/documents/rc_step_1.png)
 
-2. Set RC to stick centered, issue the next calibration command.
+2. Set RC to stick centered, then reissue the calibration command.
 
 ![RC Calibration Stage 2](https://raw.githubusercontent.com/qutas/robin/master/documents/rc_step_2.png)
 
-3. Set RC to lower inner corners, issue the next calibration command.
+3. Set RC to lower inner corners, then reissue the calibration command.
 
 ![RC Calibration Stage 3](https://raw.githubusercontent.com/qutas/robin/master/documents/rc_step_3.png)
 
-4. Move all sticks and switches to extremes, then issue the next calibration command when done.
+4. Move all sticks and switches to extremes, then reissue the calibration command when done.
 
 5. Calibration should now be complete.
