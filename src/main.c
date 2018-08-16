@@ -80,7 +80,6 @@ void loop(void) {
 	sensors_poll( micros() );
 
 	if( sensors_read() ) {
-
 		sensors_update( micros() );
 
 		estimator_update( sensors_clock_imu_int_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)

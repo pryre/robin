@@ -74,9 +74,6 @@ static void clock_init(void) {
 	_sensors.clock.rt_sync_last = 0;
 }
 
-static void sensors_imu_disable(void) {
-}
-
 void sensors_imu_poll(void) {
 	//==-- Timing setup get loop time
 	_imu_time_ready = micros();
