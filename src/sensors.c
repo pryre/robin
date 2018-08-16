@@ -27,12 +27,11 @@
 #define GYRO_HIGH_BIAS_WARN 200
 
 //==-- Local Variables
-int32_t _imu_time_read = 0;
+uint32_t _imu_time_ready = 0;
 static volatile uint8_t accel_status = 0;
 static volatile uint8_t gyro_status = 0;
 static volatile uint8_t temp_status = 0;
 
-static bool use_imu;
 static int16_t read_accel_raw[3];
 static int16_t read_gyro_raw[3];
 static volatile int16_t read_temp_raw;
@@ -80,11 +79,7 @@ static void sensors_imu_disable(void) {
 
 void sensors_imu_poll(void) {
 	//==-- Timing setup get loop time
-	_imu_time_read = micros();
-
-	mpu_request_async_accel_read(read_accel_raw, &accel_status);
-	mpu_request_async_gyro_read(read_gyro_raw, &gyro_status);
-	mpu_request_async_temp_read(&(read_temp_raw), &temp_status);
+	_imu_time_ready = micros();
 }
 
 static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
@@ -135,17 +130,15 @@ void sensors_cal_init(void) {
 	_sensor_calibration.data.accel.temp_shift = fix16_from_float(36.53f);
 }
 
-void sensors_deinit_imu(void) {
-	if(use_imu) {
-		mpu_register_interrupt_cb(&sensors_imu_disable, get_param_uint(PARAM_BOARD_REVISION));
-		while( i2c_job_queued() ); //Wait for jobs to finish
+void sensors_clear_i2c(void) {
+		//mpu_register_interrupt_cb(&sensors_imu_disable, get_param_uint(PARAM_BOARD_REVISION));
+	while( i2c_job_queued() ); //Wait for jobs to finish
 		//mpuWriteRegisterI2C(MPU_RA_PWR_MGMT_1, MPU_BIT_DEVICE_RESET);
 		//delay(500);
-	}
 }
 
 void sensors_init_imu(void) {
-	if( use_imu ) {
+	if( get_param_uint(PARAM_SENSOR_IMU_CBRK) ) {
 		sensor_status_init(&_sensors.imu.status, true);
 		mpu_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
 
@@ -173,7 +166,6 @@ void sensors_init_imu(void) {
 
 void sensors_init_internal(void) {
 	//==-- IMU-MPU6050
-	use_imu = (bool)get_param_uint(PARAM_SENSOR_IMU_CBRK);
 	sensors_init_imu();
 
 	//==-- Calibrations
@@ -338,8 +330,6 @@ bool sensors_read(void) {
 		accel_status = I2C_JOB_DEFAULT;
 		gyro_status = I2C_JOB_DEFAULT;
 		temp_status = I2C_JOB_DEFAULT;
-
-		_sensors.clock.imu_time_read = _imu_time_read;
 
 		//==-- Save raw data
 		//XXX: Some values need to be inversed to be in the NED frame
@@ -1196,36 +1186,54 @@ void sensors_update_rc_cal(void) {
 }
 
 void sensors_poll(uint32_t time_us) {
-	//Only allow a single i2c device to be queued each loop
-	bool i2c_read_requested = false;
+	//==-- Update IMU
+	if(_sensors.imu.status.present) {
+		//Update the imu sensor if we've recieved a new interrupt
+		if( (_imu_time_ready > sensors_clock_imu_int_get() ) &&
+			(accel_status == I2C_JOB_DEFAULT) &&
+			(gyro_status == I2C_JOB_DEFAULT) &&
+			(temp_status == I2C_JOB_DEFAULT) ) {
+
+			mpu_request_async_accel_read(read_accel_raw, &accel_status);
+			mpu_request_async_gyro_read(read_gyro_raw, &gyro_status);
+			mpu_request_async_temp_read(&(read_temp_raw), &temp_status);
+
+			_sensors.clock.imu_time_read = _imu_time_ready;
+		}
+	}
+
+	//Only allow a single additional i2c device to be queued each sensor cycle
+	bool aux_sensor_req = (mag_status != I2C_JOB_DEFAULT) &&
+						  (baro_status != I2C_JOB_DEFAULT) &&
+						  (sonar_status != I2C_JOB_DEFAULT);
 
 	//==-- Update Mag
-	if(_sensors.mag.status.present && !i2c_read_requested) {
+	if(_sensors.mag.status.present && !aux_sensor_req) {
 		//Update the sensor if it's time (and it's not currently reading)
 		if( ( (time_us - _sensors.mag.status.time_read) > _sensors.mag.period_update ) &&
 			(mag_status == I2C_JOB_DEFAULT) ) {
 			hmc5883l_request_async_read(read_mag_raw, &mag_status);
-			i2c_read_requested = true;
+			aux_sensor_req = true;
 		}
 	}
 
 	//==-- Update Baro
-	if(_sensors.baro.status.present && !i2c_read_requested) {
+	if(_sensors.baro.status.present && !aux_sensor_req) {
 		//Update the sensor if it's time (and it's not currently reading)
 		if( ( (time_us - _sensors.baro.status.time_read) > _sensors.baro.period_update ) &&
 			(baro_status == I2C_JOB_DEFAULT) ) {
 			bmp280_request_async_read(read_baro_raw, &baro_status);
-			i2c_read_requested = true;
+			aux_sensor_req = true;
 		}
 	}
 
 	//==-- Update Sonar
-	if(_sensors.sonar.status.present && !i2c_read_requested) {
+	if(_sensors.sonar.status.present && !aux_sensor_req) {
 		//Update the sensor if it's time (and it's not currently reading)
 		if( ( (time_us - _sensors.sonar.status.time_read) > _sensors.sonar.period_update ) &&
 			(sonar_status == I2C_JOB_DEFAULT) ) {
 			//sonar_request_async_read(read_baro_raw, &baro_status);
-			i2c_read_requested = true;
+			aux_sensor_req = true;
 		}
 	}
 }
@@ -1277,10 +1285,10 @@ bool sensors_update(uint32_t time_us) {
 		_sensors.rc_input.p_y = pwmRead(chan_yaw);
 		_sensors.rc_input.p_T = pwmRead(chan_throttle);
 
-		if( (_sensors.rc_input.p_r > 0) &&
-			(_sensors.rc_input.p_p > 0) &&
-			(_sensors.rc_input.p_y > 0) &&
-			(_sensors.rc_input.p_T > 0) ) {
+		if( (_sensors.rc_input.p_r > 800) && (_sensors.rc_input.p_r < 2200 ) &&
+			(_sensors.rc_input.p_p > 800) && (_sensors.rc_input.p_p < 2200 ) &&
+			(_sensors.rc_input.p_y > 800) && (_sensors.rc_input.p_y < 2200 ) &&
+			(_sensors.rc_input.p_T > 800) && (_sensors.rc_input.p_T < 2200 ) ) {
 			//We have a valid reading
 			_sensors.rc_input.status.time_read = time_us;
 			_sensors.rc_input.status.new_data = true;
@@ -1325,7 +1333,7 @@ bool sensors_update(uint32_t time_us) {
 			if( get_param_uint(PARAM_RC_MAP_MODE_SW) ) {
 				_sensors.rc_input.p_m = pwmRead(get_param_uint(PARAM_RC_MAP_MODE_SW) - 1);
 
-				if( _sensors.rc_input.p_m > 0 ) {
+				if( ( _sensors.rc_input.p_m > 800 ) && ( _sensors.rc_input.p_m < 2200 ) ) {
 					compat_px4_main_mode_t c_m_last = _sensors.rc_input.c_m;
 
 					if( abs( (int16_t)get_param_uint(PARAM_RC_MODE_PWM_STAB) - _sensors.rc_input.p_m ) < get_param_uint(PARAM_RC_MODE_PWM_RANGE) ) {

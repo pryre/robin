@@ -64,7 +64,7 @@ void setup(void) {
 	//==============================================================
 
 	//Wait here for the first imu message (probably not really neaded)
-	while( !sensors_read() );
+	//while( !sensors_read() );
 }
 
 //XXX: Measured CPU load when armed and running: 51.4%
@@ -77,8 +77,9 @@ void loop(void) {
 	//Sensor Read
 	//Check to see if any of the i2c sensors have been updated (mainly the imu)
 	// and if so, update the sensor states and estimator
+	sensors_poll( micros() );
+
 	if( sensors_read() ) {
-		sensors_poll( micros() );
 
 		sensors_update( micros() );
 

@@ -229,38 +229,44 @@ bool safety_request_state(uint8_t req_state) {
 	return change_state;
 }
 
+static bool check_control_mode_inputs(uint8_t req_ctrl_mode) {
+	bool control_mode_ok = false;
+
+	switch(req_ctrl_mode) {
+		case MAIN_MODE_STABILIZED: {
+			if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK )
+				  control_mode_ok = true;
+
+			break;
+		}
+		case MAIN_MODE_ACRO: {
+			if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK )
+				control_mode_ok = true;
+
+			break;
+		}
+		case MAIN_MODE_OFFBOARD: {
+			if( ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
+				  ( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) )
+				  control_mode_ok = true;
+
+			break;
+		}
+		default: {	// Other control modes cannot be requested
+			break;
+		}
+	}
+
+	return control_mode_ok;
+}
 
 bool safety_request_control_mode( uint8_t req_ctrl_mode ) {
 	bool change_ctrl_mode = false;
 
-
 	if(_system_status.control_mode == req_ctrl_mode) {	//XXX: State request to same state, just say OK
 		change_ctrl_mode = true;
 	} else {
-		switch(req_ctrl_mode) {
-			case MAIN_MODE_STABILIZED: {
-				if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK )
-					  change_ctrl_mode = true;
-
-				break;
-			}
-			case MAIN_MODE_ACRO: {
-				if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK )
-					change_ctrl_mode = true;
-
-				break;
-			}
-			case MAIN_MODE_OFFBOARD: {
-				if( ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
-					  ( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) )
-					  change_ctrl_mode = true;
-
-				break;
-			}
-			default: {	// Other control modes cannot be requested
-				break;
-			}
-		}
+		change_ctrl_mode = check_control_mode_inputs(req_ctrl_mode);
 	}
 
 
@@ -300,9 +306,9 @@ static void do_safety_arm(void) {
 
 bool safety_request_arm(void) {
 	bool result = false;
+	bool mode_check = false;
 	bool control_check = false;
 	bool throttle_check = false;
-	bool mode_check = false;
 
 	char text_error[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] Arming denied: ";
 	char text_reason[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
@@ -314,9 +320,10 @@ bool safety_request_arm(void) {
 	} else {
 		switch(_system_status.control_mode) {
 			case MAIN_MODE_STABILIZED: {
+				mode_check = true;
+
 				if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) {
 					control_check = true;
-					mode_check = true;
 
 					if( _sensors.rc_input.c_T < _fc_0_05 )
 						throttle_check = true;
@@ -325,9 +332,10 @@ bool safety_request_arm(void) {
 				break;
 			}
 			case MAIN_MODE_ACRO: {
+				mode_check = true;
+
 				if( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) {
 					control_check = true;
-					mode_check = true;
 
 					if( _sensors.rc_input.c_T < _fc_0_05 )
 						throttle_check = true;
@@ -336,9 +344,10 @@ bool safety_request_arm(void) {
 				break;
 			}
 			case MAIN_MODE_OFFBOARD: {
+				mode_check = true;
+
 				if( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) {
 					control_check = true;
-					mode_check = true;
 
 					if( ( _cmd_ob_input.T == 0 ) || ( _cmd_ob_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) {
 						throttle_check = true;
@@ -439,7 +448,7 @@ bool safety_request_arm(void) {
 				MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			} else if(!control_check) {
 				strncpy(text_reason,
-				"no control for current mode",
+				"no control input",
 				MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 			} else if( !throttle_check ) {
 				strncpy(text_reason, "high throttle", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
@@ -651,9 +660,7 @@ static void safety_health_update(uint32_t time_now) {
 					  ( !_sensors.sonar.status.present || ( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) ) &&
 					  ( !_sensors.ext_pose.status.present || ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) );
 
-	bool control_ok = ( (_system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK) &&
-						( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) ) ||
-					  (_system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK);
+	bool control_ok = check_control_mode_inputs(_system_status.control_mode);
 
 	if( sensors_ok && control_ok ) {
 		_system_status.health = SYSTEM_HEALTH_OK;

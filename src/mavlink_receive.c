@@ -24,12 +24,15 @@ command_input_t _cmd_ob_input;
 system_status_t _system_status;
 mavlink_system_t _mavlink_gcs;
 
-static void communication_decode(uint8_t port, uint8_t c) {
+static bool communication_decode(uint8_t port, uint8_t c) {
+	bool msg_parsed = false;
 	mavlink_message_t msg;
 	mavlink_status_t status;
 
 	// Try to get a new message
 	if(mavlink_parse_char(port, c, &msg, &status)) {
+		msg_parsed = true;
+
 		if( ( !get_param_uint(PARAM_STRICT_GCS_MATCH) ) ||
 		    ( (msg.sysid == _mavlink_gcs.sysid) && (msg.compid == _mavlink_gcs.compid) ) ) {
 			//XXX: This may happen automatically in the MAVLINK backend
@@ -426,8 +429,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 										delay(500);	//XXX: Give a few moments for the comms to send
 
 										//XXX: Graceful Shutdown
-										sensors_deinit_imu();
-										while( i2c_job_queued() ); //Wait for jobs to finish
+										sensors_clear_i2c();
+										//while( i2c_job_queued() ); //Wait for jobs to finish
 
 										systemReset();
 
@@ -438,8 +441,8 @@ static void communication_decode(uint8_t port, uint8_t c) {
 										delay(500);	//XXX: Give a few moments for the comms to send
 
 										//XXX: Graceful Shutdown
-										sensors_deinit_imu();
-										while( i2c_job_queued() ); //Wait for jobs to finish
+										sensors_clear_i2c();
+										//while( i2c_job_queued() ); //Wait for jobs to finish
 
 										systemResetToBootloader();
 
@@ -661,22 +664,42 @@ static void communication_decode(uint8_t port, uint8_t c) {
 			}
 		}
 	}
+
+	return msg_parsed;
 }
 
 void communication_receive(void) {
-	const uint32_t time_read_max = 250;	//XXX: Make sure the read step doesn't last more that 250us (means we might drop packets, but it won't lock the system)
+	//XXX: Make sure the read step doesn't last more that 250us
+	//	   (means we might drop packets, but it won't lock the system)
+	const uint32_t time_read_max = 250;
 	uint32_t time_start_read = micros();
 
-	if( comm_is_open( COMM_PORT_0 ) )
-		while( serialTotalRxBytesWaiting( Serial1 ) && ( (micros() - time_start_read ) < time_read_max ) )
-				communication_decode( MAVLINK_COMM_0, serialRead(Serial1) );
+	//Read in as many byts as we can until either
+	//both ports are empty, have both read messages,
+	//or the time_read_max is hit
+	while( (micros() - time_start_read ) < time_read_max ) {
+		bool port0_done = !comm_is_open( COMM_PORT_0 );
+		bool port1_done = !comm_is_open( COMM_PORT_1 );
 
-	time_start_read = micros();
+		if( !port0_done ) {
+			if( serialTotalRxBytesWaiting( Serial1 ) ) {
+					port0_done = communication_decode( MAVLINK_COMM_0, serialRead(Serial1) );
+			} else {
+				port0_done = true;
+			}
+		}
 
-	if( comm_is_open( COMM_PORT_1 ) )
-		while( serialTotalRxBytesWaiting( Serial2 ) && ( (micros() - time_start_read ) < time_read_max ) )
-				communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
+		if( !port1_done ) {
+			if( serialTotalRxBytesWaiting( Serial2 ) ) {
+					port1_done = communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
+			} else {
+				port1_done = true;
+			}
+		}
 
+		if(port0_done && port1_done)
+			break;
+	}
 	//TODO: Update global packet drops counter
 	//packet_drops += status.packet_rx_drop_count;
 }
