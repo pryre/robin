@@ -30,6 +30,7 @@ extern v3d _adaptive_gyro_bias;		//Adds in an adaptive measurements for gyro
 // PARAM_EST_USE_QUAD_INT <- some additional accuracy, adds ~20 us
 void estimator_init();
 void estimator_update(uint32_t now);
+void estimator_set_hil(uint32_t now);
 void reset_adaptive_gyro_bias();
 
 void estimator_calc_lvl_horz(qf16* q_lh);

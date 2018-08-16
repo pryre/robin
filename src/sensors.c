@@ -85,7 +85,7 @@ static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
 	status->time_read = 0;
 }
 
-void sensors_cal_init(void) {
+static void sensors_cal_init(void) {
 	_sensor_calibration.type = SENSOR_CAL_NONE;
 
 	_sensor_calibration.data.gyro.count = 0;
@@ -134,7 +134,34 @@ void sensors_clear_i2c(void) {
 		//delay(500);
 }
 
-void sensors_init_imu(void) {
+static void sensors_init_hil(void) {
+	sensor_status_init(&_sensors.hil.status, get_param_uint(PARAM_SENSOR_HIL_CBRK));
+
+	if(_sensors.hil.status.present)
+		mavlink_queue_broadcast_error("[SENSOR] HARDWARE IN THE LOOP ENABLED!");
+
+	_sensors.hil.q.a = _fc_1;
+	_sensors.hil.q.b = 0;
+	_sensors.hil.q.c = 0;
+	_sensors.hil.q.d = 0;
+	_sensors.hil.gyro.x = 0;
+	_sensors.hil.gyro.y = 0;
+	_sensors.hil.gyro.z = 0;
+	_sensors.hil.accel.x = 0;
+	_sensors.hil.accel.y = 0;
+	_sensors.hil.accel.z = 0;
+
+	_sensors.hil.gps.x = 0;
+	_sensors.hil.gps.y = 0;
+	_sensors.hil.gps.z = 0;
+	_sensors.hil.gv.x = 0;
+	_sensors.hil.gv.y = 0;
+	_sensors.hil.gv.z = 0;
+	_sensors.hil.airspeed_ind = 0;
+	_sensors.hil.airspeed_true = 0;
+}
+
+static void sensors_init_imu(void) {
 	if( get_param_uint(PARAM_SENSOR_IMU_CBRK) ) {
 		sensor_status_init(&_sensors.imu.status, true);
 		mpu_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
@@ -155,13 +182,17 @@ void sensors_init_imu(void) {
 				failureMode(5);
 			}
 		}
-
-		_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_sensor_calibration.data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
-		_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 	}
+
+	_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_sensor_calibration.data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
+	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
+
 }
 
 void sensors_init_internal(void) {
+	//==-- Hardware In The Loop
+	sensors_init_hil();
+
 	//==-- IMU-MPU6050
 	sensors_init_imu();
 

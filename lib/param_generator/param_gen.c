@@ -43,11 +43,13 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_STREAM_RATE_TIMESYNC_1, fix16_from_float(2.0f));
 	init_param_fix16(PARAM_STREAM_RATE_BATTERY_STATUS_1, fix16_from_float(2.0f));
 	init_param_fix16(PARAM_STREAM_RATE_LOW_PRIORITY_1, fix16_from_float(20.0f));
+	init_param_uint(PARAM_SENSOR_HIL_CBRK, 0);
 	init_param_uint(PARAM_SENSOR_IMU_CBRK, 1);
 	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, 1);
 	init_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_SENSOR_SONAR_UPDATE_RATE, fix16_from_float(0.0f));
+	init_param_uint(PARAM_SENSOR_HIL_STRM_COUNT, 100);
 	init_param_uint(PARAM_SENSOR_IMU_STRM_COUNT, 1000);
 	init_param_uint(PARAM_SENSOR_BARO_STRM_COUNT, 50);
 	init_param_uint(PARAM_SENSOR_SONAR_STRM_COUNT, 50);
@@ -57,6 +59,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_OFFB_HRBT_STRM_COUNT, 2);
 	init_param_uint(PARAM_SENSOR_OFFB_CTRL_STRM_COUNT, 100);
 	init_param_uint(PARAM_SENSOR_PWM_CTRL_STRM_COUNT, 100);
+	init_param_uint(PARAM_SENSOR_HIL_TIMEOUT, 500000);
 	init_param_uint(PARAM_SENSOR_IMU_TIMEOUT, 2000);
 	init_param_uint(PARAM_SENSOR_MAG_TIMEOUT, 100000);
 	init_param_uint(PARAM_SENSOR_BARO_TIMEOUT, 100000);
@@ -229,11 +232,13 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"STRM1_TIMESYNC",
 	"STRM1_BATTSTAT",
 	"STRM1_LPQ",
+	"CBRK_HIL",
 	"CBRK_IMU",
 	"CBRK_SAFETY",
 	"CHK_RATE_MAG",
 	"CHK_RATE_BARO",
 	"CHK_RATE_SONAR",
+	"STRM_NUM_HIL",
 	"STRM_NUM_IMU",
 	"STRM_NUM_BARO",
 	"STRM_NUM_SONAR",
@@ -243,6 +248,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"STRM_NUM_OB_H",
 	"STRM_NUM_OB_C",
 	"STRM_NUM_RC_C",
+	"TIMEOUT_HIL",
 	"TIMEOUT_IMU",
 	"TIMEOUT_MAG",
 	"TIMEOUT_BARO",

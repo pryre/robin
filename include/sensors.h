@@ -75,6 +75,21 @@ typedef struct {
 	int16_t z;
 } vector_int32_t;
 
+//Hardware In The Loop State Input
+typedef struct {
+	sensor_status_t status;
+
+	qf16 q;	//Quaternion attitude
+	v3d gyro;		//Vector of gyro rates
+	v3d accel;		//Vector of body-frame accelerations
+
+	v3d gps;		//Vector of Lat, Long, Alt
+	v3d gv;			//Vector of Ground Speed (Lat, Long, Alt)
+	fix16_t airspeed_ind;	//Indicated Airspeed
+	fix16_t airspeed_true;	//True Airspeed
+} sensor_readings_hil_t;
+
+//IMU
 typedef struct {
 	sensor_status_t status;
 
@@ -174,6 +189,7 @@ typedef struct {
 
 typedef struct {
 	sensor_readings_clock_t clock;
+	sensor_readings_hil_t hil;
 	sensor_readings_imu_t imu;
 	sensor_readings_magnometer_t mag;
 	sensor_readings_barometer_t baro;
@@ -284,10 +300,10 @@ extern sensor_readings_t _sensors;
 extern sensor_calibration_t _sensor_calibration;
 
 // function declarations
-void sensors_init_imu(void);
+//void sensors_init_imu(void);
 void sensors_init_internal(void);
 void sensors_init_external(void);
-void sensors_cal_init(void);
+//void sensors_cal_init(void);
 bool sensors_request_cal(sensor_calibration_request_t req);
 bool sensors_read(void);
 bool i2c_job_queued(void);

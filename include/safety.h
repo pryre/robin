@@ -42,6 +42,7 @@ typedef struct {
 } timeout_status_t;
 
 typedef struct {
+	timeout_status_t hil;
 	timeout_status_t imu;
 	timeout_status_t mag;
 	timeout_status_t baro;

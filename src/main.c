@@ -77,12 +77,17 @@ void loop(void) {
 	//Sensor Read
 	//Check to see if any of the i2c sensors have been updated (mainly the imu)
 	// and if so, update the sensor states and estimator
-	sensors_poll( micros() );
+	//If we're not in HIL mode
+	if(!_sensors.hil.status.present) {
+		sensors_poll( micros() );
 
-	if( sensors_read() ) {
-		sensors_update( micros() );
+		if( sensors_read() ) {
+			sensors_update( micros() );
 
-		estimator_update( sensors_clock_imu_int_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
+			estimator_update( sensors_clock_imu_int_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
+		}
+	} else {
+		estimator_set_hil( micros() );
 	}
 
 	//==-- Check Serial

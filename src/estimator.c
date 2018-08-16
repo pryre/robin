@@ -104,17 +104,17 @@ void reset_adaptive_gyro_bias() {
 	b.z = 0;
 }
 
-static void lpf_update(void) {
+static void lpf_update(v3d *accel, v3d *gyro) {
 	//value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
 	fix16_t alpha_acc = get_param_fix16(PARAM_ACC_ALPHA);
-	_accel_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.x), fix16_smul(alpha_acc, _sensors.imu.accel.x));
-	_accel_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.y), fix16_smul(alpha_acc, _sensors.imu.accel.y));;
-	_accel_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.z), fix16_smul(alpha_acc, _sensors.imu.accel.z));;
+	_accel_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.x), fix16_smul(alpha_acc, accel->x));
+	_accel_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.y), fix16_smul(alpha_acc, accel->y));
+	_accel_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.z), fix16_smul(alpha_acc, accel->z));
 
 	fix16_t alpha_gyro = get_param_fix16(PARAM_GYRO_ALPHA);
-	_gyro_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.x), fix16_smul(alpha_gyro, _sensors.imu.gyro.x));
-	_gyro_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.y), fix16_smul(alpha_gyro, _sensors.imu.gyro.y));
-	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.z), fix16_smul(alpha_gyro, _sensors.imu.gyro.z));
+	_gyro_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.x), fix16_smul(alpha_gyro, gyro->x));
+	_gyro_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.y), fix16_smul(alpha_gyro, gyro->y));
+	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.z), fix16_smul(alpha_gyro, gyro->z));
 }
 
 static void fuse_heading_estimate( qf16 *q_est, const qf16 *q_mes, const fix16_t alpha) {
@@ -169,7 +169,7 @@ void estimator_update( uint32_t time_now ) {
 	}
 
 	//Run LPF to reject a lot of noise
-	lpf_update();
+	lpf_update(&_sensors.imu.accel, &_sensors.imu.gyro);
 
 	//Add in accelerometer
 	//a_sqrd_norm = x^2 + y^2 + z^2
@@ -409,6 +409,21 @@ void estimator_update( uint32_t time_now ) {
 	_adaptive_gyro_bias.z = b.z;
 }
 
+void estimator_set_hil( uint32_t time_now ) {
+	lpf_update(&_sensors.hil.accel, &_sensors.hil.gyro);
+
+	_state_estimator.p = _gyro_LPF.x;
+	_state_estimator.q = _gyro_LPF.y;
+	_state_estimator.r = _gyro_LPF.z;
+
+	_state_estimator.ax = _accel_LPF.x;
+	_state_estimator.ay = _accel_LPF.y;
+	_state_estimator.az = _accel_LPF.z;
+
+	//XXX: Could estimate attitude here with gyro rates
+
+	_state_estimator.attitude = _sensors.hil.q;
+}
 
 void estimator_calc_lvl_horz(qf16* qlh) {
 	mf16 ratt;

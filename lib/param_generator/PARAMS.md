@@ -37,11 +37,13 @@ STRM1_SRV_OUT | float | Communication update rate for commanded servo output (se
 STRM1_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
 STRM1_BATTSTAT | float | Communication update rate for battery status (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
 STRM1_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
+CBRK_HIL | uint | Sensor circuit breaker to enable/disable HIL input (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
 CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CHK_RATE_MAG | float | Sensor update rate for magnetometer (set to 0 to disable, typical is 20Hz) | 0.0 | Hz | scalar | True
 CHK_RATE_BARO | float | Sensor update rate for barometer (set to 0 to disable, typical is 20Hz) | 0.0 | Hz | scalar | True
 CHK_RATE_SONAR | float | Sensor update rate for sonar (TODO) (set to 0 to disable, typical is 5Hz) | 0.0 | Hz | scalar | True
+STRM_NUM_HIL | uint | Number of HIL readings that must be recieved before a stream is established | 100 |  | scalar | False
 STRM_NUM_IMU | uint | Number of IMU readings that must be recieved before a stream is established | 1000 |  | scalar | False
 STRM_NUM_BARO | uint | Number of barometer readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_SONAR | uint | Number of sonar readings that must be recieved before a stream is established | 50 |  | scalar | False
@@ -51,6 +53,7 @@ STRM_NUM_MAG | uint | Number of magnetometer readings that must be recieved befo
 STRM_NUM_OB_H | uint | Number of offboard heartbeat messages that must be recieved before a stream is established | 2 |  | scalar | False
 STRM_NUM_OB_C | uint | Number of offboard control messages that must be recieved before a stream is established | 100 |  | scalar | False
 STRM_NUM_RC_C | uint | Number of PWM control messages that must be recieved before a stream is established | 100 |  | scalar | False
+TIMEOUT_HIL | uint | Time that new data must be read before an HIL state timeout is declared | 500000 | us | scalar | False
 TIMEOUT_IMU | uint | Time that new data must be read before an IMU timeout is declared | 2000 | us | scalar | False
 TIMEOUT_MAG | uint | Time that new data must be read before a magnetometer timeout is declared | 100000 | us | scalar | False
 TIMEOUT_BARO | uint | Time that new data must be read before a barometer timeout is declared | 100000 | us | scalar | False

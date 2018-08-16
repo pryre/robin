@@ -74,6 +74,7 @@ static void init_sensor_state(timeout_status_t *sensor, const char *name, const 
 }
 
 void safety_init() {
+	init_sensor_state(&_system_status.sensors.hil, "HIL", PARAM_SENSOR_HIL_STRM_COUNT, PARAM_SENSOR_HIL_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.imu, "IMU", PARAM_SENSOR_IMU_STRM_COUNT, PARAM_SENSOR_IMU_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.mag, "Magnetometer", PARAM_SENSOR_MAG_STRM_COUNT, PARAM_SENSOR_MAG_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.baro, "Barometer", PARAM_SENSOR_BARO_STRM_COUNT, PARAM_SENSOR_BARO_TIMEOUT);
@@ -699,6 +700,9 @@ void safety_run( uint32_t time_now ) {
 	safety_check_sensor( &_system_status.sensors.offboard_heartbeat, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_control, time_now );
 	safety_check_sensor( &_system_status.sensors.pwm_control, time_now );
+
+	if(_sensors.hil.status.present)
+		safety_check_sensor( &_system_status.sensors.hil, time_now );
 
 	//Update the overall system health based on the individual sensors
 	safety_health_update(time_now);

@@ -420,6 +420,15 @@ PARAM_STREAM_RATE_LOW_PRIORITY_1:
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_LOW_PRIORITY);"
     unit: "Hz"
 ---
+PARAM_SENSOR_HIL_CBRK:
+  type: "uint"
+  name: "CBRK_HIL"
+  description: "Sensor circuit breaker to enable/disable HIL input (set to 0 to disable checking device)"
+  reboot: true
+  value:
+    option: "bool"
+    default: 0
+---
 PARAM_SENSOR_IMU_CBRK:
   type: "uint"
   name: "CBRK_IMU"
@@ -467,6 +476,15 @@ PARAM_SENSOR_SONAR_UPDATE_RATE:
     option: "scalar"
     default: 0.0
     unit: "Hz"
+---
+PARAM_SENSOR_HIL_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_HIL"
+  description: "Number of HIL readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100
 ---
 PARAM_SENSOR_IMU_STRM_COUNT:
   type: "uint"
@@ -548,6 +566,16 @@ PARAM_SENSOR_PWM_CTRL_STRM_COUNT:
   value:
     option: "scalar"
     default: 100
+---
+PARAM_SENSOR_HIL_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_HIL"
+  description: "Time that new data must be read before an HIL state timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 500000
+    unit: "us"
 ---
 PARAM_SENSOR_IMU_TIMEOUT:
   type: "uint"
