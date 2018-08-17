@@ -193,8 +193,10 @@ void sensors_init_internal(void) {
 	//==-- Hardware In The Loop
 	sensors_init_hil();
 
-	//==-- IMU-MPU6050
-	sensors_init_imu();
+	if(!_sensors.hil.status.present) {
+		//==-- IMU-MPU6050
+		sensors_init_imu();
+	}
 
 	//==-- Calibrations
 	sensors_cal_init();

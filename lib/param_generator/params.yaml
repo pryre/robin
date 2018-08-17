@@ -83,7 +83,7 @@ PARAM_BAUD_RATE_0:
   reboot: true
   value:
     option: "list"
-    default: 3
+    default: 4
     list: [0, 9600, 57600, 115200, 921600]
 ---
 PARAM_BAUD_RATE_1:
@@ -262,7 +262,7 @@ PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
   reboot: false
   value:
     option: "scalar"
-    default: 10.0
+    default: 100.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
     unit: "Hz"
 ---
@@ -427,7 +427,7 @@ PARAM_SENSOR_HIL_CBRK:
   reboot: true
   value:
     option: "bool"
-    default: 0
+    default: 1
 ---
 PARAM_SENSOR_IMU_CBRK:
   type: "uint"

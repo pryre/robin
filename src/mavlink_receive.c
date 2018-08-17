@@ -634,6 +634,9 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 						_sensors.hil.gv.z = fix16_mul(_fc_100, fix16_from_int(mavlink_msg_hil_state_quaternion_get_vz(&msg)));
 						_sensors.hil.airspeed_ind = fix16_mul(_fc_100, fix16_from_int(mavlink_msg_hil_state_quaternion_get_ind_airspeed(&msg)));
 						_sensors.hil.airspeed_true = fix16_mul(_fc_100, fix16_from_int(mavlink_msg_hil_state_quaternion_get_true_airspeed(&msg)));
+
+						safety_update_sensor(&_system_status.sensors.hil);
+						_sensors.hil.status.new_data = true;
 					}	//else no in HIL mode, discard
 
 					break;
