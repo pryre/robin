@@ -43,7 +43,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_STREAM_RATE_TIMESYNC_1, fix16_from_float(2.0f));
 	init_param_fix16(PARAM_STREAM_RATE_BATTERY_STATUS_1, fix16_from_float(2.0f));
 	init_param_fix16(PARAM_STREAM_RATE_LOW_PRIORITY_1, fix16_from_float(20.0f));
-	init_param_uint(PARAM_SENSOR_HIL_CBRK, 1);
+	init_param_uint(PARAM_SENSOR_HIL_CBRK, 0);
 	init_param_uint(PARAM_SENSOR_IMU_CBRK, 1);
 	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, 1);
 	init_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE, fix16_from_float(0.0f));
@@ -102,11 +102,11 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_ACC_Y_TEMP_COMP, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_ACC_Z_TEMP_COMP, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_RATE_CONTROL, fix16_from_float(250.0f));
-	init_param_fix16(PARAM_PID_ROLL_RATE_P, fix16_from_float(0.02f));
+	init_param_fix16(PARAM_PID_ROLL_RATE_P, fix16_from_float(0.05f));
 	init_param_fix16(PARAM_PID_ROLL_RATE_I, fix16_from_float(0.01f));
 	init_param_fix16(PARAM_PID_ROLL_RATE_D, fix16_from_float(0.001f));
 	init_param_fix16(PARAM_MAX_ROLL_RATE, fix16_from_float(3.14159f));
-	init_param_fix16(PARAM_PID_PITCH_RATE_P, fix16_from_float(0.02f));
+	init_param_fix16(PARAM_PID_PITCH_RATE_P, fix16_from_float(0.05f));
 	init_param_fix16(PARAM_PID_PITCH_RATE_I, fix16_from_float(0.01f));
 	init_param_fix16(PARAM_PID_PITCH_RATE_D, fix16_from_float(0.001f));
 	init_param_fix16(PARAM_MAX_PITCH_RATE, fix16_from_float(3.14159f));
@@ -114,9 +114,9 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_PID_YAW_RATE_I, fix16_from_float(0.01f));
 	init_param_fix16(PARAM_PID_YAW_RATE_D, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_MAX_YAW_RATE, fix16_from_float(1.57079f));
-	init_param_fix16(PARAM_PID_ROLL_ANGLE_P, fix16_from_float(6.5f));
+	init_param_fix16(PARAM_PID_ROLL_ANGLE_P, fix16_from_float(4.5f));
 	init_param_fix16(PARAM_MAX_ROLL_ANGLE, fix16_from_float(0.786f));
-	init_param_fix16(PARAM_PID_PITCH_ANGLE_P, fix16_from_float(6.5f));
+	init_param_fix16(PARAM_PID_PITCH_ANGLE_P, fix16_from_float(4.5f));
 	init_param_fix16(PARAM_MAX_PITCH_ANGLE, fix16_from_float(0.786f));
 	init_param_fix16(PARAM_PID_YAW_ANGLE_P, fix16_from_float(2.8f));
 	init_param_uint(PARAM_BATTERY_TYPE, 0);

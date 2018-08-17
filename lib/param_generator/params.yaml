@@ -427,7 +427,7 @@ PARAM_SENSOR_HIL_CBRK:
   reboot: true
   value:
     option: "bool"
-    default: 1
+    default: 0
 ---
 PARAM_SENSOR_IMU_CBRK:
   type: "uint"
@@ -972,7 +972,7 @@ PARAM_PID_ROLL_RATE_P:
   reboot: false
   value:
     option: "scalar"
-    default: 0.02
+    default: 0.05
     function: "pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));"
 ---
 PARAM_PID_ROLL_RATE_I:
@@ -1013,7 +1013,7 @@ PARAM_PID_PITCH_RATE_P:
   reboot: false
   value:
     option: "scalar"
-    default: 0.02
+    default: 0.05
     function: "pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));"
 ---
 PARAM_PID_PITCH_RATE_I:
@@ -1095,7 +1095,7 @@ PARAM_PID_ROLL_ANGLE_P:
   reboot: false
   value:
     option: "scalar"
-    default: 6.5
+    default: 4.5
 ---
 PARAM_MAX_ROLL_ANGLE:
   type: "float"
@@ -1114,7 +1114,7 @@ PARAM_PID_PITCH_ANGLE_P:
   reboot: false
   value:
     option: "scalar"
-    default: 6.5
+    default: 4.5
 ---
 PARAM_MAX_PITCH_ANGLE:
   type: "float"

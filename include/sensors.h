@@ -79,14 +79,15 @@ typedef struct {
 typedef struct {
 	sensor_status_t status;
 
-	qf16 q;	//Quaternion attitude
-	v3d gyro;		//Vector of gyro rates
-	v3d accel;		//Vector of body-frame accelerations
+	v3d accel;		//Body-frame accelerations
+	v3d gyro;		//Body-frame rotation rates
+	v3d mag;		//Magnetometer reading vector
 
-	v3d gps;		//Vector of Lat, Long, Alt
-	v3d gv;			//Vector of Ground Speed (Lat, Long, Alt)
-	fix16_t airspeed_ind;	//Indicated Airspeed
-	fix16_t airspeed_true;	//True Airspeed
+	fix16_t pressure_abs;	//Absolute preassure (mbar)
+	fix16_t pressure_diff;	//Differential preassure (mbar)
+	fix16_t pressure_alt;	//Calculated altitude from pressure (m)
+
+	fix16_t temperature;	//Sensor temperature reading
 } sensor_readings_hil_t;
 
 //IMU

@@ -84,10 +84,11 @@ void loop(void) {
 		if( sensors_read() ) {
 			sensors_update( micros() );
 
-			estimator_update( sensors_clock_imu_int_get() ); //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
+			estimator_update_sensors( sensors_clock_imu_int_get() );
 		}
 	} else {
-		estimator_set_hil( micros() );
+		if(_sensors.hil.status.new_data)
+			estimator_update_hil( micros() );
 	}
 
 	//==-- Check Serial

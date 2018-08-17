@@ -148,7 +148,8 @@ static void fuse_heading_estimate( qf16 *q_est, const qf16 *q_mes, const fix16_t
 	qf16_normalize_to_unit(q_est, q_est);
 }
 
-void estimator_update( uint32_t time_now ) {
+//  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
+static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 	fix16_t kp = get_param_fix16( PARAM_EST_FILTER_KP );
 	fix16_t ki = get_param_fix16( PARAM_EST_FILTER_KI );
 
@@ -169,7 +170,7 @@ void estimator_update( uint32_t time_now ) {
 	}
 
 	//Run LPF to reject a lot of noise
-	lpf_update(&_sensors.imu.accel, &_sensors.imu.gyro);
+	lpf_update(accel, gyro);
 
 	//Add in accelerometer
 	//a_sqrd_norm = x^2 + y^2 + z^2
@@ -409,20 +410,16 @@ void estimator_update( uint32_t time_now ) {
 	_adaptive_gyro_bias.z = b.z;
 }
 
-void estimator_set_hil( uint32_t time_now ) {
-	lpf_update(&_sensors.hil.accel, &_sensors.hil.gyro);
+void estimator_update_sensors(uint32_t now) {
+	estimator_update(now, &_sensors.imu.accel, &_sensors.imu.gyro);
 
-	_state_estimator.p = _gyro_LPF.x;
-	_state_estimator.q = _gyro_LPF.y;
-	_state_estimator.r = _gyro_LPF.z;
+	_sensors.imu.status.new_data = false;
+}
 
-	_state_estimator.ax = _accel_LPF.x;
-	_state_estimator.ay = _accel_LPF.y;
-	_state_estimator.az = _accel_LPF.z;
+void estimator_update_hil(uint32_t now) {
+	estimator_update(now, &_sensors.hil.accel, &_sensors.hil.gyro);
 
-	//XXX: Could estimate attitude here with gyro rates
-
-	_state_estimator.attitude = _sensors.hil.q;
+	_sensors.hil.status.new_data = false;
 }
 
 void estimator_calc_lvl_horz(qf16* qlh) {

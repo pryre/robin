@@ -37,7 +37,7 @@ STRM1_SRV_OUT | float | Communication update rate for commanded servo output (se
 STRM1_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
 STRM1_BATTSTAT | float | Communication update rate for battery status (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
 STRM1_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
-CBRK_HIL | uint | Sensor circuit breaker to enable/disable HIL input (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
+CBRK_HIL | uint | Sensor circuit breaker to enable/disable HIL input (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
 CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CHK_RATE_MAG | float | Sensor update rate for magnetometer (set to 0 to disable, typical is 20Hz) | 0.0 | Hz | scalar | True
@@ -96,11 +96,11 @@ ACC_X_TEMP_COMP | float | Temperature correction for accelerometer measurements 
 ACC_Y_TEMP_COMP | float | Temperature correction for accelerometer measurements (Y axis) | 0.0 |  | scalar | False
 ACC_Z_TEMP_COMP | float | Temperature correction for accelerometer measurements (Z axis) | 0.0 |  | scalar | False
 RATE_CONTROL | float | Update rate of the controller | 250.0 |  | scalar | True
-MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 0.02 |  | scalar | False
+MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 0.05 |  | scalar | False
 MC_ROLLRATE_I | float | Integral gain for roll rate PID | 0.01 |  | scalar | False
 MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.001 |  | scalar | False
 MC_ROLLRATE_MAX | float | Maximum allowed command for roll rate | 3.14159 | rad/s | scalar | False
-MC_PITCHRATE_P | float | Proportional gain for pitch rate PID | 0.02 |  | scalar | False
+MC_PITCHRATE_P | float | Proportional gain for pitch rate PID | 0.05 |  | scalar | False
 MC_PITCHRATE_I | float | Integral gain for pitch rate PID | 0.01 |  | scalar | False
 MC_PITCHRATE_D | float | Derivative gain for pitch rate PID | 0.001 |  | scalar | False
 MC_PITCHRATE_MAX | float | Maximum allowed command for pitch rate | 3.14159 | rad/s | scalar | False
@@ -108,9 +108,9 @@ MC_YAWRATE_P | float | Proportional gain for yaw rate PID | 0.05 |  | scalar | F
 MC_YAWRATE_I | float | Integral gain for yaw rate PID | 0.01 |  | scalar | False
 MC_YAWRATE_D | float | Derivative gain for yaw rate PID | 0.0 |  | scalar | False
 MC_YAWRATE_MAX | float | Maximum allowed command for yaw rate | 1.57079 | rad/s | scalar | False
-MC_ROLL_P | float | Feed-forward gain for roll angle | 6.5 |  | scalar | False
+MC_ROLL_P | float | Feed-forward gain for roll angle | 4.5 |  | scalar | False
 MAX_ROLL_A | float | Maximum allowed command roll angle (TODO) | 0.786 | rad | scalar | False
-MC_PITCH_P | float | Feed-forward gain for pitch angle | 6.5 |  | scalar | False
+MC_PITCH_P | float | Feed-forward gain for pitch angle | 4.5 |  | scalar | False
 MAX_PITCH_A | float | Maximum allowed command pitch angle (TODO) | 0.786 | rad | scalar | False
 MC_YAW_P | float | Feed-forward gain for yaw angle | 2.8 |  | scalar | False
 BAT_TYPE | uint | See the MAV_BATTERY_TYPE enum | 0 |  | scalar | False

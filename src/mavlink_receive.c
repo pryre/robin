@@ -604,36 +604,27 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 
 					break;
 				}
-				case MAVLINK_MSG_ID_HIL_STATE_QUATERNION: {
+				case MAVLINK_MSG_ID_HIL_SENSOR: {
 					if(_sensors.hil.status.present) {
-						float qt_float[4];
-						qf16 qt_fix;
-						mavlink_msg_hil_state_quaternion_get_attitude_quaternion(&msg, &qt_float[0]);
-
-						qt_fix.a = fix16_from_float(qt_float[0]);
-						qt_fix.b = fix16_from_float(qt_float[1]);
-						qt_fix.c = fix16_from_float(qt_float[2]);
-						qt_fix.d = fix16_from_float(qt_float[3]);
-
-						qf16_normalize_to_unit(&_sensors.hil.q, &qt_fix);
-
-						_sensors.hil.gyro.x = fix16_from_float(mavlink_msg_hil_state_quaternion_get_rollspeed(&msg));
-						_sensors.hil.gyro.y = fix16_from_float(mavlink_msg_hil_state_quaternion_get_pitchspeed(&msg));
-						_sensors.hil.gyro.z = fix16_from_float(mavlink_msg_hil_state_quaternion_get_yawspeed(&msg));
-
-						_sensors.hil.accel.x = fix16_mul(_fc_1000, fix16_from_int(mavlink_msg_hil_state_quaternion_get_xacc(&msg)));
-						_sensors.hil.accel.y = fix16_mul(_fc_1000, fix16_from_int(mavlink_msg_hil_state_quaternion_get_yacc(&msg)));
-						_sensors.hil.accel.z = fix16_mul(_fc_1000, fix16_from_int(mavlink_msg_hil_state_quaternion_get_zacc(&msg)));
-
-						//TODO: Figure out how to encode GPS data
-						_sensors.hil.gps.x = 0;
-						_sensors.hil.gps.y = 0;
-						_sensors.hil.gps.z = 0;
-						_sensors.hil.gv.x = fix16_mul(_fc_100, fix16_from_int(mavlink_msg_hil_state_quaternion_get_vx(&msg)));
-						_sensors.hil.gv.y = fix16_mul(_fc_100, fix16_from_int(mavlink_msg_hil_state_quaternion_get_vy(&msg)));
-						_sensors.hil.gv.z = fix16_mul(_fc_100, fix16_from_int(mavlink_msg_hil_state_quaternion_get_vz(&msg)));
-						_sensors.hil.airspeed_ind = fix16_mul(_fc_100, fix16_from_int(mavlink_msg_hil_state_quaternion_get_ind_airspeed(&msg)));
-						_sensors.hil.airspeed_true = fix16_mul(_fc_100, fix16_from_int(mavlink_msg_hil_state_quaternion_get_true_airspeed(&msg)));
+						//Accelerometer
+						//XXX: TODO: THIS SHOULDN'T NEED TO BE INVERSED
+						_sensors.hil.accel.x = -fix16_from_int(mavlink_msg_hil_sensor_get_xacc(&msg));
+						_sensors.hil.accel.y = -fix16_from_int(mavlink_msg_hil_sensor_get_yacc(&msg));
+						_sensors.hil.accel.z = -fix16_from_int(mavlink_msg_hil_sensor_get_zacc(&msg));
+						//Gyroscope
+						_sensors.hil.gyro.x = fix16_from_float(mavlink_msg_hil_sensor_get_xgyro(&msg));
+						_sensors.hil.gyro.y = fix16_from_float(mavlink_msg_hil_sensor_get_ygyro(&msg));
+						_sensors.hil.gyro.z = fix16_from_float(mavlink_msg_hil_sensor_get_zgyro(&msg));
+						//Magnetometer
+						_sensors.hil.mag.x = fix16_from_float(mavlink_msg_hil_sensor_get_xmag(&msg));
+						_sensors.hil.mag.y = fix16_from_float(mavlink_msg_hil_sensor_get_ymag(&msg));
+						_sensors.hil.mag.z = fix16_from_float(mavlink_msg_hil_sensor_get_zmag(&msg));
+						//Differential Pressure
+						_sensors.hil.pressure_abs = fix16_from_float(mavlink_msg_hil_sensor_get_abs_pressure(&msg));
+						_sensors.hil.pressure_diff = fix16_from_float(mavlink_msg_hil_sensor_get_diff_pressure(&msg));
+						_sensors.hil.pressure_alt = fix16_from_float(mavlink_msg_hil_sensor_get_pressure_alt(&msg));
+						//Temperature
+						_sensors.hil.temperature = fix16_from_float(mavlink_msg_hil_sensor_get_temperature(&msg));
 
 						safety_update_sensor(&_system_status.sensors.hil);
 						_sensors.hil.status.new_data = true;

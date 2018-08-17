@@ -140,25 +140,21 @@ static void sensors_init_hil(void) {
 	if(_sensors.hil.status.present)
 		mavlink_queue_broadcast_error("[SENSOR] HARDWARE IN THE LOOP ENABLED!");
 
-	_sensors.hil.q.a = _fc_1;
-	_sensors.hil.q.b = 0;
-	_sensors.hil.q.c = 0;
-	_sensors.hil.q.d = 0;
-	_sensors.hil.gyro.x = 0;
-	_sensors.hil.gyro.y = 0;
-	_sensors.hil.gyro.z = 0;
 	_sensors.hil.accel.x = 0;
 	_sensors.hil.accel.y = 0;
 	_sensors.hil.accel.z = 0;
+	_sensors.hil.gyro.x = 0;
+	_sensors.hil.gyro.y = 0;
+	_sensors.hil.gyro.z = 0;
+	_sensors.hil.mag.x = 0;
+	_sensors.hil.mag.y = 0;
+	_sensors.hil.mag.z = 0;
 
-	_sensors.hil.gps.x = 0;
-	_sensors.hil.gps.y = 0;
-	_sensors.hil.gps.z = 0;
-	_sensors.hil.gv.x = 0;
-	_sensors.hil.gv.y = 0;
-	_sensors.hil.gv.z = 0;
-	_sensors.hil.airspeed_ind = 0;
-	_sensors.hil.airspeed_true = 0;
+	_sensors.hil.pressure_abs = 0;
+	_sensors.hil.pressure_diff = 0;
+	_sensors.hil.pressure_alt = 0;
+
+	_sensors.hil.temperature = 0;
 }
 
 static void sensors_init_imu(void) {
