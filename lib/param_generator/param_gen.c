@@ -11,7 +11,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_BOARD_REVISION, NAZE32_REV);
 	init_param_uint(PARAM_VERSION_FIRMWARE, strtoll(GIT_VERSION_FLIGHT_STR, NULL, 16));
 	init_param_uint(PARAM_VERSION_SOFTWARE, strtoll(GIT_VERSION_OS_STR, NULL, 16));
-	init_param_uint(PARAM_BAUD_RATE_0, 921600);
+	init_param_uint(PARAM_BAUD_RATE_0, 115200);
 	init_param_uint(PARAM_BAUD_RATE_1, 0);
 	init_param_uint(PARAM_WAIT_FOR_HEARTBEAT, 1);
 	init_param_fix16(PARAM_TIMESYNC_ALPHA, fix16_from_float(0.8f));
@@ -28,7 +28,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0, fix16_from_float(20.0f));
 	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_TARGET_0, fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_RC_CHANNELS_RAW_0, fix16_from_float(10.0f));
-	init_param_fix16(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0, fix16_from_float(100.0f));
+	init_param_fix16(PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0, fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_TIMESYNC_0, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_STREAM_RATE_BATTERY_STATUS_0, fix16_from_float(2.0f));
 	init_param_fix16(PARAM_STREAM_RATE_LOW_PRIORITY_0, fix16_from_float(40.0f));
