@@ -50,7 +50,7 @@ Copy the firmware to the same folder as the one where you extracted `stm32flash.
 
 In the command prompt, run the following:
 ```sh
-stm32flash.exe -w robin_naze32_rX.hex -v -g 0x0 -b 921600 COMX
+./stm32flash.exe -w robin_naze32_rX.hex -v -g 0x0 -b 921600 COMX
 ```
 
 ## Documentation
