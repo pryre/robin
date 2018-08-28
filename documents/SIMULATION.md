@@ -24,4 +24,4 @@ Currently, the simulation interface is provided by the ROS package `robin_gazebo
 To actually run the simulation, the following steps must be taken:
 1. Set the parameters as previously discussed on the flight controller, then reboot it.
 2. Configure and run `mavros` such that it connects to the flight controller correctly.
-3. Follow the instructions on running the [Robin Gazebo](https://github.com/qutas/robin_gazebo#running-the-simulator) simulator.
+3. Follow the instructions on [running the Robin Gazebo](https://github.com/qutas/robin_gazebo#running-the-simulator) simulator.
