@@ -207,7 +207,7 @@ PARAM_STREAM_RATE_HIGHRES_IMU_0:
   reboot: false
   value:
     option: "scalar"
-    default: 20.0
+    default: 10.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_HIGHRES_IMU);"
     unit: "Hz"
 ---
@@ -229,7 +229,7 @@ PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0:
   reboot: false
   value:
     option: "scalar"
-    default: 20.0
+    default: 10.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
     unit: "Hz"
 ---
@@ -240,7 +240,7 @@ PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
   reboot: false
   value:
     option: "scalar"
-    default: 10.0
+    default: 5.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
     unit: "Hz"
 ---
@@ -251,7 +251,7 @@ PARAM_STREAM_RATE_RC_CHANNELS_RAW_0:
   reboot: false
   value:
     option: "scalar"
-    default: 10.0
+    default: 5.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_RC_CHANNELS_RAW);"
     unit: "Hz"
 ---
@@ -262,7 +262,7 @@ PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
   reboot: false
   value:
     option: "scalar"
-    default: 10.0
+    default: 5.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
     unit: "Hz"
 ---
@@ -584,7 +584,7 @@ PARAM_SENSOR_IMU_TIMEOUT:
   reboot: false
   value:
     option: "scalar"
-    default: 2000
+    default: 4000
     unit: "us"
 ---
 PARAM_SENSOR_MAG_TIMEOUT:
@@ -634,7 +634,7 @@ PARAM_SENSOR_EXT_POSE_TIMEOUT:
   reboot: false
   value:
     option: "scalar"
-    default: 500000
+    default: 1000000
     unit: "us"
 ---
 PARAM_SENSOR_OFFB_HRBT_TIMEOUT:
@@ -654,7 +654,7 @@ PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
   reboot: false
   value:
     option: "scalar"
-    default: 200000
+    default: 400000
     unit: "us"
 ---
 PARAM_SENSOR_PWM_CTRL_TIMEOUT:

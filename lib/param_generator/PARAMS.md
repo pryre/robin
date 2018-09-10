@@ -17,12 +17,12 @@ GCS_COMP_ID | uint | Sets the MAVLINK Component ID parameter for the ground stat
 RELAXED_SET | uint | Allows for 'unit' type parameters to be set when send as 'int' type | 1 | 0 / 1 | boolean | False
 STRM0_HRTBT | float | Communication update rate for system heartbeat (set to 0 to turn off stream) | 1.0 | Hz | scalar | False
 STRM0_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
-STRM0_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
+STRM0_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_ATT | float | Communication update rate for current attitude euler angles (set to 0 to turn off stream) | 0.0 | Hz | scalar | False
-STRM0_ATT_Q | float | Communication update rate for current attitude quaternion (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
-STRM0_ATT_T | float | Communication update rate for current attitude target (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
-STRM0_RC_IN | float | Communication update rate for RC input channels (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
-STRM0_SRV_OUT | float | Communication update rate for commanded servo output (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
+STRM0_ATT_Q | float | Communication update rate for current attitude quaternion (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
+STRM0_ATT_T | float | Communication update rate for current attitude target (set to 0 to turn off stream) | 5.0 | Hz | scalar | False
+STRM0_RC_IN | float | Communication update rate for RC input channels (set to 0 to turn off stream) | 5.0 | Hz | scalar | False
+STRM0_SRV_OUT | float | Communication update rate for commanded servo output (set to 0 to turn off stream) | 5.0 | Hz | scalar | False
 STRM0_TIMESYNC | float | Communication update rate for timesync (set to 0 to turn off stream) | 0.0 | Hz | scalar | False
 STRM0_BATTSTAT | float | Communication update rate for battery status (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
 STRM0_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 40.0 | Hz | scalar | False
@@ -54,14 +54,14 @@ STRM_NUM_OB_H | uint | Number of offboard heartbeat messages that must be reciev
 STRM_NUM_OB_C | uint | Number of offboard control messages that must be recieved before a stream is established | 100 |  | scalar | False
 STRM_NUM_RC_C | uint | Number of PWM control messages that must be recieved before a stream is established | 100 |  | scalar | False
 TIMEOUT_HIL | uint | Time that new data must be read before an HIL state timeout is declared | 500000 | us | scalar | False
-TIMEOUT_IMU | uint | Time that new data must be read before an IMU timeout is declared | 2000 | us | scalar | False
+TIMEOUT_IMU | uint | Time that new data must be read before an IMU timeout is declared | 4000 | us | scalar | False
 TIMEOUT_MAG | uint | Time that new data must be read before a magnetometer timeout is declared | 100000 | us | scalar | False
 TIMEOUT_BARO | uint | Time that new data must be read before a barometer timeout is declared | 100000 | us | scalar | False
 TIMEOUT_SONAR | uint | Time that new data must be read before a sonar timeout is declared | 100000 | us | scalar | False
 TIMEOUT_RC_IN | uint | Time that new data must be read before a RC input timeout is declared | 1000000 | us | scalar | False
-TIMEOUT_EXT_P | uint | Time that new data must be read before a external pose timeout is declared | 500000 | us | scalar | False
+TIMEOUT_EXT_P | uint | Time that new data must be read before a external pose timeout is declared | 1000000 | us | scalar | False
 TIMEOUT_OB_HRBT | uint | Time that new data must be read before a off-board heartbeat timeout is declared | 5000000 | us | scalar | False
-TIMEOUT_OB_CTRL | uint | Time that new data must be read before a off-board control timeout is declared | 200000 | us | scalar | False
+TIMEOUT_OB_CTRL | uint | Time that new data must be read before a off-board control timeout is declared | 400000 | us | scalar | False
 TIMEOUT_RC_CTRL | uint | Time that new data must be read before a PWM control timeout is declared | 200000 | us | scalar | False
 CAL_IMU_PASSES | uint | Number of samples to collect for IMU calibrations | 1000 |  | scalar | False
 EST_FLTR_INIT | uint | Time from boot where the estimator will use quick convergence | 3000 | ms | scalar | True
