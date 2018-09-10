@@ -14,7 +14,7 @@
 
 // type definitions
 typedef struct {
-	uint8_t version;
+	uint64_t version;
 	uint16_t size;
 	uint8_t magic_be;                       // magic number, should be 0xBE
 

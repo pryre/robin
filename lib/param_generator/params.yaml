@@ -178,6 +178,24 @@ PARAM_RELAXED_PARAM_SET:
     option: "bool"
     default: 1
 ---
+PARAM_ACTUATORS_G1_ENABLE:
+  type: "uint"
+  name: "ACTUATOR_G1_ACT"
+  description: "Enables or disables group 1 actuator output"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+---
+PARAM_ACTUATORS_G1_RESPECT_ARM:
+  type: "uint"
+  name: "ACTUATOR_G1_ARM"
+  description: "Setting to false allows actuator group 1 outputs to be active outside of arm/disarm functions"
+  reboot: false
+  value:
+    option: "bool"
+    default: 1
+---
 PARAM_STREAM_RATE_HEARTBEAT_0:
   type: "float"
   name: "STRM0_HRTBT"

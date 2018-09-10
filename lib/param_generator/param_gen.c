@@ -21,6 +21,8 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_GCS_SYSTEM_ID, 1);
 	init_param_uint(PARAM_GCS_COMPONENT_ID, 240);
 	init_param_uint(PARAM_RELAXED_PARAM_SET, 1);
+	init_param_uint(PARAM_ACTUATORS_G1_ENABLE, 0);
+	init_param_uint(PARAM_ACTUATORS_G1_RESPECT_ARM, 1);
 	init_param_fix16(PARAM_STREAM_RATE_HEARTBEAT_0, fix16_from_float(1.0f));
 	init_param_fix16(PARAM_STREAM_RATE_SYS_STATUS_0, fix16_from_float(0.2f));
 	init_param_fix16(PARAM_STREAM_RATE_HIGHRES_IMU_0, fix16_from_float(10.0f));
@@ -210,6 +212,8 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"GCS_SYS_ID",
 	"GCS_COMP_ID",
 	"RELAXED_SET",
+	"ACTUATOR_G1_ACT",
+	"ACTUATOR_G1_ARM",
 	"STRM0_HRTBT",
 	"STRM0_SYS_STAT",
 	"STRM0_HR_IMU",

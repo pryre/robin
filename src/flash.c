@@ -4,10 +4,12 @@
 #include "params.h"
 #include "flash.h"
 
+static uint64_t _eeprom_version;
 
 void initEEPROM(void) {
 	// make sure (at compile time) that config struct doesn't overflow allocated flash pages
 	ct_assert(sizeof(_params) < CONFIG_SIZE);
+	_eeprom_version = strtoll(EEPROM_CONF_VERSION_STR, NULL, 16);
 }
 
 static bool validEEPROM(void) {
@@ -16,7 +18,7 @@ static bool validEEPROM(void) {
 	uint8_t chk = 0;
 
 	// check version number
-	if (EEPROM_CONF_VERSION != temp->version)
+	if (_eeprom_version != temp->version)
 		return false;
 
 	// check size and magic numbers
@@ -51,7 +53,7 @@ bool writeEEPROM(void) {
 	const uint8_t *p;
 
 	// prepare checksum/version constants
-	_params.version = EEPROM_CONF_VERSION;
+	_params.version = _eeprom_version;
 	_params.size = sizeof(params_t);
 	_params.magic_be = 0xBE;
 	_params.magic_ef = 0xEF;

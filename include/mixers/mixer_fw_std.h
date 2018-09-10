@@ -6,6 +6,8 @@
 #include "fixextra.h"
 
 const mixer_t mixer_plane_standard = {
+	true,
+
 	{MT_M, MT_S, MT_S, MT_S, MT_NONE, MT_NONE, MT_NONE, MT_NONE}, // output_type
 
 	{ _fc_1, 0, 0, 0, 0, 0, 0, 0}, // F Mix

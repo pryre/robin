@@ -25,10 +25,13 @@ typedef enum {
 	MT_NONE,	//None
 	MT_S,		//Servo
 	MT_M,		//Motor
+	MT_A,		//Actuator
 	MT_G		//GPIO
 } output_type_t;
 
 typedef struct {
+	bool mixer_ok;
+
 	output_type_t output_type[MIXER_NUM_MOTORS];
 	fix16_t T[MIXER_NUM_MOTORS];
 	fix16_t x[MIXER_NUM_MOTORS];
@@ -49,6 +52,10 @@ extern int32_t _GPIO_outputs[MIXER_NUM_MOTORS];
 extern output_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
 
 extern int32_t _pwm_control[MIXER_NUM_MOTORS];
+
+//TODO: Switch PWM Control to G1 input / override
+extern fix16_t _actuator_control_g0_offboard[MIXER_NUM_MOTORS];
+extern fix16_t _actuator_control_g1_offboard[MIXER_NUM_MOTORS];
 
 extern mixer_motor_test_t _motor_test;
 

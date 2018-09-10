@@ -7,6 +7,8 @@
 
 //TODO: Double check
 static mixer_t mixer_quadrotor_plus = {
+	true,
+
 	{MT_M, MT_M, MT_M, MT_M, MT_NONE, MT_NONE, MT_NONE, MT_NONE}, // output_type
 
 	{ _fc_1, _fc_1, _fc_1, _fc_1, 0, 0, 0, 0}, // F Mix

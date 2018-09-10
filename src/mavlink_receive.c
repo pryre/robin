@@ -18,6 +18,8 @@ mavlink_queue_t _lpq;
 bool _ch_0_have_heartbeat;
 bool _ch_1_have_heartbeat;
 
+fix16_t _actuator_control_g0_offboard[MIXER_NUM_MOTORS];
+fix16_t _actuator_control_g1_offboard[MIXER_NUM_MOTORS];
 int32_t _pwm_control[MIXER_NUM_MOTORS];
 mixer_motor_test_t _motor_test;
 command_input_t _cmd_ob_input;
@@ -601,6 +603,24 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 												   mavlink_system.compid,
 												   0, 0);
 					lpq_queue_msg(port, &msg_out);
+
+					break;
+				}
+				case MAVLINK_MSG_ID_SET_ACTUATOR_CONTROL_TARGET: {
+					if( (mavlink_msg_set_actuator_control_target_get_target_system(&msg) == mavlink_system.sysid) &&
+						(mavlink_msg_set_actuator_control_target_get_target_component(&msg) == mavlink_system.compid) ) {
+
+						float act_float[8];
+						mavlink_msg_set_actuator_control_target_get_controls(&msg, &act_float[0]);
+
+						if( mavlink_msg_set_actuator_control_target_get_target_system(&msg) == 0) {
+							for(int i=0; i<8; i++)
+								_actuator_control_g0_offboard[i] = fix16_from_float(act_float[i]);
+						} else if( mavlink_msg_set_actuator_control_target_get_target_system(&msg) == 1) {
+							for(int i=0; i<8; i++)
+								_actuator_control_g1_offboard[i] = fix16_from_float(act_float[i]);
+						}
+					}
 
 					break;
 				}

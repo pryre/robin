@@ -15,6 +15,8 @@ GCS_MATCH | uint | Sets the MAVLINK System ID parameter for the ground station |
 GCS_SYS_ID | uint | Sets the MAVLINK System ID parameter for the ground station | 1 |  | [min:0, max:255] | True
 GCS_COMP_ID | uint | Sets the MAVLINK Component ID parameter for the ground station | 240 |  | [min:0, max:255] | True
 RELAXED_SET | uint | Allows for 'unit' type parameters to be set when send as 'int' type | 1 | 0 / 1 | boolean | False
+ACTUATOR_G1_ACT | uint | Enables or disables group 1 actuator output | 0 | 0 / 1 | boolean | False
+ACTUATOR_G1_ARM | uint | Setting to false allows actuator group 1 outputs to be active outside of arm/disarm functions | 1 | 0 / 1 | boolean | False
 STRM0_HRTBT | float | Communication update rate for system heartbeat (set to 0 to turn off stream) | 1.0 | Hz | scalar | False
 STRM0_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
 STRM0_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 10.0 | Hz | scalar | False

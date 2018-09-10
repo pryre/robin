@@ -6,6 +6,8 @@
 #include "fixextra.h"
 
 const mixer_t mixer_none = {
+	false,
+
 	//Ch1, Ch2,  Ch3,  Ch4,  Ch5,  Ch6,  Ch7,  Ch8
 	{MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE}, // output_type
 

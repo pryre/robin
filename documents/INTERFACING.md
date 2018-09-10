@@ -30,3 +30,21 @@ As a secondary form of control, the `RC_CHANNELS_OVERRIDE` message can be used t
 The `TIMEOUT_RC_CTRL` and `STRM_NUM_RC_C` parameters can be used to set the timeout period and the number of messages needed to establish a stream respectively.
 
 This message will only not count towards failsafe protection, and as such, needs a Attitude/Rates Control stream established for something to fall back on if this stream drops out. The overrides will be re-established once the stream is regained.
+
+## Actuator Control Input
+The actuator control inputs provides a stable input for controlling PWM driven actuators. The interface exposes 2 input groupings:
+1. Group 0: Motor mixer input (Currently unimplemented)
+2. Group 1: Auxilary actuator input
+
+Direct actuator control for group `X` can be enabled using the following parameters:
+- `ACTUATOR_GX_ACT`: Setting to true (1) will enable the actutor output on reboot
+- `ACTUATOR_GX_ARM`: Setting to true (1) will force the actuator outputs to respect arm/disarm conditions (i.e. if disabled, actuators will be able to be controlled without arming the flight controller)
+
+The actuator groups overlay one another depending on which outputs are enabled. For example, if the mixer is set to "Quadrotor X4" and `ACTUATOR_G1_ACT` is enabled, the group overlays will look like the following:
+| **Group** | **Actuator 1** | **Actuator 2** | **Actuator 3** | **Actuator 4** | **Actuator 5** | **Actuator 6** | **Actuator 7** | **Actuator 8** |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | Motor 1 | Motor 2 | Motor 3 | Motor 4 | Unused | Unused | Unused | Unused |
+| 1 | Blocked | Blocked | Blocked | Blocked | Free | Free | Free | Free |
+| **Final Overlay** | Motor 1 | Motor 2 | Motor 3 | Motor 4 | G1 Input | G1 Input | G1 Input | G1 Input |
+
+With this setup, actuators 5 through 8 can be controlled using the `SET_ACTUATOR_CONTROL_TARGET` message in Mavlink (or using the `actuator_control` plugin in MAVROS). Ensure that `group_mix` variable is set to the desired group to ensure that the actuator control input is correctly registered.

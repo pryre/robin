@@ -16,7 +16,7 @@
 // if sizeof(_params) is over this number, compile-time error will occur. so, need to add another page to config data.
 #define CONFIG_SIZE                     (FLASH_PAGE_SIZE * 3)
 
-static const uint8_t EEPROM_CONF_VERSION = 76;
+//XXX: static const uint8_t EEPROM_CONF_VERSION = 76;
 //static uint32_t enabledSensors = 0;
 //static void resetConf(void);
 static const uint32_t FLASH_WRITE_ADDR = 0x08000000 + (FLASH_PAGE_SIZE * (FLASH_PAGE_COUNT - (CONFIG_SIZE / 1024)));

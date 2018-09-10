@@ -24,6 +24,8 @@ system_status_t _system_status;
 
 int32_t _GPIO_outputs[MIXER_NUM_MOTORS];
 output_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
+fix16_t _actuator_control_g0_offboard[MIXER_NUM_MOTORS];
+fix16_t _actuator_control_g1_offboard[MIXER_NUM_MOTORS];
 int32_t _pwm_control[MIXER_NUM_MOTORS];
 int32_t _pwm_output_requested[MIXER_NUM_MOTORS];
 int32_t _pwm_output[MIXER_NUM_MOTORS];
@@ -31,6 +33,8 @@ mixer_motor_test_t _motor_test;
 
 static const mixer_t *mixer_to_use;
 static int16_t pwm_aux_map[MIXER_NUM_AUX];
+
+static bool actuator_apply_g1;
 
 void mixer_init() {
 	switch( get_param_uint(PARAM_MIXER) ) {
@@ -77,7 +81,12 @@ void mixer_init() {
 		_pwm_output[i] = 0;
 		_GPIO_outputs[i] = 0;
 		_GPIO_output_type[i] = MT_NONE;
+
+		_actuator_control_g0_offboard[i] = 0;
+		_actuator_control_g1_offboard[i] = 0;
 	}
+
+	actuator_apply_g1 = get_param_uint( PARAM_ACTUATORS_G1_ENABLE );
 
 	pwm_aux_map[0] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX1) - 1;
 	pwm_aux_map[1] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX2) - 1;
@@ -136,6 +145,14 @@ static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) 
 	return (i < min) ? min : (i > max) ? max : i;
 }
 
+static uint32_t map_fix16_to_pwm(fix16_t f) {
+	fix16_t fc = fix16_constrain(f,-_fc_1,_fc_1);
+	//range is -500 to 500
+	fix16_t pwm_range = fix16_from_int( (get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN) ) / 2 );
+	//Returns 1000 to 2000
+	return fix16_to_int(fix16_mul(fc, pwm_range)) + 1500;
+}
+
 //Direct write to the motor with failsafe checks
 //1000 <= value <= 2000
 //value_disarm (for motors) should be 1000
@@ -191,6 +208,15 @@ static void pwm_output() {
 			//write_servo(i, _pwm_output_requested[i]);
 		} else if (output_type == MT_M) {
 			write_motor(i, _pwm_output_requested[i]);
+		} else if( actuator_apply_g1 ) {
+			//Handle actuator output if enabled
+			uint16_t pwm_act_out = map_fix16_to_pwm( _actuator_control_g1_offboard[i] );
+
+			if( get_param_uint(PARAM_ACTUATORS_G1_RESPECT_ARM) ) {
+				write_output_pwm(i, pwm_act_out, 1500);
+			} else {
+				write_output_pwm(i, pwm_act_out, pwm_act_out);
+			}
 		} else if (output_type == MT_G) {
 			//write_servo(i, _pwm_output_requested[i]);	//XXX: Could have another function here to handle GPIO cases
 		} else {
@@ -309,5 +335,6 @@ void mixer_output() {
 		}
 	}
 
-	pwm_output();
+	if(mixer_to_use->mixer_ok)
+		pwm_output();
 }

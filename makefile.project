@@ -25,6 +25,8 @@ GIT_VERSION_FLIGHT := $(shell git describe --abbrev=8 --always | sed 's/^ *//g' 
 GIT_VERSION_OS := $(shell git submodule status | grep BreezySTM32 | sed 's/^ *//g' | head -c 8)
 GIT_VERSION_MAVLINK := $(shell git submodule status | grep mavlink | sed 's/^ *//g' | head -c 8)
 
+EEPROM_CONF_VERSION := $(shell date +'%s')
+
 # Contains your setup() and loop()
 PROJECT_SRC_FILES = ./src/main.c \
 					./src/flash.c \
