@@ -41,10 +41,11 @@ Direct actuator control for group `X` can be enabled using the following paramet
 - `ACTUATOR_GX_ARM`: Setting to true (1) will force the actuator outputs to respect arm/disarm conditions (i.e. if disabled, actuators will be able to be controlled without arming the flight controller)
 
 The actuator groups overlay one another depending on which outputs are enabled. For example, if the mixer is set to "Quadrotor X4" and `ACTUATOR_G1_ACT` is enabled, the group overlays will look like the following:
+
 | **Group** | **Actuator 1** | **Actuator 2** | **Actuator 3** | **Actuator 4** | **Actuator 5** | **Actuator 6** | **Actuator 7** | **Actuator 8** |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 0 | Motor 1 | Motor 2 | Motor 3 | Motor 4 | Unused | Unused | Unused | Unused |
 | 1 | Blocked | Blocked | Blocked | Blocked | Free | Free | Free | Free |
-| **Final Overlay** | Motor 1 | Motor 2 | Motor 3 | Motor 4 | G1 Input | G1 Input | G1 Input | G1 Input |
+| **Final Overlay** | Motor 1 | Motor 2 | Motor 3 | Motor 4 | G1[5] Input | G1[6] Input | G1[7] Input | G1[8] Input |
 
 With this setup, actuators 5 through 8 can be controlled using the `SET_ACTUATOR_CONTROL_TARGET` message in Mavlink (or using the `actuator_control` plugin in MAVROS). Ensure that `group_mix` variable is set to the desired group to ensure that the actuator control input is correctly registered.
