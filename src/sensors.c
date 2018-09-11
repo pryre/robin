@@ -7,6 +7,7 @@
 #include "estimator.h"
 #include "safety.h"
 #include "params.h"
+#include "mixer.h"
 #include "mavlink_system.h"
 #include "breezystm32.h"
 #include "drv_mpu.h"
@@ -25,6 +26,7 @@
 #include <stdlib.h>
 
 #define GYRO_HIGH_BIAS_WARN 200
+
 
 //==-- Local Variables
 uint32_t _imu_time_ready = 0;
@@ -47,11 +49,17 @@ static uint16_t rc_cal[8][3];
 static bool rc_rev[8];
 static fix16_t rc_dz[8];
 
+
+//==-- Global Variables
+int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
+fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];
+
 sensor_readings_t _sensors;
 sensor_calibration_t _sensor_calibration;
 
 system_status_t _system_status;
 command_input_t _cmd_rc_input;
+
 
 //==-- Functions
 static void clock_init(void) {
@@ -1355,6 +1363,18 @@ bool sensors_update(uint32_t time_us) {
 		//Only do this is the RC is healthy
 		if( (_system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK) &&
 			(_system_status.state != MAV_STATE_CALIBRATING) ) {
+
+			//Handle actuator control mapping
+			for(int i=0; i<8; i++) {
+				int8_t ach = _actuator_apply_g1_map[i];
+				if( ach ) {
+					_actuator_control_g1[i] = dual_normalized_input(pwmRead( ach ),
+																	rc_cal[ach][SENSOR_RC_CAL_MIN],
+																	rc_cal[ach][SENSOR_RC_CAL_MID],
+																	rc_cal[ach][SENSOR_RC_CAL_MAX]);
+				}
+			}
+
 			//If we're using a mode switch
 			if( get_param_uint(PARAM_RC_MAP_MODE_SW) ) {
 				_sensors.rc_input.p_m = pwmRead(get_param_uint(PARAM_RC_MAP_MODE_SW) - 1);

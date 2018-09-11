@@ -178,19 +178,50 @@ PARAM_RELAXED_PARAM_SET:
     option: "bool"
     default: 1
 ---
-PARAM_ACTUATORS_G1_ENABLE:
+PARAM_ACTUATORS_RC_RESPECT_ARM:
   type: "uint"
-  name: "ACTUATOR_G1_ACT"
-  description: "Enables or disables group 1 actuator output"
+  name: "ACTUATOR_RC_ARM"
+  description: "Setting to false allows actuator group 1 outputs to be active outside of arm/disarm functions"
   reboot: false
   value:
     option: "bool"
-    default: 0
+    default: 1
 ---
-PARAM_ACTUATORS_G1_RESPECT_ARM:
+PARAM_ACTUATORS_RC_DISARM_VALUE:
+  type: "float"
+  name: "ACTUATOR_RC_ODV"
+  description: "Set value will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed."
+  reboot: false
+  value:
+    option: "range"
+    default: 0.0
+    min: -1.0
+    max: 1.0
+---
+PARAM_ACTUATORS_OB_RESPECT_ARM:
   type: "uint"
-  name: "ACTUATOR_G1_ARM"
-  description: "Setting to false allows actuator group 1 outputs to be active outside of arm/disarm functions"
+  name: "ACTUATOR_OB_ARM"
+  description: "Setting to false allows actuator group 2 outputs to be active outside of arm/disarm functions"
+  reboot: false
+  value:
+    option: "bool"
+    default: 1
+---
+PARAM_ACTUATORS_OB_DISARM_VALUE:
+  type: "float"
+  name: "ACTUATOR_OB_ODV"
+  description: "Set value will be output if `ACTUATOR_OB_ARM` is set true and the flight controller is disarmed."
+  reboot: false
+  value:
+    option: "range"
+    default: 0.0
+    min: -1.0
+    max: 1.0
+---
+PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT:
+  type: "uint"
+  name: "ACTUATOR_AUX_ZO"
+  description: "Override disarm behaviour of all auxilary outputs, such that if the flight controller is disarmed (and the groupings respect arm/disarm), zero output will be given."
   reboot: false
   value:
     option: "bool"

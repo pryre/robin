@@ -32,20 +32,31 @@ The `TIMEOUT_RC_CTRL` and `STRM_NUM_RC_C` parameters can be used to set the time
 This message will only not count towards failsafe protection, and as such, needs a Attitude/Rates Control stream established for something to fall back on if this stream drops out. The overrides will be re-established once the stream is regained.
 
 ## Actuator Control Input
+
+**If using v0.99.1, please see [this version](https://github.com/qutas/robin/blob/v0.99.1/documents/INTERFACING.md) of the documentation.**
+
 The actuator control inputs provides a stable input for controlling PWM driven actuators. The interface exposes 2 input groupings:
 1. Group 0: Motor mixer input (Currently unimplemented)
-2. Group 1: Auxilary actuator input
+2. Group 1: RC auxilary input
+3. Group 2: Offboard auxilary input
 
-Direct actuator control for group `X` can be enabled using the following parameters:
-- `ACTUATOR_GX_ACT`: Setting to true (1) will enable the actutor output on reboot
-- `ACTUATOR_GX_ARM`: Setting to true (1) will force the actuator outputs to respect arm/disarm conditions (i.e. if disabled, actuators will be able to be controlled without arming the flight controller)
+Direct actuator control for the offboard group `ACTUATOR_RC_*` is enabled when any of the `RC_MAP_AUX*` parameters are set, and act as a partial overlay depending on which auxilaries are set. The following parameters can be used for additional configuration:
+- `ACTUATOR_RC_ARM`: Setting to true (1) will force the actuator outputs to respect arm/disarm conditions (i.e. if disabled, actuators will be able to be controlled without arming the flight controller)
+- `ACTUATOR_RC_ODV`: "Ouput Disarm Value"; Values in the range of -1 to 1 will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed.
 
-The actuator groups overlay one another depending on which outputs are enabled. For example, if the mixer is set to "Quadrotor X4" and `ACTUATOR_G1_ACT` is enabled, the group overlays will look like the following:
+Direct actuator control for the offboard group `ACTUATOR_OB_*` is enabled when an initial input message is received, with additional settings enabled using the following parameters:
+- `ACTUATOR_OB_ARM`: Setting to true (1) will force the actuator outputs to respect arm/disarm conditions (i.e. if disabled, actuators will be able to be controlled without arming the flight controller)
+- `ACTUATOR_OB_ODV`: "Ouput Disarm Value"; Values in the range of -1 to 1 will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed.
 
-| **Group** | **Actuator 1** | **Actuator 2** | **Actuator 3** | **Actuator 4** | **Actuator 5** | **Actuator 6** | **Actuator 7** | **Actuator 8** |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 0 | Motor 1 | Motor 2 | Motor 3 | Motor 4 | Unused | Unused | Unused | Unused |
-| 1 | Blocked | Blocked | Blocked | Blocked | Free | Free | Free | Free |
-| **Final Overlay** | Motor 1 | Motor 2 | Motor 3 | Motor 4 | G1[5] Input | G1[6] Input | G1[7] Input | G1[8] Input |
+Additionally, the `ACTUATOR_AUX_ZO` parameter ("Auxilary Zero Output") can be used to override disarm behaviour of all auxilary outputs, such that if the flight controller is disarmed (and the groupings respect arm/disarm), zero output will be given, instead of sending "0.0"/"1500 (pwm)". This may be useful if you wish for to respect disarm output, but do not want the actuators to be sent "0.0" on disarm.
 
-With this setup, actuators 5 through 8 can be controlled using the `SET_ACTUATOR_CONTROL_TARGET` message in Mavlink (or using the `actuator_control` plugin in MAVROS). Ensure that `group_mix` variable is set to the desired group to ensure that the actuator control input is correctly registered.
+The actuator groups overlay one another depending on which outputs are enabled. For example, if the mixer is set to "Quadrotor X4" and `RC_MAP_AUX2` is set to RC input channel 5, and an offboard actuator set has been received, the group overlays will look like the following:
+
+| **Group** | `group_mix` | **Actuator 1** | **Actuator 2** | **Actuator 3** | **Actuator 4** | **Actuator 5** | **Actuator 6** | **Actuator 7** | **Actuator 8** |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Motor Mixer | 0 | Motor 1 | Motor 2 | Motor 3 | Motor 4 | Unused | Unused | Unused | Unused |
+| RC Aux. | 1 | Blocked | Blocked | Blocked | Blocked | Unused | RC [Ch.5] | Unused | Unused |
+| Offboard Aux. | 2 | Blocked | Blocked | Blocked | Blocked | Free | Blocked | Free | Free |
+| **Final Overlay** | --- | Motor 1 | Motor 2 | Motor 3 | Motor 4 | Offboard [Ch.5] | RC [Ch.5] |  Offboard [Ch.7] | Offboard [Ch.8] |
+
+With this setup, actuator 6 is controlled with RC channel 5, and actuators 5, 7, and 8 controlled using the `SET_ACTUATOR_CONTROL_TARGET` message in Mavlink (or using the `actuator_control` plugin in MAVROS). Ensure that `group_mix` variable is set to the desired group to ensure that the actuator control input is correctly registered.

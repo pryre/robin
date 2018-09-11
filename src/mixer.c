@@ -24,17 +24,23 @@ system_status_t _system_status;
 
 int32_t _GPIO_outputs[MIXER_NUM_MOTORS];
 output_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
-fix16_t _actuator_control_g0_offboard[MIXER_NUM_MOTORS];
-fix16_t _actuator_control_g1_offboard[MIXER_NUM_MOTORS];
+
+int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
+bool _actuator_apply_g2;
+fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];
+fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];
+fix16_t _actuator_control_g2[MIXER_NUM_MOTORS];
+
 int32_t _pwm_control[MIXER_NUM_MOTORS];
 int32_t _pwm_output_requested[MIXER_NUM_MOTORS];
 int32_t _pwm_output[MIXER_NUM_MOTORS];
 mixer_motor_test_t _motor_test;
 
 static const mixer_t *mixer_to_use;
-static int16_t pwm_aux_map[MIXER_NUM_AUX];
 
-static bool actuator_apply_g1;
+static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) {
+	return (i < min) ? min : (i > max) ? max : i;
+}
 
 void mixer_init() {
 	switch( get_param_uint(PARAM_MIXER) ) {
@@ -75,6 +81,17 @@ void mixer_init() {
 		}
 	}
 
+	_actuator_apply_g1_map[0] = -1;
+	_actuator_apply_g1_map[1] = -1;
+	_actuator_apply_g1_map[2] = -1;
+	_actuator_apply_g1_map[3] = -1;
+	_actuator_apply_g1_map[4] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX1) - 1;
+	_actuator_apply_g1_map[5] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX2) - 1;
+	_actuator_apply_g1_map[6] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX3) - 1;
+	_actuator_apply_g1_map[7] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX4) - 1;
+
+	_actuator_apply_g2 = false;
+
 	for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++) {
 		_pwm_control[i] = 0;
 		_pwm_output_requested[i] = 0;
@@ -82,16 +99,15 @@ void mixer_init() {
 		_GPIO_outputs[i] = 0;
 		_GPIO_output_type[i] = MT_NONE;
 
-		_actuator_control_g0_offboard[i] = 0;
-		_actuator_control_g1_offboard[i] = 0;
+		//Ensure that RC Aux mapping is either disabled (-1), or a valid channel
+		int8_t rca_map = _actuator_apply_g1_map[i];
+		_actuator_apply_g1_map[i] = ( (rca_map < -1) || (rca_map > (MIXER_NUM_MOTORS -1) ) ) ? -1 : rca_map;
+
+		//Set initial actuator outputs
+		_actuator_control_g0[i] = 0;
+		_actuator_control_g1[i] = 0;
+		_actuator_control_g2[i] = 0;
 	}
-
-	actuator_apply_g1 = get_param_uint( PARAM_ACTUATORS_G1_ENABLE );
-
-	pwm_aux_map[0] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX1) - 1;
-	pwm_aux_map[1] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX2) - 1;
-	pwm_aux_map[2] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX3) - 1;
-	pwm_aux_map[3] = get_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX4) - 1;
 
 	_motor_test.start = 0;
 	_motor_test.throttle = 0;
@@ -141,10 +157,6 @@ void pwm_init() {
 	}
 }
 
-static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) {
-	return (i < min) ? min : (i > max) ? max : i;
-}
-
 static uint32_t map_fix16_to_pwm(fix16_t f) {
 	fix16_t fc = fix16_constrain(f,-_fc_1,_fc_1);
 	//range is -500 to 500
@@ -158,7 +170,7 @@ static uint32_t map_fix16_to_pwm(fix16_t f) {
 //value_disarm (for motors) should be 1000
 void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disarm) {
 	if( safety_is_armed() ) {
-		_pwm_output[index] = int32_constrain(value, 1000, 2000);
+		_pwm_output[index] = value;
 	} else {
 		_pwm_output[index] = value_disarm;
 	}
@@ -188,8 +200,6 @@ void write_servo(uint8_t index, int32_t value) {
 
 //Used to send a PWM while
 static void pwm_output() {
-	int aux_counter = 0;
-
 	// Add in GPIO inputs from Onboard Computer
 	for (int8_t i=0; i<MIXER_NUM_MOTORS; i++) {
 		output_type_t output_type = mixer_to_use->output_type[i];
@@ -208,29 +218,49 @@ static void pwm_output() {
 			//write_servo(i, _pwm_output_requested[i]);
 		} else if (output_type == MT_M) {
 			write_motor(i, _pwm_output_requested[i]);
-		} else if( actuator_apply_g1 ) {
-			//Handle actuator output if enabled
-			uint16_t pwm_act_out = map_fix16_to_pwm( _actuator_control_g1_offboard[i] );
+		} else if( _actuator_apply_g1_map[i] && (_system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK) ) {
+			//RC aux. actuator control
+			uint16_t pwm_act_disarm = 0;
+			uint16_t pwm_act_out = int32_constrain( map_fix16_to_pwm( _actuator_control_g1[i] ),
+																	  get_param_uint(PARAM_MOTOR_PWM_MIN),
+																	  get_param_uint(PARAM_MOTOR_PWM_MAX) );
 
-			if( get_param_uint(PARAM_ACTUATORS_G1_RESPECT_ARM) ) {
-				write_output_pwm(i, pwm_act_out, 1500);
+			if( get_param_uint(PARAM_ACTUATORS_RC_RESPECT_ARM) ) {
+				if( !get_param_uint(PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT) ) {
+					uint16_t pwmd = map_fix16_to_pwm( get_param_fix16(PARAM_ACTUATORS_RC_DISARM_VALUE) );
+					pwm_act_disarm = int32_constrain( pwmd,
+													  get_param_uint(PARAM_MOTOR_PWM_MIN),
+													  get_param_uint(PARAM_MOTOR_PWM_MAX) );
+				}
 			} else {
-				write_output_pwm(i, pwm_act_out, pwm_act_out);
+				pwm_act_disarm = pwm_act_out;
 			}
+
+			write_output_pwm(i, pwm_act_out, pwm_act_disarm);
+		} else if( _actuator_apply_g2 ) {
+			//Offboard aux. actuator control
+			uint16_t pwm_act_disarm = 0;
+			uint16_t pwm_act_out = int32_constrain( map_fix16_to_pwm( _actuator_control_g2[i] ),
+																	  get_param_uint(PARAM_MOTOR_PWM_MIN),
+																	  get_param_uint(PARAM_MOTOR_PWM_MAX) );
+
+			if( get_param_uint(PARAM_ACTUATORS_OB_RESPECT_ARM) ) {
+				if( !get_param_uint(PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT) ) {
+					uint16_t pwmd = map_fix16_to_pwm( get_param_fix16(PARAM_ACTUATORS_OB_DISARM_VALUE) );
+					pwm_act_disarm = int32_constrain( pwmd,
+													  get_param_uint(PARAM_MOTOR_PWM_MIN),
+													  get_param_uint(PARAM_MOTOR_PWM_MAX) );
+				}
+			} else {
+				pwm_act_disarm = pwm_act_out;
+			}
+
+			write_output_pwm(i, pwm_act_out, pwm_act_disarm);
 		} else if (output_type == MT_G) {
 			//write_servo(i, _pwm_output_requested[i]);	//XXX: Could have another function here to handle GPIO cases
 		} else {
-			//If we haven't run out of AUX channels
-			if(aux_counter < MIXER_NUM_AUX) {
-				//If a valid channel is set
-				if(pwm_aux_map[aux_counter] >= 0) {
-					write_output_pwm(i, pwmRead(pwm_aux_map[aux_counter]), 1500);
-				}
-
-				//Move on to the next aux channel for the next output loop
-				//May be that AUX 2 is set, but not 1
-				aux_counter++;
-			}
+			//Disable output
+			write_output_pwm(i, 0, 0);
 		}
 	}
 }

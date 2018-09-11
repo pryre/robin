@@ -54,8 +54,11 @@ extern output_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
 extern int32_t _pwm_control[MIXER_NUM_MOTORS];
 
 //TODO: Switch PWM Control to G1 input / override
-extern fix16_t _actuator_control_g0_offboard[MIXER_NUM_MOTORS];
-extern fix16_t _actuator_control_g1_offboard[MIXER_NUM_MOTORS];
+extern int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
+extern bool _actuator_apply_g2;
+extern fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];
+extern fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];
+extern fix16_t _actuator_control_g2[MIXER_NUM_MOTORS];
 
 extern mixer_motor_test_t _motor_test;
 
