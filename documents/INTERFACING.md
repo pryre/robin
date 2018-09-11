@@ -39,18 +39,18 @@ This message will only not count towards failsafe protection, and as such, needs
 
 The actuator control inputs provides a stable input for controlling PWM driven actuators. The interface exposes 2 input groupings:
 1. Group 0: Motor mixer input (Currently unimplemented)
-2. Group 1: RC auxilary input
-3. Group 2: Offboard auxilary input
+2. Group 1: RC auxiliary input
+3. Group 2: Offboard auxiliary input
 
-Direct actuator control for the offboard group `ACTUATOR_RC_*` is enabled when any of the `RC_MAP_AUX*` parameters are set, and act as a partial overlay depending on which auxilaries are set. The following parameters can be used for additional configuration:
+Direct actuator control for the RC auxiliary group `ACTUATOR_RC_*` is enabled when any of the `RC_MAP_AUX*` parameters are set, and act as a partial overlay depending on which auxiliaries are set. The following parameters can be used for additional configuration:
 - `ACTUATOR_RC_ARM`: Setting to true (1) will force the actuator outputs to respect arm/disarm conditions (i.e. if disabled, actuators will be able to be controlled without arming the flight controller)
 - `ACTUATOR_RC_ODV`: "Ouput Disarm Value"; Values in the range of -1 to 1 will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed.
 
-Direct actuator control for the offboard group `ACTUATOR_OB_*` is enabled when an initial input message is received, with additional settings enabled using the following parameters:
+Direct actuator control for the offboard auxiliary group `ACTUATOR_OB_*` is enabled when an initial input message is received, with additional settings enabled using the following parameters:
 - `ACTUATOR_OB_ARM`: Setting to true (1) will force the actuator outputs to respect arm/disarm conditions (i.e. if disabled, actuators will be able to be controlled without arming the flight controller)
 - `ACTUATOR_OB_ODV`: "Ouput Disarm Value"; Values in the range of -1 to 1 will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed.
 
-Additionally, the `ACTUATOR_AUX_ZO` parameter ("Auxilary Zero Output") can be used to override disarm behaviour of all auxilary outputs, such that if the flight controller is disarmed (and the groupings respect arm/disarm), zero output will be given, instead of sending "0.0"/"1500 (pwm)". This may be useful if you wish for to respect disarm output, but do not want the actuators to be sent "0.0" on disarm.
+Additionally, the `ACTUATOR_AUX_ZO` parameter ("Auxiliary Zero Output") can be used to override disarm behaviour of all auxiliary outputs, such that if the flight controller is disarmed (and the groupings respect arm/disarm), zero output will be given, instead of sending "0.0"/"1500 (pwm)". This may be useful if you wish for to respect disarm output, but do not want the actuators to be sent "0.0" on disarm.
 
 The actuator groups overlay one another depending on which outputs are enabled. For example, if the mixer is set to "Quadrotor X4" and `RC_MAP_AUX2` is set to RC input channel 5, and an offboard actuator set has been received, the group overlays will look like the following:
 
