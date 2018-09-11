@@ -35,6 +35,8 @@ This message will only not count towards failsafe protection, and as such, needs
 
 **If using v0.99.1, please see [this version](https://github.com/qutas/robin/blob/v0.99.1/documents/INTERFACING.md) of the documentation.**
 
+**If using v0.99.2 and onwards, please see documentation below.**
+
 The actuator control inputs provides a stable input for controlling PWM driven actuators. The interface exposes 2 input groupings:
 1. Group 0: Motor mixer input (Currently unimplemented)
 2. Group 1: RC auxilary input
