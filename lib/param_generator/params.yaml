@@ -221,7 +221,7 @@ PARAM_ACTUATORS_OB_DISARM_VALUE:
 PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT:
   type: "uint"
   name: "ACTUATOR_AUX_ZO"
-  description: "Override disarm behaviour of all auxilary outputs, such that if the flight controller is disarmed (and the groupings respect arm/disarm), zero output will be given."
+  description: "Override disarm behaviour of all auxiliary outputs, such that if the flight controller is disarmed (and the groupings respect arm/disarm), zero output will be given."
   reboot: false
   value:
     option: "bool"

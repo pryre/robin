@@ -19,7 +19,7 @@ ACTUATOR_RC_ARM | uint | Setting to false allows actuator group 1 outputs to be 
 ACTUATOR_RC_ODV | float | Set value will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed. | 0.0 |  | [min:-1.0, max:1.0] | False
 ACTUATOR_OB_ARM | uint | Setting to false allows actuator group 2 outputs to be active outside of arm/disarm functions | 1 | 0 / 1 | boolean | False
 ACTUATOR_OB_ODV | float | Set value will be output if `ACTUATOR_OB_ARM` is set true and the flight controller is disarmed. | 0.0 |  | [min:-1.0, max:1.0] | False
-ACTUATOR_AUX_ZO | uint | Override disarm behaviour of all auxilary outputs, such that if the flight controller is disarmed (and the groupings respect arm/disarm), zero output will be given. | 1 | 0 / 1 | boolean | False
+ACTUATOR_AUX_ZO | uint | Override disarm behaviour of all auxiliary outputs, such that if the flight controller is disarmed (and the groupings respect arm/disarm), zero output will be given. | 1 | 0 / 1 | boolean | False
 STRM0_HRTBT | float | Communication update rate for system heartbeat (set to 0 to turn off stream) | 1.0 | Hz | scalar | False
 STRM0_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
 STRM0_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
