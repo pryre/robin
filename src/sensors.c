@@ -1365,9 +1365,9 @@ bool sensors_update(uint32_t time_us) {
 			(_system_status.state != MAV_STATE_CALIBRATING) ) {
 
 			//Handle actuator control mapping
-			for(int i=0; i<8; i++) {
+			for(int i=0; i<MIXER_NUM_MOTORS; i++) {
 				int8_t ach = _actuator_apply_g1_map[i];
-				if( ach ) {
+				if( ach >= 0 ) {
 					_actuator_control_g1[i] = dual_normalized_input(pwmRead( ach ),
 																	rc_cal[ach][SENSOR_RC_CAL_MIN],
 																	rc_cal[ach][SENSOR_RC_CAL_MID],

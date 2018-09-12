@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mixer.h"
+#include "io_type.h"
 
 #include "fix16.h"
 #include "fixextra.h"
@@ -8,7 +8,7 @@
 const mixer_t mixer_plane_standard = {
 	true,
 
-	{MT_M, MT_S, MT_S, MT_S, MT_NONE, MT_NONE, MT_NONE, MT_NONE}, // output_type
+	{IO_TYPE_OM, IO_TYPE_OS, IO_TYPE_OS, IO_TYPE_OS, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N}, // output_type
 
 	{ _fc_1, 0, 0, 0, 0, 0, 0, 0}, // F Mix
 	{ 0, _fc_1, 0, 0, 0, 0, 0, 0}, // X Mix

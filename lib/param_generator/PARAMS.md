@@ -128,7 +128,8 @@ BAT_V_DIV | float | Resistor voltage divider for battery sensing (-1 to use boar
 BAT_LOW_THR | float | Charge state cutoff for low battery remaining (as a percentage) | 0.2 |  | scalar | False
 BAT_CRIT_THR | float | Charge state cutoff for critical battery remaining (as a percentage) | 0.1 |  | scalar | False
 BAT_EMERGEN_THR | float | Charge state cutoff for emergency battery remaining (as a percentage) | 0.05 |  | scalar | False
-PWM_RATE | uint | Update rate for PWM outputs | 400 | ? | scalar | True
+PWM_RATE_S | uint | Update rate for servo/actuator PWM outputs | 50 | ? | scalar | True
+PWM_RATE_M | uint | Update rate for motor PWM outputs | 400 | ? | scalar | True
 PWM_IDLE | uint | Idle output for motors (when armed) | 1150 | pwm | scalar | False
 PWM_MIN | uint | Minimum output for motors | 1000 | pwm | scalar | False
 PWM_MAX | uint | Maximum output for motors | 2000 | pwm | scalar | False

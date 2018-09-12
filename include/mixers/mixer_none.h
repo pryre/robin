@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mixer.h"
+#include "io_type.h"
 
 #include "fix16.h"
 #include "fixextra.h"
@@ -9,7 +9,7 @@ const mixer_t mixer_none = {
 	false,
 
 	//Ch1, Ch2,  Ch3,  Ch4,  Ch5,  Ch6,  Ch7,  Ch8
-	{MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE, MT_NONE}, // output_type
+	{IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N}, // output_type
 
 	//Channels
 	//1, 2, 3, 4, 5, 6, 7, 8

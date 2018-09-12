@@ -1,7 +1,8 @@
 #include <stdint.h>
+#include <stdio.h>
 
 #include "breezystm32.h"
-#include "pwm.h"
+#include "drv_pwm.h"
 #include "mavlink_system.h"
 #include "mavlink/mavlink_types.h"
 #include "fix16.h"
@@ -11,6 +12,8 @@
 #include "params.h"
 #include "safety.h"
 #include "controller.h"
+
+#include "io_type.h"
 
 #include "mixers/mixer_none.h"
 #include "mixers/mixer_mc_p4.h"
@@ -23,7 +26,7 @@ control_output_t _control_output;
 system_status_t _system_status;
 
 int32_t _GPIO_outputs[MIXER_NUM_MOTORS];
-output_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
+io_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
 
 int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
 bool _actuator_apply_g2;
@@ -37,6 +40,10 @@ int32_t _pwm_output[MIXER_NUM_MOTORS];
 mixer_motor_test_t _motor_test;
 
 static const mixer_t *mixer_to_use;
+
+//XXX: Pinout Mapping for Naze32!
+static const uint8_t io_map_naze32_ppm = 0;
+static const uint8_t io_map_naze32_pwm[MIXER_NUM_MOTORS] = {8, 9, 10, 11, 12, 13, 4, 5};
 
 static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) {
 	return (i < min) ? min : (i > max) ? max : i;
@@ -97,11 +104,21 @@ void mixer_init() {
 		_pwm_output_requested[i] = 0;
 		_pwm_output[i] = 0;
 		_GPIO_outputs[i] = 0;
-		_GPIO_output_type[i] = MT_NONE;
+		_GPIO_output_type[i] = IO_TYPE_N;
 
 		//Ensure that RC Aux mapping is either disabled (-1), or a valid channel
 		int8_t rca_map = _actuator_apply_g1_map[i];
-		_actuator_apply_g1_map[i] = ( (rca_map < -1) || (rca_map > (MIXER_NUM_MOTORS -1) ) ) ? -1 : rca_map;
+		if( (rca_map >= 0) && (rca_map < MIXER_NUM_MOTORS ) ) {
+			_actuator_apply_g1_map[i] = rca_map;
+		} else {
+			_actuator_apply_g1_map[i] = -1;
+
+			if (rca_map >= MIXER_NUM_MOTORS) {
+				char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+				snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[MIXER] Bad RC Aux mapping (ch%i)", i);
+				mavlink_queue_broadcast_error(text);
+			}
+		}
 
 		//Set initial actuator outputs
 		_actuator_control_g0[i] = 0;
@@ -117,22 +134,40 @@ void mixer_init() {
 }
 
 void pwm_init() {
-	bool useCPPM = true;
-	/* XXX: Frees up the ports for telem2 and safety switch
-	//In-case needed in future
-	if(get_param_int(PARAM_RC_TYPE) == 1)
-		useCPPM = true;
-	*/
+	//XXX: Loop backwards through the IO map to set the number of motor/servo ports
+	io_def_t io_map;
+	uint8_t io_c = 0;
+	io_map.port[io_c] = io_map_naze32_ppm;	//IO set for PPM input
+	io_map.type[io_c] = IO_TYPE_IP;	//IO set for PPM input
+	io_c++;
 
-	int16_t motor_refresh_rate = get_param_uint(PARAM_MOTOR_PWM_SEND_RATE);
-	int16_t pwm_disarm = get_param_uint(PARAM_MOTOR_PWM_MIN);
-	pwmInit(useCPPM, false, false, motor_refresh_rate, pwm_disarm);
+	//XXX: Use motor IO timings for motor mixer outputs
+	//XXX: use servo IO timings for other mixer outputs
+	for(int i=0; i<MIXER_NUM_MOTORS; i++) {
+		io_map.port[io_c] = io_map_naze32_pwm[i];	//IO map set for PWM input
+		io_map.type[io_c] = (mixer_to_use->output_type[i] == IO_TYPE_OM ) ? IO_TYPE_OM : IO_TYPE_OS;;	//IO map set for PWM input
+		io_c++;
+	}
 
+	//Fill out the rest of the ports to not be initialized
+	while(io_c < PWM_MAX_PORTS) {
+		io_map.port[io_c] = 0;
+		io_map.type[io_c] = IO_TYPE_N;
+		io_c++;
+	}
+
+	pwmInit(&io_map,
+			false,
+			get_param_uint(PARAM_MOTOR_PWM_SEND_RATE),
+			get_param_uint(PARAM_SERVO_PWM_SEND_RATE),
+			get_param_uint(PARAM_MOTOR_PWM_MIN));
+
+	//==-- Perform remaining PWM setup tasks
 	if( get_param_uint( PARAM_DO_ESC_CAL ) ) {
 		mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[MIXER] Performing ESC calibration");
 
 		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
-			if (mixer_to_use->output_type[i] == MT_M)
+			if (mixer_to_use->output_type[i] == IO_TYPE_OM)
 				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MAX ) );
 
 		LED1_OFF;
@@ -142,7 +177,7 @@ void pwm_init() {
 		}
 
 		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
-			if (mixer_to_use->output_type[i] == MT_M)
+			if (mixer_to_use->output_type[i] == IO_TYPE_OM)
 				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MIN ) );
 
 		LED0_OFF;
@@ -202,21 +237,23 @@ void write_servo(uint8_t index, int32_t value) {
 static void pwm_output() {
 	// Add in GPIO inputs from Onboard Computer
 	for (int8_t i=0; i<MIXER_NUM_MOTORS; i++) {
-		output_type_t output_type = mixer_to_use->output_type[i];
+		io_type_t output_type = mixer_to_use->output_type[i];
 
 		//TODO: This logic needs to be double checked
+		/*
 		if (output_type == MT_NONE) {
 			// Incorporate GPIO on not already reserved outputs
 			_pwm_output_requested[i] = _GPIO_outputs[i];
 			output_type = _GPIO_output_type[i];
 		}
+		*/
 
 		//XXX: This is getting pretty messy, but it looks like a good spot for AUX passthrough as well
 
 		// Write output to motors
-		if (output_type == MT_S) {
+		if (output_type == IO_TYPE_OS) {
 			//write_servo(i, _pwm_output_requested[i]);
-		} else if (output_type == MT_M) {
+		} else if (output_type == IO_TYPE_OM) {
 			write_motor(i, _pwm_output_requested[i]);
 		} else if( _actuator_apply_g1_map[i] && (_system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK) ) {
 			//RC aux. actuator control
@@ -256,7 +293,7 @@ static void pwm_output() {
 			}
 
 			write_output_pwm(i, pwm_act_out, pwm_act_disarm);
-		} else if (output_type == MT_G) {
+		} else if (output_type == IO_TYPE_OG) {
 			//write_servo(i, _pwm_output_requested[i]);	//XXX: Could have another function here to handle GPIO cases
 		} else {
 			//Disable output
@@ -273,7 +310,7 @@ void mixer_output() {
 
 	for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++) {
 		//TODO: This logic needs to be double checked
-		if (mixer_to_use->output_type[i] != MT_NONE) {
+		if (mixer_to_use->output_type[i] != IO_TYPE_N) {
 			// Matrix multiply (in so many words) -- done in integer, hence the /1000 at the end
 			//TODO: This might actually be very easy to do with fix16 matrix operations...
 			/*
@@ -291,7 +328,7 @@ void mixer_output() {
 			prescaled_outputs[i] = fix16_to_int(fix16_mul(thrust_calc, _fc_1000));
 			//Note: Negitive PWM values could be calculated here, but will be saturated to 0pwm later
 
-			if( mixer_to_use->output_type[i] == MT_M ) {
+			if( mixer_to_use->output_type[i] == IO_TYPE_OM ) {
 				if( prescaled_outputs[i] > max_output )
 					max_output = prescaled_outputs[i];
 
@@ -328,10 +365,8 @@ void mixer_output() {
 					_motor_test.start = micros();
 					_motor_test.motor_step++;
 
-					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
-					char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-					itoa(_motor_test.motor_step, mchar, 10);
-					strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+					snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[MIXER] Testing motor: %i", _motor_test.motor_step);
 					mavlink_queue_broadcast_notice(text);
 			} else {
 				//Test is done, reset
@@ -346,7 +381,7 @@ void mixer_output() {
 
 	//Prepare the motor mixing
 	for (uint8_t i=0; i<MIXER_NUM_MOTORS; i++) {
-		if (mixer_to_use->output_type[i] == MT_M) {
+		if (mixer_to_use->output_type[i] == IO_TYPE_OM) {
 			_pwm_output_requested[i] = prescaled_outputs[i] * scale_factor / 1000; // divide by scale factor
 		} else {
 			_pwm_output_requested[i] = prescaled_outputs[i];

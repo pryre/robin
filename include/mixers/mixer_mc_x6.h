@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mixer.h"
+#include "io_type.h"
 
 #include "fix16.h"
 #include "fixextra.h"
@@ -8,7 +8,7 @@
 const mixer_t mixer_hexarotor_x = {
 	true,
 
-	{MT_M, MT_M, MT_M, MT_M, MT_M, MT_M, MT_NONE, MT_NONE}, // output_type
+	{IO_TYPE_OM, IO_TYPE_OM, IO_TYPE_OM, IO_TYPE_OM, IO_TYPE_OM, IO_TYPE_OM, IO_TYPE_N, IO_TYPE_N}, // output_type
 
 	{ _fc_1, _fc_1,   _fc_1,   _fc_1,    _fc_1,   _fc_1, 0, 0}, // F Mix
 	{-_fc_1, _fc_1, _fc_0_5,-_fc_0_5, -_fc_0_5, _fc_0_5, 0, 0}, // X Mix

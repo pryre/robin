@@ -6,6 +6,8 @@
 #include "fix16.h"
 #include "controller.h"
 
+#include "io_type.h"
+
 #define MIXER_NUM_MOTORS 8
 #define MIXER_TEST_MOTORS_ALL 0xFF
 #define MIXER_NUM_AUX 4
@@ -21,24 +23,15 @@ typedef enum {
 	NUM_MIXERS
 } mixer_type_t;
 
-typedef enum {
-	MT_NONE,	//None
-	MT_S,		//Servo
-	MT_M,		//Motor
-	MT_A,		//Actuator
-	MT_G		//GPIO
-} output_type_t;
-
 typedef struct {
 	bool mixer_ok;
 
-	output_type_t output_type[MIXER_NUM_MOTORS];
+	io_type_t output_type[MIXER_NUM_MOTORS];
 	fix16_t T[MIXER_NUM_MOTORS];
 	fix16_t x[MIXER_NUM_MOTORS];
 	fix16_t y[MIXER_NUM_MOTORS];
 	fix16_t z[MIXER_NUM_MOTORS];
 } mixer_t;
-
 
 typedef struct {
 	uint32_t start;
@@ -49,7 +42,7 @@ typedef struct {
 } mixer_motor_test_t;
 
 extern int32_t _GPIO_outputs[MIXER_NUM_MOTORS];
-extern output_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
+extern io_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
 
 extern int32_t _pwm_control[MIXER_NUM_MOTORS];
 

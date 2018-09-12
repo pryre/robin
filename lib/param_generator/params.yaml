@@ -1274,10 +1274,20 @@ PARAM_BATTERY_CHARGE_STATE_EMERGENCY:
     option: "scalar"
     default: 0.05
 ---
+PARAM_SERVO_PWM_SEND_RATE:
+  type: "uint"
+  name: "PWM_RATE_S"
+  description: "Update rate for servo/actuator PWM outputs"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 50
+    unit: "?"
+---
 PARAM_MOTOR_PWM_SEND_RATE:
   type: "uint"
-  name: "PWM_RATE"
-  description: "Update rate for PWM outputs"
+  name: "PWM_RATE_M"
+  description: "Update rate for motor PWM outputs"
   reboot: true
   value:
     option: "scalar"
