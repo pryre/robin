@@ -1,0 +1,178 @@
+PARAM_RATE_CONTROL:
+  type: "float"
+  name: "RATE_CONTROL"
+  description: "Update rate of the controller"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 250.0
+---
+PARAM_PID_ROLL_RATE_P:
+  type: "float"
+  name: "MC_ROLLRATE_P"
+  description: "Proportional gain for roll rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05
+    function: "pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));"
+---
+PARAM_PID_ROLL_RATE_I:
+  type: "float"
+  name: "MC_ROLLRATE_I"
+  description: "Integral gain for roll rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.01
+    function: "pid_set_gain_i(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_I));"
+---
+PARAM_PID_ROLL_RATE_D:
+  type: "float"
+  name: "MC_ROLLRATE_D"
+  description: "Derivative gain for roll rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.001
+    function: "pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));"
+---
+PARAM_MAX_ROLL_RATE:
+  type: "float"
+  name: "MC_ROLLRATE_MAX"
+  description: "Maximum allowed command for roll rate"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 3.14159
+    unit: "rad/s"
+    function: "pid_set_min_max(&_pid_roll_rate, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));"
+---
+PARAM_PID_PITCH_RATE_P:
+  type: "float"
+  name: "MC_PITCHRATE_P"
+  description: "Proportional gain for pitch rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05
+    function: "pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));"
+---
+PARAM_PID_PITCH_RATE_I:
+  type: "float"
+  name: "MC_PITCHRATE_I"
+  description: "Integral gain for pitch rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.01
+    function: "pid_set_gain_i(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_I));"
+---
+PARAM_PID_PITCH_RATE_D:
+  type: "float"
+  name: "MC_PITCHRATE_D"
+  description: "Derivative gain for pitch rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.001
+    function: "pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));"
+---
+PARAM_MAX_PITCH_RATE:
+  type: "float"
+  name: "MC_PITCHRATE_MAX"
+  description: "Maximum allowed command for pitch rate"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 3.14159
+    unit: "rad/s"
+    function: "pid_set_min_max(&_pid_pitch_rate, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));"
+---
+PARAM_PID_YAW_RATE_P:
+  type: "float"
+  name: "MC_YAWRATE_P"
+  description: "Proportional gain for yaw rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05
+    function: "pid_set_gain_p(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_P));"
+---
+PARAM_PID_YAW_RATE_I:
+  type: "float"
+  name: "MC_YAWRATE_I"
+  description: "Integral gain for yaw rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.01
+    function: "pid_set_gain_i(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_I));"
+---
+PARAM_PID_YAW_RATE_D:
+  type: "float"
+  name: "MC_YAWRATE_D"
+  description: "Derivative gain for yaw rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+    function: "pid_set_gain_d(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_D));"
+---
+PARAM_MAX_YAW_RATE:
+  type: "float"
+  name: "MC_YAWRATE_MAX"
+  description: "Maximum allowed command for yaw rate"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.57079
+    unit: "rad/s"
+    function: "pid_set_min_max(&_pid_yaw_rate, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));"
+---
+PARAM_PID_ROLL_ANGLE_P:
+  type: "float"
+  name: "MC_ROLL_P"
+  description: "Feed-forward gain for roll angle"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 4.5
+---
+PARAM_MAX_ROLL_ANGLE:
+  type: "float"
+  name: "MAX_ROLL_A"
+  description: "Maximum allowed command roll angle (TODO)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.786
+    unit: "rad"
+---
+PARAM_PID_PITCH_ANGLE_P:
+  type: "float"
+  name: "MC_PITCH_P"
+  description: "Feed-forward gain for pitch angle"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 4.5
+---
+PARAM_MAX_PITCH_ANGLE:
+  type: "float"
+  name: "MAX_PITCH_A"
+  description: "Maximum allowed command pitch angle (TODO)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.786
+    unit: "rad"
+---
+PARAM_PID_YAW_ANGLE_P:
+  type: "float"
+  name: "MC_YAW_P"
+  description: "Feed-forward gain for yaw angle"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2.8

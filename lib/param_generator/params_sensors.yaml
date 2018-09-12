@@ -1,0 +1,257 @@
+PARAM_TIMESYNC_ALPHA:
+  type: "float"
+  name: "TIMESYNC_ALPHA"
+  description: "TODO - also check min-max values"
+  reboot: false
+  value:
+    option: "range"
+    default: 0.8
+    min: 0.0
+    max: 1.0
+---
+PARAM_SENSOR_HIL_CBRK:
+  type: "uint"
+  name: "CBRK_HIL"
+  description: "Sensor circuit breaker to enable/disable HIL input (set to 0 to disable checking device)"
+  reboot: true
+  value:
+    option: "bool"
+    default: 0
+---
+PARAM_SENSOR_IMU_CBRK:
+  type: "uint"
+  name: "CBRK_IMU"
+  description: "Sensor circuit breaker arming check for IMU (set to 0 to disable checking device)"
+  reboot: true
+  value:
+    option: "bool"
+    default: 1
+---
+PARAM_SENSOR_SAFETY_CBRK:
+  type: "uint"
+  name: "CBRK_SAFETY"
+  description: "Sensor circuit breaker arming check for safety button (set to 0 to disable checking device)"
+  reboot: true
+  value:
+    option: "bool"
+    default: 1
+---
+PARAM_SENSOR_MAG_UPDATE_RATE:
+  type: "float"
+  name: "CHK_RATE_MAG"
+  description: "Sensor update rate for magnetometer (set to 0 to disable, typical is 20Hz)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0.0
+    unit: "Hz"
+---
+PARAM_SENSOR_BARO_UPDATE_RATE:
+  type: "float"
+  name: "CHK_RATE_BARO"
+  description: "Sensor update rate for barometer (set to 0 to disable, typical is 20Hz)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0.0
+    unit: "Hz"
+---
+PARAM_SENSOR_SONAR_UPDATE_RATE:
+  type: "float"
+  name: "CHK_RATE_SONAR"
+  description: "Sensor update rate for sonar (TODO) (set to 0 to disable, typical is 5Hz)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0.0
+    unit: "Hz"
+---
+PARAM_SENSOR_HIL_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_HIL"
+  description: "Number of HIL readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100
+---
+PARAM_SENSOR_IMU_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_IMU"
+  description: "Number of IMU readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+---
+PARAM_SENSOR_BARO_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_BARO"
+  description: "Number of barometer readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50
+---
+PARAM_SENSOR_SONAR_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_SONAR"
+  description: "Number of sonar readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50
+---
+PARAM_SENSOR_RC_INPUT_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_RC_IN"
+  description: "Number of valid RC input readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+---
+PARAM_SENSOR_EXT_POSE_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_EXT_P"
+  description: "Number of external pose readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10
+---
+PARAM_SENSOR_MAG_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_MAG"
+  description: "Number of magnetometer readings that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 50
+---
+PARAM_SENSOR_OFFB_HRBT_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_OB_H"
+  description: "Number of offboard heartbeat messages that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2
+---
+PARAM_SENSOR_OFFB_CTRL_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_OB_C"
+  description: "Number of offboard control messages that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100
+---
+PARAM_SENSOR_PWM_CTRL_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_RC_C"
+  description: "Number of PWM control messages that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100
+---
+PARAM_SENSOR_HIL_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_HIL"
+  description: "Time that new data must be read before an HIL state timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 500000
+    unit: "us"
+---
+PARAM_SENSOR_IMU_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_IMU"
+  description: "Time that new data must be read before an IMU timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 4000
+    unit: "us"
+---
+PARAM_SENSOR_MAG_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_MAG"
+  description: "Time that new data must be read before a magnetometer timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100000
+    unit: "us"
+---
+PARAM_SENSOR_BARO_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_BARO"
+  description: "Time that new data must be read before a barometer timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100000
+    unit: "us"
+---
+PARAM_SENSOR_SONAR_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_SONAR"
+  description: "Time that new data must be read before a sonar timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100000
+    unit: "us"
+---
+PARAM_SENSOR_RC_INPUT_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_RC_IN"
+  description: "Time that new data must be read before a RC input timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000000
+    unit: "us"
+---
+PARAM_SENSOR_EXT_POSE_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_EXT_P"
+  description: "Time that new data must be read before a external pose timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000000
+    unit: "us"
+---
+PARAM_SENSOR_OFFB_HRBT_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_OB_HRBT"
+  description: "Time that new data must be read before a off-board heartbeat timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 5000000
+    unit: "us"
+---
+PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_OB_CTRL"
+  description: "Time that new data must be read before a off-board control timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 400000
+    unit: "us"
+---
+PARAM_SENSOR_PWM_CTRL_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_RC_CTRL"
+  description: "Time that new data must be read before a PWM control timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 200000
+    unit: "us"

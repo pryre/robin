@@ -1,0 +1,149 @@
+PARAM_RC_MAP_ROLL:
+  type: "uint"
+  name: "RC_MAP_ROLL"
+  description: "Channel to use for RC roll inputs"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_PITCH:
+  type: "uint"
+  name: "RC_MAP_PITCH"
+  description: "Channel to use for RC pitch inputs"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_YAW:
+  type: "uint"
+  name: "RC_MAP_YAW"
+  description: "Channel to use for RC yaw inputs"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_THROTTLE:
+  type: "uint"
+  name: "RC_MAP_THROTTLE"
+  description: "Channel to use for RC throttle inputs"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_MODE_SW:
+  type: "uint"
+  name: "RC_MAP_MODE_SW"
+  description: "Channel to use for RC mode select"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_PASSTHROUGH_AUX1:
+  type: "uint"
+  name: "RC_MAP_AUX1"
+  description: "RC channel to use for AUX1 passthrough, if there are free mixer channels (set to 0 to disable)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_PASSTHROUGH_AUX2:
+  type: "uint"
+  name: "RC_MAP_AUX2"
+  description: "RC channel to use for AUX2 passthrough, if there are free mixer channels (set to 0 to disable)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_PASSTHROUGH_AUX3:
+  type: "uint"
+  name: "RC_MAP_AUX3"
+  description: "RC channel to use for AUX3 passthrough, if there are free mixer channels (set to 0 to disable)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MAP_PASSTHROUGH_AUX4:
+  type: "uint"
+  name: "RC_MAP_AUX4"
+  description: "RC channel to use for AUX4 passthrough, if there are free mixer channels (set to 0 to disable)"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MODE_DEFAULT:
+  type: "uint"
+  name: "RC_MODE_DEFAULT"
+  description: "Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MODE_PWM_RANGE:
+  type: "uint"
+  name: "RC_MODE_PWM_RNG"
+  description: "Sets the range (+ or -) that counts as a selection for any PWM mode selection"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100
+    unit: "channel"
+---
+PARAM_RC_MODE_PWM_STAB:
+  type: "uint"
+  name: "RC_MODE_PWM_STAB"
+  description: "The PWM value to use to select manual stabilized mode (set to 0 to disable)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1100
+    unit: "channel"
+---
+PARAM_RC_MODE_PWM_ACRO:
+  type: "uint"
+  name: "RC_MODE_PWM_ACRO"
+  description: "The PWM value to use to select manual acro mode (set to 0 to disable)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+    unit: "channel"
+---
+PARAM_RC_MODE_PWM_OFFBOARD:
+  type: "uint"
+  name: "RC_MODE_PWM_OFFB"
+  description: "The PWM value to use to select offboard mode (set to 0 to disable)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1900
+    unit: "channel"
+---
+PARAM_RC_ARM_TIMER:
+  type: "uint"
+  name: "COM_RC_ARM_HYST"
+  description: "Time threshold to activate RC arming"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000000
+    unit: "us"

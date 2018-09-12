@@ -192,7 +192,7 @@ def check_params(params):
 
 	return success
 
-def gen_md(params, filepath):
+def gen_md(params, param_groups, filepath):
 	success = False
 
 	# Open files to insert generated data
@@ -200,62 +200,71 @@ def gen_md(params, filepath):
 
 	try:
 		# Prepare file headers
-		str_md = "# Parameter File Reference\n\nName | Type | Description | Default | Unit | Options | Reboot\n--- | --- | --- | ---:| --- | --- | ---\n"
+		str_md = "# Parameter File Reference\n\n"
 		param_gen_md.write(str_md)
 
-		# Markdown generation
-		for p in params:
-			for param_id, details in p.items():
-				str_md = details["name"]
-				str_md += " | "
-				str_md += details["type"]
-				str_md += " | "
-				str_md += details["description"]
-				str_md += " | "
+		str_md_tab = "Name | Type | Description | Default | Unit | Options | Reboot\n--- | --- | --- | ---:| --- | --- | ---\n"
 
-				unit_str = ""
+		for i in range(len(param_groups)):
+			str_md = ("## %s\n\n" % param_groups[i]) + str_md_tab
+			param_gen_md.write(str_md)
 
-				if "unit" in details["value"]:
-					unit_str = details["value"]["unit"]
+			pg = params[i]
 
-				if details["value"]["option"] == "bool":
-					str_md += str(details["value"]["default"])
+			# Markdown generation
+			for p in pg:
+				for param_id, details in p.items():
+					str_md = details["name"]
 					str_md += " | "
-					str_md += "0 / 1"
+					str_md += details["type"]
 					str_md += " | "
-					str_md += "boolean"
+					str_md += details["description"]
 					str_md += " | "
-				elif details["value"]["option"] == "scalar":
-					str_md += str(details["value"]["default"])
-					str_md += " | "
-					str_md += unit_str
-					str_md += " | "
-					str_md += "scalar"
-					str_md += " | "
-				elif details["value"]["option"] == "range":
-					str_md += str(details["value"]["default"])
-					str_md += " | "
-					str_md += unit_str
-					str_md += " | "
-					str_md += "[min:%s, max:%s]" % (str(details["value"]["min"]), str(details["value"]["max"]))
-					str_md += " | "
-				elif details["value"]["option"] == "list":
-					str_md += str(details["value"]["list"][details["value"]["default"]])
-					str_md += " | "
-					str_md += unit_str
-					str_md += " | "
-					str_md += "%s" % str(details["value"]["list"])
-					str_md += " | "
-				elif details["value"]["option"] == "generated":
-					str_md += " | | | "
-				else:
-					raise ValueError("%s: Unsupported value option (%s) for Markdown generation" % (param_id, details["value"]["option"]))
 
-				str_md += str(details["reboot"])
+					unit_str = ""
 
-				str_md += "\n"
+					if "unit" in details["value"]:
+						unit_str = details["value"]["unit"]
 
-				param_gen_md.write(str_md)
+					if details["value"]["option"] == "bool":
+						str_md += str(details["value"]["default"])
+						str_md += " | "
+						str_md += "0 / 1"
+						str_md += " | "
+						str_md += "boolean"
+						str_md += " | "
+					elif details["value"]["option"] == "scalar":
+						str_md += str(details["value"]["default"])
+						str_md += " | "
+						str_md += unit_str
+						str_md += " | "
+						str_md += "scalar"
+						str_md += " | "
+					elif details["value"]["option"] == "range":
+						str_md += str(details["value"]["default"])
+						str_md += " | "
+						str_md += unit_str
+						str_md += " | "
+						str_md += "[min:%s, max:%s]" % (str(details["value"]["min"]), str(details["value"]["max"]))
+						str_md += " | "
+					elif details["value"]["option"] == "list":
+						str_md += str(details["value"]["list"][details["value"]["default"]])
+						str_md += " | "
+						str_md += unit_str
+						str_md += " | "
+						str_md += "%s" % str(details["value"]["list"])
+						str_md += " | "
+					elif details["value"]["option"] == "generated":
+						str_md += " | | | "
+					else:
+						raise ValueError("%s: Unsupported value option (%s) for Markdown generation" % (param_id, details["value"]["option"]))
+
+					str_md += str(details["reboot"])
+					str_md += "\n"
+					param_gen_md.write(str_md)
+
+			str_md = "\n"
+			param_gen_md.write(str_md)
 
 		# Prepare file footers
 		#str_md = ""
@@ -423,34 +432,78 @@ def gen_c(params, filepath):
 	return success
 
 def main():
+	param_groups = ("Battery",
+					"Calibration",
+					"Communication",
+					"Control",
+					"Estimator",
+					"Mixer",
+					"RC Input",
+					"Sensors",
+					"System")
 
-	path_params_yaml = "lib/param_generator/params.yaml"
+	path_params_yaml = ("lib/param_generator/params_battery.yaml",
+						"lib/param_generator/params_calibration.yaml",
+						"lib/param_generator/params_comms.yaml",
+						"lib/param_generator/params_control.yaml",
+						"lib/param_generator/params_estimator.yaml",
+						"lib/param_generator/params_mixer.yaml",
+						"lib/param_generator/params_rc_input.yaml",
+						"lib/param_generator/params_sensors.yaml",
+						"lib/param_generator/params_system.yaml")
 	path_params_md = "lib/param_generator/PARAMS.md"
 	path_params_h = "lib/param_generator/param_gen.h"
 	path_params_c = "lib/param_generator/param_gen.c"
 
 	do_gen = False
-	mod_time_yaml = 0
-	mod_time_md = 0
-	mod_time_h = 0
-	mod_time_c = 0
 
 	try:
-		mod_time_yaml = os.stat(path_params_yaml).st_mtime
-		mod_time_md = os.stat(path_params_md).st_mtime
-		mod_time_h = os.stat(path_params_h).st_mtime
-		mod_time_c = os.stat(path_params_c).st_mtime
-	except FileNotFoundError as e:
+		mod_time_yaml = 0
+		for pf in path_params_yaml:
+			mod_time_yaml_pf = os.stat(pf).st_mtime
+
+			if mod_time_yaml == 0:
+				mod_time_yaml = mod_time_yaml_pf
+			else:
+				if mod_time_yaml < mod_time_yaml_pf:
+					mod_time_yaml = mod_time_yaml_pf
+
+		if mod_time_yaml > os.stat(path_params_md).st_mtime:
+			do_gen = True
+
+		if mod_time_yaml > os.stat(path_params_h).st_mtime:
+			do_gen = True
+
+		if mod_time_yaml > os.stat(path_params_c).st_mtime:
+			do_gen = True
+
+	except:
 		do_gen = True
 
-	if (mod_time_yaml > mod_time_md) or (mod_time_yaml > mod_time_h) or (mod_time_yaml > mod_time_c) or do_gen:
-		params = read_params(path_params_yaml)
+	if do_gen:
+		params = []
+		params_g = []
+		param_count = 0
+
+		for pf in path_params_yaml:
+			pf_list = read_params(pf)
+			param_count += len(pf_list)
+			params_g.append(pf_list)
+
+		if len(param_groups) == len(params_g):
+			print("Total parameters loaded: %i" % param_count)
+		else:
+			print("Error: Parameters loaded do not match expected number of groups")
+			exit(1)
+
+		for pg in params_g:
+			params += pg
 
 		#TODO: Still need to check for unique param_ids
 		if not check_params(params):
 			exit(1)
 
-		if not gen_md(params, path_params_md):
+		if not gen_md(params_g, param_groups, path_params_md):
 			exit(1)
 
 		if not gen_h(params, path_params_h):

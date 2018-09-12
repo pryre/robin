@@ -1,0 +1,50 @@
+#---
+#PARAM_VALUE:
+#  type: "int"
+#  name: "EX_VALUE"
+#  description: "Example of an unbounded integer parameter"
+#  reboot: true
+#  value:
+#    option: "scalar"
+#    default: -3
+#    unit: "m/s"
+#---
+#PARAM_UPDATE:
+#  type: "int"
+#  name: "EX_DYN_UPDT"
+#  description: "Example of a parameter that does not need to reboot to take effect"
+#  reboot: false
+#  value:
+#    option: "scalar"
+#    default: 1000
+#    function: "param_update(EX_DYN_UPDT);" # Some function or call
+#---
+#PARAM_RANGE:
+#  type: "float"
+#  name: "EX_RANGE"
+#  description: "Example of a bounded floating point parameter"
+#  reboot: false
+#  value:
+#    option: "range"
+#    default: 0.0
+#    min: -1.0
+#    max: 1.0
+#---
+#PARAM_GEN:
+#  type: "uint"
+#  name: "EX_GEN"
+#  description: "Example of a parameter that is generated at compile time or on run time"
+#  reboot: false
+#  value:
+#    option: "generated"
+#    function: "param_value_gen()" # Some function or call
+#---
+#PARAM_LIST:
+#  type: "uint"
+#  name: "EX_LIST"
+#  description: "Example of a list of preset options"
+#  reboot: false
+#  value:
+#    option: "list"
+#    default: 3 #Default list position, not default value (index 3 -> 30 in this example)
+#    list: [0, 10, 20, 30, 40, 50]

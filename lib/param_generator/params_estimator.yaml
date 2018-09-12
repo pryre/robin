@@ -1,0 +1,144 @@
+PARAM_INIT_TIME:
+  type: "uint"
+  name: "EST_FLTR_INIT"
+  description: "Time from boot where the estimator will use quick convergence"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 3000
+    unit: "ms"
+---
+PARAM_EST_USE_ACC_COR:
+  type: "uint"
+  name: "EST_ACC_COR"
+  description: "Toggle to enable accelerometer correction (required for angular control) in the attitude estimator (0:false,1:true)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1
+---
+PARAM_EST_USE_MAT_EXP:
+  type: "uint"
+  name: "EST_MAT_EXP"
+  description: "Toggle to enable matrix expotential approximation (adds decent estimation accuracy) in the attitude estimator (0:false,1:true)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1
+---
+PARAM_EST_USE_QUAD_INT:
+  type: "uint"
+  name: "EST_QUAD_INT"
+  description: "Toggle to enable quadratic integration (adds a small amount of additional accuracy) in the attitude estimator (0:false,1:true)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1
+---
+PARAM_EST_USE_ADPT_BIAS:
+  type: "uint"
+  name: "EST_ADPT_BIAS"
+  description: "Toggle to enable adaptive bias estimation (accounts for some additional sensor fluctuations) in the attitude estimator (0:false,1:true)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_EST_USE_LEVEL_HORIZON:
+  type: "uint"
+  name: "EST_LVL_HORZ"
+  description: "Toggle to enable level horizon calibration for the attitude estimation (0:false,1:true)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1
+---
+PARAM_EST_LEVEL_HORIZON_W:
+  type: "float"
+  name: "EST_LVL_HORZ_W"
+  description: "Level horizon offset quaternion calibration data (W)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+---
+PARAM_EST_LEVEL_HORIZON_X:
+  type: "float"
+  name: "EST_LVL_HORZ_X"
+  description: "Level horizon offset quaternion calibration data (X)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+---
+PARAM_EST_LEVEL_HORIZON_Y:
+  type: "float"
+  name: "EST_LVL_HORZ_Y"
+  description: "Level horizon offset quaternion calibration data (Y)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+---
+PARAM_EST_LEVEL_HORIZON_Z:
+  type: "float"
+  name: "EST_LVL_HORZ_Z"
+  description: "Level horizon offset quaternion calibration data (Z)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+---
+PARAM_EST_FILTER_KP:
+  type: "float"
+  name: "EST_FLTR_KP"
+  description: "Adjusts the amount of proportional filtering done on the attitude estimation"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+---
+PARAM_EST_FILTER_KI:
+  type: "float"
+  name: "EST_FLTR_KI"
+  description: "Adjusts the amount of integral filtering done on the attitude estimation"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05
+---
+PARAM_GYRO_ALPHA:
+  type: "float"
+  name: "EST_LPF_GYRO_A"
+  description: "Alpha parameter for gyroscope measurement low pass filter (noise reduction)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.04
+---
+PARAM_ACC_ALPHA:
+  type: "float"
+  name: "EST_LPF_ACC_A"
+  description: "Alpha parameter for gyroscope measurement low pass filter (noise reduction)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.04
+---
+PARAM_FUSE_EXT_HDG_W:
+  type: "float"
+  name: "FSE_EXT_HDG_W"
+  description: "Weighting for external heading fusion (0 means don't trust, 1 means trust fully)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.2
+---
+PARAM_FUSE_MAG_HDG_W:
+  type: "float"
+  name: "FSE_MAG_HDG_W"
+  description: "Weighting for compass heading fusion (0 means don't trust, 1 means trust fully)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.5

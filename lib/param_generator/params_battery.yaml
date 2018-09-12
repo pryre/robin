@@ -1,0 +1,89 @@
+PARAM_BATTERY_TYPE:
+  type: "uint"
+  name: "BAT_TYPE"
+  description: "See the MAV_BATTERY_TYPE enum"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_BATTERY_FUNCTION:
+  type: "uint"
+  name: "BAT_FUNC"
+  description: "See the MAV_BATTERY_FUNCTION enum"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_BATTERY_CELL_NUM:
+  type: "uint"
+  name: "BAT_N_CELLS"
+  description: "Number of cells in the battery"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_BATTERY_CELL_MIN:
+  type: "float"
+  name: "BAT_V_EMPTY"
+  description: "Low cell voltage"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 3.7
+---
+PARAM_BATTERY_CELL_MAX:
+  type: "float"
+  name: "BAT_V_CHARGED"
+  description: "High cell voltage"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 4.2
+---
+PARAM_BATTERY_READING_FILTER:
+  type: "float"
+  name: "BAT_FILTER"
+  description: "A smoothing filter for the voltage reading (0->1)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.8
+---
+PARAM_BATTERY_DIVIDER:
+  type: "float"
+  name: "BAT_V_DIV"
+  description: "Resistor voltage divider for battery sensing (-1 to use board default)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: -1.0
+---
+PARAM_BATTERY_CHARGE_STATE_LOW:
+  type: "float"
+  name: "BAT_LOW_THR"
+  description: "Charge state cutoff for low battery remaining (as a percentage)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.2
+---
+PARAM_BATTERY_CHARGE_STATE_CRITICAL:
+  type: "float"
+  name: "BAT_CRIT_THR"
+  description: "Charge state cutoff for critical battery remaining (as a percentage)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.1
+---
+PARAM_BATTERY_CHARGE_STATE_EMERGENCY:
+  type: "float"
+  name: "BAT_EMERGEN_THR"
+  description: "Charge state cutoff for emergency battery remaining (as a percentage)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05

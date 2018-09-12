@@ -1,0 +1,568 @@
+PARAM_CAL_IMU_PASSES:
+  type: "uint"
+  name: "CAL_IMU_PASSES"
+  description: "Number of samples to collect for IMU calibrations"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+---
+PARAM_GYRO_X_BIAS:
+  type: "int"
+  name: "GYRO_X_BIAS"
+  description: "Bias correction for gyroscope measurements (X axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_GYRO_Y_BIAS:
+  type: "int"
+  name: "GYRO_Y_BIAS"
+  description: "Bias correction for gyroscope measurements (Y axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_GYRO_Z_BIAS:
+  type: "int"
+  name: "GYRO_Z_BIAS"
+  description: "Bias correction for gyroscope measurements (Z axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_ACC_X_BIAS:
+  type: "int"
+  name: "ACC_X_BIAS"
+  description: "Bias correction for accelerometer measurements (X axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_ACC_Y_BIAS:
+  type: "int"
+  name: "ACC_Y_BIAS"
+  description: "Bias correction for accelerometer measurements (Y axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_ACC_Z_BIAS:
+  type: "int"
+  name: "ACC_Z_BIAS"
+  description: "Bias correction for accelerometer measurements (Z axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_ACC_X_SCALE_POS:
+  type: "float"
+  name: "ACC_X_S_POS"
+  description: "Scaling correction for accelerometer measurements (X positive axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+---
+PARAM_ACC_X_SCALE_NEG:
+  type: "float"
+  name: "ACC_X_S_NEG"
+  description: "Scaling correction for accelerometer measurements (X negative axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+---
+PARAM_ACC_Y_SCALE_POS:
+  type: "float"
+  name: "ACC_Y_S_POS"
+  description: "Scaling correction for accelerometer measurements (Y positive axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+---
+PARAM_ACC_Y_SCALE_NEG:
+  type: "float"
+  name: "ACC_Y_S_NEG"
+  description: "Scaling correction for accelerometer measurements (Y negative axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+---
+PARAM_ACC_Z_SCALE_POS:
+  type: "float"
+  name: "ACC_Z_S_POS"
+  description: "Scaling correction for accelerometer measurements (Z positive axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+---
+PARAM_ACC_Z_SCALE_NEG:
+  type: "float"
+  name: "ACC_Z_S_NEG"
+  description: "Scaling correction for accelerometer measurements (Z negative axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+---
+PARAM_ACC_X_TEMP_COMP:
+  type: "float"
+  name: "ACC_X_TEMP_COMP"
+  description: "Temperature correction for accelerometer measurements (X axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+---
+PARAM_ACC_Y_TEMP_COMP:
+  type: "float"
+  name: "ACC_Y_TEMP_COMP"
+  description: "Temperature correction for accelerometer measurements (Y axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+---
+PARAM_ACC_Z_TEMP_COMP:
+  type: "float"
+  name: "ACC_Z_TEMP_COMP"
+  description: "Temperature correction for accelerometer measurements (Z axis)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+---
+PARAM_RC1_MIN:
+  type: "uint"
+  name: "RC1_MIN"
+  description: "RC minimum value for channel 1 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC1_MID:
+  type: "uint"
+  name: "RC1_TRIM"
+  description: "RC median value for channel 1 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC1_MAX:
+  type: "uint"
+  name: "RC1_MAX"
+  description: "RC max value for channel 1 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC1_REV:
+  type: "uint"
+  name: "RC1_REV"
+  description: "RC reverse reading channel 1 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC1_DZ:
+  type: "float"
+  name: "RC1_DZ"
+  description: "RC deadzone for channel 1"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
+PARAM_RC2_MIN:
+  type: "uint"
+  name: "RC2_MIN"
+  description: "RC minimum value for channel 2 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC2_MID:
+  type: "uint"
+  name: "RC2_TRIM"
+  description: "RC median value for channel 2 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC2_MAX:
+  type: "uint"
+  name: "RC2_MAX"
+  description: "RC max value for channel 2 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC2_REV:
+  type: "uint"
+  name: "RC2_REV"
+  description: "RC reverse reading channel 2 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC2_DZ:
+  type: "float"
+  name: "RC2_DZ"
+  description: "RC deadzone for channel 2"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
+PARAM_RC3_MIN:
+  type: "uint"
+  name: "RC3_MIN"
+  description: "RC minimum value for channel 3 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC3_MID:
+  type: "uint"
+  name: "RC3_TRIM"
+  description: "RC median value for channel 3 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC3_MAX:
+  type: "uint"
+  name: "RC3_MAX"
+  description: "RC max value for channel 3 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC3_REV:
+  type: "uint"
+  name: "RC3_REV"
+  description: "RC reverse reading channel 3 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC3_DZ:
+  type: "float"
+  name: "RC3_DZ"
+  description: "RC deadzone for channel 3"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
+PARAM_RC4_MIN:
+  type: "uint"
+  name: "RC4_MIN"
+  description: "RC minimum value for channel 4 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC4_MID:
+  type: "uint"
+  name: "RC4_TRIM"
+  description: "RC median value for channel 4 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC4_MAX:
+  type: "uint"
+  name: "RC4_MAX"
+  description: "RC max value for channel 4 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC4_REV:
+  type: "uint"
+  name: "RC4_REV"
+  description: "RC reverse reading channel 4 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC4_DZ:
+  type: "float"
+  name: "RC4_DZ"
+  description: "RC deadzone for channel 4"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
+PARAM_RC5_MIN:
+  type: "uint"
+  name: "RC5_MIN"
+  description: "RC minimum value for channel 5 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC5_MID:
+  type: "uint"
+  name: "RC5_TRIM"
+  description: "RC median value for channel 5 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC5_MAX:
+  type: "uint"
+  name: "RC5_MAX"
+  description: "RC max value for channel 5 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC5_REV:
+  type: "uint"
+  name: "RC5_REV"
+  description: "RC reverse reading channel 5 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC5_DZ:
+  type: "float"
+  name: "RC5_DZ"
+  description: "RC deadzone for channel 5"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
+PARAM_RC6_MIN:
+  type: "uint"
+  name: "RC6_MIN"
+  description: "RC minimum value for channel 6 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC6_MID:
+  type: "uint"
+  name: "RC6_TRIM"
+  description: "RC median value for channel 6 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC6_MAX:
+  type: "uint"
+  name: "RC6_MAX"
+  description: "RC max value for channel 6 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC6_REV:
+  type: "uint"
+  name: "RC6_REV"
+  description: "RC reverse reading channel 6 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC6_DZ:
+  type: "float"
+  name: "RC6_DZ"
+  description: "RC deadzone for channel 6"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
+PARAM_RC7_MIN:
+  type: "uint"
+  name: "RC7_MIN"
+  description: "RC minimum value for channel 7 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC7_MID:
+  type: "uint"
+  name: "RC7_TRIM"
+  description: "RC median value for channel 7 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC7_MAX:
+  type: "uint"
+  name: "RC7_MAX"
+  description: "RC max value for channel 7 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC7_REV:
+  type: "uint"
+  name: "RC7_REV"
+  description: "RC reverse reading channel 7 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC7_DZ:
+  type: "float"
+  name: "RC7_DZ"
+  description: "RC deadzone for channel 7"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
+PARAM_RC8_MIN:
+  type: "uint"
+  name: "RC8_MIN"
+  description: "RC minimum value for channel 8 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC8_MID:
+  type: "uint"
+  name: "RC8_TRIM"
+  description: "RC median value for channel 8 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1500
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC8_MAX:
+  type: "uint"
+  name: "RC8_MAX"
+  description: "RC max value for channel 8 calibration"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2000
+    unit: "channel"
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC8_REV:
+  type: "uint"
+  name: "RC8_REV"
+  description: "RC reverse reading channel 8 calibration"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+    function: "sensors_update_rc_cal();"
+---
+PARAM_RC8_DZ:
+  type: "float"
+  name: "RC8_DZ"
+  description: "RC deadzone for channel 8"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02
+---
+PARAM_DO_ESC_CAL:
+  type: "uint"
+  name: "DO_ESC_CAL"
+  description: "When set to true, a motor calibration will be performed on the next boot (False:0,True:1)"
+  reboot: true
+  value:
+    option: "bool"
+    default: 0

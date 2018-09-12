@@ -1,0 +1,63 @@
+PARAM_BOARD_REVISION:
+  type: "uint"
+  name: "BOARD_REV"
+  description: "A compile-time selector for what version of the board to setup sensors for"
+  reboot: false
+  value:
+    option: "generated"
+    function: "NAZE32_REV"
+---
+PARAM_VERSION_FIRMWARE:
+  type: "uint"
+  name: "VERSION_FW"
+  description: "A compile-time stamp for the flight firmware version"
+  reboot: false
+  value:
+    option: "generated"
+    function: "strtoll(GIT_VERSION_FLIGHT_STR, NULL, 16)"
+---
+PARAM_VERSION_SOFTWARE:
+  type: "uint"
+  name: "VERSION_SW"
+  description: "A compile-time stamp for the OS firmware version"
+  reboot: false
+  value:
+    option: "generated"
+    function: "strtoll(GIT_VERSION_OS_STR, NULL, 16)"
+---
+PARAM_RELAXED_PARAM_SET:
+  type: "uint"
+  name: "RELAXED_SET"
+  description: "Allows for 'unit' type parameters to be set when send as 'int' type"
+  reboot: false
+  value:
+    option: "bool"
+    default: 1
+---
+PARAM_FAILSAFE_THROTTLE:
+  type: "float"
+  name: "FAILSAFE_THRTL"
+  description: "Throttle percentage output when in failsafe mode"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.25
+---
+PARAM_THROTTLE_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_THRTL"
+  description: "Throttle timeout in to prevent accidentally leaving armed"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10000000
+    unit: "us"
+---
+PARAM_RESET_PARAMS:
+  type: "uint"
+  name: "SYS_AUTOCONFIG"
+  description: "Tells the system to reset all parameters to default on next boot"
+  reboot: true
+  value:
+    option: "scalar"
+    default: 0
