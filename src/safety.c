@@ -433,6 +433,10 @@ bool safety_request_arm(void) {
 							"(offb_ctrl)",
 							MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 						}
+					} else if(_system_status.control_mode == MAIN_MODE_UNSET) {
+						strncpy(text_reason,
+						"(no_mode)",
+						MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 					} else {
 						strncpy(text_reason,
 						"(no_ctrl)",
