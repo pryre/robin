@@ -49,6 +49,14 @@ static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) 
 	return (i < min) ? min : (i > max) ? max : i;
 }
 
+static uint32_t map_fix16_to_pwm(fix16_t f) {
+	fix16_t fc = fix16_constrain(f,-_fc_1,_fc_1);
+	//range is -500 to 500
+	fix16_t pwm_range = fix16_from_int( (get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN) ) / 2 );
+	//Returns 1000 to 2000
+	return fix16_to_int(fix16_mul(fc, pwm_range)) + 1500;
+}
+
 void mixer_init() {
 	switch( get_param_uint(PARAM_MIXER) ) {
 		case MIXER_QUADROTOR_PLUS: {
@@ -122,8 +130,14 @@ void mixer_init() {
 
 		//Set initial actuator outputs
 		_actuator_control_g0[i] = 0;
-		_actuator_control_g1[i] = 0;
-		_actuator_control_g2[i] = 0;
+
+		if( get_param_uint(PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT) ) {
+			_actuator_control_g1[i] = 0;
+			_actuator_control_g2[i] = 0;
+		} else {
+			_actuator_control_g1[i] = map_fix16_to_pwm( get_param_fix16(PARAM_ACTUATORS_RC_DISARM_VALUE) );
+			_actuator_control_g2[i] = map_fix16_to_pwm( get_param_fix16(PARAM_ACTUATORS_OB_DISARM_VALUE) );
+		}
 	}
 
 	_motor_test.start = 0;
@@ -192,14 +206,6 @@ void pwm_init() {
 	}
 }
 
-static uint32_t map_fix16_to_pwm(fix16_t f) {
-	fix16_t fc = fix16_constrain(f,-_fc_1,_fc_1);
-	//range is -500 to 500
-	fix16_t pwm_range = fix16_from_int( (get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN) ) / 2 );
-	//Returns 1000 to 2000
-	return fix16_to_int(fix16_mul(fc, pwm_range)) + 1500;
-}
-
 //Direct write to the motor with failsafe checks
 //1000 <= value <= 2000
 //value_disarm (for motors) should be 1000
@@ -263,12 +269,8 @@ static void pwm_output() {
 																	  get_param_uint(PARAM_MOTOR_PWM_MAX) );
 
 			if( get_param_uint(PARAM_ACTUATORS_RC_RESPECT_ARM) ) {
-				if( !get_param_uint(PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT) ) {
-					uint16_t pwmd = map_fix16_to_pwm( get_param_fix16(PARAM_ACTUATORS_RC_DISARM_VALUE) );
-					pwm_act_disarm = int32_constrain( pwmd,
-													  get_param_uint(PARAM_MOTOR_PWM_MIN),
-													  get_param_uint(PARAM_MOTOR_PWM_MAX) );
-				}
+				if( !get_param_uint(PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT) )
+					pwm_act_disarm = map_fix16_to_pwm( get_param_fix16(PARAM_ACTUATORS_RC_DISARM_VALUE) );
 			} else {
 				pwm_act_disarm = pwm_act_out;
 			}
@@ -282,12 +284,8 @@ static void pwm_output() {
 																	  get_param_uint(PARAM_MOTOR_PWM_MAX) );
 
 			if( get_param_uint(PARAM_ACTUATORS_OB_RESPECT_ARM) ) {
-				if( !get_param_uint(PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT) ) {
-					uint16_t pwmd = map_fix16_to_pwm( get_param_fix16(PARAM_ACTUATORS_OB_DISARM_VALUE) );
-					pwm_act_disarm = int32_constrain( pwmd,
-													  get_param_uint(PARAM_MOTOR_PWM_MIN),
-													  get_param_uint(PARAM_MOTOR_PWM_MAX) );
-				}
+				if( !get_param_uint(PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT) )
+					pwm_act_disarm = map_fix16_to_pwm( get_param_fix16(PARAM_ACTUATORS_OB_DISARM_VALUE) );
 			} else {
 				pwm_act_disarm = pwm_act_out;
 			}
