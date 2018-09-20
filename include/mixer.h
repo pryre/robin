@@ -16,6 +16,7 @@
 //http://autoquad.org/wiki/wiki/configuring-autoquad-flightcontroller/frame-motor-mixing-table/
 typedef enum {
 	MIXER_NONE = 0,
+	MIXER_DIRECT = 999,
 	MIXER_QUADROTOR_PLUS = 5001,
 	MIXER_QUADROTOR_X = 4001,
 	MIXER_HEXAROTOR_X = 6001,
@@ -41,17 +42,15 @@ typedef struct {
 	uint8_t motor_step;
 } mixer_motor_test_t;
 
-extern int32_t _GPIO_outputs[MIXER_NUM_MOTORS];
-extern io_type_t _GPIO_output_type[MIXER_NUM_MOTORS];
-
 extern int32_t _pwm_control[MIXER_NUM_MOTORS];
 
-//TODO: Switch PWM Control to G1 input / override
 extern int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
-extern bool _actuator_apply_g2;
-extern fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];
-extern fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];
-extern fix16_t _actuator_control_g2[MIXER_NUM_MOTORS];
+extern fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];	//Motors Controls
+extern fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];	//Motor Additions
+extern fix16_t _actuator_control_g2[MIXER_NUM_MOTORS];	//RC PWM
+extern fix16_t _actuator_control_g3[MIXER_NUM_MOTORS];	//RC Digital
+extern fix16_t _actuator_control_g4[MIXER_NUM_MOTORS];	//OB PWM
+extern fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];	//OB Digital
 
 extern mixer_motor_test_t _motor_test;
 
@@ -61,8 +60,9 @@ extern int32_t _pwm_output[MIXER_NUM_MOTORS];
 void pwm_init();
 void mixer_init();
 
-void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disarm);
-void write_motor(uint8_t index, uint32_t value);
-void write_servo(uint8_t index, int32_t value);
+//void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disarm);
+//void write_motor(uint8_t index, uint32_t value);
+//void write_servo(uint8_t index, int32_t value);
 
 void calc_mixer_output();
+void pwm_output();

@@ -1,3 +1,39 @@
+PARAM_ACTUATORS_RC_PWM_MAP:
+  type: "uint"
+  name: "ACTUATOR_RCPMAP"
+  description: "Bitwise mapping for to enable auxiliary RC PWM actuator output (bit 0 = pin 0; bit 1 = pin 1; ...)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_ACTUATORS_RC_DIGITAL_MAP:
+  type: "uint"
+  name: "ACTUATOR_RCDMAP"
+  description: "Bitwise mapping for to enable auxiliary RC digital actuator output (bit 0 = pin 0; bit 1 = pin 1; ...)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_ACTUATORS_OB_PWM_MAP:
+  type: "uint"
+  name: "ACTUATOR_OBPMAP"
+  description: "Bitwise mapping for to enable auxiliary offboard PWM actuator output (bit 0 = pin 0; bit 1 = pin 1; ...)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
+PARAM_ACTUATORS_OB_DIGITAL_MAP:
+  type: "uint"
+  name: "ACTUATOR_OBDMAP"
+  description: "Bitwise mapping for to enable auxiliary offboard digital actuator output (bit 0 = pin 0; bit 1 = pin 1; ...)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
 PARAM_ACTUATORS_RC_RESPECT_ARM:
   type: "uint"
   name: "ACTUATOR_RC_ARM"
@@ -7,9 +43,9 @@ PARAM_ACTUATORS_RC_RESPECT_ARM:
     option: "bool"
     default: 1
 ---
-PARAM_ACTUATORS_RC_DISARM_VALUE:
+PARAM_ACTUATORS_RC_PWM_DISARM_VALUE:
   type: "float"
-  name: "ACTUATOR_RC_ODV"
+  name: "ACTUATOR_RC_PDV"
   description: "Set value will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed."
   reboot: false
   value:
@@ -17,6 +53,16 @@ PARAM_ACTUATORS_RC_DISARM_VALUE:
     default: 0.0
     min: -1.0
     max: 1.0
+---
+PARAM_ACTUATORS_RC_DIGITAL_DISARM_VALUE:
+  type: "uint"
+  name: "ACTUATOR_RC_DDV"
+  description: "Set value will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed."
+  reboot: false
+  value:
+    option: "list"
+    default: 0
+    list: [0, 1]
 ---
 PARAM_ACTUATORS_OB_RESPECT_ARM:
   type: "uint"
@@ -27,9 +73,9 @@ PARAM_ACTUATORS_OB_RESPECT_ARM:
     option: "bool"
     default: 1
 ---
-PARAM_ACTUATORS_OB_DISARM_VALUE:
+PARAM_ACTUATORS_OB_PWM_DISARM_VALUE:
   type: "float"
-  name: "ACTUATOR_OB_ODV"
+  name: "ACTUATOR_OB_PDV"
   description: "Set value will be output if `ACTUATOR_OB_ARM` is set true and the flight controller is disarmed."
   reboot: false
   value:
@@ -37,6 +83,16 @@ PARAM_ACTUATORS_OB_DISARM_VALUE:
     default: 0.0
     min: -1.0
     max: 1.0
+---
+PARAM_ACTUATORS_OB_DIGITAL_DISARM_VALUE:
+  type: "uint"
+  name: "ACTUATOR_OB_DDV"
+  description: "Set value will be output if `ACTUATOR_OB_ARM` is set true and the flight controller is disarmed."
+  reboot: false
+  value:
+    option: "list"
+    default: 0
+    list: [0, 1]
 ---
 PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT:
   type: "uint"

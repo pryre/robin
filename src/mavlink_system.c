@@ -459,7 +459,7 @@ void mavlink_stream_sys_status(mavlink_channel_t chan) {
 		uint16_t drop_rate_comm = 0;
 		uint16_t errors_comm = 0;
 		uint16_t errors_count1 = _lpq.length;
-		uint16_t errors_count2 = _lpq.param_length;
+		uint16_t errors_count2 = fix16_to_int(_control_timing.average_update);
 		uint16_t errors_count3 = _sensors.clock.min;
 		uint16_t errors_count4 = _sensors.clock.max;
 

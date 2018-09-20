@@ -58,12 +58,7 @@ void setup(void) {
 
 	estimator_init();
 
-	controller_init();
-
-	//==============================================================
-
-	//Wait here for the first imu message (probably not really neaded)
-	//while( !sensors_read() );
+	control_init();
 }
 
 //XXX: Measured CPU load when armed and running: 51.4%
@@ -102,25 +97,11 @@ void loop(void) {
 	safety_run( micros() );
 
 	//==-- Control Process
-	//Run the control loop at a slower frequency so it is more resilient against noise
-	if( (micros() - _control_timing.time_last) > _control_timing.period_update) {
-		if( ( safety_is_armed() ) && ( _system_status.state != MAV_STATE_EMERGENCY ) ) {
-			//==-- Update Controller
-			controller_run( sensors_clock_imu_int_get() );	//Apply the current commands and update the PID controllers
-		} else {
-			//==-- Reset Controller
-			controller_reset();	//Reset the PIDs and output flat 0s for control
-		}
-
-		mixer_output();
-
-		_control_timing.time_last = micros();
-	}
+	control_run( micros() );
 
 	//==-- Send Motor Commands
 	//Convert outputs to correct layout and send PWM (and considers failsafes)
-	if(mixer_to_use->mixer_ok)
-		pwm_output();
+	pwm_output();
 
     //==-- loop time calculation
 	sensors_clock_update( micros() );

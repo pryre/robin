@@ -160,10 +160,16 @@ FSE_MAG_HDG_W | float | Weighting for compass heading fusion (0 means don't trus
 
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
+ACTUATOR_RCPMAP | uint | Bitwise mapping for to enable auxiliary RC PWM actuator output (bit 0 = pin 0; bit 1 = pin 1; ...) | 0 |  | scalar | False
+ACTUATOR_RCDMAP | uint | Bitwise mapping for to enable auxiliary RC digital actuator output (bit 0 = pin 0; bit 1 = pin 1; ...) | 0 |  | scalar | False
+ACTUATOR_OBPMAP | uint | Bitwise mapping for to enable auxiliary offboard PWM actuator output (bit 0 = pin 0; bit 1 = pin 1; ...) | 0 |  | scalar | False
+ACTUATOR_OBDMAP | uint | Bitwise mapping for to enable auxiliary offboard digital actuator output (bit 0 = pin 0; bit 1 = pin 1; ...) | 0 |  | scalar | False
 ACTUATOR_RC_ARM | uint | Setting to false allows actuator group 1 outputs to be active outside of arm/disarm functions | 1 | 0 / 1 | boolean | False
-ACTUATOR_RC_ODV | float | Set value will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed. | 0.0 |  | [min:-1.0, max:1.0] | False
+ACTUATOR_RC_PDV | float | Set value will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed. | 0.0 |  | [min:-1.0, max:1.0] | False
+ACTUATOR_RC_DDV | uint | Set value will be output if `ACTUATOR_RC_ARM` is set true and the flight controller is disarmed. | 0 |  | [0, 1] | False
 ACTUATOR_OB_ARM | uint | Setting to false allows actuator group 2 outputs to be active outside of arm/disarm functions | 1 | 0 / 1 | boolean | False
-ACTUATOR_OB_ODV | float | Set value will be output if `ACTUATOR_OB_ARM` is set true and the flight controller is disarmed. | 0.0 |  | [min:-1.0, max:1.0] | False
+ACTUATOR_OB_PDV | float | Set value will be output if `ACTUATOR_OB_ARM` is set true and the flight controller is disarmed. | 0.0 |  | [min:-1.0, max:1.0] | False
+ACTUATOR_OB_DDV | uint | Set value will be output if `ACTUATOR_OB_ARM` is set true and the flight controller is disarmed. | 0 |  | [0, 1] | False
 ACTUATOR_AUX_ZO | uint | Override disarm behaviour of all auxiliary outputs, such that if the flight controller is disarmed (and the groupings respect arm/disarm), zero output will be given. | 1 | 0 / 1 | boolean | False
 PWM_RATE_S | uint | Update rate for servo/actuator PWM outputs | 50 | ? | scalar | True
 PWM_RATE_M | uint | Update rate for motor PWM outputs | 400 | ? | scalar | True
@@ -182,10 +188,6 @@ RC_MAP_PITCH | uint | Channel to use for RC pitch inputs | 0 | channel | scalar 
 RC_MAP_YAW | uint | Channel to use for RC yaw inputs | 0 | channel | scalar | False
 RC_MAP_THROTTLE | uint | Channel to use for RC throttle inputs | 0 | channel | scalar | False
 RC_MAP_MODE_SW | uint | Channel to use for RC mode select | 0 | channel | scalar | False
-RC_MAP_AUX1 | uint | RC channel to use for AUX1 passthrough, if there are free mixer channels (set to 0 to disable) | 0 | channel | scalar | True
-RC_MAP_AUX2 | uint | RC channel to use for AUX2 passthrough, if there are free mixer channels (set to 0 to disable) | 0 | channel | scalar | True
-RC_MAP_AUX3 | uint | RC channel to use for AUX3 passthrough, if there are free mixer channels (set to 0 to disable) | 0 | channel | scalar | True
-RC_MAP_AUX4 | uint | RC channel to use for AUX4 passthrough, if there are free mixer channels (set to 0 to disable) | 0 | channel | scalar | True
 RC_MODE_DEFAULT | uint | Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable) | 0 | channel | scalar | False
 RC_MODE_PWM_RNG | uint | Sets the range (+ or -) that counts as a selection for any PWM mode selection | 100 | channel | scalar | False
 RC_MODE_PWM_STAB | uint | The PWM value to use to select manual stabilized mode (set to 0 to disable) | 1100 | channel | scalar | False

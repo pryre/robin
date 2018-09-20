@@ -18,9 +18,14 @@ mavlink_queue_t _lpq;
 bool _ch_0_have_heartbeat;
 bool _ch_1_have_heartbeat;
 
-bool _actuator_apply_g2;
+static bool got_actuator_g4;
+static bool got_actuator_g5;
 fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];
+fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g2[MIXER_NUM_MOTORS];
+fix16_t _actuator_control_g3[MIXER_NUM_MOTORS];
+fix16_t _actuator_control_g4[MIXER_NUM_MOTORS];
+fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];
 
 int32_t _pwm_control[MIXER_NUM_MOTORS];
 mixer_motor_test_t _motor_test;
@@ -619,14 +624,26 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 							//XXX: Use this instead of PWM Overrides
 							//for(int i=0; i<8; i++)
 							//	_actuator_control_g0[i] = fix16_from_float(act_float[i]);
-						} else if( mavlink_msg_set_actuator_control_target_get_group_mlx(&msg) == 2) {
-							if(!_actuator_apply_g2) {
-								mavlink_queue_broadcast_info("[MIXER] Accepted offboard aux. actuator control");
-								_actuator_apply_g2 = true;
+						} else if( mavlink_msg_set_actuator_control_target_get_group_mlx(&msg) == 1) {
+							//XXX: Use this instead of motor additions
+							//for(int i=0; i<8; i++)
+							//	_actuator_control_g1[i] = fix16_from_float(act_float[i]);
+						} else if( mavlink_msg_set_actuator_control_target_get_group_mlx(&msg) == 4) {
+							if(!got_actuator_g4) {
+								mavlink_queue_broadcast_info("[MIXER] Accepted OB AUX PWM actuator control");
+								got_actuator_g4 = true;
 							}
 
 							for(int i=0; i<8; i++)
-								_actuator_control_g2[i] = fix16_from_float(act_float[i]);
+								_actuator_control_g4[i] = fix16_from_float(act_float[i]);
+						} else if( mavlink_msg_set_actuator_control_target_get_group_mlx(&msg) == 5) {
+							if(!got_actuator_g5) {
+								mavlink_queue_broadcast_info("[MIXER] Accepted OB AUX digital actuator control");
+								got_actuator_g5 = true;
+							}
+
+							for(int i=0; i<8; i++)
+								_actuator_control_g5[i] = fix16_from_float(act_float[i]);
 						}
 					}
 

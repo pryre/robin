@@ -1366,13 +1366,11 @@ bool sensors_update(uint32_t time_us) {
 
 			//Handle actuator control mapping
 			for(int i=0; i<MIXER_NUM_MOTORS; i++) {
-				int8_t ach = _actuator_apply_g1_map[i];
-				if( ach >= 0 ) {
-					_actuator_control_g1[i] = dual_normalized_input(pwmRead( ach ),
-																	rc_cal[ach][SENSOR_RC_CAL_MIN],
-																	rc_cal[ach][SENSOR_RC_CAL_MID],
-																	rc_cal[ach][SENSOR_RC_CAL_MAX]);
-				}
+				_actuator_control_g2[i] = dual_normalized_input(pwmRead( i ),
+																rc_cal[i][SENSOR_RC_CAL_MIN],
+																rc_cal[i][SENSOR_RC_CAL_MID],
+																rc_cal[i][SENSOR_RC_CAL_MAX]);
+				_actuator_control_g3[i] = _actuator_control_g2[i];
 			}
 
 			//If we're using a mode switch

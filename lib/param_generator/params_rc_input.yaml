@@ -48,46 +48,6 @@ PARAM_RC_MAP_MODE_SW:
     default: 0
     unit: "channel"
 ---
-PARAM_RC_MAP_PASSTHROUGH_AUX1:
-  type: "uint"
-  name: "RC_MAP_AUX1"
-  description: "RC channel to use for AUX1 passthrough, if there are free mixer channels (set to 0 to disable)"
-  reboot: true
-  value:
-    option: "scalar"
-    default: 0
-    unit: "channel"
----
-PARAM_RC_MAP_PASSTHROUGH_AUX2:
-  type: "uint"
-  name: "RC_MAP_AUX2"
-  description: "RC channel to use for AUX2 passthrough, if there are free mixer channels (set to 0 to disable)"
-  reboot: true
-  value:
-    option: "scalar"
-    default: 0
-    unit: "channel"
----
-PARAM_RC_MAP_PASSTHROUGH_AUX3:
-  type: "uint"
-  name: "RC_MAP_AUX3"
-  description: "RC channel to use for AUX3 passthrough, if there are free mixer channels (set to 0 to disable)"
-  reboot: true
-  value:
-    option: "scalar"
-    default: 0
-    unit: "channel"
----
-PARAM_RC_MAP_PASSTHROUGH_AUX4:
-  type: "uint"
-  name: "RC_MAP_AUX4"
-  description: "RC channel to use for AUX4 passthrough, if there are free mixer channels (set to 0 to disable)"
-  reboot: true
-  value:
-    option: "scalar"
-    default: 0
-    unit: "channel"
----
 PARAM_RC_MODE_DEFAULT:
   type: "uint"
   name: "RC_MODE_DEFAULT"

@@ -17,6 +17,7 @@ extern "C" {
 #include "sensors.h"
 #include "estimator.h"
 #include "controller.h"
+#include "mixer.h"
 #include "pid_controller.h"
 
 #include "mavlink_system.h"
@@ -35,7 +36,7 @@ pid_controller_t _pid_roll_rate;
 pid_controller_t _pid_pitch_rate;
 pid_controller_t _pid_yaw_rate;
 
-void controller_reset(void) {
+static void controller_reset(void) {
 	pid_reset(&_pid_roll_rate, _state_estimator.p);
 	pid_reset(&_pid_pitch_rate, _state_estimator.q);
 	pid_reset(&_pid_yaw_rate, _state_estimator.r);
@@ -54,46 +55,6 @@ void controller_reset(void) {
 	_control_output.p = 0;
 	_control_output.y = 0;
 	_control_output.T = 0;
-}
-
-void controller_init(void) {
-	_system_status.control_mode = 0;
-	_control_timing.time_last = 0;
-	_control_timing.period_update = 1000*fix16_to_int( fix16_div( _fc_1000, get_param_fix16(PARAM_RATE_CONTROL) ) );
-	_control_timing.period_stale = 4*_control_timing.period_update;	//Allow for some variance in update rate
-
-	pid_init(&_pid_roll_rate,
-			 get_param_fix16(PARAM_PID_ROLL_RATE_P),
-			 get_param_fix16(PARAM_PID_ROLL_RATE_I),
-			 get_param_fix16(PARAM_PID_ROLL_RATE_D),
-			 _state_estimator.p,
-			 0, 0, -_fc_100, _fc_100);	//XXX: Mixer input is normalized from 100/-100 to 1/-1
-
-	pid_init(&_pid_pitch_rate,
-			 get_param_fix16(PARAM_PID_PITCH_RATE_P),
-			 get_param_fix16(PARAM_PID_PITCH_RATE_I),
-			 get_param_fix16(PARAM_PID_PITCH_RATE_D),
-			 _state_estimator.q,
-			 0, 0, -_fc_100, _fc_100);	//XXX: Mixer input is normalized from 100/-100 to 1/-1
-
-	pid_init(&_pid_yaw_rate,
-			 get_param_fix16(PARAM_PID_YAW_RATE_P),
-			 get_param_fix16(PARAM_PID_YAW_RATE_I),
-			 get_param_fix16(PARAM_PID_YAW_RATE_D),
-			 _state_estimator.r,
-			 0, 0, -_fc_100, _fc_100);	//XXX: Mixer input is normalized from 100/-100 to 1/-1
-
-	_cmd_ob_input.r = 0;
-	_cmd_ob_input.p = 0;
-	_cmd_ob_input.y = 0;
-	_cmd_ob_input.q.a = _fc_1;
-	_cmd_ob_input.q.b = 0;
-	_cmd_ob_input.q.c = 0;
-	_cmd_ob_input.q.d = 0;
-	_cmd_ob_input.T = 0;
-	_cmd_ob_input.input_mask = 0;;
-
-	controller_reset();
 }
 
 static void controller_set_input_failsafe(command_input_t *input) {
@@ -270,7 +231,7 @@ static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		return rates_sp;
 }
 
-void controller_run( uint32_t time_now ) {
+static void controller_run( uint32_t time_now ) {
 	//Variables that store the computed attitude goal rates
 	fix16_t goal_r = 0;
 	fix16_t goal_p = 0;
@@ -456,6 +417,67 @@ void controller_run( uint32_t time_now ) {
 	_control_output.r = fix16_div(command_r, _fc_100);
 	_control_output.p = fix16_div(command_p, _fc_100);
 	_control_output.y = fix16_div(command_y, _fc_100);
+}
+
+void control_init(void) {
+	_system_status.control_mode = 0;
+	_control_timing.time_last = 0;
+	_control_timing.period_update = 1000*fix16_to_int( fix16_div( _fc_1000, get_param_fix16(PARAM_RATE_CONTROL) ) );
+	_control_timing.period_stale = 4*_control_timing.period_update;	//Allow for some variance in update rate
+	_control_timing.average_update = 0;
+
+	pid_init(&_pid_roll_rate,
+			 get_param_fix16(PARAM_PID_ROLL_RATE_P),
+			 get_param_fix16(PARAM_PID_ROLL_RATE_I),
+			 get_param_fix16(PARAM_PID_ROLL_RATE_D),
+			 _state_estimator.p,
+			 0, 0, -_fc_100, _fc_100);	//XXX: Mixer input is normalized from 100/-100 to 1/-1
+
+	pid_init(&_pid_pitch_rate,
+			 get_param_fix16(PARAM_PID_PITCH_RATE_P),
+			 get_param_fix16(PARAM_PID_PITCH_RATE_I),
+			 get_param_fix16(PARAM_PID_PITCH_RATE_D),
+			 _state_estimator.q,
+			 0, 0, -_fc_100, _fc_100);	//XXX: Mixer input is normalized from 100/-100 to 1/-1
+
+	pid_init(&_pid_yaw_rate,
+			 get_param_fix16(PARAM_PID_YAW_RATE_P),
+			 get_param_fix16(PARAM_PID_YAW_RATE_I),
+			 get_param_fix16(PARAM_PID_YAW_RATE_D),
+			 _state_estimator.r,
+			 0, 0, -_fc_100, _fc_100);	//XXX: Mixer input is normalized from 100/-100 to 1/-1
+
+	_cmd_ob_input.r = 0;
+	_cmd_ob_input.p = 0;
+	_cmd_ob_input.y = 0;
+	_cmd_ob_input.q.a = _fc_1;
+	_cmd_ob_input.q.b = 0;
+	_cmd_ob_input.q.c = 0;
+	_cmd_ob_input.q.d = 0;
+	_cmd_ob_input.T = 0;
+	_cmd_ob_input.input_mask = 0;;
+
+	controller_reset();
+}
+
+void control_run( uint32_t now ) {
+	//Run the control loop at a slower frequency so it is more resilient against noise
+	if( ( now - _control_timing.time_last ) > _control_timing.period_update) {
+		if( ( safety_is_armed() ) && ( _system_status.state != MAV_STATE_EMERGENCY ) ) {
+			//==-- Update Controller
+			controller_run( sensors_clock_imu_int_get() );	//Apply the current commands and update the PID controllers
+		} else {
+			//==-- Reset Controller
+			controller_reset();	//Reset the PIDs and output flat 0s for control
+		}
+
+		calc_mixer_output();
+
+		//Calculate timings for feedback
+		_control_timing.average_update = fix16_div(_fc_1000, fix16_from_int( (now - _control_timing.time_last) / 1000 ) );
+
+		_control_timing.time_last = micros();
+	}
 }
 
 #ifdef __cplusplus

@@ -40,6 +40,7 @@ typedef struct {
 	uint32_t period_update;
 	uint32_t period_stale;
 	uint32_t time_last;
+	fix16_t average_update;
 } control_timing_t;
 
 extern control_timing_t _control_timing;
@@ -51,9 +52,10 @@ extern pid_controller_t _pid_roll_rate;
 extern pid_controller_t _pid_pitch_rate;
 extern pid_controller_t _pid_yaw_rate;
 
-void controller_reset(void);
-void controller_init(void);
-void controller_run( uint32_t now );
+//void controller_reset(void);
+void control_init(void);
+//void controller_run( uint32_t now );
+void control_run( uint32_t now );
 
 #ifdef __cplusplus
 }

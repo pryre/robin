@@ -288,6 +288,13 @@ void pwmInit(io_def_t *io_map, bool usePwmFilter, uint32_t motorPwmRate, uint32_
 		} else if (mask == IO_TYPE_IW) {
 			pwmInConfig(port, pwmCallback, numInputs);
 			numInputs++;
+		} else if (mask == IO_TYPE_OD) {
+			//TODO: Digital is to behave just as a PWM, but should be fixed later
+			uint32_t mhz = PWM_TIMER_MHZ;
+			uint32_t hz = mhz * 1000000;
+			uint16_t period = hz / servoPwmRate;
+
+			motors[numMotors++] = pwmOutConfig(port, mhz, period, idlePulseUsec);
 		} else if (mask == IO_TYPE_OM) {
 			//uint32_t mhz = (motorPwmRate > 500 || fastPWM) ? PWM_TIMER_8_MHZ : PWM_TIMER_MHZ;
 			uint32_t mhz = PWM_TIMER_MHZ;

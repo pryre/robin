@@ -139,10 +139,16 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_ACC_ALPHA, fix16_from_float(0.04f));
 	init_param_fix16(PARAM_FUSE_EXT_HDG_W, fix16_from_float(0.2f));
 	init_param_fix16(PARAM_FUSE_MAG_HDG_W, fix16_from_float(0.5f));
+	init_param_uint(PARAM_ACTUATORS_RC_PWM_MAP, 0);
+	init_param_uint(PARAM_ACTUATORS_RC_DIGITAL_MAP, 0);
+	init_param_uint(PARAM_ACTUATORS_OB_PWM_MAP, 0);
+	init_param_uint(PARAM_ACTUATORS_OB_DIGITAL_MAP, 0);
 	init_param_uint(PARAM_ACTUATORS_RC_RESPECT_ARM, 1);
-	init_param_fix16(PARAM_ACTUATORS_RC_DISARM_VALUE, fix16_from_float(0.0f));
+	init_param_fix16(PARAM_ACTUATORS_RC_PWM_DISARM_VALUE, fix16_from_float(0.0f));
+	init_param_uint(PARAM_ACTUATORS_RC_DIGITAL_DISARM_VALUE, 0);
 	init_param_uint(PARAM_ACTUATORS_OB_RESPECT_ARM, 1);
-	init_param_fix16(PARAM_ACTUATORS_OB_DISARM_VALUE, fix16_from_float(0.0f));
+	init_param_fix16(PARAM_ACTUATORS_OB_PWM_DISARM_VALUE, fix16_from_float(0.0f));
+	init_param_uint(PARAM_ACTUATORS_OB_DIGITAL_DISARM_VALUE, 0);
 	init_param_uint(PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT, 1);
 	init_param_uint(PARAM_SERVO_PWM_SEND_RATE, 50);
 	init_param_uint(PARAM_MOTOR_PWM_SEND_RATE, 400);
@@ -156,10 +162,6 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_RC_MAP_YAW, 0);
 	init_param_uint(PARAM_RC_MAP_THROTTLE, 0);
 	init_param_uint(PARAM_RC_MAP_MODE_SW, 0);
-	init_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX1, 0);
-	init_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX2, 0);
-	init_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX3, 0);
-	init_param_uint(PARAM_RC_MAP_PASSTHROUGH_AUX4, 0);
 	init_param_uint(PARAM_RC_MODE_DEFAULT, 0);
 	init_param_uint(PARAM_RC_MODE_PWM_RANGE, 100);
 	init_param_uint(PARAM_RC_MODE_PWM_STAB, 1100);
@@ -334,10 +336,16 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"EST_LPF_ACC_A",
 	"FSE_EXT_HDG_W",
 	"FSE_MAG_HDG_W",
+	"ACTUATOR_RCPMAP",
+	"ACTUATOR_RCDMAP",
+	"ACTUATOR_OBPMAP",
+	"ACTUATOR_OBDMAP",
 	"ACTUATOR_RC_ARM",
-	"ACTUATOR_RC_ODV",
+	"ACTUATOR_RC_PDV",
+	"ACTUATOR_RC_DDV",
 	"ACTUATOR_OB_ARM",
-	"ACTUATOR_OB_ODV",
+	"ACTUATOR_OB_PDV",
+	"ACTUATOR_OB_DDV",
 	"ACTUATOR_AUX_ZO",
 	"PWM_RATE_S",
 	"PWM_RATE_M",
@@ -351,10 +359,6 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"RC_MAP_YAW",
 	"RC_MAP_THROTTLE",
 	"RC_MAP_MODE_SW",
-	"RC_MAP_AUX1",
-	"RC_MAP_AUX2",
-	"RC_MAP_AUX3",
-	"RC_MAP_AUX4",
 	"RC_MODE_DEFAULT",
 	"RC_MODE_PWM_RNG",
 	"RC_MODE_PWM_STAB",
