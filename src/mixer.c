@@ -301,7 +301,7 @@ static void pwm_output() {
 }
 
 //TODO: Need to do fix16 operations in this section
-void mixer_output() {
+void calc_mixer_output() {
 	int32_t max_output = 1000;
 	int32_t scale_factor = 1000;
 	int32_t prescaled_outputs[MIXER_NUM_MOTORS];
@@ -397,7 +397,4 @@ void mixer_output() {
 			}
 		}
 	}
-
-	if(mixer_to_use->mixer_ok)
-		pwm_output();
 }

@@ -117,16 +117,16 @@ STRM1_LPQ | float | Communication update rate for all other messages (set to 0 t
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
 RATE_CONTROL | float | Update rate of the controller | 250.0 |  | scalar | True
-MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 0.05 |  | scalar | False
-MC_ROLLRATE_I | float | Integral gain for roll rate PID | 0.01 |  | scalar | False
-MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.001 |  | scalar | False
+MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 5.0 |  | scalar | False
+MC_ROLLRATE_I | float | Integral gain for roll rate PID | 1.0 |  | scalar | False
+MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.1 |  | scalar | False
 MC_ROLLRATE_MAX | float | Maximum allowed command for roll rate | 3.14159 | rad/s | scalar | False
-MC_PITCHRATE_P | float | Proportional gain for pitch rate PID | 0.05 |  | scalar | False
-MC_PITCHRATE_I | float | Integral gain for pitch rate PID | 0.01 |  | scalar | False
-MC_PITCHRATE_D | float | Derivative gain for pitch rate PID | 0.001 |  | scalar | False
+MC_PITCHRATE_P | float | Proportional gain for pitch rate PID | 5.0 |  | scalar | False
+MC_PITCHRATE_I | float | Integral gain for pitch rate PID | 1.0 |  | scalar | False
+MC_PITCHRATE_D | float | Derivative gain for pitch rate PID | 0.1 |  | scalar | False
 MC_PITCHRATE_MAX | float | Maximum allowed command for pitch rate | 3.14159 | rad/s | scalar | False
-MC_YAWRATE_P | float | Proportional gain for yaw rate PID | 0.05 |  | scalar | False
-MC_YAWRATE_I | float | Integral gain for yaw rate PID | 0.01 |  | scalar | False
+MC_YAWRATE_P | float | Proportional gain for yaw rate PID | 5.0 |  | scalar | False
+MC_YAWRATE_I | float | Integral gain for yaw rate PID | 1.0 |  | scalar | False
 MC_YAWRATE_D | float | Derivative gain for yaw rate PID | 0.0 |  | scalar | False
 MC_YAWRATE_MAX | float | Maximum allowed command for yaw rate | 1.57079 | rad/s | scalar | False
 MC_ROLL_P | float | Feed-forward gain for roll angle | 4.5 |  | scalar | False

@@ -112,11 +112,15 @@ void loop(void) {
 			controller_reset();	//Reset the PIDs and output flat 0s for control
 		}
 
-		//==-- Send Motor Commands
-		mixer_output();	//Convert outputs to correct layout and send PWM (and considers failsafes)
+		mixer_output();
 
 		_control_timing.time_last = micros();
 	}
+
+	//==-- Send Motor Commands
+	//Convert outputs to correct layout and send PWM (and considers failsafes)
+	if(mixer_to_use->mixer_ok)
+		pwm_output();
 
     //==-- loop time calculation
 	sensors_clock_update( micros() );

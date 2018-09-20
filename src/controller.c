@@ -67,21 +67,21 @@ void controller_init(void) {
 			 get_param_fix16(PARAM_PID_ROLL_RATE_I),
 			 get_param_fix16(PARAM_PID_ROLL_RATE_D),
 			 _state_estimator.p,
-			 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
+			 0, 0, -_fc_100, _fc_100);	//XXX: Mixer input is normalized from 100/-100 to 1/-1
 
 	pid_init(&_pid_pitch_rate,
 			 get_param_fix16(PARAM_PID_PITCH_RATE_P),
 			 get_param_fix16(PARAM_PID_PITCH_RATE_I),
 			 get_param_fix16(PARAM_PID_PITCH_RATE_D),
 			 _state_estimator.q,
-			 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
+			 0, 0, -_fc_100, _fc_100);	//XXX: Mixer input is normalized from 100/-100 to 1/-1
 
 	pid_init(&_pid_yaw_rate,
 			 get_param_fix16(PARAM_PID_YAW_RATE_P),
 			 get_param_fix16(PARAM_PID_YAW_RATE_I),
 			 get_param_fix16(PARAM_PID_YAW_RATE_D),
 			 _state_estimator.r,
-			 0, 0, -_fc_1, _fc_1);	//XXX: Mixer input is normalized from -1 to 1
+			 0, 0, -_fc_100, _fc_100);	//XXX: Mixer input is normalized from 100/-100 to 1/-1
 
 	_cmd_ob_input.r = 0;
 	_cmd_ob_input.p = 0;
@@ -443,9 +443,19 @@ void controller_run( uint32_t time_now ) {
 	_control_input.y = goal_y;
 
 	//Rate PID Controllers
-	_control_output.r = pid_step(&_pid_roll_rate, dt, goal_r, _state_estimator.p);
-	_control_output.p = pid_step(&_pid_pitch_rate, dt, goal_p, _state_estimator.q);
-	_control_output.y = pid_step(&_pid_yaw_rate, dt, goal_y, _state_estimator.r);
+	fix16_t command_r = pid_step(&_pid_roll_rate, dt, goal_r, _state_estimator.p);
+	fix16_t command_p = pid_step(&_pid_pitch_rate, dt, goal_p, _state_estimator.q);
+	fix16_t command_y = pid_step(&_pid_yaw_rate, dt, goal_y, _state_estimator.r);
+
+	//XXX:
+	//"Post-Scale/Normalize" the commands to act within
+	//a range that is approriate for the motors. This
+	//allows us to have higher PID gains for the rates
+	//(by a factor of 100), and avoids complications
+	//of getting close to the fixed-point step size
+	_control_output.r = fix16_div(command_r, _fc_100);
+	_control_output.p = fix16_div(command_p, _fc_100);
+	_control_output.y = fix16_div(command_y, _fc_100);
 }
 
 #ifdef __cplusplus

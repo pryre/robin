@@ -14,7 +14,7 @@ PARAM_PID_ROLL_RATE_P:
   reboot: false
   value:
     option: "scalar"
-    default: 0.05
+    default: 5.0
     function: "pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));"
 ---
 PARAM_PID_ROLL_RATE_I:
@@ -24,7 +24,7 @@ PARAM_PID_ROLL_RATE_I:
   reboot: false
   value:
     option: "scalar"
-    default: 0.01
+    default: 1.0
     function: "pid_set_gain_i(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_I));"
 ---
 PARAM_PID_ROLL_RATE_D:
@@ -34,7 +34,7 @@ PARAM_PID_ROLL_RATE_D:
   reboot: false
   value:
     option: "scalar"
-    default: 0.001
+    default: 0.1
     function: "pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));"
 ---
 PARAM_MAX_ROLL_RATE:
@@ -55,7 +55,7 @@ PARAM_PID_PITCH_RATE_P:
   reboot: false
   value:
     option: "scalar"
-    default: 0.05
+    default: 5.0
     function: "pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));"
 ---
 PARAM_PID_PITCH_RATE_I:
@@ -65,7 +65,7 @@ PARAM_PID_PITCH_RATE_I:
   reboot: false
   value:
     option: "scalar"
-    default: 0.01
+    default: 1.0
     function: "pid_set_gain_i(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_I));"
 ---
 PARAM_PID_PITCH_RATE_D:
@@ -75,7 +75,7 @@ PARAM_PID_PITCH_RATE_D:
   reboot: false
   value:
     option: "scalar"
-    default: 0.001
+    default: 0.1
     function: "pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));"
 ---
 PARAM_MAX_PITCH_RATE:
@@ -96,7 +96,7 @@ PARAM_PID_YAW_RATE_P:
   reboot: false
   value:
     option: "scalar"
-    default: 0.05
+    default: 5.0
     function: "pid_set_gain_p(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_P));"
 ---
 PARAM_PID_YAW_RATE_I:
@@ -106,7 +106,7 @@ PARAM_PID_YAW_RATE_I:
   reboot: false
   value:
     option: "scalar"
-    default: 0.01
+    default: 1.0
     function: "pid_set_gain_i(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_I));"
 ---
 PARAM_PID_YAW_RATE_D:

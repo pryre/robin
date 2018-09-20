@@ -65,4 +65,4 @@ void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disarm);
 void write_motor(uint8_t index, uint32_t value);
 void write_servo(uint8_t index, int32_t value);
 
-void mixer_output();
+void calc_mixer_output();
