@@ -41,12 +41,10 @@ fix16_t _actuator_control_g3[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g4[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];
 
-//int32_t _pwm_control[MIXER_NUM_MOTORS];
-//int32_t _pwm_output_requested[MIXER_NUM_MOTORS];
 int32_t _pwm_output[MIXER_NUM_MOTORS];
-//mixer_motor_test_t _motor_test;
+mixer_motor_test_t _motor_test;
 
-static const mixer_t *mixer_to_use;
+const mixer_t *mixer_to_use;
 static io_type_t _actuator_type_map[MIXER_NUM_MOTORS];
 
 //XXX: Pinout Mapping for Naze32!
@@ -72,6 +70,14 @@ static uint32_t map_fix16_to_pwm_dual(fix16_t f) {
 	uint16_t pwm_range = ( get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN) ) / 2;
 	//Returns 1000 to 2000
 	return fix16_to_int( fix16_mul( fc, fix16_from_int(pwm_range) ) ) + pwm_range + get_param_uint(PARAM_MOTOR_PWM_MIN);
+}
+
+static void motor_test_reset( void ) {
+	_motor_test.start = 0;
+	_motor_test.throttle = 0;
+	_motor_test.duration = 0;
+	_motor_test.test_all = false;
+	_motor_test.motor_step = 0;
 }
 
 void mixer_init() {
@@ -120,11 +126,12 @@ void mixer_init() {
 		}
 	}
 
+	//Set up the parameters for the motor test utility
+	motor_test_reset();
+
 	char text_map[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Layout: ";
 
 	for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++) {
-		_pwm_control[i] = 0;
-		//_pwm_output_requested[i] = 0;
 		_pwm_output[i] = 0;
 
 		//Calculate final actuator mapping
@@ -188,12 +195,6 @@ void mixer_init() {
 	}
 
 	mavlink_queue_broadcast_notice(text_map);
-
-	_motor_test.start = 0;
-	_motor_test.throttle = 0;
-	_motor_test.duration = 0;
-	_motor_test.test_all = false;
-	_motor_test.motor_step = 0;
 }
 
 void pwm_init() {
@@ -325,8 +326,66 @@ static void write_aux_digital(uint8_t index, bool value, bool respect_arm, bool 
 	write_output_pwm(index, pwm_act_out, pwm_act_disarm);
 }
 
+static bool motor_test_in_progress( void ) {
+	bool in_progress = false;
+
+	//Handle motor testing
+	if(_motor_test.start > 0) {
+		if( !safety_switch_engaged() && !safety_is_armed() ) {
+			//Check to see if the test should move onto next motor or end
+			if( micros() > (_motor_test.start + _motor_test.duration) ) {
+				//If there are motors left to test
+				if( (_motor_test.test_all) &&
+					(_motor_test.motor_step < (MIXER_NUM_MOTORS - 1) ) ) {
+						_motor_test.start = micros();
+						_motor_test.motor_step++;
+
+						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
+						char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+						itoa(_motor_test.motor_step, mchar, 10);
+						strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+						mavlink_queue_broadcast_notice(text);
+				} else {
+					//Test is done, reset
+					mavlink_queue_broadcast_error("[MIXER] Motor test complete!");
+
+					motor_test_reset();
+				}
+			}
+
+			//If test in progress
+			if( micros() < (_motor_test.start + _motor_test.duration) ) {
+				in_progress = true;
+
+				fix16_t test_pwm_range = fix16_from_int(get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN));
+				uint16_t test_pwm = fix16_to_int(fix16_mul(_motor_test.throttle, test_pwm_range)) + get_param_uint(PARAM_MOTOR_PWM_MIN);
+
+				//Override mixer inputs for all motors to set to 0
+				for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++) {
+					if( _actuator_apply_g0_map[i] )
+						_actuator_control_g0m[i] = 0;
+				}
+
+				//Apply the test to the one we care about
+				_actuator_control_g0m[_motor_test.motor_step] = test_pwm;
+			} else {
+
+			}
+		} else {
+			//Safety switch was reset or armed, stop test
+			mavlink_queue_broadcast_error("[MIXER] Safety status changed, cancelling test");
+
+			motor_test_reset();
+		}
+	}
+
+	return in_progress;
+}
+
 //Used to send a PWM while
 void pwm_output() {
+	bool test_running = motor_test_in_progress();
+
 	if(mixer_to_use->mixer_ok) {
 		for (int8_t i=0; i<MIXER_NUM_MOTORS; i++) {
 			if(_actuator_apply_g0_map[i]) {
@@ -335,18 +394,22 @@ void pwm_output() {
 
 				fix16_t val = _actuator_control_g0m[i];
 
-				if(_system_status.sensors.offboard_mixer_g0_control.health == SYSTEM_HEALTH_OK) {
-					val = _actuator_control_g0[i];
-				}
+				if(!test_running) {
+					if(_system_status.sensors.offboard_mixer_g0_control.health == SYSTEM_HEALTH_OK) {
+						val = _actuator_control_g0[i];
+					}
 
-				if(_system_status.sensors.offboard_mixer_g1_control.health == SYSTEM_HEALTH_OK) {
-					val = fix16_add( val, _actuator_control_g1[i] );
-				}
+					if(_system_status.sensors.offboard_mixer_g1_control.health == SYSTEM_HEALTH_OK) {
+						val = fix16_add( val, _actuator_control_g1[i] );
+					}
 
-				if( output_type == IO_TYPE_OM ) {
-					write_motor(i, val);
+					if( output_type == IO_TYPE_OM ) {
+						write_motor(i, val);
+					} else {
+						write_servo(i, val);
+					}
 				} else {
-					write_servo(i, val);
+					write_output_pwm(i, _actuator_control_g0m[i], _actuator_control_g0m[i]);
 				}
 			} else if(_actuator_apply_g2_map[i]) {
 				//Handle Aux RC PWM

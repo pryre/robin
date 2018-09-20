@@ -85,7 +85,7 @@ void safety_init() {
 	init_sensor_state(&_system_status.sensors.offboard_control, "Offboard Control", PARAM_SENSOR_OFFB_CTRL_STRM_COUNT, PARAM_SENSOR_OFFB_CTRL_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.offboard_mixer_g0_control, "Group 0 Actuator", PARAM_SENSOR_OFFB_G0_STRM_COUNT, PARAM_SENSOR_OFFB_G0_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.offboard_mixer_g1_control, "Group 1 Actuator", PARAM_SENSOR_OFFB_G1_STRM_COUNT, PARAM_SENSOR_OFFB_G1_TIMEOUT);
-	init_sensor_state(&_system_status.sensors.pwm_control, "PWM Control", PARAM_SENSOR_PWM_CTRL_STRM_COUNT, PARAM_SENSOR_PWM_CTRL_TIMEOUT);
+	//init_sensor_state(&_system_status.sensors.pwm_control, "PWM Control", PARAM_SENSOR_PWM_CTRL_STRM_COUNT, PARAM_SENSOR_PWM_CTRL_TIMEOUT);
 
 	_time_safety_arm_throttle_timeout = 0;
 
@@ -158,6 +158,10 @@ static void status_buzzer_update(void) {
 
 bool safety_is_armed(void) {
 	return _system_status.arm_status;
+}
+
+bool safety_switch_engaged( void ) {
+	return ( !_system_status.safety_button_status ) && ( _sensors.safety_button.status.present );
 }
 
 bool safety_request_state(uint8_t req_state) {
@@ -367,7 +371,7 @@ bool safety_request_arm(void) {
 		//Make sure low throttle is being output
 		throttle_check &= (_control_output.T == 0 );
 
-		if(	( ( _system_status.safety_button_status ) || !_sensors.safety_button.status.present ) &&
+		if(	!safety_switch_engaged() &&
 		  ( _system_status.health == SYSTEM_HEALTH_OK ) &&
 		  ( control_check ) &&
 		  ( throttle_check ) &&
@@ -389,7 +393,7 @@ bool safety_request_arm(void) {
 				mavlink_queue_broadcast_error(text_error);
 			}
 		} else {
-			if( ( !_system_status.safety_button_status ) && ( _sensors.safety_button.status.present ) ) {
+			if( safety_switch_engaged() ) {
 				strncpy(text_reason,
 						 "safety engaged",
 						 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
@@ -538,7 +542,7 @@ static void status_led_update(void) {
 	// Safety LED
 	if( safety_is_armed() ) {
 		digitalLo(_status_led_red.gpio_p, _status_led_red.pin);	//On
-	} else if (_system_status.safety_button_status) {
+	} else if( !safety_switch_engaged() ) {
 		status_led_do_pulse(&_status_led_red);
 	} else {
 		digitalHi(_status_led_red.gpio_p, _status_led_red.pin);	//Off
@@ -707,7 +711,7 @@ void safety_run( uint32_t time_now ) {
 	safety_check_sensor( &_system_status.sensors.offboard_control, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_mixer_g0_control, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_mixer_g1_control, time_now );
-	safety_check_sensor( &_system_status.sensors.pwm_control, time_now );
+	//safety_check_sensor( &_system_status.sensors.pwm_control, time_now );
 
 	if(_sensors.hil.status.present)
 		safety_check_sensor( &_system_status.sensors.hil, time_now );

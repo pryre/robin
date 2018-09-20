@@ -53,7 +53,7 @@ typedef struct {
 	timeout_status_t offboard_control;
 	timeout_status_t offboard_mixer_g0_control;
 	timeout_status_t offboard_mixer_g1_control;
-	timeout_status_t pwm_control;
+	//timeout_status_t pwm_control;
 } safety_sensor_status_t;
 
 //List of failures
@@ -113,6 +113,7 @@ extern system_status_t _system_status;
 void safety_init( void );
 
 bool safety_is_armed( void );
+bool safety_switch_engaged( void );
 bool safety_request_state( uint8_t req_state );
 bool safety_request_control_mode( uint8_t req_ctrl_mode );
 bool safety_request_arm( void );

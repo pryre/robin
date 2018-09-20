@@ -42,7 +42,7 @@ typedef struct {
 	uint8_t motor_step;
 } mixer_motor_test_t;
 
-extern int32_t _pwm_control[MIXER_NUM_MOTORS];
+//extern int32_t _pwm_control[MIXER_NUM_MOTORS];
 
 extern int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
 extern fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];	//Motors Controls
@@ -54,8 +54,8 @@ extern fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];	//OB Digital
 
 extern mixer_motor_test_t _motor_test;
 
-extern int32_t _pwm_output_requested[MIXER_NUM_MOTORS];
 extern int32_t _pwm_output[MIXER_NUM_MOTORS];
+extern const mixer_t *mixer_to_use;
 
 void pwm_init();
 void mixer_init();

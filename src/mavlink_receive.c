@@ -27,7 +27,8 @@ fix16_t _actuator_control_g3[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g4[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];
 
-int32_t _pwm_control[MIXER_NUM_MOTORS];
+const mixer_t *mixer_to_use;
+
 mixer_motor_test_t _motor_test;
 command_input_t _cmd_ob_input;
 system_status_t _system_status;
@@ -307,12 +308,12 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 						case MAV_CMD_DO_MOTOR_TEST: {
 							need_ack = true;
 
-							if( _system_status.sensors.pwm_control.health == SYSTEM_HEALTH_OK ) {
-								mavlink_queue_broadcast_error("[MIXER] Cannot run motor test, PWM control is active!");
+							if( !mixer_to_use->mixer_ok ) {
+								mavlink_queue_broadcast_error("[MIXER] No valid mixer selected!");
 
-								command_result = MAV_RESULT_TEMPORARILY_REJECTED;
-							} else if(!safety_is_armed()) {
-								mavlink_queue_broadcast_error("[MIXER] Cannot run motor test unless armed!");
+								command_result = MAV_RESULT_FAILED;
+							} else if( safety_switch_engaged() || safety_is_armed() ) {
+								mavlink_queue_broadcast_error("[MIXER] Can only run motor test with saftety on and not armed!");
 
 								command_result = MAV_RESULT_TEMPORARILY_REJECTED;
 							} else {
@@ -341,8 +342,8 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 									_motor_test.throttle = motor_test_throttle;
 
 									//XXX: Override sensor health as autopilot is in control
-									_system_status.sensors.pwm_control.count = get_param_uint(_system_status.sensors.pwm_control.param_stream_count);
-									safety_update_sensor(&_system_status.sensors.pwm_control);
+									//_system_status.sensors.pwm_control.count = get_param_uint(_system_status.sensors.pwm_control.param_stream_count);
+									//safety_update_sensor(&_system_status.sensors.pwm_control);
 
 									char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
 									char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
@@ -552,6 +553,7 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 
 					break;
 				}
+				/*
 				case MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE: {
 					if( (mavlink_msg_rc_channels_override_get_target_system(&msg) == mavlink_system.sysid) &&
 						(mavlink_msg_rc_channels_override_get_target_component(&msg) == mavlink_system.compid) ) {
@@ -571,6 +573,7 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 
 					break;
 				}
+				*/
 				case MAVLINK_MSG_ID_ATT_POS_MOCAP: {
 					_sensors.ext_pose.status.present = true;
 
