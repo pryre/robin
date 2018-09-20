@@ -51,6 +51,8 @@ typedef struct {
 	timeout_status_t rc_input;
 	timeout_status_t offboard_heartbeat;
 	timeout_status_t offboard_control;
+	timeout_status_t offboard_mixer_g0_control;
+	timeout_status_t offboard_mixer_g1_control;
 	timeout_status_t pwm_control;
 } safety_sensor_status_t;
 

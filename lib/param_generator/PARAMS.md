@@ -215,6 +215,8 @@ STRM_NUM_EXT_P | uint | Number of external pose readings that must be recieved b
 STRM_NUM_MAG | uint | Number of magnetometer readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_OB_H | uint | Number of offboard heartbeat messages that must be recieved before a stream is established | 2 |  | scalar | False
 STRM_NUM_OB_C | uint | Number of offboard control messages that must be recieved before a stream is established | 100 |  | scalar | False
+STRM_NUM_OB_G0 | uint | Number of offboard group 0 actuator control messages that must be recieved before a stream is established | 100 |  | scalar | False
+STRM_NUM_OB_G1 | uint | Number of offboard group 1 actuator control messages that must be recieved before a stream is established | 100 |  | scalar | False
 STRM_NUM_RC_C | uint | Number of PWM control messages that must be recieved before a stream is established | 100 |  | scalar | False
 TIMEOUT_HIL | uint | Time that new data must be read before an HIL state timeout is declared | 500000 | us | scalar | False
 TIMEOUT_IMU | uint | Time that new data must be read before an IMU timeout is declared | 4000 | us | scalar | False
@@ -223,9 +225,11 @@ TIMEOUT_BARO | uint | Time that new data must be read before a barometer timeout
 TIMEOUT_SONAR | uint | Time that new data must be read before a sonar timeout is declared | 100000 | us | scalar | False
 TIMEOUT_RC_IN | uint | Time that new data must be read before a RC input timeout is declared | 1000000 | us | scalar | False
 TIMEOUT_EXT_P | uint | Time that new data must be read before a external pose timeout is declared | 1000000 | us | scalar | False
-TIMEOUT_OB_HRBT | uint | Time that new data must be read before a off-board heartbeat timeout is declared | 5000000 | us | scalar | False
-TIMEOUT_OB_CTRL | uint | Time that new data must be read before a off-board control timeout is declared | 400000 | us | scalar | False
-TIMEOUT_RC_CTRL | uint | Time that new data must be read before a PWM control timeout is declared | 200000 | us | scalar | False
+TIMEOUT_OB_HRBT | uint | Time that new data must be read before a offboard heartbeat timeout is declared | 5000000 | us | scalar | False
+TIMEOUT_OB_CTRL | uint | Time that new data must be read before a offboard control timeout is declared | 400000 | us | scalar | False
+TIMEOUT_OB_G0 | uint | Time that new data must be read before a offboard actuator group 0 control timeout is declared | 400000 | us | scalar | False
+TIMEOUT_OB_G1 | uint | Time that new data must be read before a offboard actuator group 1 control timeout is declared | 400000 | us | scalar | False
+TIMEOUT_OB_PWM | uint | Time that new data must be read before a PWM control timeout is declared | 400000 | us | scalar | False
 
 ## System
 

@@ -57,20 +57,21 @@ static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) 
 	return (i < min) ? min : (i > max) ? max : i;
 }
 
-static uint32_t map_fix16_to_pwm_dual(fix16_t f) {
-	fix16_t fc = fix16_constrain(f, -_fc_1, _fc_1);
-	//range is -500 to 500
-	fix16_t pwm_range = fix16_from_int( (get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN) ) / 2 );
-	//Returns 1000 to 2000
-	return fix16_to_int(fix16_mul(fc, pwm_range)) + 1500;
-}
-
 static uint32_t map_fix16_to_pwm(fix16_t f) {
 	fix16_t fc = fix16_constrain(f, 0, _fc_1);
 	//range is -500 to 500
 	fix16_t pwm_range = fix16_from_int( get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN) );
 	//Returns 1000 to 2000
-	return fix16_to_int(fix16_mul(fc, pwm_range)) + 1000;
+	return fix16_to_int(fix16_mul(fc, pwm_range)) + get_param_uint(PARAM_MOTOR_PWM_MIN);
+}
+
+static uint32_t map_fix16_to_pwm_dual(fix16_t f) {
+	fix16_t fc = fix16_constrain(f, -_fc_1, _fc_1);
+	//range is -500 to 500
+
+	uint16_t pwm_range = ( get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN) ) / 2;
+	//Returns 1000 to 2000
+	return fix16_to_int( fix16_mul( fc, fix16_from_int(pwm_range) ) ) + pwm_range + get_param_uint(PARAM_MOTOR_PWM_MIN);
 }
 
 void mixer_init() {
@@ -266,7 +267,6 @@ static void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disar
 	pwmWriteMotor(index, _pwm_output[index]);
 }
 
-//TODO: Maybe this logic should be checked elsewhere?
 //Write a pwm value to the motor channel, value should be between 0 and 1
 static void write_motor(uint8_t index, fix16_t value) {
 	uint16_t pwm = map_fix16_to_pwm(value);
@@ -278,7 +278,6 @@ static void write_motor(uint8_t index, fix16_t value) {
 	write_output_pwm(index, pwm, get_param_uint(PARAM_MOTOR_PWM_MIN));
 }
 
-//TODO: Is this even needed? (Tricopters)
 //Write a pwm value to the motor channel, value should be between -1 and 1
 static void write_servo(uint8_t index, fix16_t value) {
 	uint16_t pwm = map_fix16_to_pwm_dual(value);
@@ -334,11 +333,15 @@ void pwm_output() {
 				//Handle mixer output
 				io_type_t output_type = mixer_to_use->output_type[i];
 
-				fix16_t val = 0;
+				fix16_t val = _actuator_control_g0m[i];
 
-				//TODO: _actuator_control_g0
-				//TODO: _actuator_control_g1
-				val = _actuator_control_g0m[i];
+				if(_system_status.sensors.offboard_mixer_g0_control.health == SYSTEM_HEALTH_OK) {
+					val = _actuator_control_g0[i];
+				}
+
+				if(_system_status.sensors.offboard_mixer_g1_control.health == SYSTEM_HEALTH_OK) {
+					val = fix16_add( val, _actuator_control_g1[i] );
+				}
 
 				if( output_type == IO_TYPE_OM ) {
 					write_motor(i, val);
@@ -383,7 +386,6 @@ void pwm_output() {
 	}
 }
 
-//TODO: Need to do fix16 operations in this section
 void calc_mixer_output() {
 	fix16_t max_output = 0;
 	fix16_t scale_factor = _fc_1;
@@ -412,7 +414,6 @@ void calc_mixer_output() {
 		}
 	}
 
-	//TODO: Need to check if this still holds
 	// saturate outputs to maintain controllability even during aggressive maneuvers
 	if (max_output > _fc_1)
 		scale_factor = _fc_1 / max_output;

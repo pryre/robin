@@ -83,6 +83,8 @@ void safety_init() {
 	init_sensor_state(&_system_status.sensors.rc_input, "RC Input", PARAM_SENSOR_RC_INPUT_STRM_COUNT, PARAM_SENSOR_RC_INPUT_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.offboard_heartbeat, "Offboard Heartbeat", PARAM_SENSOR_OFFB_HRBT_STRM_COUNT, PARAM_SENSOR_OFFB_HRBT_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.offboard_control, "Offboard Control", PARAM_SENSOR_OFFB_CTRL_STRM_COUNT, PARAM_SENSOR_OFFB_CTRL_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.offboard_mixer_g0_control, "Group 0 Actuator", PARAM_SENSOR_OFFB_G0_STRM_COUNT, PARAM_SENSOR_OFFB_G0_TIMEOUT);
+	init_sensor_state(&_system_status.sensors.offboard_mixer_g1_control, "Group 1 Actuator", PARAM_SENSOR_OFFB_G1_STRM_COUNT, PARAM_SENSOR_OFFB_G1_TIMEOUT);
 	init_sensor_state(&_system_status.sensors.pwm_control, "PWM Control", PARAM_SENSOR_PWM_CTRL_STRM_COUNT, PARAM_SENSOR_PWM_CTRL_TIMEOUT);
 
 	_time_safety_arm_throttle_timeout = 0;
@@ -703,6 +705,8 @@ void safety_run( uint32_t time_now ) {
 	safety_check_sensor( &_system_status.sensors.rc_input, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_heartbeat, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_control, time_now );
+	safety_check_sensor( &_system_status.sensors.offboard_mixer_g0_control, time_now );
+	safety_check_sensor( &_system_status.sensors.offboard_mixer_g1_control, time_now );
 	safety_check_sensor( &_system_status.sensors.pwm_control, time_now );
 
 	if(_sensors.hil.status.present)

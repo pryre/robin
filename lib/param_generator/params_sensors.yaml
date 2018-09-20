@@ -147,6 +147,24 @@ PARAM_SENSOR_OFFB_CTRL_STRM_COUNT:
     option: "scalar"
     default: 100
 ---
+PARAM_SENSOR_OFFB_G0_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_OB_G0"
+  description: "Number of offboard group 0 actuator control messages that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100
+---
+PARAM_SENSOR_OFFB_G1_STRM_COUNT:
+  type: "uint"
+  name: "STRM_NUM_OB_G1"
+  description: "Number of offboard group 1 actuator control messages that must be recieved before a stream is established"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100
+---
 PARAM_SENSOR_PWM_CTRL_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_RC_C"
@@ -229,7 +247,7 @@ PARAM_SENSOR_EXT_POSE_TIMEOUT:
 PARAM_SENSOR_OFFB_HRBT_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_OB_HRBT"
-  description: "Time that new data must be read before a off-board heartbeat timeout is declared"
+  description: "Time that new data must be read before a offboard heartbeat timeout is declared"
   reboot: false
   value:
     option: "scalar"
@@ -239,7 +257,27 @@ PARAM_SENSOR_OFFB_HRBT_TIMEOUT:
 PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_OB_CTRL"
-  description: "Time that new data must be read before a off-board control timeout is declared"
+  description: "Time that new data must be read before a offboard control timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 400000
+    unit: "us"
+---
+PARAM_SENSOR_OFFB_G0_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_OB_G0"
+  description: "Time that new data must be read before a offboard actuator group 0 control timeout is declared"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 400000
+    unit: "us"
+---
+PARAM_SENSOR_OFFB_G1_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_OB_G1"
+  description: "Time that new data must be read before a offboard actuator group 1 control timeout is declared"
   reboot: false
   value:
     option: "scalar"
@@ -248,10 +286,10 @@ PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
 ---
 PARAM_SENSOR_PWM_CTRL_TIMEOUT:
   type: "uint"
-  name: "TIMEOUT_RC_CTRL"
+  name: "TIMEOUT_OB_PWM"
   description: "Time that new data must be read before a PWM control timeout is declared"
   reboot: false
   value:
     option: "scalar"
-    default: 200000
+    default: 400000
     unit: "us"

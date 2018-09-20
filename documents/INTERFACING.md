@@ -24,13 +24,6 @@ The `FSE_EXT_HDG_W` parameter can be used to define the weighting of the heading
 
 In the event of a stream timing out, the estimator will simply ignore this functionallity until the stream is re-established.
 
-## PWM Overrides
-As a secondary form of control, the `RC_CHANNELS_OVERRIDE` message can be used to directly control the PWM outputs. Arming conditions will be adhered to, and additionally, `MOTOR_PWM_IDLE` will also override the requested PWM (so disable the idle if this will be an issue).
-
-The `TIMEOUT_RC_CTRL` and `STRM_NUM_RC_C` parameters can be used to set the timeout period and the number of messages needed to establish a stream respectively.
-
-This message will only not count towards failsafe protection, and as such, needs a Attitude/Rates Control stream established for something to fall back on if this stream drops out. The overrides will be re-established once the stream is regained.
-
 ## Actuator Control Input
 
 **If using v0.99.1, please see [this version](https://github.com/qutas/robin/blob/v0.99.1/documents/INTERFACING.md) of the documentation.**
@@ -47,6 +40,8 @@ The actuator control inputs provides a stable input for controlling PWM driven a
 4. Group 3: RC auxiliary digital
 5. Group 4: Offboard auxiliary PWM
 6. Group 5: Offboard auxiliary digital
+
+Actuator controls for Group 0 and Group 1 both require streams to be established before control will be passed over. Additionally, nethier stream will be counted as a vaild control input, and as such, needs a Attitude/Rates Control stream established for something to fall back on in case this stream drops out, or a failsafe input is required. The overrides will be re-established once the stream is regained. Lastly, the available mappings for both streams are aligned with the mixer output mappings (i.e. if the mixer `QUAD x` is set, only channels 1 through 4 will be available for overrides).
 
 Group mappings are defined as a bitwise to specify which outputs should be overriden by what groups. The parameters `ACTUATOR_xxPMAP` and `ACTUATOR_xxDMAP` describe the mixing of PWM and digital groups respectively for the RC and offboard inputs. The bitwise mapping is calculated using the LSB as the loweset channel, such that setting bit 0 to `true` will enable channel 1, setting bit 1 to `true` will enable channel 2, etc. As an example, the bitwise mapping works as follows:
 - To allow PWM RC actuator control of channel 5:
@@ -75,6 +70,6 @@ The actuator groups overlay one another depending on which outputs are enabled. 
 | RC Digital | 3 | Blocked | Blocked | Blocked | Blocked | RC [Ch.5] | Unused | Unused | Unused |
 | Offboard PWM | 4 | Blocked | Blocked | Blocked | Blocked | Blocked | Unused | Offboard [Ch.7] | Offboard [Ch.8] |
 | Offboard Digital | 5 | Blocked | Blocked | Blocked | Blocked | Blocked | Unused | Blocked | Blocked |
-| **Final Overlay** | --- | Motor 1 | Motor 2 | Motor 3 | Motor 4 | RC Digital [Ch.5] | --- | Offboard [Ch.7] | Offboard [Ch.8] |
+| **Final Overlay** | --- | Motor 1 | Motor 2 | Motor 3 | Motor 4 | RC Digital [Ch.5] | --- | Offboard PWM [Ch.7] | Offboard PWM [Ch.8] |
 
 With this setup, actuator 5 is controlled with RC channel 5, and actuators 7 and 8 controlled using the `SET_ACTUATOR_CONTROL_TARGET` message in Mavlink (or using the `actuator_control` plugin in MAVROS). Ensure that `group_mix` variable is set to the desired group to ensure that the actuator control input is correctly registered.

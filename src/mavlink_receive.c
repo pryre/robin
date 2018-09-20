@@ -621,13 +621,15 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 						mavlink_msg_set_actuator_control_target_get_controls(&msg, &act_float[0]);
 
 						if( mavlink_msg_set_actuator_control_target_get_group_mlx(&msg) == 0) {
-							//XXX: Use this instead of PWM Overrides
-							//for(int i=0; i<8; i++)
-							//	_actuator_control_g0[i] = fix16_from_float(act_float[i]);
+							for(int i=0; i<8; i++)
+								_actuator_control_g0[i] = fix16_from_float(act_float[i]);
+
+							safety_update_sensor(&_system_status.sensors.offboard_mixer_g0_control);
 						} else if( mavlink_msg_set_actuator_control_target_get_group_mlx(&msg) == 1) {
-							//XXX: Use this instead of motor additions
-							//for(int i=0; i<8; i++)
-							//	_actuator_control_g1[i] = fix16_from_float(act_float[i]);
+							for(int i=0; i<8; i++)
+								_actuator_control_g1[i] = fix16_from_float(act_float[i]);
+
+							safety_update_sensor(&_system_status.sensors.offboard_mixer_g1_control);
 						} else if( mavlink_msg_set_actuator_control_target_get_group_mlx(&msg) == 4) {
 							if(!got_actuator_g4) {
 								mavlink_queue_broadcast_info("[MIXER] Accepted OB AUX PWM actuator control");
