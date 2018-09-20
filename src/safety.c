@@ -11,6 +11,7 @@ extern "C" {
 #include "safety.h"
 #include "sensors.h"
 #include "controller.h"
+#include "mixer.h"
 
 #include <stdio.h>
 
@@ -733,6 +734,17 @@ void safety_run( uint32_t time_now ) {
 
 	//Auto throttle timeout
 	safety_arm_throttle_timeout(time_now);
+}
+
+void safety_prepare_graceful_shutdown( void ) {
+	//Make sure outputs for PWMs are set to off
+	mixer_clear_outputs();
+
+	//Make sure there are no i2c jobs still running
+	sensors_clear_i2c();
+
+	//Give a few final moments for the comms to send and PWM to update
+	delay(500);
 }
 
 #ifdef __cplusplus

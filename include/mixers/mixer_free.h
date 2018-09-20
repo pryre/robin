@@ -5,8 +5,8 @@
 #include "fix16.h"
 #include "fixextra.h"
 
-//XXX: Mixer direct is the same as "none" but will allow for full actuator control passthrough
-const mixer_t mixer_direct = {
+//XXX: Mixer free is the same as "none" but will allow for full actuator control
+const mixer_t mixer_free = {
 	true,
 
 	//Ch1, Ch2,  Ch3,  Ch4,  Ch5,  Ch6,  Ch7,  Ch8

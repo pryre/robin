@@ -46,7 +46,7 @@ void setup(void) {
 	safety_init();
 
 	mixer_init();	//XXX: Must be called before pwm_init()
-	pwm_init();		//XXX:This locks boot for a while if ESC cal is active, so do it before i2c devices
+	pwm_init();		//XXX: This locks boot for a while if ESC cal is active, so do it before i2c devices
 
 	delay(500);	//Wait for i2c devices to boot properly
 

@@ -129,3 +129,5 @@ void safety_update_sensor( timeout_status_t *sensor);
 
 void safety_run( uint32_t time_now );
 
+void safety_prepare_graceful_shutdown( void );
+

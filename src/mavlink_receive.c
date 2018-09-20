@@ -236,7 +236,7 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 									command_result = MAV_RESULT_ACCEPTED;
 								} else {
 									mavlink_queue_broadcast_error("[SENSOR] Automatic calibration in progress");
-									command_result = MAV_RESULT_TEMPORARILY_REJECTED;
+									command_result = MAV_RESULT_DENIED;
 								}
 							} else if ( _sensor_calibration.type == SENSOR_CAL_NONE ) {
 								_sensor_calibration.req_sysid = msg.sysid;
@@ -311,11 +311,11 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 							if( !mixer_to_use->mixer_ok ) {
 								mavlink_queue_broadcast_error("[MIXER] No valid mixer selected!");
 
-								command_result = MAV_RESULT_FAILED;
+								command_result = MAV_RESULT_DENIED;
 							} else if( safety_switch_engaged() || safety_is_armed() ) {
-								mavlink_queue_broadcast_error("[MIXER] Can only run motor test with saftety on and not armed!");
+								mavlink_queue_broadcast_error("[MIXER] Motor test requires saftety off, not armed");
 
-								command_result = MAV_RESULT_TEMPORARILY_REJECTED;
+								command_result = MAV_RESULT_DENIED;
 							} else {
 								uint8_t motor_test_number = (int)mavlink_msg_command_long_get_param1(&msg);
 								//fix16_t motor_test_type = fix16_from_float(mavlink_msg_command_long_get_param2(&msg));
@@ -355,7 +355,7 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 								} else {
 									mavlink_queue_broadcast_error("[MIXER] Cannot run motor test, bad test variables!");
 
-									command_result = MAV_RESULT_FAILED;
+									command_result = MAV_RESULT_DENIED;
 								}
 							}
 
@@ -423,7 +423,7 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 										break;
 								}
 							} else {
-								command_result = MAV_RESULT_TEMPORARILY_REJECTED;
+								command_result = MAV_RESULT_DENIED;
 							}
 
 							break;
@@ -436,11 +436,8 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 									case 1:
 										mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[SAFETY] Performing system reset!");
 										mavlink_msg_command_ack_send(port, MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN, MAV_RESULT_ACCEPTED, 0xFF, 0xFF, msg.sysid, msg.compid);
-										delay(500);	//XXX: Give a few moments for the comms to send
 
-										//XXX: Graceful Shutdown
-										sensors_clear_i2c();
-										//while( i2c_job_queued() ); //Wait for jobs to finish
+										safety_prepare_graceful_shutdown();
 
 										systemReset();
 
@@ -448,11 +445,8 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 									case 3:
 										mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[SAFETY] Entering bootloader mode!");
 										mavlink_msg_command_ack_send(port, MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN, MAV_RESULT_ACCEPTED, 0xFF, 0xFF, msg.sysid, msg.compid);
-										delay(500);	//XXX: Give a few moments for the comms to send
 
-										//XXX: Graceful Shutdown
-										sensors_clear_i2c();
-										//while( i2c_job_queued() ); //Wait for jobs to finish
+										safety_prepare_graceful_shutdown();
 
 										systemResetToBootloader();
 

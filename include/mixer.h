@@ -16,7 +16,7 @@
 //http://autoquad.org/wiki/wiki/configuring-autoquad-flightcontroller/frame-motor-mixing-table/
 typedef enum {
 	MIXER_NONE = 0,
-	MIXER_DIRECT = 999,
+	MIXER_FREE = 999,
 	MIXER_QUADROTOR_PLUS = 5001,
 	MIXER_QUADROTOR_X = 4001,
 	MIXER_HEXAROTOR_X = 6001,
@@ -57,8 +57,11 @@ extern mixer_motor_test_t _motor_test;
 extern int32_t _pwm_output[MIXER_NUM_MOTORS];
 extern const mixer_t *mixer_to_use;
 
-void pwm_init();
-void mixer_init();
+void mixer_clear_outputs( void );
+
+void pwm_init( void );
+void mixer_init( void );
+
 
 //void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disarm);
 //void write_motor(uint8_t index, uint32_t value);
