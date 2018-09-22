@@ -4,6 +4,7 @@
 #include "breezystm32.h"
 #include "params.h"
 #include "safety.h"
+#include "calibration.h"
 #include "sensors.h"
 #include "estimator.h"
 #include "controller.h"
@@ -56,6 +57,8 @@ void setup(void) {
 	//XXX: Overrides settings made by pwm backend, so must be after pwm_init()
 	sensors_init_external();
 
+	calibration_init();
+
 	estimator_init();
 
 	control_init();
@@ -77,6 +80,12 @@ void loop(void) {
 
 		if( sensors_read() ) {
 			sensors_update( micros() );
+
+			//Handle any calibration is in progress
+			if( _system_status.state == MAV_STATE_CALIBRATING ) {
+				//Run the rest of the calibration logic
+				calibration_run();
+			}
 
 			estimator_update_sensors( sensors_clock_imu_int_get() );
 		}

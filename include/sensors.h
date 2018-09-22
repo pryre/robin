@@ -10,36 +10,7 @@
 
 #include "safety.h"
 
-//RC CAL DEFINES
-#define SENSOR_RC_CAL_MIN 0
-#define SENSOR_RC_CAL_MID 1
-#define SENSOR_RC_CAL_MAX 2
-
 #define SENSOR_RC_MIDSTICK 1500
-
-//XXX: Defined in MAV_CMD_PREFLIGHT_CALIBRATION
-//Param1
-#define SENSOR_CAL_CMD_GYRO 1
-#define SENSOR_CAL_CMD_GYRO_TEMP 3
-//Param2
-#define SENSOR_CAL_CMD_MAG 1
-//Param3
-#define SENSOR_CAL_CMD_PRESSURE_GND 1
-//Param4
-#define SENSOR_CAL_CMD_RC 1
-#define SENSOR_CAL_CMD_RC_TRIM 2
-//Param5
-#define SENSOR_CAL_CMD_ACCEL 1
-#define SENSOR_CAL_CMD_ACCEL_LEVEL 2
-#define SENSOR_CAL_CMD_ACCEL_TEMP 3
-#define SENSOR_CAL_CMD_ACCEL_SIMPLE 4
-//Param6
-#define SENSOR_CAL_CMD_COMPASS_MOTOR 1
-#define SENSOR_CAL_CMD_AIRPSEED 2
-//Param7
-#define SENSOR_CAL_CMD_ESC 1
-#define SENSOR_CAL_CMD_BAROMETER 3
-
 #define SENSOR_VMON_DIVIDER_NAZE32 _fc_11	//XXX: Naze32's use 10K:1k which gives a value of 11.0
 
 typedef struct {
@@ -202,110 +173,13 @@ typedef struct {
 	sensor_readings_voltage_monitor_t voltage_monitor;
 } sensor_readings_t;
 
-typedef enum {
-	SENSOR_CAL_NONE = 0,
-	SENSOR_CAL_GYRO,
-	SENSOR_CAL_MAG,
-	SENSOR_CAL_GND_PRESSURE,
-	SENSOR_CAL_RC,
-	SENSOR_CAL_ACCEL,
-	SENSOR_CAL_LEVEL_HORIZON,
-	SENSOR_CAL_INTER,
-	SENSOR_CAL_BARO,
-	SENSOR_CAL_INVALID
-} sensor_calibration_request_t;
-
-typedef enum {
-	SENSOR_CAL_RC_RANGE_INIT = 0,
-	SENSOR_CAL_RC_RANGE_MIDDOWN,
-	SENSOR_CAL_RC_RANGE_CORNERS,
-	SENSOR_CAL_RC_RANGE_EXTREMES,
-	SENSOR_CAL_RC_RANGE_DONE
-} sensor_calibration_rc_range_t;
-
-typedef struct {
-	bool waiting;
-	sensor_calibration_rc_range_t step;
-	uint16_t rc_ranges[8][4];
-	bool rc_rev[8];
-} sensor_calibration_rc_range_data_t;
-
-typedef struct {
-	uint16_t count;
-	fix16_t sum_x;
-	fix16_t sum_y;
-	fix16_t sum_z;
-} sensor_calibration_gyro_data_t;
-
-typedef enum {
-	SENSOR_CAL_ACCEL_INIT = 0,
-	SENSOR_CAL_ACCEL_Z_DOWN,
-	SENSOR_CAL_ACCEL_Z_UP,
-	SENSOR_CAL_ACCEL_Y_DOWN,
-	SENSOR_CAL_ACCEL_Y_UP,
-	SENSOR_CAL_ACCEL_X_DOWN,
-	SENSOR_CAL_ACCEL_X_UP,
-	SENSOR_CAL_ACCEL_DONE
-} sensor_calibration_accel_rotations_t;
-
-typedef struct {
-	uint16_t count;
-
-	int32_t t_sum;
-	int32_t x_sum;
-	int32_t y_sum;
-	int32_t z_sum;
-
-	int32_t t_av_sum;
-
-	int32_t x_flat_av_sum;
-	int32_t x_up_av;
-	int32_t x_down_av;
-
-	int32_t y_flat_av_sum;
-	int32_t y_up_av;
-	int32_t y_down_av;
-
-	int32_t z_flat_av_sum;
-	int32_t z_up_av;
-	int32_t z_down_av;
-
-} sensor_calibration_gravity_data_t;
-
-typedef struct {
-	sensor_calibration_accel_rotations_t accel_cal_step;
-	sensor_calibration_gravity_data_t data;
-
-	bool waiting;
-
-	uint16_t acc1G;
-	fix16_t temp_scale;
-	fix16_t temp_shift;
-} sensor_calibration_accel_data_t;
-
-typedef struct {
-	sensor_calibration_gyro_data_t gyro;
-	sensor_calibration_rc_range_data_t rc;
-	sensor_calibration_accel_data_t accel;
-} sensor_calibration_data_t;
-
-typedef struct {
-	uint8_t type;
-	sensor_calibration_data_t data;
-
-	uint8_t req_sysid;
-	uint8_t req_compid;
-} sensor_calibration_t;
-
 extern sensor_readings_t _sensors;
-extern sensor_calibration_t _sensor_calibration;
 
 // function declarations
 //void sensors_init_imu(void);
 void sensors_init_internal(void);
 void sensors_init_external(void);
 //void sensors_cal_init(void);
-bool sensors_request_cal(sensor_calibration_request_t req);
 bool sensors_read(void);
 bool i2c_job_queued(void);
 void sensors_clear_i2c(void);

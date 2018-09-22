@@ -41,6 +41,7 @@ PROJECT_SRC_FILES = ./src/main.c \
 					./src/drv_mpu6500.c \
 					./src/drv_hmc5883l.c \
 					./src/drv_bmp280.c \
+					./src/calibration.c \
 					./src/sensors.c \
 					./src/estimator.c \
 					./src/pid_controller.c \
@@ -71,6 +72,16 @@ PROJECT_SRC_FILES += ./src/mavlink_handlers/mavlink_handle_command_long_prefligh
 					 ./src/mavlink_handlers/mavlink_handle_command_long_preflight_storage.c \
 					 ./src/mavlink_handlers/mavlink_handle_command_long_reboot_shutdown.c \
 					 ./src/mavlink_handlers/mavlink_handle_command_long_component_arm_disarm.c
+
+# Calibration Handlers
+PROJECT_SRC_FILES += ./src/calibrations/calibrations_accel.c \
+					 ./src/calibrations/calibrations_barometer.c \
+					 ./src/calibrations/calibrations_ground_pressure.c \
+					 ./src/calibrations/calibrations_gyro.c \
+					 ./src/calibrations/calibrations_interference.c \
+					 ./src/calibrations/calibrations_level_horizon.c \
+					 ./src/calibrations/calibrations_magnetometer.c \
+					 ./src/calibrations/calibrations_rc.c
 
 # Parameter Generation
 PROJECT_DIR_PARAM_GEN = ./lib/param_generator
