@@ -137,12 +137,15 @@ endif
 
 DEBUG_FLAGS	 = -ggdb3
 
+#XXX: (-Wno-char-subscripts -Wno-sign-compare) used to disable warnings
+#	  in the libfixmath and libfixmatrix compilations
 CFLAGS	 = $(ARCH_FLAGS) \
 		   $(LTO_FLAGS) \
 		   $(addprefix -D,$(OPTIONS)) \
 		   $(addprefix -I,$(INCLUDE_DIRS)) \
 		   $(DEBUG_FLAGS) \
 		   -Wall -pedantic -Wextra -Wshadow -Wunsafe-loop-optimizations \
+		   -Wno-char-subscripts -Wno-sign-compare \
 		   -ffunction-sections \
 		   -fdata-sections \
 		   $(DEVICE_FLAGS) \

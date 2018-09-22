@@ -44,7 +44,7 @@ fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];
 int32_t _pwm_output[MIXER_NUM_MOTORS];
 mixer_motor_test_t _motor_test;
 
-const mixer_t *mixer_to_use;
+const mixer_t *_mixer_to_use;
 static io_type_t _actuator_type_map[MIXER_NUM_MOTORS];
 
 //XXX: Pinout Mapping for Naze32!
@@ -83,42 +83,42 @@ static void motor_test_reset( void ) {
 void mixer_init() {
 	switch( get_param_uint(PARAM_MIXER) ) {
 		case MIXER_FREE: {
-			mixer_to_use = &mixer_free;
+			_mixer_to_use = &mixer_free;
 			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_GENERIC);
 			mavlink_queue_broadcast_notice("[MIXER] Using mixer FREE");
 
 			break;
 		}
 		case MIXER_QUADROTOR_PLUS: {
-			mixer_to_use = &mixer_quadrotor_plus;
+			_mixer_to_use = &mixer_quadrotor_plus;
 			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_QUADROTOR);
 			mavlink_queue_broadcast_notice("[MIXER] Using mixer QUAD +");
 
 			break;
 		}
 		case MIXER_QUADROTOR_X: {
-			mixer_to_use = &mixer_quadrotor_x;
+			_mixer_to_use = &mixer_quadrotor_x;
 			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_QUADROTOR);
 			mavlink_queue_broadcast_notice("[MIXER] Using mixer QUAD X");
 
 			break;
 		}
 		case MIXER_HEXAROTOR_X: {
-			mixer_to_use = &mixer_hexarotor_x;
+			_mixer_to_use = &mixer_hexarotor_x;
 			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_HEXAROTOR);
 			mavlink_queue_broadcast_notice("[MIXER] Using mixer HEX X");
 
 			break;
 		}
 		case MIXER_PLANE_STANDARD: {
-			mixer_to_use = &mixer_plane_standard;
+			_mixer_to_use = &mixer_plane_standard;
 			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_FIXED_WING);
 			mavlink_queue_broadcast_notice("[MIXER] Using mixer PLANE STANDARD");
 
 			break;
 		}
 		default: {
-			mixer_to_use = &mixer_none;
+			_mixer_to_use = &mixer_none;
 			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_GENERIC);
 			mavlink_queue_broadcast_error("[MIXER] Unknown mixer! Disabling!");
 
@@ -136,8 +136,8 @@ void mixer_init() {
 
 		//Calculate final actuator mapping
 		//First handle output mixers, then auxiliaries
-		if(mixer_to_use->output_type[i] != IO_TYPE_N) {
-			_actuator_type_map[i] = mixer_to_use->output_type[i];
+		if(_mixer_to_use->output_type[i] != IO_TYPE_N) {
+			_actuator_type_map[i] = _mixer_to_use->output_type[i];
 			_actuator_apply_g0_map[i] = true;
 			//_actuator_apply_g1_map[i] = true;
 		} else if( ( get_param_uint(PARAM_ACTUATORS_RC_PWM_MAP) >> i ) & 0x01) {
@@ -214,7 +214,7 @@ void pwm_init() {
 
 	for(int i=0; i<MIXER_NUM_MOTORS; i++) {
 		io_map.port[io_c] = io_map_naze32_pwm[i];	//IO map set for PWM input
-		//io_map.type[io_c] = (mixer_to_use->output_type[i] == IO_TYPE_OM ) ? IO_TYPE_OM : IO_TYPE_OS;	//IO map set for PWM input
+		//io_map.type[io_c] = (_mixer_to_use->output_type[i] == IO_TYPE_OM ) ? IO_TYPE_OM : IO_TYPE_OS;	//IO map set for PWM input
 		io_map.type[io_c] = _actuator_type_map[i];
 		io_c++;
 	}
@@ -239,7 +239,7 @@ void pwm_init() {
 		mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[MIXER] Performing ESC calibration");
 
 		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
-			if (mixer_to_use->output_type[i] == IO_TYPE_OM)
+			if (_mixer_to_use->output_type[i] == IO_TYPE_OM)
 				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MAX ) );
 
 		LED1_OFF;
@@ -249,7 +249,7 @@ void pwm_init() {
 		}
 
 		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
-			if (mixer_to_use->output_type[i] == IO_TYPE_OM)
+			if (_mixer_to_use->output_type[i] == IO_TYPE_OM)
 				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MIN ) );
 
 		LED0_OFF;
@@ -392,11 +392,11 @@ static bool motor_test_in_progress( void ) {
 void pwm_output() {
 	bool test_running = motor_test_in_progress();
 
-	if(mixer_to_use->mixer_ok) {
+	if(_mixer_to_use->mixer_ok) {
 		for (int8_t i=0; i<MIXER_NUM_MOTORS; i++) {
 			if(_actuator_apply_g0_map[i]) {
 				//Handle mixer output
-				io_type_t output_type = mixer_to_use->output_type[i];
+				io_type_t output_type = _mixer_to_use->output_type[i];
 
 				fix16_t val = _actuator_control_g0m[i];
 
@@ -471,17 +471,17 @@ void calc_mixer_output( void ) {
 	for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++) {
 		//If we're using the mixer io for motor/servo output
 		//and there is some throttle input
-		if( ( (mixer_to_use->output_type[i] == IO_TYPE_OM) ||
-			  (mixer_to_use->output_type[i] == IO_TYPE_OS) ) &&
+		if( ( (_mixer_to_use->output_type[i] == IO_TYPE_OM) ||
+			  (_mixer_to_use->output_type[i] == IO_TYPE_OS) ) &&
 			( _control_output.T > 0 ) ) {
 
 			//Matrix multiply
-			prescaled_outputs[i] = fix16_add(fix16_mul(_control_output.T, mixer_to_use->T[i]),
-								   fix16_add(fix16_mul(_control_output.r, mixer_to_use->x[i]),
-								   fix16_add(fix16_mul(_control_output.p, mixer_to_use->y[i]),
-											fix16_mul(_control_output.y, mixer_to_use->z[i]))));
+			prescaled_outputs[i] = fix16_add(fix16_mul(_control_output.T, _mixer_to_use->T[i]),
+								   fix16_add(fix16_mul(_control_output.r, _mixer_to_use->x[i]),
+								   fix16_add(fix16_mul(_control_output.p, _mixer_to_use->y[i]),
+											fix16_mul(_control_output.y, _mixer_to_use->z[i]))));
 
-			if( mixer_to_use->output_type[i] == IO_TYPE_OM ) {
+			if( _mixer_to_use->output_type[i] == IO_TYPE_OM ) {
 				if( prescaled_outputs[i] > max_output )
 					max_output = prescaled_outputs[i];
 			}
@@ -496,7 +496,7 @@ void calc_mixer_output( void ) {
 		scale_factor = _fc_1 / max_output;
 
 	for (uint8_t i=0; i<MIXER_NUM_MOTORS; i++) {
-		if (mixer_to_use->output_type[i] == IO_TYPE_OM) {
+		if (_mixer_to_use->output_type[i] == IO_TYPE_OM) {
 			_actuator_control_g0m[i] = fix16_mul( prescaled_outputs[i], scale_factor );
 		} else {
 			_actuator_control_g0m[i] = prescaled_outputs[i];

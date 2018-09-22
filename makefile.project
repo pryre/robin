@@ -45,7 +45,32 @@ PROJECT_SRC_FILES = ./src/main.c \
 					./src/estimator.c \
 					./src/pid_controller.c \
 					./src/controller.c \
+					./src/mixer.c \
 					./src/mixer.c
+
+# Mavlink receive handlers
+PROJECT_SRC_FILES += ./src/mavlink_handlers/mavlink_handle_heartbeat.c \
+					 ./src/mavlink_handlers/mavlink_handle_param_request_list.c \
+					 ./src/mavlink_handlers/mavlink_handle_param_request_read.c \
+					 ./src/mavlink_handlers/mavlink_handle_param_set.c \
+					 ./src/mavlink_handlers/mavlink_handle_command_long.c \
+					 ./src/mavlink_handlers/mavlink_handle_set_attitude_target.c \
+					 ./src/mavlink_handlers/mavlink_handle_att_pos_mocap.c \
+					 ./src/mavlink_handlers/mavlink_handle_mission_request_list.c \
+					 ./src/mavlink_handlers/mavlink_handle_actuator_control_target.c \
+					 ./src/mavlink_handlers/mavlink_handle_hil_sensor.c \
+					 ./src/mavlink_handlers/mavlink_handle_timesync.c
+
+#  Mavlink receive command handlers
+PROJECT_SRC_FILES += ./src/mavlink_handlers/mavlink_handle_command_long_preflight_calibration.c \
+					 ./src/mavlink_handlers/mavlink_handle_command_long_set_mode.c \
+					 ./src/mavlink_handlers/mavlink_handle_command_long_do_motor_test.c \
+					 ./src/mavlink_handlers/mavlink_handle_command_long_request_protocol_version.c \
+					 ./src/mavlink_handlers/mavlink_handle_command_long_request_autopilot_capabilities.c \
+					 ./src/mavlink_handlers/mavlink_handle_command_long_get_home_position.c \
+					 ./src/mavlink_handlers/mavlink_handle_command_long_preflight_storage.c \
+					 ./src/mavlink_handlers/mavlink_handle_command_long_reboot_shutdown.c \
+					 ./src/mavlink_handlers/mavlink_handle_command_long_component_arm_disarm.c
 
 # Parameter Generation
 PROJECT_DIR_PARAM_GEN = ./lib/param_generator

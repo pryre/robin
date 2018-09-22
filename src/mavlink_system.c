@@ -124,9 +124,11 @@ static void comm_wait_ready( mavlink_channel_t chan ) {
  */
 void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 	if( (chan == MAVLINK_COMM_0 ) && comm_is_open( COMM_PORT_0 ) ) {
-		serialWrite(Serial1, ch);
+		//serialWrite(Serial1, ch);
+		uartWrite(Serial1, ch);
 	} else if( (chan == MAVLINK_COMM_1 ) && comm_is_open( COMM_PORT_1 ) ) {
-	 	serialWrite(Serial2, ch);
+	 	//serialWrite(Serial2, ch);
+	 	uartWrite(Serial2, ch);
 	}
 }
 
