@@ -137,7 +137,7 @@ void communication_receive(void) {
 		bool port1_done = !comm_is_open( COMM_PORT_1 );
 
 		if( !port0_done ) {
-			if( serialTotalRxBytesWaiting( Serial1 ) ) {
+			if( uartTotalRxBytesWaiting( Serial1 ) ) {
 					//port0_done = communication_decode( MAVLINK_COMM_0, serialRead(Serial1) );
 					port0_done = communication_decode( MAVLINK_COMM_0, uartRead(Serial1) );
 			} else {
@@ -146,7 +146,7 @@ void communication_receive(void) {
 		}
 
 		if( !port1_done ) {
-			if( serialTotalRxBytesWaiting( Serial2 ) ) {
+			if( uartTotalRxBytesWaiting( Serial2 ) ) {
 					//port1_done = communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
 					port1_done = communication_decode( MAVLINK_COMM_1, uartRead(Serial2) );
 			} else {
