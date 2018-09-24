@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -6,6 +9,8 @@
 
 #include "fix16.h"
 #include "fixextra.h"
+
+#include "drv_system.h"
 
 const mixer_t *_mixer_to_use;
 mixer_motor_test_t _motor_test;
@@ -42,7 +47,7 @@ MAV_RESULT mavlink_handle_command_long_do_motor_test( uint8_t port, float *param
 				_motor_test.motor_step = motor_test_number;
 			}
 
-			_motor_test.start = micros();
+			_motor_test.start = system_micros();
 			_motor_test.duration = 10000*fix16_to_int(fix16_mul(motor_test_timeout, _fc_100)); //XXX: Motor test should be accurate to 0.01 seconds, and max out at ~1min
 			_motor_test.throttle = motor_test_throttle;
 

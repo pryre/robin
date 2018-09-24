@@ -39,6 +39,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "breezystm32.h"
 #include "stm32f10x_conf.h"
 
 #include "gpio.h"

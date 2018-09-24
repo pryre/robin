@@ -9,10 +9,10 @@
 #include "params.h"
 #include "mixer.h"
 #include "mavlink_system.h"
+#include "drv_sensors.h"
+#include "drv_system.h"
+
 #include "breezystm32.h"
-#include "drv_mpu.h"
-#include "drv_hmc5883l.h"
-#include "drv_bmp280.h"
 #include "pwm.h"
 #include "adc.h"
 #include "gpio.h"
@@ -22,8 +22,6 @@
 #include "fixquat.h"
 #include "fixextra.h"
 
-//#include "stdio.h"
-#include <stdlib.h>
 
 #define GYRO_HIGH_BIAS_WARN 200
 
@@ -80,9 +78,9 @@ static void clock_init(void) {
 	_sensors.clock.rt_sync_last = 0;
 }
 
-void sensors_imu_poll(void) {
+static void sensors_imu_poll(void) {
 	//==-- Timing setup get loop time
-	_imu_time_ready = micros();
+	_imu_time_ready = system_micros();
 }
 
 static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
@@ -122,31 +120,14 @@ static void sensors_init_hil(void) {
 }
 
 static void sensors_init_imu(void) {
-	if( get_param_uint(PARAM_SENSOR_IMU_CBRK) ) {
-		sensor_status_init(&_sensors.imu.status, true);
-		mpu_register_interrupt_cb(&sensors_imu_poll, get_param_uint(PARAM_BOARD_REVISION));
 
-		switch(get_param_uint(PARAM_BOARD_REVISION)) {
-			case 5: {
-				//Get the 1g gravity scale (raw->g's)
-				_calibrations.data.accel.acc1G = mpu6050_init(INV_FSR_8G, INV_FSR_2000DPS);
-				break;
-			}
-			case 6: {
-				//Get the 1g gravity scale (raw->g's)
-				_calibrations.data.accel.acc1G = mpu6500_init(INV_FSR_8G, INV_FSR_2000DPS);
-				break;
-			}
-			default: {
-				//Could not determine IMU!
-				failureMode(5);
-			}
-		}
-	}
+	sensor_status_init(&_sensors.imu.status, get_param_uint(PARAM_SENSOR_IMU_CBRK) );
 
-	_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_calibrations.data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
-	_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
+	if( _sensors.imu.status.present )
+		drv_sensors_imu_init( &_sensors.imu.accel_scale, &_sensors.imu.gyro_scale );
 
+	//_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_calibrations.data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
+	//_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
 }
 
 void sensors_init_internal(void) {
@@ -185,7 +166,7 @@ void sensors_init_external(void) {
 	if( get_param_fix16( PARAM_SENSOR_MAG_UPDATE_RATE ) > 0 ) {
 		mavlink_queue_broadcast_error("[SENSOR] Mag support is not stable!");
 
-		sensor_status_init( &_sensors.mag.status, hmc5883lInit(get_param_uint( PARAM_BOARD_REVISION ) ) );
+		sensor_status_init( &_sensors.mag.status, drv_sensors_mag_init() );
 
 		//If we expected it to be present, but it failed
 		if(!_sensors.mag.status.present)
@@ -209,7 +190,7 @@ void sensors_init_external(void) {
 
 	//==-- Baro
 	if( get_param_fix16( PARAM_SENSOR_BARO_UPDATE_RATE ) > 0 ) {
-			sensor_status_init( &_sensors.baro.status, bmp280Init(get_param_uint( PARAM_BOARD_REVISION ) ) );
+		sensor_status_init( &_sensors.baro.status, drv_sensors_baro_init() );
 
 		//If we expected it to be present, but it failed
 		if(!_sensors.baro.status.present)
@@ -227,6 +208,7 @@ void sensors_init_external(void) {
 		mavlink_queue_broadcast_error("[SENSOR] Sonar feature is not developed yet!");
 
 		//XXX:sensor_status_init( &_sensors.sonar.status, sonarInit() );
+		sensor_status_init( &_sensors.sonar.status, false );
 
 		//If we expected it to be present, but it failed
 		if(!_sensors.sonar.status.present)

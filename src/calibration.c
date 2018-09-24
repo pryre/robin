@@ -3,21 +3,17 @@
 #include <stdlib.h>
 
 #include "mavlink_system.h"
-#include "breezystm32.h"
-
 #include "sensors.h"
 #include "calibration.h"
 #include "safety.h"
 #include "params.h"
-//#include "pwm.h"
+
+#include "drv_status_io.h"
 
 #include "fix16.h"
 #include "fixvector3d.h"
 #include "fixquat.h"
 #include "fixextra.h"
-
-//#include "stdio.h"
-#include <stdlib.h>
 
 calibration_data_t _calibrations;
 sensor_readings_t _sensors;

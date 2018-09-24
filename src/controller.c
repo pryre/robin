@@ -2,15 +2,16 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
 #include <stdbool.h>
 
-#include "breezystm32.h"
-#include "pwm.h"
 #include "fix16.h"
 #include "fixvector3d.h"
 #include "fixmatrix.h"
 #include "fixquat.h"
 #include "fixextra.h"
+
+#include "mavlink_system.h"
 
 #include "params.h"
 #include "safety.h"
@@ -20,8 +21,6 @@ extern "C" {
 #include "mixer.h"
 #include "pid_controller.h"
 
-#include "mavlink_system.h"
-#include "stdio.h"
 
 system_status_t _system_status;
 sensor_readings_t _sensors;

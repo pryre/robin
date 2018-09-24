@@ -4,6 +4,7 @@
 #include "mavlink_receive.h"
 
 #include "params.h"
+#include "drv_comms.h"
 
 #include <stdio.h>
 //#include "fixextra.h"
@@ -133,22 +134,22 @@ void communication_receive(void) {
 	//both ports are empty, have both read messages,
 	//or the time_read_max is hit
 	while( (micros() - time_start_read ) < time_read_max ) {
-		bool port0_done = !comm_is_open( COMM_PORT_0 );
-		bool port1_done = !comm_is_open( COMM_PORT_1 );
+		bool port0_done = !comms_is_open( COMM_PORT_0 );
+		bool port1_done = !comms_is_open( COMM_PORT_1 );
 
 		if( !port0_done ) {
-			if( uartTotalRxBytesWaiting( Serial1 ) ) {
+			if( comms_waiting( COMM_PORT_0 ) ) {
 					//port0_done = communication_decode( MAVLINK_COMM_0, serialRead(Serial1) );
-					port0_done = communication_decode( MAVLINK_COMM_0, uartRead(Serial1) );
+					port0_done = communication_decode( MAVLINK_COMM_0, comms_recv(COMM_PORT_0) );
 			} else {
 				port0_done = true;
 			}
 		}
 
 		if( !port1_done ) {
-			if( uartTotalRxBytesWaiting( Serial2 ) ) {
+			if( comms_waiting( COMM_PORT_1 ) ) {
 					//port1_done = communication_decode( MAVLINK_COMM_1, serialRead(Serial2) );
-					port1_done = communication_decode( MAVLINK_COMM_1, uartRead(Serial2) );
+					port1_done = communication_decode( MAVLINK_COMM_1, comms_recv(COMM_PORT_1) );
 			} else {
 				port1_done = true;
 			}

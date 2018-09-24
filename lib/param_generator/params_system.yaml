@@ -1,12 +1,12 @@
-PARAM_BOARD_REVISION:
-  type: "uint"
-  name: "BOARD_REV"
-  description: "A compile-time selector for what version of the board to setup sensors for"
-  reboot: false
-  value:
-    option: "generated"
-    function: "NAZE32_REV"
----
+#PARAM_BOARD_REVISION:
+#  type: "uint"
+#  name: "BOARD_REV"
+#  description: "A compile-time selector for what version of the board to setup sensors for"
+#  reboot: false
+#  value:
+#    option: "generated"
+#    function: "NAZE32_REV"
+#---
 PARAM_VERSION_FIRMWARE:
   type: "uint"
   name: "VERSION_FW"

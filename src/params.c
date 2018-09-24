@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "flash.h"
+#include "drv_flash.h"
 #include "sensors.h"
 #include "params.h"
 #include "mixer.h"

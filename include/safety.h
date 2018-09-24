@@ -80,31 +80,6 @@ typedef struct {
 	safety_sensor_status_t sensors;
 } system_status_t;
 
-typedef enum {
-	STATUS_BUZZER_QUIET,
-	STATUS_BUZZER_SUCCESS,
-	STATUS_BUZZER_FAILURE,
-	STATUS_BUZZER_FAILSAFE
-} status_buzzer_modes_t;
-
-typedef struct {
-	GPIO_TypeDef *gpio_p;
-	uint16_t pin;
-
-	uint32_t period_us;
-	uint32_t length_us;
-	uint32_t last_pulse;
-} status_led_t;
-
-typedef struct {
-	GPIO_TypeDef *gpio_p;
-	uint16_t pin;
-
-	uint8_t num_beeps;
-	uint32_t period;
-	uint32_t last_beep;
-} status_buzzer_t;
-
 extern char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
 extern char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
 
@@ -118,9 +93,6 @@ bool safety_request_state( uint8_t req_state );
 bool safety_request_control_mode( uint8_t req_ctrl_mode );
 bool safety_request_arm( void );
 bool safety_request_disarm( void );
-
-void status_buzzer_success( void );
-void status_buzzer_failure( void );
 
 uint32_t compat_encode_px4_main_mode( uint8_t main_mode );
 uint8_t compat_decode_px4_main_mode( uint32_t mode );

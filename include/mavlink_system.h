@@ -6,11 +6,12 @@
 #define LOW_PRIORITY_QUEUE_SIZE 8
 #define LOW_PRIORITY_QUEUE_PARAMS_SIZE 32
 
-#include "breezystm32.h"
-#include "serial.h"
-#include "serial_uart.h"
+//#include "breezystm32.h"
+//#include "serial.h"
+//#include "serial_uart.h"
 
 #include "mavlink/mavlink_types.h"
+#include "drv_comms.h"
 
 /* Struct that stores the communication settings of this system.
    you can also define / alter these settings elsewhere, as long
@@ -26,21 +27,12 @@
 #define MAVLINK_VERSION_MIN 100
 #define MAVLINK_VERSION_MAX 200
 
-#define COMM_PORT_0 (uint8_t)0x01	//0b00000001
-#define COMM_PORT_1 (uint8_t)0x02	//0b00000010
-
-serialPort_t* Serial1;
-serialPort_t* Serial2;
-
 extern mavlink_system_t mavlink_system;
 extern mavlink_system_t mavlink_gcs;
 extern bool _ch_0_have_heartbeat;
 extern bool _ch_1_have_heartbeat;
 
 void communications_system_init(void);
-bool comm_is_open( uint8_t port );
-void comm_set_open( uint8_t port );
-void comm_set_closed( uint8_t port );
 
 /**
  * @brief Send one char (uint8_t) over a comm channel

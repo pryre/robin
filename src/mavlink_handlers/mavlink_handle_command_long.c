@@ -1,7 +1,7 @@
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
-#include "safety.h"
+#include "drv_status_io.h"
 
 void mavlink_handle_command_long( uint8_t port, mavlink_message_t *msg, mavlink_status_t *status ) {
 	//A command should always have an acknowledge

@@ -2,7 +2,7 @@
 
 #include "breezystm32.h"
 #include "params.h"
-#include "flash.h"
+#include "drv_flash.h"
 
 static uint64_t _eeprom_version;
 

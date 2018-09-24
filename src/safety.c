@@ -2,16 +2,15 @@
 extern "C" {
 #endif
 
-#include "breezystm32.h"
-
 #include "mavlink_system.h"
-
-#include "fixextra.h"
 #include "params.h"
 #include "safety.h"
 #include "sensors.h"
 #include "controller.h"
 #include "mixer.h"
+#include "drv_status_io.h"
+
+#include "fixextra.h"
 
 #include <stdio.h>
 
@@ -23,47 +22,9 @@ control_output_t _control_output;
 char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
 char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
 
-static status_led_t _status_led_green;
-static status_led_t _status_led_red;
-static status_buzzer_t _status_buzzer;
-
 static uint32_t _time_safety_arm_throttle_timeout;
 static uint32_t _time_safety_button_pressed;
 static bool _new_safety_button_press;
-
-static void status_led_init() {
-	_status_led_green.gpio_p = LED0_GPIO;
-	_status_led_green.pin = LED0_PIN;
-	_status_led_green.period_us = 1000000;
-	_status_led_green.length_us = 250000;
-	_status_led_green.last_pulse = 0;
-
-	_status_led_red.gpio_p = LED1_GPIO;
-	_status_led_red.pin = LED1_PIN;
-	_status_led_red.period_us = 500000;
-	_status_led_red.length_us = 250000;
-	_status_led_red.last_pulse = 0;
-}
-
-static void status_buzzer_init() {
-	//Buzzer
-	_status_buzzer.gpio_p = GPIOA;
-	_status_buzzer.pin = Pin_12;
-
-	gpio_config_t safety_buzzer_cfg;
-    safety_buzzer_cfg.pin = _status_buzzer.pin;
-    safety_buzzer_cfg.mode = Mode_Out_PP;
-    safety_buzzer_cfg.speed = Speed_2MHz;
-    gpioInit(_status_buzzer.gpio_p, &safety_buzzer_cfg);
-
-	_status_buzzer.num_beeps = 0;	//Number of beeps to make
-	_status_buzzer.period = 0;		//200ms beep length
-	_status_buzzer.last_beep = 0;	//Time last beep started
-
-    digitalLo( _status_buzzer.gpio_p, _status_buzzer.pin );
-
-	//TODO: Make this play a startup tune
-}
 
 static void init_sensor_state(timeout_status_t *sensor, const char *name, const param_id_t param_stream_count, const param_id_t param_timeout) {
 	sensor->health = SYSTEM_HEALTH_UNKNOWN;
@@ -112,49 +73,6 @@ void safety_init() {
 	strncpy( mav_mode_names[MAIN_MODE_OFFBOARD], "OFFBOARD", MAV_MODE_NAME_LEN);
 	strncpy( mav_mode_names[MAIN_MODE_STABILIZED], "STABILIZED", MAV_MODE_NAME_LEN);
 	strncpy( mav_mode_names[MAIN_MODE_RATTITUDE], "RATTITUDE", MAV_MODE_NAME_LEN);
-
-	status_led_init();
-
-	status_buzzer_init();
-}
-
-static void status_buzzer_set(int8_t num, uint32_t period) {
-	_status_buzzer.last_beep = 0;	//Time last beep started
-
-	_status_buzzer.num_beeps = 2*num;	//double to get the correct on/off states
-	_status_buzzer.period = period;
-
-    digitalLo( _status_buzzer.gpio_p, _status_buzzer.pin );
-}
-
-void status_buzzer_success(void) {
-	//Play 2 quick beeps
-	status_buzzer_set(2, 100000);
-}
-
-void status_buzzer_failure(void) {
-	//Play 1 long beep
-	status_buzzer_set(1, 1000000);
-}
-
-static void status_buzzer_update(void) {
-	//If the system is in a failsafe mode
-	//	and the buzzer isn't set to make a beep
-	if( ( _status_buzzer.num_beeps == 0 ) &&
-		( (_system_status.state == MAV_STATE_CRITICAL ) ||
-	      (_system_status.state == MAV_STATE_EMERGENCY ) ) ) {
-
-		status_buzzer_set(1, 100000);
-	}
-
-	if( ( _status_buzzer.num_beeps > 0 ) &&
-		( ( micros() - _status_buzzer.last_beep ) > _status_buzzer.period ) ) {
-
-		digitalToggle(_status_buzzer.gpio_p, _status_buzzer.pin);
-
-		_status_buzzer.last_beep = micros();
-		_status_buzzer.num_beeps--;
-	}
 }
 
 bool safety_is_armed(void) {
@@ -528,31 +446,6 @@ static void safety_switch_update(uint32_t time_now) {
 	}
 }
 
-static void status_led_do_pulse(status_led_t* led) {
-	if( ( micros() - led->last_pulse ) > led->period_us )
-		led->last_pulse = micros();
-
-	if( ( micros() - led->last_pulse ) < led->length_us ) {
-		digitalLo(led->gpio_p, led->pin);	//On
-	} else {
-		digitalHi(led->gpio_p, led->pin);	//Off
-	}
-}
-
-static void status_led_update(void) {
-	// Safety LED
-	if( safety_is_armed() ) {
-		digitalLo(_status_led_red.gpio_p, _status_led_red.pin);	//On
-	} else if( !safety_switch_engaged() ) {
-		status_led_do_pulse(&_status_led_red);
-	} else {
-		digitalHi(_status_led_red.gpio_p, _status_led_red.pin);	//Off
-	}
-
-	//System heartbeat LED
-	status_led_do_pulse(&_status_led_green);
-}
-
 void safety_update_sensor( timeout_status_t *sensor ) {
 	sensor->last_read = micros();
 	sensor->count++;
@@ -725,12 +618,6 @@ void safety_run( uint32_t time_now ) {
 
 	//Make sure current system state and mode are valid, and handle changes
 	system_state_update();
-
-	//Update LED flashes to match system state
-	status_led_update();
-
-	//Update buzzer to see if it should be making any noise
-	status_buzzer_update();
 
 	//Auto throttle timeout
 	safety_arm_throttle_timeout(time_now);

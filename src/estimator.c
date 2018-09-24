@@ -2,11 +2,8 @@
 extern "C" {
 #endif
 
-//#include <stdlib.h>
 #include <stdbool.h>
-//#include <math.h>
 
-#include "breezystm32.h"
 #include "sensors.h"
 #include "safety.h"
 #include "params.h"

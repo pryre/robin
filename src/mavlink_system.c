@@ -1,23 +1,21 @@
-#include "breezystm32.h"
-#include "gpio.h"
-#include "serial.h"
-#include "serial_uart.h"
-
 #include "mavlink_system.h"
 #include "mavlink/mavlink_types.h"
 #include "mavlink/common/mavlink.h"
 #include "mavlink_transmit.h"
+
+#include "drv_comms.h"
 
 #include "fix16.h"
 #include "fixextra.h"
 #include "params.h"
 #include "param_generator/param_gen.h"
 #include "safety.h"
-#include "pwm.h"
 #include "sensors.h"
 #include "estimator.h"
 #include "controller.h"
 #include "mixer.h"
+
+#include "pwm.h"
 
 #include <stdio.h>
 
@@ -48,7 +46,6 @@ state_t _state_estimator;
 command_input_t _control_input;
 int32_t _pwm_output[8];
 
-static uint8_t comms_open_status_ = 0;
 static const uint8_t blank_array_[8] = {0,0,0,0,0,0,0,0};
 static const uint8_t blank_array_uid_[18] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
@@ -68,15 +65,11 @@ void communications_system_init(void) {
 	_lpq.timer_warn_full = 0;
 	_lpq.timer_param_warn_full = 0;
 
-	if( get_param_uint( PARAM_BAUD_RATE_0 ) > 0 ) {
-		Serial1 = uartOpen( USART1, NULL, get_param_uint(PARAM_BAUD_RATE_0 ), MODE_RXTX, SERIAL_NOT_INVERTED );
-		comm_set_open( COMM_PORT_0 );
-	}
+	if( get_param_uint( PARAM_BAUD_RATE_0 ) > 0 )
+		comms_init_port(COMM_PORT_0);
 
-	if( get_param_uint( PARAM_BAUD_RATE_1 ) > 0 ) {
-		Serial2 = uartOpen( USART2, NULL, get_param_uint( PARAM_BAUD_RATE_1 ), MODE_RXTX, SERIAL_NOT_INVERTED );
-		comm_set_open( COMM_PORT_1 );
-	}
+	if( get_param_uint( PARAM_BAUD_RATE_1 ) > 0 )
+		comms_init_port(COMM_PORT_1);
 
 	_ch_0_have_heartbeat = false;
 	_ch_1_have_heartbeat = false;
@@ -88,18 +81,6 @@ void communications_system_init(void) {
 
 	mavlink_set_proto_version(MAVLINK_COMM_0, 1);
 	mavlink_set_proto_version(MAVLINK_COMM_1, 1);
-}
-
-bool comm_is_open( uint8_t port ) {
-	return comms_open_status_ & port;
-}
-
-void comm_set_open( uint8_t port ) {
-	comms_open_status_ |= port;
-}
-
-void comm_set_closed( uint8_t port ) {
-	comms_open_status_ &= ~port;
 }
 
 /*
@@ -122,13 +103,11 @@ static void comm_wait_ready( mavlink_channel_t chan ) {
  * @param chan MAVLink channel to use, usually MAVLINK_COMM_0 = UART0
  * @param ch Character to send
  */
-void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
-	if( (chan == MAVLINK_COMM_0 ) && comm_is_open( COMM_PORT_0 ) ) {
-		//serialWrite(Serial1, ch);
-		uartWrite(Serial1, ch);
-	} else if( (chan == MAVLINK_COMM_1 ) && comm_is_open( COMM_PORT_1 ) ) {
-	 	//serialWrite(Serial2, ch);
-	 	uartWrite(Serial2, ch);
+void comm_send_ch( mavlink_channel_t chan, uint8_t ch ) {
+	if( chan == MAVLINK_COMM_0 ) {
+		comms_send(COMM_PORT_0, ch);
+	} else if( chan == MAVLINK_COMM_1 ) {
+		comms_send(COMM_PORT_1, ch);
 	}
 }
 
@@ -142,10 +121,10 @@ void mavlink_send_statustext(mavlink_channel_t chan, uint8_t severity, char* tex
 }
 
 void mavlink_send_broadcast_statustext(uint8_t severity, char* text) {
-	if( comm_is_open( COMM_PORT_0 ) )
+	if( comms_is_open( COMM_PORT_0 ) )
 		mavlink_send_statustext(MAVLINK_COMM_0, severity, text);
 
-	if( comm_is_open( COMM_PORT_1 ) )
+	if( comms_is_open( COMM_PORT_1 ) )
 		mavlink_send_statustext(MAVLINK_COMM_1, severity, text);
 }
 
@@ -216,10 +195,10 @@ static bool lpq_queue_msg_port( uint8_t port, mavlink_message_t *msg ) {
 	bool success = false;
 
 	//Only add in port if it is open
-	if( !comm_is_open(port & COMM_PORT_0) )
+	if( !comms_is_open(port & COMM_PORT_0) )
 		port &= ~COMM_PORT_0;
 
-	if( !comm_is_open(port & COMM_PORT_1) )
+	if( !comms_is_open(port & COMM_PORT_1) )
 		port &= ~COMM_PORT_1;
 
 	//Only add param if port is valid and there is room
@@ -258,10 +237,10 @@ bool lpq_queue_msg(mavlink_channel_t chan, mavlink_message_t *msg) {
 void lpq_queue_broadcast_msg(mavlink_message_t *msg) {
 	uint8_t port = 0;
 
-	if( comm_is_open( COMM_PORT_0 ) )
+	if( comms_is_open( COMM_PORT_0 ) )
 		port |= COMM_PORT_0;
 
-	if( comm_is_open( COMM_PORT_1 ) )
+	if( comms_is_open( COMM_PORT_1 ) )
 		port |= COMM_PORT_1;
 
 	lpq_queue_msg_port(port, msg);
@@ -271,10 +250,10 @@ static bool lpq_queue_param_port( uint8_t port, uint32_t index ) {
 	bool success = false;
 
 	//Only add in port if it is open
-	if( !comm_is_open(port & COMM_PORT_0) )
+	if( !comms_is_open(port & COMM_PORT_0) )
 		port &= ~COMM_PORT_0;
 
-	if( !comm_is_open(port & COMM_PORT_1) )
+	if( !comms_is_open(port & COMM_PORT_1) )
 		port &= ~COMM_PORT_1;
 
 	//Only add param if port is valid and there is room
@@ -832,7 +811,7 @@ void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 									   get_param_uint(PARAM_VERSION_FIRMWARE),
 									   0,
 									   get_param_uint(PARAM_VERSION_SOFTWARE),
-									   get_param_uint(PARAM_BOARD_REVISION),
+									   0,	//XXX: get_param_uint(PARAM_BOARD_REVISION),
 									   &blank_array_[0],
 									   &blank_array_[0],
 									   &blank_array_[0],

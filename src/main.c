@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include <stdarg.h>
+//#include <stdio.h>
+//#include <stdarg.h>
 
-#include "breezystm32.h"
 #include "params.h"
+#include "drv_status_io.h"
 #include "safety.h"
 #include "calibration.h"
 #include "sensors.h"
@@ -10,14 +10,12 @@
 #include "controller.h"
 #include "mixer.h"
 
+#include "drv_system.h"
+
 #include "mavlink/mavlink_types.h"
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 #include "mavlink_transmit.h"
-
-extern void SetSysClock(bool overclock);
-uint8_t _system_operation_control;
-control_timing_t _control_timing;
 
 system_status_t _system_status;
 
@@ -25,9 +23,7 @@ int main(void) {
 	_system_status.state = MAV_STATE_UNINIT;
 	_system_status.mode = MAV_MODE_PREFLIGHT;
 
-    SetSysClock(false);
-
-    systemInit();
+	system_init();
 
 	safety_request_state( MAV_STATE_BOOT );
 
@@ -43,6 +39,8 @@ void setup(void) {
 	params_init();
 
 	communications_system_init();
+
+	status_devices_init();
 
 	safety_init();
 
@@ -105,12 +103,14 @@ void loop(void) {
 	//==-- Timeout Checks
 	safety_run( micros() );
 
+	status_devices_run( micros() );
+
 	//==-- Control Process
 	control_run( micros() );
 
 	//==-- Send Motor Commands
 	//Convert outputs to correct layout and send PWM (and considers failsafes)
-	pwm_output();
+	pwm_output( micros() );
 
     //==-- loop time calculation
 	sensors_clock_update( micros() );

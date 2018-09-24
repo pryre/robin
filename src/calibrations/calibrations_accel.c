@@ -1,6 +1,7 @@
 #include "calibration.h"
-#include "sensors.h"
 #include "mavlink_system.h"
+#include "sensors.h"
+#include "drv_status_io.h"
 
 #include "safety.h"
 #include "fix16.h"

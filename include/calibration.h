@@ -105,7 +105,6 @@ typedef struct {
 	int32_t z_flat_av_sum;
 	int32_t z_up_av;
 	int32_t z_down_av;
-
 } calibration_gravity_data_t;
 
 typedef struct {
@@ -114,7 +113,7 @@ typedef struct {
 
 	bool waiting;
 
-	uint16_t acc1G;
+	//uint16_t acc1G;
 	fix16_t temp_scale;
 	fix16_t temp_shift;
 } calibration_accel_data_t;
@@ -148,4 +147,5 @@ bool calibrate_interference(void);
 bool calibrate_level_horizon(void);
 bool calibrate_magnetometer(void);
 bool calibrate_rc(void);
+bool calibrate_esc(void);
 

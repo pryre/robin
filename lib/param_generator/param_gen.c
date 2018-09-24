@@ -199,7 +199,6 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_OFFB_G0_TIMEOUT, 400000);
 	init_param_uint(PARAM_SENSOR_OFFB_G1_TIMEOUT, 400000);
 	init_param_uint(PARAM_SENSOR_PWM_CTRL_TIMEOUT, 400000);
-	init_param_uint(PARAM_BOARD_REVISION, NAZE32_REV);
 	init_param_uint(PARAM_VERSION_FIRMWARE, strtoll(GIT_VERSION_FLIGHT_STR, NULL, 16));
 	init_param_uint(PARAM_VERSION_SOFTWARE, strtoll(GIT_VERSION_OS_STR, NULL, 16));
 	init_param_uint(PARAM_RELAXED_PARAM_SET, 1);
@@ -400,7 +399,6 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"TIMEOUT_OB_G0",
 	"TIMEOUT_OB_G1",
 	"TIMEOUT_OB_PWM",
-	"BOARD_REV",
 	"VERSION_FW",
 	"VERSION_SW",
 	"RELAXED_SET",

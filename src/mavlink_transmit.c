@@ -81,8 +81,8 @@ void communication_transmit(uint32_t time_us) {
 	// otherwise we risk overloading the serial buffer. This
 	// will also offset the message streams so they are all staggered
 	//Disable checking for outputs if port disabled
-	bool message_sent_comm_0 = !comm_is_open( COMM_PORT_0 );
-	bool message_sent_comm_1 = !comm_is_open( COMM_PORT_1 );
+	bool message_sent_comm_0 = !comms_is_open( COMM_PORT_0 );
+	bool message_sent_comm_1 = !comms_is_open( COMM_PORT_1 );
 
 	for (int i = 0; i < MAVLINK_STREAM_COUNT; i++) {
 

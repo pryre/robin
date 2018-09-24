@@ -1,0 +1,110 @@
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "drv_comms.h"
+#include "params.h"
+
+#include "breezystm32.h"
+#include "gpio.h"
+#include "serial.h"
+#include "serial_uart.h"
+
+serialPort_t* Serial1;
+serialPort_t* Serial2;
+
+static comms_port_t comms_open_status_ = 0;
+
+void comms_set_open( comms_port_t port ) {
+	comms_open_status_ |= port;
+}
+
+void comms_set_closed( comms_port_t port ) {
+	comms_open_status_ &= ~port;
+}
+
+bool comms_init_port( comms_port_t port ) {
+	bool success = false;
+
+	switch(port) {
+		case COMM_PORT_0: {
+			Serial1 = uartOpen( USART1, NULL, get_param_uint(PARAM_BAUD_RATE_0 ), MODE_RXTX, SERIAL_NOT_INVERTED );
+			success = true;
+
+			break;
+		}
+		case COMM_PORT_1: {
+			Serial2 = uartOpen( USART2, NULL, get_param_uint(PARAM_BAUD_RATE_1 ), MODE_RXTX, SERIAL_NOT_INVERTED );
+			success = true;
+
+			break;
+		}
+	}
+
+	if(success)
+		comms_set_open( port );
+
+	return success;
+}
+
+bool comms_is_open( comms_port_t port ) {
+	return comms_open_status_ & port;
+}
+
+void comms_send(comms_port_t port, uint8_t ch) {
+	if( comms_is_open( port ) ) {
+		switch(port) {
+			case COMM_PORT_0: {
+				//serialWrite(Serial1, ch);
+				uartWrite(Serial1, ch);
+				break;
+			}
+			case COMM_PORT_1: {
+				//serialWrite(Serial2, ch);
+				uartWrite(Serial2, ch);
+				break;
+			}
+		}
+	}
+}
+
+bool comms_waiting( comms_port_t port ) {
+	bool waiting = false;
+
+	if( comms_is_open( port ) ) {
+		switch(port) {
+			case COMM_PORT_0: {
+				waiting = uartTotalRxBytesWaiting( Serial1 );
+				break;
+			}
+			case COMM_PORT_1: {
+				waiting = uartTotalRxBytesWaiting( Serial2 );
+				break;
+			}
+		}
+	}
+
+	return waiting;
+}
+
+uint8_t comms_recv( comms_port_t port ) {
+	uint8_t ch = 0;
+
+	if( comms_is_open( port ) ) {
+		switch(port) {
+			case COMM_PORT_0: {
+				ch = uartRead(Serial1);
+				break;
+			}
+			case COMM_PORT_1: {
+				ch = uartRead(Serial2);
+				break;
+			}
+		}
+	}
+
+	return ch;
+
+}
+
+
+

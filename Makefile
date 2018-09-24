@@ -18,7 +18,7 @@
 # along with this code.  If not, see <http://www.gnu.org/licenses/>.
 
 ###############################################################################
-NAZE32_REV		?= 6
+BOARD_TYPE		?= posix
 
 SERIAL_DEVICE	?= /dev/ttyUSB0
 SERIAL_BAUD		?= 921600
@@ -35,7 +35,7 @@ F1_DIR		= $(BREEZY_DIR)/f1
 
 include makefile.project
 
-TARGET		?= $(PROJECT_NAME)_naze32_r$(NAZE32_REV)
+TARGET		?= $(PROJECT_NAME)_$(BOARD_TYPE)
 
 # Compile-time options
 OPTIONS		?=

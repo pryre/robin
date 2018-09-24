@@ -235,7 +235,6 @@ TIMEOUT_OB_PWM | uint | Time that new data must be read before a PWM control tim
 
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
-BOARD_REV | uint | A compile-time selector for what version of the board to setup sensors for |  | | | False
 VERSION_FW | uint | A compile-time stamp for the flight firmware version |  | | | False
 VERSION_SW | uint | A compile-time stamp for the OS firmware version |  | | | False
 RELAXED_SET | uint | Allows for 'unit' type parameters to be set when send as 'int' type | 1 | 0 / 1 | boolean | False

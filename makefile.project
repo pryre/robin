@@ -2,18 +2,18 @@ PROJECT_NAME = robin
 
 BUILD_REV_OK := 0
 
-ifeq ($(NAZE32_REV),5)
-	BUILD_REV_OK := 1
+ifeq ($(BOARD_TYPE),naze32_rev5)
+BUILD_REV_OK := 1
 endif
-ifeq ($(NAZE32_REV),6)
-	BUILD_REV_OK := 1
+ifeq ($(BOARD_TYPE),naze32_rev6)
+BUILD_REV_OK := 1
 endif
 
 ifeq ($(BUILD_REV_OK),0)
-$(error Unsupported board revision: $(NAZE32_REV))
+$(error Unsupported board revision: $(BOARD_TYPE))
 endif
 
-$(info Building for board revision: $(NAZE32_REV))
+$(info Building for board revision: $(BOARD_TYPE))
 
 GEN_PARAMS := $(shell python3 lib/param_generator/gen_params.py >&2; echo $$?)
 #$(info $$GEN_PARAMS is [${GEN_PARAMS}])
@@ -29,18 +29,11 @@ EEPROM_CONF_VERSION := $(shell date +'%s')
 
 # Contains your setup() and loop()
 PROJECT_SRC_FILES = ./src/main.c \
-					./src/flash.c \
 					./src/params.c \
 					./src/safety.c \
 					./src/mavlink_system.c \
 					./src/mavlink_receive.c \
 					./src/mavlink_transmit.c \
-					./src/drv_pwm.c \
-					./src/drv_mpu.c \
-					./src/drv_mpu6050.c \
-					./src/drv_mpu6500.c \
-					./src/drv_hmc5883l.c \
-					./src/drv_bmp280.c \
 					./src/calibration.c \
 					./src/sensors.c \
 					./src/estimator.c \
@@ -81,7 +74,40 @@ PROJECT_SRC_FILES += ./src/calibrations/calibrations_accel.c \
 					 ./src/calibrations/calibrations_interference.c \
 					 ./src/calibrations/calibrations_level_horizon.c \
 					 ./src/calibrations/calibrations_magnetometer.c \
-					 ./src/calibrations/calibrations_rc.c
+					 ./src/calibrations/calibrations_rc.c\
+					 ./src/calibrations/calibrations_esc.c
+
+# Board specific drivers
+ifeq ($(BOARD_TYPE),naze32_rev5)
+PROJECT_SRC_FILES += ./src/drivers/naze32_common/drv_system.c \
+					 ./src/drivers/naze32_common/drv_status_io.c \
+					 ./src/drivers/naze32_common/drv_flash.c \
+					 ./src/drivers/naze32_common/drv_comms.c \
+					 ./src/drivers/naze32_common/drv_pwm.c \
+					 ./src/drivers/naze32_common/drv_hmc5883l.c \
+					 ./src/drivers/naze32_common/drv_bmp280.c \
+					 ./src/drivers/naze32_common/drv_mpu.c \
+					 ./src/drivers/naze32_common/drv_mpu6050.c \
+					 ./src/drivers/naze32_common/drv_mpu6500.c \
+					 ./src/drivers/naze32_rev5/drv_imu.c \
+					 ./src/drivers/naze32_rev5/drv_baro.c \
+					 ./src/drivers/naze32_rev5/drv_mag.c
+endif
+ifeq ($(BOARD_TYPE),naze32_rev6)
+PROJECT_SRC_FILES += ./src/drivers/naze32_common/drv_system.c \
+					 ./src/drivers/naze32_common/drv_status_io.c \
+					 ./src/drivers/naze32_common/drv_flash.c \
+					 ./src/drivers/naze32_common/drv_comms.c \
+					 ./src/drivers/naze32_common/drv_pwm.c \
+					 ./src/drivers/naze32_common/drv_hmc5883l.c \
+					 ./src/drivers/naze32_common/drv_bmp280.c \
+					 ./src/drivers/naze32_common/drv_mpu.c \
+					 ./src/drivers/naze32_common/drv_mpu6050.c \
+					 ./src/drivers/naze32_common/drv_mpu6500.c \
+					 ./src/drivers/naze32_rev6/drv_imu.c \
+					 ./src/drivers/naze32_rev6/drv_baro.c \
+					 ./src/drivers/naze32_rev6/drv_mag.c
+endif
 
 # Parameter Generation
 PROJECT_DIR_PARAM_GEN = ./lib/param_generator

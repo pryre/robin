@@ -1,17 +1,19 @@
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "breezystm32.h"
-#include "drv_pwm.h"
 #include "mavlink_system.h"
 #include "mavlink/mavlink_types.h"
 #include "fix16.h"
 #include "fixextra.h"
 
+#include "drv_pwm.h"
 #include "mixer.h"
 #include "params.h"
 #include "safety.h"
 #include "controller.h"
+#include "calibration.h"
 
 #include "io_type.h"
 
@@ -174,30 +176,30 @@ void mixer_init() {
 		if (_actuator_type_map[i] == IO_TYPE_N) {
 			strncat(text_map,
 					 "-",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);
 		} else if(_actuator_type_map[i] == IO_TYPE_OD) {
 			strncat(text_map,
 					 "D",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);
 		} else if(_actuator_type_map[i] == IO_TYPE_OM) {
 			strncat(text_map,
 					 "M",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);
 		} else if (_actuator_type_map[i] == IO_TYPE_OS) {
 			strncat(text_map,
 					 "S",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);
 		} else {
 			strncat(text_map,
 					 "?",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);
 		}
 
 		//Prettify output
 		if(i < (MIXER_NUM_MOTORS - 1) ) {
-			strncat(text_map, ",", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			strncat(text_map, ",", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);
 		} else {
-			strncat(text_map, "]", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
+			strncat(text_map, "]", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1);
 		}
 	}
 
@@ -235,33 +237,7 @@ void pwm_init() {
 	mixer_clear_outputs();
 
 	//==-- Perform remaining PWM setup tasks
-	if( get_param_uint( PARAM_DO_ESC_CAL ) ) {
-		mavlink_send_broadcast_statustext(MAV_SEVERITY_NOTICE, "[MIXER] Performing ESC calibration");
-
-		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
-			if (_mixer_to_use->output_type[i] == IO_TYPE_OM)
-				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MAX ) );
-
-		LED1_OFF;
-		for (uint8_t i = 0; i < 20; i++) {
-			LED0_TOGGLE;
-			delay(100);
-		}
-
-		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
-			if (_mixer_to_use->output_type[i] == IO_TYPE_OM)
-				pwmWriteMotor(i, get_param_uint( PARAM_MOTOR_PWM_MIN ) );
-
-		LED0_OFF;
-		LED1_OFF;
-
-		status_buzzer_success();
-		mavlink_send_broadcast_statustext(MAV_SEVERITY_INFO, "[MIXER] ESC calibration complete!");
-
-		set_param_uint( PARAM_DO_ESC_CAL, 0 );
-
-		write_params();
-	}
+	calibrate_esc();
 }
 
 //Direct write to the motor with failsafe checks
@@ -335,18 +311,18 @@ static void write_aux_digital(uint8_t index, bool value, bool respect_arm, bool 
 	write_output_pwm(index, pwm_act_out, pwm_act_disarm);
 }
 
-static bool motor_test_in_progress( void ) {
+static bool motor_test_in_progress( uint32_t time_now ) {
 	bool in_progress = false;
 
 	//Handle motor testing
 	if(_motor_test.start > 0) {
 		if( !safety_switch_engaged() && !safety_is_armed() ) {
 			//Check to see if the test should move onto next motor or end
-			if( micros() > (_motor_test.start + _motor_test.duration) ) {
+			if( time_now > (_motor_test.start + _motor_test.duration) ) {
 				//If there are motors left to test
 				if( (_motor_test.test_all) &&
 					(_motor_test.motor_step < (MIXER_NUM_MOTORS - 1) ) ) {
-						_motor_test.start = micros();
+						_motor_test.start = time_now;
 						_motor_test.motor_step++;
 
 						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
@@ -363,7 +339,7 @@ static bool motor_test_in_progress( void ) {
 			}
 
 			//If test in progress
-			if( micros() < (_motor_test.start + _motor_test.duration) ) {
+			if( time_now < (_motor_test.start + _motor_test.duration) ) {
 				in_progress = true;
 
 				//Override mixer inputs for all motors to set to 0
@@ -389,8 +365,8 @@ static bool motor_test_in_progress( void ) {
 }
 
 //Used to send a PWM while
-void pwm_output() {
-	bool test_running = motor_test_in_progress();
+void pwm_output( uint32_t time_now ) {
+	bool test_running = motor_test_in_progress( time_now );
 
 	if(_mixer_to_use->mixer_ok) {
 		for (int8_t i=0; i<MIXER_NUM_MOTORS; i++) {
