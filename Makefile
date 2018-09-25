@@ -22,6 +22,7 @@ BUILD_TYPE		?= posix
 
 SERIAL_DEVICE	?= /dev/ttyUSB0
 SERIAL_BAUD		?= 921600
+SERIAL_DEVICE_2 ?=
 ###############################################################################
 
 ARCH_FLAGS	= -DFIXMATH_NO_CACHE
@@ -201,7 +202,7 @@ reflash_$(TARGET): $(TARGET_IMG) mavlink_bootloader flash_$(TARGET)
 run: run_$(TARGET)
 
 run_$(TARGET): $(TARGET_IMG)
-	@exec ./lib/scripts/sitl_run.sh $(TARGET_IMG)
+	@exec ./lib/scripts/sitl_run.sh $(TARGET_IMG) $(SERIAL_DEVICE) $(SERIAL_DEVICE_2)
 
 listen:
 	#picocom $(SERIAL_DEVICE) -b $(SERIAL_BAUD)
