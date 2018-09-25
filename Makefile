@@ -24,16 +24,28 @@ SERIAL_DEVICE	?= /dev/ttyUSB0
 SERIAL_BAUD		?= 921600
 ###############################################################################
 
-ARCH_FLAGS	= -DFIXMATH_NO_CACHE \
-			  -std=gnu11
+ARCH_FLAGS	= -DFIXMATH_NO_CACHE
 
 # In some cases, %.s regarded as intermediate file, which is actually not.
 # This will prevent accidental deletion of startup code.
 .PRECIOUS: %.s
 
-include makefiles/makefile.common
+# Working directories
+ROOT		 = ..
+HERE         = .
+SRC_DIR		 = $(ROOT)
+OBJECT_DIR	 = $(HERE)/build
+BIN_DIR		 = $(HERE)/build
 
 TARGET		?= $(PROJECT_NAME)_$(BUILD_TYPE)
+
+TARGET_BIN	 = $(BIN_DIR)/$(TARGET).bin
+TARGET_HEX	 = $(BIN_DIR)/$(TARGET).hex
+TARGET_ELF	 = $(BIN_DIR)/$(TARGET).elf
+TARGET_OBJS	 = $(addsuffix .o,$(addprefix $(OBJECT_DIR)/$(TARGET)/,$(basename $($(TARGET)_SRC))))
+TARGET_MAP   = $(OBJECT_DIR)/$(TARGET).map
+
+include makefiles/makefile.common
 
 # Compile-time options
 OPTIONS		?=
@@ -44,15 +56,6 @@ DEBUG		?=
 ###############################################################################
 # Things that need to be maintained as the source changes
 #
-
-# Working directories
-ROOT		 = ..
-HERE         = .
-SRC_DIR		 = $(ROOT)
-OBJECT_DIR	 = $(HERE)/build
-BIN_DIR		 = $(HERE)/build
-
-ARCH = 1
 
 # Source files common to all targets
 $(TARGET)_SRC = $(PROJECT_SRC_FILES) \
@@ -123,29 +126,33 @@ LDFLAGS	= $(ARCH_FLAGS) \
 ###############################################################################
 
 #
-# Things we will build
+# Things we can build
 #
+TARGET_BUILD_ID ?= hex
+$(info Build target: $(TARGET_BUILD_ID))
 
-TARGET_BIN	 = $(BIN_DIR)/$(TARGET).bin
-TARGET_HEX	 = $(BIN_DIR)/$(TARGET).hex
-TARGET_ELF	 = $(BIN_DIR)/$(TARGET).elf
-TARGET_OBJS	 = $(addsuffix .o,$(addprefix $(OBJECT_DIR)/$(TARGET)/,$(basename $($(TARGET)_SRC))))
-TARGET_MAP   = $(OBJECT_DIR)/$(TARGET).map
+ifeq ($(findstring bin,$(TARGET_BUILD_ID)),bin)
+	TARGET_IMG = $(TARGET_BIN)
+endif
+ifeq ($(findstring hex,$(TARGET_BUILD_ID)),hex)
+	TARGET_IMG = $(TARGET_HEX)
+endif
+ifeq ($(findstring elf,$(TARGET_BUILD_ID)),elf)
+	TARGET_IMG = $(TARGET_ELF)
+endif
 
-TARGET_IMG = $(TARGET_HEX)
-
-DO_FLASH  = stm32flash -w $(TARGET_HEX) -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+# Set up for the default build target
+.DEFAULT_GOAL := $(TARGET_IMG)
 
 # List of buildable ELF files and their object dependencies.
 # It would be nice to compute these lists, but that seems to be just beyond make.
-
 $(TARGET_BIN): $(TARGET_ELF)
 		$(V0) $(OBJCOPY) -O binary $< $@
 
 $(TARGET_HEX): $(TARGET_ELF)
 	$(OBJCOPY) -O ihex --set-start 0x8000000 $< $@
 
-$(TARGET_ELF):  $(TARGET_OBJS)
+$(TARGET_ELF): $(TARGET_OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 MKDIR_OBJDIR = @mkdir -p $(dir $@)
@@ -181,7 +188,7 @@ flash_$(TARGET): $(TARGET_IMG)
 #	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb -ixon
 #	echo -n 'R' >$(SERIAL_DEVICE)
 #	sleep 1
-	$(DO_FLASH)
+	stm32flash -w $(TARGET_HEX) -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
 mavlink_bootloader:
 	./lib/scripts/reboot_bootloader --device $(SERIAL_DEVICE) --baudrate $(SERIAL_BAUD)
@@ -191,10 +198,11 @@ reflash: reflash_$(TARGET)
 
 reflash_$(TARGET): $(TARGET_IMG) mavlink_bootloader flash_$(TARGET)
 
-unbrick: unbrick_$(TARGET)
+run: run_$(TARGET)
 
-unbrick_$(TARGET): $(TARGET_IMG)
-	$(DO_FLASH)
+run_$(TARGET): $(TARGET_IMG)
+	@chmod +x $(TARGET_IMG)
+	exec $(TARGET_IMG)
 
 listen:
 	#picocom $(SERIAL_DEVICE) -b $(SERIAL_BAUD)

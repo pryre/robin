@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "io_type.h"
 #include "drivers/drv_pwm.h"
 

@@ -20,8 +20,8 @@
  */
 
 
-#include <breezystm32.h>
-#include <drivers/naze32_common/drv_mpu.h>
+#include "breezystm32.h"
+#include "drivers/naze32_common/drv_mpu.h"
 
 #include <math.h>
 

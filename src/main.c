@@ -1,14 +1,15 @@
-//#include <stdio.h>
+#include <stdio.h>
 //#include <stdarg.h>
 
-#include "params.h"
 #include "safety.h"
+#include "params.h"
 #include "calibration.h"
 #include "sensors.h"
 #include "estimator.h"
 #include "controller.h"
 #include "mixer.h"
 
+#include "drivers/drv_system.h"
 #include "drivers/drv_status_io.h"
 #include "drivers/drv_system.h"
 
@@ -19,6 +20,7 @@
 
 system_status_t _system_status;
 
+
 void setup(void);
 void loop(void);
 
@@ -27,15 +29,14 @@ int main(void) {
 	_system_status.mode = MAV_MODE_PREFLIGHT;
 
 	system_init();
-
 	safety_request_state( MAV_STATE_BOOT );
 
     setup();
 
 	safety_request_state( MAV_STATE_STANDBY );
 
-    while (true)
-        loop();
+	while (true)
+		loop();
 }
 
 void setup(void) {
@@ -108,4 +109,7 @@ void loop(void) {
 
     //==-- loop time calculation
 	sensors_clock_update( system_micros() );
+
+    //==-- Loop rate limiting (if required)
+	system_rate_limit();
 }

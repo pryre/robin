@@ -122,7 +122,7 @@ void mixer_init() {
 		default: {
 			_mixer_to_use = &mixer_none;
 			set_param_uint(PARAM_MAV_TYPE, MAV_TYPE_GENERIC);
-			mavlink_queue_broadcast_error("[MIXER] Unknown mixer! Disabling!");
+			mavlink_queue_broadcast_error("[MIXER] Unknown mixer, disabling!");
 
 			break;
 		}

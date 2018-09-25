@@ -8,6 +8,8 @@
 extern void SetSysClock(bool overclock);
 
 void system_init(void) {
+	system_debug_print("--== robin ==--");
+
     SetSysClock(false);
 
     systemInit();
@@ -29,4 +31,12 @@ void system_reset(void) {
 
 void system_bootloader(void) {
 	systemResetToBootloader();
+}
+
+void system_debug_print( char *msg ) {
+	//XXX: We don't have a debug CLI
+}
+
+void system_rate_limit(void) {
+	//XXX: Not required for naze32
 }

@@ -111,16 +111,21 @@ void comm_send_ch( mavlink_channel_t chan, uint8_t ch ) {
 	}
 }
 
+static void mavlink_debug_cli_message( uint8_t severity, char* text ) {
+	system_debug_print(text);
+}
+
 //==-- On-demand messages
 void mavlink_send_statustext(mavlink_channel_t chan, uint8_t severity, char* text) {
 	//comm_wait_ready(port);
-
 	mavlink_msg_statustext_send(chan,
 								severity,
 								&text[0]);
 }
 
 void mavlink_send_broadcast_statustext(uint8_t severity, char* text) {
+	mavlink_debug_cli_message(severity, text);
+
 	if( comms_is_open( COMM_PORT_0 ) )
 		mavlink_send_statustext(MAVLINK_COMM_0, severity, text);
 
@@ -744,6 +749,8 @@ void mavlink_prepare_statustext(mavlink_message_t *msg, uint8_t severity, char* 
 
 //Broadcasts an notice to all open comm channels
 void mavlink_queue_broadcast_info(char* text) {
+	mavlink_debug_cli_message(MAV_SEVERITY_INFO, text);
+
 	mavlink_message_t msg;
 	mavlink_prepare_statustext(&msg, MAV_SEVERITY_INFO, text);
 
@@ -752,6 +759,8 @@ void mavlink_queue_broadcast_info(char* text) {
 
 //Broadcasts an notice to all open comm channels
 void mavlink_queue_broadcast_notice(char* text) {
+	mavlink_debug_cli_message(MAV_SEVERITY_NOTICE, text);
+
 	mavlink_message_t msg;
 	mavlink_prepare_statustext(&msg, MAV_SEVERITY_NOTICE, text);
 
@@ -760,6 +769,8 @@ void mavlink_queue_broadcast_notice(char* text) {
 
 //Broadcasts an error to all open comm channels
 void mavlink_queue_broadcast_error(char* text) {
+	mavlink_debug_cli_message(MAV_SEVERITY_ERROR, text);
+
 	mavlink_message_t msg;
 	mavlink_prepare_statustext(&msg, MAV_SEVERITY_ERROR, text);
 
@@ -877,7 +888,7 @@ void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index) {
 									 index);
 	} else {
 		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-		snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[PARAM] Unknown paramater type found: %d", index);
+		snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[PARAM] Unknown paramater type found: %lu", (unsigned long)index);
 		mavlink_queue_broadcast_error(text);
 	}
 }

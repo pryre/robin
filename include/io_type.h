@@ -2,6 +2,8 @@
 
 #define PWM_MAX_PORTS 14
 
+#include <stdint.h>
+
 typedef enum {
 	IO_TYPE_N = 0,	//None
 	IO_TYPE_IP,		//Input PPM
