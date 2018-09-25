@@ -30,8 +30,6 @@ static void initEEPROM(void) {
 
 static bool validEEPROM(void) {
 	const params_t *temp = (const params_t *)FLASH_WRITE_ADDR;
-	const uint8_t *p;
-	uint8_t chk = 0;
 
 	// check version number
 	if (_eeprom_version != temp->version)
@@ -42,6 +40,9 @@ static bool validEEPROM(void) {
 		return false;
 
 	// verify integrity of temporary copy
+	const uint8_t *p;
+	uint8_t chk = 0;
+
 	for (p = (const uint8_t *)temp; p < ((const uint8_t *)temp + sizeof(params_t)); p++)
 		chk ^= *p;
 
@@ -67,18 +68,20 @@ static bool readEEPROM(void) {
 static bool writeEEPROM(void) {
 	FLASH_Status status;
 
-	// Recalculate checksum before writing
-	uint8_t chk = 0;
-	const uint8_t *p;
-
-	for (p = (const uint8_t *)&_params; p < ((const uint8_t *)&_params + sizeof(params_t)); p++)
-		chk ^= *p;
-
-	// Prepare checksum/version constants
+	//Prepare checksum/version constants
 	_params.version = _eeprom_version;
 	_params.size = sizeof(params_t);
 	_params.magic_be = 0xBE;
 	_params.magic_ef = 0xEF;
+	_params.chk = 0;
+
+	//Recalculate checksum before writing
+	const uint8_t *p;
+	uint8_t chk = 0;
+
+	for (p = (const uint8_t *)&_params; p < ((const uint8_t *)&_params + sizeof(params_t)); p++)
+		chk ^= *p;
+
 	_params.chk = chk;
 
 	// write it

@@ -5,6 +5,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void system_init(void) {
 	system_debug_print("--== robin ==--");
@@ -25,11 +26,11 @@ void system_pause_ms(uint32_t ms) {
 }
 
 void system_reset(void) {
-
+	exit(0);
 }
 
 void system_bootloader(void) {
-
+	exit(0);
 }
 
 void system_debug_print( char *msg ) {

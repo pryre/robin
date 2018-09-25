@@ -16,8 +16,6 @@ void drv_flash_init( void ) {
 
 static bool validEEPROM(uint8_t *buffer) {
 	const params_t *temp = (const params_t *)buffer;
-	const uint8_t *p;
-	uint8_t chk = 0;
 
 	// check version number
 	if (_eeprom_version != temp->version) {
@@ -32,6 +30,9 @@ static bool validEEPROM(uint8_t *buffer) {
 	}
 
 	// verify integrity of temporary copy
+	const uint8_t *p;
+	uint8_t chk = 0;
+
 	for (p = (const uint8_t *)temp; p < ((const uint8_t *)temp + sizeof(params_t)); p++)
 		chk ^= *p;
 
@@ -40,6 +41,7 @@ static bool validEEPROM(uint8_t *buffer) {
 		system_debug_print("[PARAM] EEPROM not valid (checksum)");
 		return false;
 	}
+
 	// looks good, let's roll!
 	return true;
 }
@@ -77,22 +79,23 @@ bool drv_flash_read( void ) {
 bool drv_flash_write( void ) {
 	bool success = false;
 
-	// Recalculate checksum before writing
-	uint8_t chk = 0;
-	const uint8_t *p;
-
-	// Prepare checksum/version constants
+	//Prepare checksum/version constants
 	_params.version = _eeprom_version;
 	_params.size = sizeof(params_t);
 	_params.magic_be = 0xBE;
 	_params.magic_ef = 0xEF;
+	_params.chk = 0;
+
+	//Recalculate checksum before writing
+	const uint8_t *p;
+	uint8_t chk = 0;
 
 	for (p = (const uint8_t *)&_params; p < ((const uint8_t *)&_params + sizeof(params_t)); p++)
 		chk ^= *p;
 
 	_params.chk = chk;
 
-	// Write to file
+	//Write to file
 	FILE *fp;
 
 	fp = fopen("robin_posix_eeprom.bin","wb");
