@@ -66,19 +66,19 @@ static bool readEEPROM(void) {
 
 static bool writeEEPROM(void) {
 	FLASH_Status status;
+
+	// Recalculate checksum before writing
 	uint8_t chk = 0;
 	const uint8_t *p;
 
-	// prepare checksum/version constants
+	for (p = (const uint8_t *)&_params; p < ((const uint8_t *)&_params + sizeof(params_t)); p++)
+		chk ^= *p;
+
+	// Prepare checksum/version constants
 	_params.version = _eeprom_version;
 	_params.size = sizeof(params_t);
 	_params.magic_be = 0xBE;
 	_params.magic_ef = 0xEF;
-	_params.chk = 0;
-
-	// recalculate checksum before writing
-	for (p = (const uint8_t *)&_params; p < ((const uint8_t *)&_params + sizeof(params_t)); p++)
-	chk ^= *p;
 	_params.chk = chk;
 
 	// write it

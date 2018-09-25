@@ -9,6 +9,8 @@ function cleanup() {
     exit 0
 }
 
+sudo -v
+
 ROBIN_SITL=../$1
 SERIAL_PORT_0=$2
 SERIAL_PORT_1=$3
