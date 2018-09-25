@@ -34,8 +34,7 @@ void system_bootloader(void) {
 }
 
 void system_debug_print( char *msg ) {
-	printf( msg );
-	printf( "\n" );
+	puts( msg );
 }
 
 void system_rate_limit(void) {

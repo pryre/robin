@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function cleanup() {
+cleanup() {
     # perform cleanup here
     echo "Shutting down SITL"
 
@@ -14,6 +14,13 @@ sudo -v
 ROBIN_SITL=../$1
 SERIAL_PORT_0=$2
 SERIAL_PORT_1=$3
+
+
+# Initialise trap to call cleanup() when CTRL+C (SIGINT) is received
+trap "cleanup" 2
+echo "+----------------------+"
+echo "| Press CTRL+C to exit |"
+echo "+----------------------+"
 
 cd ./build
 
@@ -44,9 +51,6 @@ bash -c "exec -a 'robin_sitl' ../$1" &
 PID_ROBIN=$!
 echo "Started robin ($PID_ROBIN)"
 
-# Initialise trap to call cleanup() when CTRL+C (SIGINT) is received
-trap "cleanup" 2
-
-read -p "Press any key to exit: " -n1 -s
+sleep infinity
 
 cleanup

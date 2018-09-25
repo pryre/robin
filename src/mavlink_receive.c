@@ -51,22 +51,10 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 					mavlink_handle_command_long( port, &msg, &status );
 					break;
 				}
-				/*
 				case MAVLINK_MSG_ID_SET_MODE: {
-					uint8_t base_mode = mavlink_msg_set_mode_get_base_mode(&msg);
-					uint32_t custom_mode = mavlink_msg_set_mode_get_custom_mode(&msg);
-
-					if( base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED ) {
-						if( !safety_request_control_mode(compat_decode_px4_main_mode(custom_mode)) ) {
-							mavlink_queue_broadcast_error("[SAFETY] Rejecting mode switch");
-						}
-					} else {
-						mavlink_send_broadcast_statustext( MAV_SEVERITY_ERROR, "[SAFETY] Unsupported mode" );
-					}
-
+					mavlink_handle_set_mode( port, &msg, &status );
 					break;
 				}
-				*/
 				case MAVLINK_MSG_ID_SET_ATTITUDE_TARGET: {
 					mavlink_handle_set_attitude_target( port, &msg, &status );
 					break;

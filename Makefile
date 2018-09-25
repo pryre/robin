@@ -96,6 +96,8 @@ DEBUG_FLAGS	 = -ggdb3
 #	  in the libfixmath and libfixmatrix compilations
 #XXX: (-Wno-unused-parameter) used to disable warnings
 #	  for driver / generic function parameters
+#XXX: (-Wno-unused-result) used to disable warnings about
+#	  not using return values for some functions
 CFLAGS	 = $(ARCH_FLAGS) \
 		   $(LTO_FLAGS) \
 		   $(DEBUG_FLAGS) \
@@ -103,7 +105,7 @@ CFLAGS	 = $(ARCH_FLAGS) \
 		   $(addprefix -D,$(OPTIONS)) \
 		   $(addprefix -I,$(INCLUDE_DIRS)) \
 		   -Wall -pedantic -Wextra -Wshadow -Wunsafe-loop-optimizations \
-		   -Wno-char-subscripts -Wno-sign-compare -Wno-unused-parameter \
+		   -Wno-char-subscripts -Wno-sign-compare -Wno-unused-parameter -Wno-unused-result \
 		   -ffunction-sections \
 		   -fdata-sections \
 		   -D$(TARGET) \
