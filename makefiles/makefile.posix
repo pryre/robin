@@ -9,6 +9,4 @@ TARGET_BUILD_ID = elf
 # POSIX specific drivers
 PROJECT_SRC_FILES += $(wildcard src/drivers/posix/*.c)
 
-$(info $(wildcard src/drivers/posix/*.c))
-
 ARCH_FLAGS += -std=gnu11

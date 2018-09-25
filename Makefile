@@ -201,8 +201,7 @@ reflash_$(TARGET): $(TARGET_IMG) mavlink_bootloader flash_$(TARGET)
 run: run_$(TARGET)
 
 run_$(TARGET): $(TARGET_IMG)
-	@chmod +x $(TARGET_IMG)
-	exec $(TARGET_IMG)
+	@exec ./lib/scripts/sitl_run.sh $(TARGET_IMG)
 
 listen:
 	#picocom $(SERIAL_DEVICE) -b $(SERIAL_BAUD)

@@ -3,6 +3,7 @@
 #include "drivers/drv_system.h"
 
 #include <time.h>
+#include <sys/time.h>
 #include <stdio.h>
 
 void system_init(void) {
@@ -10,7 +11,9 @@ void system_init(void) {
 }
 
 uint32_t system_micros(void) {
-	return 0;
+	struct timeval currentTime;
+	gettimeofday(&currentTime, NULL);
+	return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
 }
 
 void system_pause_ms(uint32_t ms) {

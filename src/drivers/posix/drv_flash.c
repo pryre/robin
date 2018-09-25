@@ -9,7 +9,7 @@ void drv_flash_init( void ) {
 }
 
 bool drv_flash_read( void ) {
-	return true;
+	return false;
 }
 
 bool drv_flash_write( void ) {
