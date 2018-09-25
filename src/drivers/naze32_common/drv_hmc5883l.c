@@ -21,7 +21,7 @@
 
 
 #include <breezystm32.h>
-#include <drv_hmc5883l.h>
+#include <drivers/naze32_common/drv_hmc5883l.h>
 
 #include <math.h>
 

@@ -6,9 +6,10 @@
 #include "fixvector3d.h"
 #include "fixquat.h"
 #include "fix16.h"
-#include "breezystm32.h"
+//#include "breezystm32.h"
 
 #include "safety.h"
+#include "drivers/drv_pwm.h"
 
 #define SENSOR_RC_MIDSTICK 1500
 #define SENSOR_VMON_DIVIDER_NAZE32 _fc_11	//XXX: Naze32's use 10K:1k which gives a value of 11.0
@@ -111,6 +112,8 @@ typedef struct {
 typedef struct {
 	sensor_status_t status;
 
+	uint16_t raw[MAX_INPUTS];
+
 	uint16_t p_r;
 	uint16_t p_p;
 	uint16_t p_y;
@@ -135,9 +138,6 @@ typedef struct {
 typedef struct {
 	sensor_status_t status;
 
-	GPIO_TypeDef *gpio_p;
-	uint16_t pin;
-
 	bool state;			//Measured state
 	uint32_t period_us;	//Measured range
 
@@ -148,9 +148,6 @@ typedef struct {
 
 typedef struct {
 	sensor_status_t status;
-
-	GPIO_TypeDef *gpio_p;
-	uint16_t pin;
 
 	uint16_t state_raw;		//Measured state raw
 	fix16_t state_calc;		//Measured state
@@ -176,13 +173,8 @@ typedef struct {
 extern sensor_readings_t _sensors;
 
 // function declarations
-//void sensors_init_imu(void);
-void sensors_init_internal(void);
-void sensors_init_external(void);
-//void sensors_cal_init(void);
-bool sensors_read(void);
-bool i2c_job_queued(void);
-void sensors_clear_i2c(void);
+void sensors_init(void);
+bool sensors_read(uint32_t time_us);
 
 //void sensors_poll(void);
 uint32_t sensors_clock_ls_get(void);	//Get time at loop start
@@ -197,6 +189,6 @@ uint32_t sensors_clock_imu_int_get(void);	//Get the time of the latest imu inter
 
 void sensors_update_rc_cal(void);
 
-void sensors_poll(uint32_t time_us);
+//void sensors_poll(uint32_t time_us);
 
-bool sensors_update(uint32_t time_us);
+//bool sensors_update(uint32_t time_us);

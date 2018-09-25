@@ -8,7 +8,7 @@
 #include "safety.h"
 #include "params.h"
 
-#include "drv_status_io.h"
+#include "drivers/drv_status_io.h"
 
 #include "fix16.h"
 #include "fixvector3d.h"

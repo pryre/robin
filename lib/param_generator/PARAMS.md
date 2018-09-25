@@ -203,6 +203,7 @@ TIMESYNC_ALPHA | float | TODO - also check min-max values | 0.8 |  | [min:0.0, m
 CBRK_HIL | uint | Sensor circuit breaker to enable/disable HIL input (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
 CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
+CBRK_RC_SAFETY | uint | Sensor circuit breaker arming check for RC input (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CHK_RATE_MAG | float | Sensor update rate for magnetometer (set to 0 to disable, typical is 20Hz) | 0.0 | Hz | scalar | True
 CHK_RATE_BARO | float | Sensor update rate for barometer (set to 0 to disable, typical is 20Hz) | 0.0 | Hz | scalar | True
 CHK_RATE_SONAR | float | Sensor update rate for sonar (TODO) (set to 0 to disable, typical is 5Hz) | 0.0 | Hz | scalar | True

@@ -2,7 +2,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "drv_flash.h"
+#include "drivers/drv_flash.h"
+#include "drivers/drv_status_io.h"
+#include "drivers/drv_sensors.h"
+#include "drivers/drv_system.h"
 #include "sensors.h"
 #include "params.h"
 #include "mixer.h"
@@ -52,26 +55,26 @@ void init_param_fix16(param_id_t id, const fix16_t value) {
 
 // function definitions
 void params_init(void) {
-	initEEPROM();
+	drv_flash_init();
 
 	if ( !read_params() ) {
 		bool flasher = true;
 
 		for(uint32_t i=0; i<5; i++) {
 			if(flasher) {
-				digitalLo(LED0_GPIO, LED0_PIN);
-				digitalLo(LED1_GPIO, LED1_PIN);
+				status_led_arm_set(true);
+				status_led_heart_set(true);
 			} else {
-				digitalHi(LED0_GPIO, LED0_PIN);
-				digitalHi(LED1_GPIO, LED1_PIN);
+				status_led_arm_set(false);
+				status_led_heart_set(false);
 			}
 
 			flasher = !flasher;
-			delay(100);
+			system_pause_ms(100);
 		}
 
-		digitalHi(LED0_GPIO, LED0_PIN);
-		digitalHi(LED1_GPIO, LED1_PIN);
+		status_led_arm_set(false);
+		status_led_heart_set(false);
 
 		set_param_defaults();
 
@@ -90,29 +93,26 @@ void params_init(void) {
 }
 
 bool read_params(void) {
-	return readEEPROM();
+	return drv_flash_read();
 }
 
 bool write_params(void) {
 	bool success = false;
 	bool state_ok = false;
-	//XXX
 
 	//Deinit imu as writing EEPROM messes up the callback
 	if( (_system_status.state != MAV_STATE_UNINIT ) &&
 		(_system_status.state != MAV_STATE_BOOT ) ) {
 
-		sensors_clear_i2c();
+		drv_sensors_i2c_clear();
 
-		state_ok = safety_request_state( MAV_STATE_STANDBY );	//XXX: This used to be in the if loop below
+		state_ok = safety_request_state( MAV_STATE_STANDBY );
 	} else {
 		state_ok = true; //We are booting, so no need to check for state
 	}
 
-	//XXX
-
 	if( state_ok ) {
-		if( writeEEPROM() ) {
+		if( drv_flash_write() ) {
 			mavlink_send_broadcast_statustext(MAV_SEVERITY_INFO, "[PARAM] EEPROM written");
 			success = true;
 		} else {
@@ -121,15 +121,6 @@ bool write_params(void) {
 	} else {
 		mavlink_queue_broadcast_error("[SAFETY] Unable to enter standby, can't write params!");
 	}
-
-	//XXX
-	//Reinit imu as writing EEPROM messes up the callback
-	//As long as we're not in boot phase, as imu hasn't been setup yet
-	//if( (_system_status.state != MAV_STATE_UNINIT ) &&
-	//	(_system_status.state != MAV_STATE_BOOT ) ) {
-	//	sensors_init_imu();
-	//}
-	//XXX
 
 	return success;
 }

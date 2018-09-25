@@ -10,7 +10,7 @@
 #include "fix16.h"
 #include "fixextra.h"
 
-#include "drv_system.h"
+#include "drivers/drv_system.h"
 
 const mixer_t *_mixer_to_use;
 mixer_motor_test_t _motor_test;
@@ -55,10 +55,8 @@ MAV_RESULT mavlink_handle_command_long_do_motor_test( uint8_t port, float *param
 			//_system_status.sensors.pwm_control.count = get_param_uint(_system_status.sensors.pwm_control.param_stream_count);
 			//safety_update_sensor(&_system_status.sensors.pwm_control);
 
-			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
-			char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-			itoa(_motor_test.motor_step, mchar, 10);
-			strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+			snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[MIXER] Testing motor: %d", _motor_test.motor_step);
 			mavlink_queue_broadcast_notice(text);
 
 			command_result = MAV_RESULT_ACCEPTED;

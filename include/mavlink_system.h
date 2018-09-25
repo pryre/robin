@@ -11,7 +11,7 @@
 //#include "serial_uart.h"
 
 #include "mavlink/mavlink_types.h"
-#include "drv_comms.h"
+#include "drivers/drv_comms.h"
 
 /* Struct that stores the communication settings of this system.
    you can also define / alter these settings elsewhere, as long

@@ -328,7 +328,8 @@ def gen_c(params, filepath):
 
 	try:
 		# Prepare file headers
-		str_c = "#include \"params.h\"\n"
+		str_c = "#include <stdlib.h>\n"
+		str_c += "#include \"params.h\"\n"
 		str_c += "#include \"param_generator/param_gen.h\"\n"
 		str_c += "#include \"mavlink_system.h\"\n"
 		str_c += "#include \"mavlink_transmit.h\"\n"

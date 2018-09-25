@@ -21,7 +21,7 @@
 
 
 #include <breezystm32.h>
-#include <drv_mpu.h>
+#include <drivers/naze32_common/drv_mpu.h>
 
 #include <math.h>
 

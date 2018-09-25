@@ -475,7 +475,7 @@ void control_run( uint32_t now ) {
 		//Calculate timings for feedback
 		_control_timing.average_update = fix16_div(_fc_1000, fix16_from_int( (now - _control_timing.time_last) / 1000 ) );
 
-		_control_timing.time_last = micros();
+		_control_timing.time_last = now;
 	}
 }
 

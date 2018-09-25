@@ -1,10 +1,9 @@
-#include "breezystm32.h"
-
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
 #include "params.h"
-#include "drv_comms.h"
+#include "drivers/drv_comms.h"
+#include "drivers/drv_system.h"
 
 #include <stdio.h>
 //#include "fixextra.h"
@@ -128,12 +127,12 @@ void communication_receive(void) {
 	//XXX: Make sure the read step doesn't last more that 250us
 	//	   (means we might drop packets, but it won't lock the system)
 	const uint32_t time_read_max = 250;
-	uint32_t time_start_read = micros();
+	uint32_t time_start_read = system_micros();
 
 	//Read in as many byts as we can until either
 	//both ports are empty, have both read messages,
 	//or the time_read_max is hit
-	while( (micros() - time_start_read ) < time_read_max ) {
+	while( (system_micros() - time_start_read ) < time_read_max ) {
 		bool port0_done = !comms_is_open( COMM_PORT_0 );
 		bool port1_done = !comms_is_open( COMM_PORT_1 );
 

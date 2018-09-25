@@ -1,12 +1,26 @@
-#include <string.h>
+#include <stdlib.h>
 
 #include "breezystm32.h"
 #include "params.h"
-#include "drv_flash.h"
+#include "drivers/drv_flash.h"
 
-static uint64_t _eeprom_version;
+#define ASSERT_CONCAT_(a, b) a##b
+#define ASSERT_CONCAT(a, b) ASSERT_CONCAT_(a, b)
+#define ct_assert(e) enum { ASSERT_CONCAT(assert_line_, __LINE__) = 1/(!!(e)) }
 
-void initEEPROM(void) {
+// define this symbol to increase or decrease flash size. not rely on flash_size_register.
+#ifndef FLASH_PAGE_COUNT
+#define FLASH_PAGE_COUNT 128
+#endif
+
+#define FLASH_PAGE_SIZE                 ((uint16_t)0x400)
+// if sizeof(_params) is over this number, compile-time error will occur. so, need to add another page to config data.
+#define CONFIG_SIZE                     (FLASH_PAGE_SIZE * 3)
+
+static const uint32_t FLASH_WRITE_ADDR = 0x08000000 + (FLASH_PAGE_SIZE * (FLASH_PAGE_COUNT - (CONFIG_SIZE / 1024)));
+static uint64_t _eeprom_version;	//XXX: static const uint8_t EEPROM_CONF_VERSION = 76;
+
+static void initEEPROM(void) {
 	// make sure (at compile time) that config struct doesn't overflow allocated flash pages
 	ct_assert(sizeof(_params) < CONFIG_SIZE);
 	_eeprom_version = strtoll(EEPROM_CONF_VERSION_STR, NULL, 16);
@@ -37,17 +51,18 @@ static bool validEEPROM(void) {
 	return true;
 }
 
-bool readEEPROM(void) {
+static bool readEEPROM(void) {
 	// Sanity check
 	if ( !validEEPROM() )
 		return false;
 
 	// Read flash
 	memcpy(&_params, (char *)FLASH_WRITE_ADDR, sizeof(params_t));
+
 	return true;
 }
 
-bool writeEEPROM(void) {
+static bool writeEEPROM(void) {
 	FLASH_Status status;
 	uint8_t chk = 0;
 	const uint8_t *p;
@@ -88,4 +103,17 @@ bool writeEEPROM(void) {
 	}
 
 	return true;
+}
+
+
+void drv_flash_init( void ) {
+	initEEPROM();
+}
+
+bool drv_flash_read( void ) {
+	return readEEPROM();
+}
+
+bool drv_flash_write( void ) {
+	return writeEEPROM();
 }

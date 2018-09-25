@@ -9,40 +9,20 @@
 #include "params.h"
 #include "mixer.h"
 #include "mavlink_system.h"
-#include "drv_sensors.h"
-#include "drv_system.h"
+#include "drivers/drv_sensors.h"
+#include "drivers/drv_system.h"
 
-#include "breezystm32.h"
-#include "pwm.h"
-#include "adc.h"
-#include "gpio.h"
+//#include "breezystm32.h"
+//#include "pwm.h"
+//#include "adc.h"
+//#include "gpio.h"
 
 #include "fix16.h"
 #include "fixvector3d.h"
 #include "fixquat.h"
 #include "fixextra.h"
 
-
-#define GYRO_HIGH_BIAS_WARN 200
-
-
 //==-- Local Variables
-uint32_t _imu_time_ready = 0;
-static volatile uint8_t accel_status = 0;
-static volatile uint8_t gyro_status = 0;
-static volatile uint8_t temp_status = 0;
-
-static int16_t read_accel_raw[3];
-static int16_t read_gyro_raw[3];
-static volatile int16_t read_temp_raw;
-
-static volatile uint8_t mag_status = 0;
-static int16_t read_mag_raw[3];
-static volatile uint8_t baro_status = 0;
-static int32_t read_baro_raw[2];
-static volatile uint8_t sonar_status = 0;
-//static int32_t read_baro_raw[2];
-
 static uint16_t rc_cal[8][3];
 static bool rc_rev[8];
 static fix16_t rc_dz[8];
@@ -78,22 +58,10 @@ static void clock_init(void) {
 	_sensors.clock.rt_sync_last = 0;
 }
 
-static void sensors_imu_poll(void) {
-	//==-- Timing setup get loop time
-	_imu_time_ready = system_micros();
-}
-
 static void sensor_status_init(sensor_status_t *status, bool sensor_present) {
 	status->present = sensor_present;
 	status->new_data = false;
 	status->time_read = 0;
-}
-
-void sensors_clear_i2c(void) {
-		//mpu_register_interrupt_cb(&sensors_imu_disable, get_param_uint(PARAM_BOARD_REVISION));
-	while( i2c_job_queued() ); //Wait for jobs to finish
-		//mpuWriteRegisterI2C(MPU_RA_PWR_MGMT_1, MPU_BIT_DEVICE_RESET);
-		//delay(500);
 }
 
 static void sensors_init_hil(void) {
@@ -119,64 +87,71 @@ static void sensors_init_hil(void) {
 	_sensors.hil.temperature = 0;
 }
 
-static void sensors_init_imu(void) {
-
-	sensor_status_init(&_sensors.imu.status, get_param_uint(PARAM_SENSOR_IMU_CBRK) );
-
-	if( _sensors.imu.status.present )
-		drv_sensors_imu_init( &_sensors.imu.accel_scale, &_sensors.imu.gyro_scale );
-
-	//_sensors.imu.accel_scale = fix16_div(_fc_gravity, fix16_from_int(_calibrations.data.accel.acc1G));	//Get the m/s scale (raw->g's->m/s/s)
-	//_sensors.imu.gyro_scale = fix16_from_float(MPU_GYRO_SCALE);	//Get radians scale (raw->rad/s)
-}
-
-void sensors_init_internal(void) {
+void sensors_init(void) {
 	//==-- Hardware In The Loop
 	sensors_init_hil();
 
-	if(!_sensors.hil.status.present) {
-		//==-- IMU-MPU6050
-		sensors_init_imu();
+	if( !_sensors.hil.status.present ) {
+		if( drv_sensors_i2c_init() ) {
+			/*
+			// XXX: I2C Sniffer
+			uint8_t addr;
+			for (addr=0; addr<128; ++addr) {
+				delay(50);
+				if (i2cWriteRegister(addr, 0x00, 0x00)) {
+
+					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+					snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[PARAM] I2C sniff found: 0x%x", addr);
+					mavlink_queue_broadcast_notice(text);
+				}
+			}
+			*/
+
+			//==-- IMU
+			sensor_status_init(&_sensors.imu.status, get_param_uint(PARAM_SENSOR_IMU_CBRK) );
+
+			if( _sensors.imu.status.present )
+				drv_sensors_imu_init( &_sensors.imu.accel_scale, &_sensors.imu.gyro_scale );
+
+			//==-- Mag
+			if( get_param_fix16( PARAM_SENSOR_MAG_UPDATE_RATE ) > 0 ) {
+				mavlink_queue_broadcast_error("[SENSOR] Mag support is not stable!");
+
+				sensor_status_init( &_sensors.mag.status, drv_sensors_mag_init() );
+
+				//If we expected it to be present, but it failed
+				if(!_sensors.mag.status.present)
+					mavlink_queue_broadcast_error("[SENSOR] Unable to configure mag, disabling!");
+			} else {
+				sensor_status_init( &_sensors.mag.status, false );
+			}
+
+			//==-- Baro
+			if( get_param_fix16( PARAM_SENSOR_BARO_UPDATE_RATE ) > 0 ) {
+				sensor_status_init( &_sensors.baro.status, drv_sensors_baro_init() );
+
+				//If we expected it to be present, but it failed
+				if(!_sensors.baro.status.present)
+					mavlink_queue_broadcast_error("[SENSOR] Unable to configure baro, disabling!");
+			} else {
+				sensor_status_init( &_sensors.baro.status, false );
+			}
+		} else {
+
+			sensor_status_init( &_sensors.imu.status, false );
+			sensor_status_init( &_sensors.mag.status, false );
+			sensor_status_init( &_sensors.baro.status, false );
+
+			mavlink_queue_broadcast_error("[SENSOR] Unable to configure i2c, disabling board sensors!");
+		}
+	} else {
+		mavlink_queue_broadcast_notice("[SENSOR] HIL configured, ignoring board sensors");
 	}
 
 	//==-- Timer
 	clock_init();
 
-	//==-- ADC
-	adcInit(false);
-}
-
-void sensors_init_external(void) {
-	/*
-	// XXX: I2C Sniffer
-    uint8_t addr;
-	for (addr=0; addr<128; ++addr) {
-		delay(50);
-		if (i2cWriteRegister(addr, 0x00, 0x00)) {
-			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PARAM] I2C sniff found: 0x";
-			char text_addr[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-			itoa(addr, text_addr, 16);
-			strncat(text, text_addr, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1); //XXX: Stops overflow warnings
-			mavlink_queue_broadcast_notice(text);
-		}
-	}
-	*/
-
-	//==-- Mag
-	if( get_param_fix16( PARAM_SENSOR_MAG_UPDATE_RATE ) > 0 ) {
-		mavlink_queue_broadcast_error("[SENSOR] Mag support is not stable!");
-
-		sensor_status_init( &_sensors.mag.status, drv_sensors_mag_init() );
-
-		//If we expected it to be present, but it failed
-		if(!_sensors.mag.status.present)
-			mavlink_queue_broadcast_error("[SENSOR] Unable to configure mag, disabling!");
-	} else {
-		sensor_status_init( &_sensors.mag.status, false );
-	}
-
 	_sensors.mag.period_update = 1000*fix16_to_int( fix16_div(_fc_1000, get_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE)));
-
 	_sensors.mag.raw.x = 0;
 	_sensors.mag.raw.y = 0;
 	_sensors.mag.raw.z = 0;
@@ -187,17 +162,6 @@ void sensors_init_external(void) {
 	_sensors.mag.q.b = 0;
 	_sensors.mag.q.c = 0;
 	_sensors.mag.q.d = 0;
-
-	//==-- Baro
-	if( get_param_fix16( PARAM_SENSOR_BARO_UPDATE_RATE ) > 0 ) {
-		sensor_status_init( &_sensors.baro.status, drv_sensors_baro_init() );
-
-		//If we expected it to be present, but it failed
-		if(!_sensors.baro.status.present)
-			mavlink_queue_broadcast_error("[SENSOR] Unable to configure baro, disabling!");
-	} else {
-		sensor_status_init( &_sensors.baro.status, false );
-	}
 
 	_sensors.baro.period_update = 1000*fix16_to_int( fix16_div(_fc_1000, get_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE)));
 	_sensors.baro.raw_press = 0;
@@ -221,7 +185,12 @@ void sensors_init_external(void) {
 	sensor_status_init( &_sensors.ext_pose.status, false );
 
 	//==-- RC Input
-	sensor_status_init( &_sensors.rc_input.status, true );
+	sensor_status_init( &_sensors.rc_input.status, drv_sensors_rc_input_init() );
+
+	for(int i=0; i<8; i++) {
+		_sensors.rc_input.raw[i] = 0;
+	}
+
 	_sensors.rc_input.p_r = 0;
 	_sensors.rc_input.p_p = 0;
 	_sensors.rc_input.p_y = 0;
@@ -235,20 +204,17 @@ void sensors_init_external(void) {
 	sensors_update_rc_cal();
 
 	//RC Safety toggle
-	sensor_status_init( &_sensors.rc_safety_toggle.status, true );
+	sensor_status_init( &_sensors.rc_safety_toggle.status, get_param_uint(PARAM_SENSOR_RC_SAFETY_CBRK) );
 	_sensors.rc_safety_toggle.arm_req_made = false;
 	_sensors.rc_safety_toggle.timer_start_us = 0;
 
 	//==-- Safety button
-	sensor_status_init(&_sensors.safety_button.status, (bool)get_param_uint(PARAM_SENSOR_SAFETY_CBRK));
-	_sensors.safety_button.gpio_p = GPIOA;
-	_sensors.safety_button.pin = Pin_6;
-
-	gpio_config_t safety_button_cfg;
-    safety_button_cfg.pin = _sensors.safety_button.pin;
-    safety_button_cfg.mode = Mode_IPU;
-    safety_button_cfg.speed = Speed_2MHz;
-    gpioInit(_sensors.safety_button.gpio_p, &safety_button_cfg);
+	sensor_status_init(&_sensors.safety_button.status, get_param_uint(PARAM_SENSOR_SAFETY_CBRK));
+	if(_sensors.safety_button.status.present) {
+		if( drv_sensors_safety_button_init() ) {
+			mavlink_queue_broadcast_error("[SENSOR] Could not initialize safety button!");
+		}
+	}
 
 	_sensors.safety_button.state = false;
 	_sensors.safety_button.period_us = 100000;		//100ms update rate
@@ -257,176 +223,11 @@ void sensors_init_external(void) {
 	_sensors.safety_button.state_db = false;
 
 	//==-- Voltage Monitor
-	sensor_status_init(&_sensors.voltage_monitor.status, true);
-	/*
-	_sensors.safety_button.gpio_p = GPIOA;
-	_sensors.safety_button.pin = Pin_4;
-
-	gpio_config_t voltage_monitor_cfg;
-    voltage_monitor_cfg.pin = _sensors.voltage_monitor.pin;
-    voltage_monitor_cfg.mode = Mode_AIN;
-    voltage_monitor_cfg.speed = Speed_2MHz;
-    gpioInit(_sensors.voltage_monitor.gpio_p, &voltage_monitor_cfg);
-	*/
+	sensor_status_init(&_sensors.voltage_monitor.status, drv_sensors_battery_monitor_init());
 
 	_sensors.voltage_monitor.state_raw = 0;
 	_sensors.voltage_monitor.state_calc = 0;
 	_sensors.voltage_monitor.state_filtered = 0;
-}
-
-bool i2c_job_queued(void) {
-	bool a_done = (accel_status == I2C_JOB_DEFAULT) || (accel_status == I2C_JOB_COMPLETE);
-	bool g_done = (gyro_status == I2C_JOB_DEFAULT) || (gyro_status == I2C_JOB_COMPLETE);
-	bool t_done = (temp_status == I2C_JOB_DEFAULT) || (temp_status == I2C_JOB_COMPLETE);
-	bool m_done = (mag_status == I2C_JOB_DEFAULT) || (mag_status == I2C_JOB_COMPLETE);
-	bool b_done = (baro_status == I2C_JOB_DEFAULT) || (baro_status == I2C_JOB_COMPLETE);
-	bool s_done = (sonar_status == I2C_JOB_DEFAULT) || (sonar_status == I2C_JOB_COMPLETE);
-
-	return !a_done || !g_done || !t_done || !m_done || !b_done || !s_done;
-}
-
-bool sensors_read(void) {
-	bool imu_job_complete = false;
-	bool mag_job_complete = false;
-	bool baro_job_complete = false;
-	bool sonar_job_complete = false;
-
-	//Check IMU status
-	if( (accel_status == I2C_JOB_COMPLETE) &&
-		(gyro_status == I2C_JOB_COMPLETE) &&
-		(temp_status == I2C_JOB_COMPLETE) ) {
-		imu_job_complete = true;
-		accel_status = I2C_JOB_DEFAULT;
-		gyro_status = I2C_JOB_DEFAULT;
-		temp_status = I2C_JOB_DEFAULT;
-
-		//==-- Save raw data
-		//XXX: Some values need to be inversed to be in the NED frame
-		_sensors.imu.accel_raw.x = -read_accel_raw[0];
-		_sensors.imu.accel_raw.y = read_accel_raw[1];
-		_sensors.imu.accel_raw.z = read_accel_raw[2];
-
-		_sensors.imu.gyro_raw.x = read_gyro_raw[0];
-		_sensors.imu.gyro_raw.y = -read_gyro_raw[1];
-		_sensors.imu.gyro_raw.z = -read_gyro_raw[2];
-
-		_sensors.imu.temp_raw = read_temp_raw;
-
-		//==-- Handle raw data
-		//Convert temperature SI units (degC, m/s^2, rad/s)
-		// value = (_sensors.imu.temp_raw/temp_scale) + temp_shift
-		_sensors.imu.temperature = fix16_add(fix16_div(fix16_from_int(_sensors.imu.temp_raw), _calibrations.data.accel.temp_scale), _calibrations.data.accel.temp_shift);
-
-		//Accel
-		//TODO: value = (raw - BIAS - (EMP_COMP * TEMP)) * scale
-		// value = (raw - BIAS) * scale
-
-		//Correct for measurement biases
-		fix16_t accel_x_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.x - get_param_int(PARAM_ACC_X_BIAS)), _sensors.imu.accel_scale);
-		fix16_t accel_y_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.y - get_param_int(PARAM_ACC_Y_BIAS)), _sensors.imu.accel_scale);
-		fix16_t accel_z_tmp = fix16_mul(fix16_from_int(_sensors.imu.accel_raw.z - get_param_int(PARAM_ACC_Z_BIAS)), _sensors.imu.accel_scale);
-
-		//Scale the accelerometer to match 1G
-		_sensors.imu.accel.x = fix16_mul(accel_x_tmp, ( accel_x_tmp > 0 ) ? get_param_fix16(PARAM_ACC_X_SCALE_POS) : get_param_fix16(PARAM_ACC_X_SCALE_NEG) );
-		_sensors.imu.accel.y = fix16_mul(accel_y_tmp, ( accel_y_tmp > 0 ) ? get_param_fix16(PARAM_ACC_Y_SCALE_POS) : get_param_fix16(PARAM_ACC_Y_SCALE_NEG) );
-		_sensors.imu.accel.z = fix16_mul(accel_z_tmp, ( accel_z_tmp > 0 ) ? get_param_fix16(PARAM_ACC_Z_SCALE_POS) : get_param_fix16(PARAM_ACC_Z_SCALE_NEG) );
-
-		//Gyro
-		// value = (raw - BIAS) * scale
-		_sensors.imu.gyro.x = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.x - get_param_int(PARAM_GYRO_X_BIAS)), _sensors.imu.gyro_scale);
-		_sensors.imu.gyro.y = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.y - get_param_int(PARAM_GYRO_Y_BIAS)), _sensors.imu.gyro_scale);
-		_sensors.imu.gyro.z = fix16_mul(fix16_from_int(_sensors.imu.gyro_raw.z - get_param_int(PARAM_GYRO_Z_BIAS)), _sensors.imu.gyro_scale);
-
-		//Other IMU updates
-		_sensors.imu.status.time_read = sensors_clock_imu_int_get();
-		_sensors.imu.status.new_data = true;
-		safety_update_sensor(&_system_status.sensors.imu);
-	}
-
-	if(mag_status == I2C_JOB_DEFAULT) {
-		mag_job_complete = true;
-	} else if(mag_status == I2C_JOB_COMPLETE) {
-		mag_job_complete = true;
-		mag_status = I2C_JOB_DEFAULT;
-
-		//Handle raw values
-		//XXX: Some values need to be switched to be in the NED frame
-		_sensors.mag.raw.x = -read_mag_raw[0];
-		_sensors.mag.raw.y = read_mag_raw[1];
-		_sensors.mag.raw.z = read_mag_raw[2];
-
-		_sensors.mag.scaled.x = fix16_div(fix16_from_int(_sensors.mag.raw.x),fix16_from_int(HMC5883L_GAIN_FACTOR));
-		_sensors.mag.scaled.y = fix16_div(fix16_from_int(_sensors.mag.raw.y),fix16_from_int(HMC5883L_GAIN_FACTOR));
-		_sensors.mag.scaled.z = fix16_div(fix16_from_int(_sensors.mag.raw.z),fix16_from_int(HMC5883L_GAIN_FACTOR));
-
-		//TODO: Do remaining mag scaling / calibration steps
-
-		//Get a north estimate
-		//Build a rotation matrix
-		v3d mag_body_x;
-		v3d_normalize(&mag_body_x, &_sensors.mag.scaled);
-		v3d mag_body_y;
-		v3d mag_body_z = _sensors.imu.accel;
-
-		v3d_cross(&mag_body_y, &mag_body_z, &mag_body_x);
-		v3d_normalize(&mag_body_y, &mag_body_y);
-
-		mf16 mag_body;
-		dcm_from_basis(&mag_body, &mag_body_x, &mag_body_y, &mag_body_z);
-
-		qf16 mag_q_body;
-		matrix_to_qf16(&mag_q_body, &mag_body );
-		qf16_normalize_to_unit(&mag_q_body, &mag_q_body);
-
-		//De-rotate from the body back to the world
-		qf16 q_tmp;
-		qf16_inverse(&q_tmp, &mag_q_body);
-		qf16_normalize_to_unit(&_sensors.mag.q, &q_tmp);
-
-		//Other Mag updates
-		_sensors.mag.status.time_read = micros();
-		_sensors.mag.status.new_data = true;
-		safety_update_sensor(&_system_status.sensors.mag);
-	}
-
-	if(baro_status == I2C_JOB_DEFAULT) {
-		baro_job_complete = true;
-	} else if(baro_status == I2C_JOB_COMPLETE) {
-		baro_job_complete = true;
-		baro_status = I2C_JOB_DEFAULT;
-
-		//Handle raw values
-		_sensors.baro.raw_press = read_baro_raw[0];
-		_sensors.baro.raw_temp = read_baro_raw[1];
-
-		//Other Baro updates
-		_sensors.baro.status.time_read = micros();
-		_sensors.baro.status.new_data = true;
-		safety_update_sensor(&_system_status.sensors.baro);
-	}
-
-	if(sonar_status == I2C_JOB_DEFAULT) {
-		sonar_job_complete = true;
-	} else if(sonar_status == I2C_JOB_COMPLETE) {
-		sonar_job_complete = true;
-		sonar_status = I2C_JOB_DEFAULT;
-		/*
-		//Handle raw values
-		_sensors.baro.raw_press = read_baro_raw[0];
-		_sensors.baro.raw_temp = read_baro_raw[1];
-
-		//Other Baro updates
-		_sensors.baro.status.time_read = micros();
-		_sensors.baro.status.new_data = true;
-		safety_update_sensor(&_system_status.sensors.baro);
-		*/
-	}
-
-	//TODO: Check other status
-	//TODO: May need to offset these so they don't all check at once(?)
-
-	//Return the results
-	return ( imu_job_complete && mag_job_complete && baro_job_complete && sonar_job_complete );
 }
 
 uint32_t sensors_clock_ls_get(void) {
@@ -466,7 +267,7 @@ float sensors_clock_smooth_time_drift(float tc, float tn) {
 }
 
 uint64_t sensors_clock_rt_get(void) {
-	return (uint64_t)( micros() * 1000LL ) + _sensors.clock.rt_offset_ns;
+	return (uint64_t)( system_micros() * 1000LL ) + _sensors.clock.rt_offset_ns;
 }
 
 uint32_t sensors_clock_imu_int_get(void) {
@@ -549,60 +350,7 @@ void sensors_update_rc_cal(void) {
 	rc_dz[7] = get_param_fix16(PARAM_RC8_DZ);
 }
 
-void sensors_poll(uint32_t time_us) {
-	//==-- Update IMU
-	if(_sensors.imu.status.present) {
-		//Update the imu sensor if we've recieved a new interrupt
-		if( (_imu_time_ready > sensors_clock_imu_int_get() ) &&
-			(accel_status == I2C_JOB_DEFAULT) &&
-			(gyro_status == I2C_JOB_DEFAULT) &&
-			(temp_status == I2C_JOB_DEFAULT) ) {
-
-			mpu_request_async_accel_read(read_accel_raw, &accel_status);
-			mpu_request_async_gyro_read(read_gyro_raw, &gyro_status);
-			mpu_request_async_temp_read(&(read_temp_raw), &temp_status);
-
-			_sensors.clock.imu_time_read = _imu_time_ready;
-		}
-	}
-
-	//Only allow a single additional i2c device to be queued each sensor cycle
-	bool aux_sensor_req = (mag_status != I2C_JOB_DEFAULT) &&
-						  (baro_status != I2C_JOB_DEFAULT) &&
-						  (sonar_status != I2C_JOB_DEFAULT);
-
-	//==-- Update Mag
-	if(_sensors.mag.status.present && !aux_sensor_req) {
-		//Update the sensor if it's time (and it's not currently reading)
-		if( ( (time_us - _sensors.mag.status.time_read) > _sensors.mag.period_update ) &&
-			(mag_status == I2C_JOB_DEFAULT) ) {
-			hmc5883l_request_async_read(read_mag_raw, &mag_status);
-			aux_sensor_req = true;
-		}
-	}
-
-	//==-- Update Baro
-	if(_sensors.baro.status.present && !aux_sensor_req) {
-		//Update the sensor if it's time (and it's not currently reading)
-		if( ( (time_us - _sensors.baro.status.time_read) > _sensors.baro.period_update ) &&
-			(baro_status == I2C_JOB_DEFAULT) ) {
-			bmp280_request_async_read(read_baro_raw, &baro_status);
-			aux_sensor_req = true;
-		}
-	}
-
-	//==-- Update Sonar
-	if(_sensors.sonar.status.present && !aux_sensor_req) {
-		//Update the sensor if it's time (and it's not currently reading)
-		if( ( (time_us - _sensors.sonar.status.time_read) > _sensors.sonar.period_update ) &&
-			(sonar_status == I2C_JOB_DEFAULT) ) {
-			//sonar_request_async_read(read_baro_raw, &baro_status);
-			aux_sensor_req = true;
-		}
-	}
-}
-
-bool sensors_update(uint32_t time_us) {
+static bool sensors_update(uint32_t time_us) {
 	//bool update_success = false;
 	//TODO: Remember not to expect all sensors to be ready
 
@@ -644,10 +392,12 @@ bool sensors_update(uint32_t time_us) {
 		uint8_t chan_yaw = get_param_uint(PARAM_RC_MAP_YAW) - 1;
 		uint8_t chan_throttle = get_param_uint(PARAM_RC_MAP_THROTTLE) - 1;
 
-		_sensors.rc_input.p_r = pwmRead(chan_roll);
-		_sensors.rc_input.p_p = pwmRead(chan_pitch);
-		_sensors.rc_input.p_y = pwmRead(chan_yaw);
-		_sensors.rc_input.p_T = pwmRead(chan_throttle);
+		drv_sensors_rc_input_read( _sensors.rc_input.raw );
+
+		_sensors.rc_input.p_r = _sensors.rc_input.raw[chan_roll];
+		_sensors.rc_input.p_p = _sensors.rc_input.raw[chan_pitch];
+		_sensors.rc_input.p_y = _sensors.rc_input.raw[chan_yaw];
+		_sensors.rc_input.p_T = _sensors.rc_input.raw[chan_throttle];
 
 		if( (_sensors.rc_input.p_r > 800) && (_sensors.rc_input.p_r < 2200 ) &&
 			(_sensors.rc_input.p_p > 800) && (_sensors.rc_input.p_p < 2200 ) &&
@@ -696,7 +446,7 @@ bool sensors_update(uint32_t time_us) {
 
 			//Handle actuator control mapping
 			for(int i=0; i<MIXER_NUM_MOTORS; i++) {
-				_actuator_control_g2[i] = dual_normalized_input(pwmRead( i ),
+				_actuator_control_g2[i] = dual_normalized_input(_sensors.rc_input.raw[i],
 																rc_cal[i][SENSOR_RC_CAL_MIN],
 																rc_cal[i][SENSOR_RC_CAL_MID],
 																rc_cal[i][SENSOR_RC_CAL_MAX]);
@@ -705,7 +455,7 @@ bool sensors_update(uint32_t time_us) {
 
 			//If we're using a mode switch
 			if( get_param_uint(PARAM_RC_MAP_MODE_SW) ) {
-				_sensors.rc_input.p_m = pwmRead(get_param_uint(PARAM_RC_MAP_MODE_SW) - 1);
+				_sensors.rc_input.p_m = _sensors.rc_input.raw[get_param_uint(PARAM_RC_MAP_MODE_SW) - 1];
 
 				if( ( _sensors.rc_input.p_m > 800 ) && ( _sensors.rc_input.p_m < 2200 ) ) {
 					compat_px4_main_mode_t c_m_last = _sensors.rc_input.c_m;
@@ -764,7 +514,7 @@ bool sensors_update(uint32_t time_us) {
 	//==-- Safety Button
 	bool safety_button_reading = false;
 
-	safety_button_reading = digitalIn(_sensors.safety_button.gpio_p, _sensors.safety_button.pin);
+	safety_button_reading = drv_sensors_safety_button_read();
 
 	if(safety_button_reading != _sensors.safety_button.state_db )
 		_sensors.safety_button.time_db_read = time_us;
@@ -783,7 +533,7 @@ bool sensors_update(uint32_t time_us) {
 	//==-- Voltage Monitor
 	if(get_param_uint(PARAM_BATTERY_CELL_NUM) > 0) {
 		//_sensors.voltage_monitor.state_raw = digitalIn(_sensors.voltage_monitor.gpio_p, _sensors.voltage_monitor.pin);
-		_sensors.voltage_monitor.state_raw = adcGetChannel(ADC_EXTERNAL_PAD);
+		_sensors.voltage_monitor.state_raw = drv_sensors_battery_monitor_read();
 
 		fix16_t voltage_res = fix16_div(fix16_from_int(0xFFF), _fc_3_3 );	//XXX: 0xFFF is from 12Bit adc
 		//XXX: TODO: Should lookup board rev properly
@@ -813,3 +563,13 @@ bool sensors_update(uint32_t time_us) {
 	return true;
 }
 
+bool sensors_read(uint32_t time_us) {
+	bool new_data_read = false;
+
+	//Return the results
+	if( drv_sensors_i2c_read( time_us ) ) {
+		new_data_read = sensors_update( time_us );
+	}
+
+	return new_data_read;
+}

@@ -1,0 +1,71 @@
+PROJECT_NAME = robin
+
+GEN_PARAMS := $(shell python3 lib/param_generator/gen_params.py >&2; echo $$?)
+#$(info $$GEN_PARAMS is [${GEN_PARAMS}])
+ifeq ($(GEN_PARAMS),"0")
+    $(error Cannot continue make without parameters generated)
+endif
+
+GIT_VERSION_FLIGHT := $(shell git describe --abbrev=8 --always | sed 's/^ *//g' | head -c 8)
+GIT_VERSION_OS := $(shell git submodule status | grep BreezySTM32 | sed 's/^ *//g' | head -c 8)
+GIT_VERSION_MAVLINK := $(shell git submodule status | grep mavlink | sed 's/^ *//g' | head -c 8)
+
+EEPROM_CONF_VERSION := $(shell date +'%s')
+
+# Source files for high-level functions, comms handlers, calibrations, and shared drivers
+PROJECT_SRC_FILES = $(wildcard src/*.c) \
+					$(wildcard src/mavlink_handlers/*.c) \
+					$(wildcard src/calibrations/*.c) \
+					$(wildcard src/drivers/*.c)
+
+# Parameter Generation
+PROJECT_DIR_PARAM_GEN = ./lib/param_generator
+PROJECT_SRC_PARAM_GEN = $(PROJECT_DIR_PARAM_GEN)/param_gen.c
+
+# Math Libs.
+PROJECT_DIR_LIBFIXMATH = ./lib/libfixmath/libfixmath
+PROJECT_DIR_LIBFIXMATRIX = ./lib/libfixmatrix
+
+PROJECT_SRC_LIBFIXMATH = $(PROJECT_DIR_LIBFIXMATH)/fix16.c \
+							$(PROJECT_DIR_LIBFIXMATH)/fix16_exp.c \
+							$(PROJECT_DIR_LIBFIXMATH)/fix16_sqrt.c \
+							$(PROJECT_DIR_LIBFIXMATH)/fix16_str.c \
+							$(PROJECT_DIR_LIBFIXMATH)/fix16_trig.c \
+							$(PROJECT_DIR_LIBFIXMATH)/fract32.c \
+							$(PROJECT_DIR_LIBFIXMATH)/uint32.c
+
+
+PROJECT_SRC_LIBFIXMATRIX = $(PROJECT_DIR_LIBFIXMATRIX)/fixarray.c \
+							$(PROJECT_DIR_LIBFIXMATRIX)/fixmatrix.c \
+							$(PROJECT_DIR_LIBFIXMATRIX)/fixquat.c \
+							$(PROJECT_DIR_LIBFIXMATRIX)/fixstring.c \
+							$(PROJECT_DIR_LIBFIXMATRIX)/fixvector2d.c \
+							$(PROJECT_DIR_LIBFIXMATRIX)/fixvector3d.c
+
+BUILD_TYPE_OK := 0
+
+ifeq ($(BUILD_TYPE),naze32_rev5)
+	include makefiles/makefile.naze32_common
+	include makefiles/makefile.naze32_rev5
+
+	BUILD_TYPE_OK := 1
+endif
+ifeq ($(BUILD_TYPE),naze32_rev6)
+	include makefiles/makefile.naze32_common
+	include makefiles/makefile.naze32_rev6
+
+	BUILD_TYPE_OK := 1
+endif
+ifeq ($(BUILD_TYPE),posix)
+	include makefiles/makefile.posix
+
+	BUILD_TYPE_OK := 1
+endif
+
+ifeq ($(BUILD_TYPE_OK),0)
+	$(error Unsupported board revision: $(BUILD_TYPE))
+endif
+
+$(info Building for board revision: $(BUILD_TYPE))
+
+

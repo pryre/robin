@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "drv_comms.h"
+#include "drivers/drv_comms.h"
 #include "params.h"
 
 #include "breezystm32.h"
@@ -11,16 +11,6 @@
 
 serialPort_t* Serial1;
 serialPort_t* Serial2;
-
-static comms_port_t comms_open_status_ = 0;
-
-void comms_set_open( comms_port_t port ) {
-	comms_open_status_ |= port;
-}
-
-void comms_set_closed( comms_port_t port ) {
-	comms_open_status_ &= ~port;
-}
 
 bool comms_init_port( comms_port_t port ) {
 	bool success = false;
@@ -44,10 +34,6 @@ bool comms_init_port( comms_port_t port ) {
 		comms_set_open( port );
 
 	return success;
-}
-
-bool comms_is_open( comms_port_t port ) {
-	return comms_open_status_ & port;
 }
 
 void comms_send(comms_port_t port, uint8_t ch) {

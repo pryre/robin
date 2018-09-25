@@ -1,13 +1,14 @@
 #include "calibration.h"
 #include "sensors.h"
 #include "mavlink_system.h"
-#include "drv_status_io.h"
+#include "drivers/drv_status_io.h"
 
 #include "safety.h"
-#include "pwm.h"
 #include "sensors.h"
 #include "fix16.h"
 #include "params.h"
+
+#include <stdlib.h>
 
 calibration_data_t _calibrations;
 sensor_readings_t _sensors;
@@ -26,13 +27,11 @@ bool calibrate_rc(void) {
 			}
 			case CAL_RC_RANGE_MIDDOWN: {
 				for(int i=0;i<8;i++) {
-					_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MID] = pwmRead(i);
+					_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MID] = _sensors.rc_input.raw[i];
 
-					if( ( pwmRead(i) < 1300 ) || ( pwmRead(i) > 1700 ) ) {
-						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Possible bad trim on channel ";
-						char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-						itoa(i + 1, mchar, 10);
-						strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+					if( ( _sensors.rc_input.raw[i] < 1300 ) || ( _sensors.rc_input.raw[i] > 1700 ) ) {
+						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+						snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[SENSOR] Possible bad trim on channel: %d", i+1);
 						mavlink_queue_broadcast_error(text);
 					}
 				}
@@ -58,10 +57,10 @@ bool calibrate_rc(void) {
 				uint8_t chan_yaw = get_param_uint(PARAM_RC_MAP_YAW) - 1;
 				uint8_t chan_throttle = get_param_uint(PARAM_RC_MAP_THROTTLE) - 1;
 
-				_calibrations.data.rc.rev[chan_roll] = (pwmRead(chan_roll) > SENSOR_RC_MIDSTICK);
-				_calibrations.data.rc.rev[chan_pitch] = (pwmRead(chan_pitch) < SENSOR_RC_MIDSTICK);
-				_calibrations.data.rc.rev[chan_yaw] = (pwmRead(chan_yaw) < SENSOR_RC_MIDSTICK);
-				_calibrations.data.rc.rev[chan_throttle] = (pwmRead(chan_throttle) > SENSOR_RC_MIDSTICK);
+				_calibrations.data.rc.rev[chan_roll] = (_sensors.rc_input.raw[chan_roll] > SENSOR_RC_MIDSTICK);
+				_calibrations.data.rc.rev[chan_pitch] = (_sensors.rc_input.raw[chan_pitch] < SENSOR_RC_MIDSTICK);
+				_calibrations.data.rc.rev[chan_yaw] = (_sensors.rc_input.raw[chan_yaw] < SENSOR_RC_MIDSTICK);
+				_calibrations.data.rc.rev[chan_throttle] = (_sensors.rc_input.raw[chan_throttle] > SENSOR_RC_MIDSTICK);
 
 				set_param_uint( PARAM_RC1_REV, _calibrations.data.rc.rev[0]);
 				set_param_uint( PARAM_RC2_REV, _calibrations.data.rc.rev[1]);
@@ -92,10 +91,8 @@ bool calibrate_rc(void) {
 					if( ( _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] > 1300 ) ||
 						( _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX] < 1700 ) ) {
 
-						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Possible bad min/max on channel ";
-						char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-						itoa(i + 1, mchar, 10);
-						strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+						snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[SENSOR] Possible bad min/max on channel: %d", i+1);
 						mavlink_queue_broadcast_error(text);
 					}
 				}

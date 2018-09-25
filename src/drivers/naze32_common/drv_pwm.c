@@ -46,7 +46,7 @@
 #include "timer.h"
 
 #include "io_type.h"
-#include "drv_pwm.h"
+#include "drivers/drv_pwm.h"
 
 typedef struct {
     volatile uint16_t *ccr;

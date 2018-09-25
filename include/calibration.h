@@ -6,7 +6,7 @@
 #include "fixvector3d.h"
 #include "fixquat.h"
 #include "fix16.h"
-#include "breezystm32.h"
+//#include "breezystm32.h"
 
 //RC CAL DEFINES
 #define SENSOR_RC_CAL_MIN 0
@@ -132,7 +132,7 @@ typedef struct {
 	uint8_t req_compid;
 } calibration_data_t;
 
-extern calibration_data_t _calibration_data;
+extern calibration_data_t _calibrations;
 
 void calibration_init(void);
 bool calibration_request(calibration_request_t req);

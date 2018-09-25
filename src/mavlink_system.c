@@ -3,7 +3,8 @@
 #include "mavlink/common/mavlink.h"
 #include "mavlink_transmit.h"
 
-#include "drv_comms.h"
+#include "drivers/drv_comms.h"
+#include "drivers/drv_system.h"
 
 #include "fix16.h"
 #include "fixextra.h"
@@ -15,9 +16,8 @@
 #include "controller.h"
 #include "mixer.h"
 
-#include "pwm.h"
-
 #include <stdio.h>
+#include <stdlib.h>
 
 /* Struct that stores the communication settings of this system.
    you can also define / alter these settings elsewhere, as long
@@ -213,9 +213,9 @@ static bool lpq_queue_msg_port( uint8_t port, mavlink_message_t *msg ) {
 		//Return an accept, even though no ports were open
 		success = true;
 	}else {
-		if( micros() - _lpq.timer_warn_full > 1000000) {	//XXX: Only outout the error at 1/s maximum otherwise buffer will never catch up
+		if( system_micros() - _lpq.timer_warn_full > 1000000) {	//XXX: Only outout the error at 1/s maximum otherwise buffer will never catch up
 			mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[COMMS] LPQ message dropped!");
-			_lpq.timer_warn_full = micros();
+			_lpq.timer_warn_full = system_micros();
 		}
 	}
 
@@ -645,14 +645,14 @@ void mavlink_stream_rc_channels_raw(mavlink_channel_t chan) {
 		mavlink_msg_rc_channels_raw_send(chan,
 										  sensors_clock_ls_get(),
 										  0,	//Port 0
-										  pwmRead(0),
-										  pwmRead(1),
-										  pwmRead(2),
-										  pwmRead(3),
-										  pwmRead(4),
-										  pwmRead(5),
-										  pwmRead(6),
-										  pwmRead(7),
+										  _sensors.rc_input.raw[0],
+										  _sensors.rc_input.raw[1],
+										  _sensors.rc_input.raw[2],
+										  _sensors.rc_input.raw[3],
+										  _sensors.rc_input.raw[4],
+										  _sensors.rc_input.raw[5],
+										  _sensors.rc_input.raw[6],
+										  _sensors.rc_input.raw[7],
 										  255);
 	}
 }
@@ -678,7 +678,7 @@ void mavlink_stream_timesync(mavlink_channel_t chan) {
 	if( mavlink_stream_ready(chan) ) {
 		mavlink_msg_timesync_send(chan,
 								  0,
-								  ( (uint64_t)micros() ) * 1000);
+								  ( (uint64_t)system_micros() ) * 1000);
 	}
 }
 
@@ -817,7 +817,7 @@ void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 									   &blank_array_[0],
 									   0x10c4,	//TODO: This is the serial vendor and product ID, should be dynamic?
 									   0xea60,
-									   U_ID_0,
+									   0,//U_ID_0,
 									   &blank_array_uid_[0]);
 }
 
@@ -876,10 +876,8 @@ void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index) {
 									 PARAMS_COUNT,	//Total number of parameters
 									 index);
 	} else {
-		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PARAM] Unknown paramater type found: ";
-		char bad_param_id[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-		itoa(index, bad_param_id, 10);
-		strncat(text, bad_param_id, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1); //XXX: Stops overflow warnings
+		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+		snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[PARAM] Unknown paramater type found: %d", index);
 		mavlink_queue_broadcast_error(text);
 	}
 }
@@ -895,7 +893,7 @@ void mavlink_prepare_home_position(mavlink_message_t *msg) {
 								   0.0, 0.0, 0.0, //X (m), Y (m), Z (m)
 								   &blank_quaternion[0],
 								   0.0, 0.0, 0.0, //Appraoch vector (m)
-								   micros());
+								   system_micros());
 
 }
 

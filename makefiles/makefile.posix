@@ -1,0 +1,9 @@
+###############################################################################
+
+DEVICE_BUILD_TOOL = gcc
+DEVICE_BUILD_OBJCOPY = objcopy
+
+###############################################################################
+
+# POSIX specific drivers
+PROJECT_SRC_FILES += $(wildcard src/drivers/posix/*.c)

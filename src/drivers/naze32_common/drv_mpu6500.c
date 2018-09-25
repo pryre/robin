@@ -21,7 +21,7 @@
 
 
 #include <breezystm32.h>
-#include <drv_mpu.h>
+#include <drivers/naze32_common/drv_mpu.h>
 
 #include <math.h>
 
@@ -52,7 +52,7 @@ uint16_t mpu6500_init(accel_fsr_e accelFSR, gyro_fsr_e gyroFSR)
     mpuWriteRegisterI2C(MPU_RA_PWR_MGMT_1, MPU6050_INV_CLK_GYROZ); // Clock source = 3 (PLL with Z Gyro reference)
     delay(10);
     mpuWriteRegisterI2C(MPU_RA_CONFIG, mpuLowPassFilter); // set DLPF
-    mpuWriteRegisterI2C(MPU_RA_GYRO_CONFIG, gyroFSR /*INV_FSR_2000DPS*/ << 3); 
+    mpuWriteRegisterI2C(MPU_RA_GYRO_CONFIG, gyroFSR /*INV_FSR_2000DPS*/ << 3);
 
     // Accel config
     mpuWriteRegisterI2C(MPU_RA_ACCEL_CONFIG, accelFSR << 3);

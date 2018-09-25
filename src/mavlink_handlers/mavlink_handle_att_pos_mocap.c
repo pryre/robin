@@ -5,6 +5,7 @@
 #include "safety.h"
 #include "fix16.h"
 #include "fixextra.h"
+#include "drivers/drv_system.h"
 
 sensor_readings_t _sensors;
 
@@ -12,7 +13,7 @@ void mavlink_handle_att_pos_mocap( uint8_t port, mavlink_message_t *msg, mavlink
 	_sensors.ext_pose.status.present = true;
 
 	//TODO: Check timestamp was recent before accepting
-	_sensors.ext_pose.status.time_read = micros();
+	_sensors.ext_pose.status.time_read = system_micros();
 
 	//Position
 	_sensors.ext_pose.p.x = fix16_from_float(mavlink_msg_att_pos_mocap_get_x(msg));

@@ -8,7 +8,9 @@ extern "C" {
 #include "sensors.h"
 #include "controller.h"
 #include "mixer.h"
-#include "drv_status_io.h"
+#include "drivers/drv_status_io.h"
+#include "drivers/drv_system.h"
+#include "drivers/drv_sensors.h"
 
 #include "fixextra.h"
 
@@ -298,7 +300,7 @@ bool safety_request_arm(void) {
 			if(safety_request_state( MAV_STATE_ACTIVE ) ) {
 				do_safety_arm();
 				result = true;
-				_time_safety_arm_throttle_timeout = micros();	//Record down the arm time for throttle timeout
+				_time_safety_arm_throttle_timeout = system_micros();	//Record down the arm time for throttle timeout
 			} else {
 				strncpy(text_reason,
 						 "state change from ",
@@ -447,7 +449,7 @@ static void safety_switch_update(uint32_t time_now) {
 }
 
 void safety_update_sensor( timeout_status_t *sensor ) {
-	sensor->last_read = micros();
+	sensor->last_read = system_micros();
 	sensor->count++;
 
 	if( ( sensor->health == SYSTEM_HEALTH_TIMEOUT ) && ( sensor->count > get_param_uint(sensor->param_stream_count) ) ) {
@@ -628,10 +630,10 @@ void safety_prepare_graceful_shutdown( void ) {
 	mixer_clear_outputs();
 
 	//Make sure there are no i2c jobs still running
-	sensors_clear_i2c();
+	drv_sensors_i2c_clear();
 
 	//Give a few final moments for the comms to send and PWM to update
-	delay(500);
+	system_pause_ms(500);
 }
 
 #ifdef __cplusplus

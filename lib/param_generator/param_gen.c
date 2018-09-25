@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "params.h"
 #include "param_generator/param_gen.h"
 #include "mavlink_system.h"
@@ -172,6 +173,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_SENSOR_HIL_CBRK, 0);
 	init_param_uint(PARAM_SENSOR_IMU_CBRK, 1);
 	init_param_uint(PARAM_SENSOR_SAFETY_CBRK, 1);
+	init_param_uint(PARAM_SENSOR_RC_SAFETY_CBRK, 1);
 	init_param_fix16(PARAM_SENSOR_MAG_UPDATE_RATE, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_SENSOR_BARO_UPDATE_RATE, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_SENSOR_SONAR_UPDATE_RATE, fix16_from_float(0.0f));
@@ -372,6 +374,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"CBRK_HIL",
 	"CBRK_IMU",
 	"CBRK_SAFETY",
+	"CBRK_RC_SAFETY",
 	"CHK_RATE_MAG",
 	"CHK_RATE_BARO",
 	"CHK_RATE_SONAR",

@@ -2,7 +2,6 @@
 //#include <stdarg.h>
 
 #include "params.h"
-#include "drv_status_io.h"
 #include "safety.h"
 #include "calibration.h"
 #include "sensors.h"
@@ -10,7 +9,8 @@
 #include "controller.h"
 #include "mixer.h"
 
-#include "drv_system.h"
+#include "drivers/drv_status_io.h"
+#include "drivers/drv_system.h"
 
 #include "mavlink/mavlink_types.h"
 #include "mavlink_system.h"
@@ -18,6 +18,9 @@
 #include "mavlink_transmit.h"
 
 system_status_t _system_status;
+
+void setup(void);
+void loop(void);
 
 int main(void) {
 	_system_status.state = MAV_STATE_UNINIT;
@@ -36,24 +39,19 @@ int main(void) {
 }
 
 void setup(void) {
+	status_devices_init();
+
 	params_init();
 
 	communications_system_init();
-
-	status_devices_init();
 
 	safety_init();
 
 	mixer_init();	//XXX: Must be called before pwm_init()
 	pwm_init();		//XXX: This locks boot for a while if ESC cal is active, so do it before i2c devices
 
-	delay(500);	//Wait for i2c devices to boot properly
-
-    i2cInit(I2CDEV);
-
-	sensors_init_internal();
 	//XXX: Overrides settings made by pwm backend, so must be after pwm_init()
-	sensors_init_external();
+	sensors_init();
 
 	calibration_init();
 
@@ -67,18 +65,14 @@ void loop(void) {
 	//TODO: XXX: There will be a timer rollover at ~70 minutes of operation, will cause some issues
 
 	//Take note of when this loop starts
-	sensors_clock_ls_set( micros() );
+	sensors_clock_ls_set( system_micros() );
 
 	//Sensor Read
 	//Check to see if any of the i2c sensors have been updated (mainly the imu)
 	// and if so, update the sensor states and estimator
 	//If we're not in HIL mode
 	if(!_sensors.hil.status.present) {
-		sensors_poll( micros() );
-
-		if( sensors_read() ) {
-			sensors_update( micros() );
-
+		if( sensors_read( system_micros() ) ) {
 			//Handle any calibration is in progress
 			if( _system_status.state == MAV_STATE_CALIBRATING ) {
 				//Run the rest of the calibration logic
@@ -89,7 +83,7 @@ void loop(void) {
 		}
 	} else {
 		if(_sensors.hil.status.new_data)
-			estimator_update_hil( micros() );
+			estimator_update_hil( system_micros() );
 	}
 
 	//==-- Check Serial
@@ -98,20 +92,20 @@ void loop(void) {
 	//==-- Transmit Serial
 	//Check to see if a message has been sent this loop, then see if a message should be sent
 	//Only allow this once per loop due to buffer risks (see serial define above)
-	communication_transmit( micros() );
+	communication_transmit( system_micros() );
 
 	//==-- Timeout Checks
-	safety_run( micros() );
+	safety_run( system_micros() );
 
-	status_devices_run( micros() );
+	status_devices_run( system_micros() );
 
 	//==-- Control Process
-	control_run( micros() );
+	control_run( system_micros() );
 
 	//==-- Send Motor Commands
 	//Convert outputs to correct layout and send PWM (and considers failsafes)
-	pwm_output( micros() );
+	pwm_output( system_micros() );
 
     //==-- loop time calculation
-	sensors_clock_update( micros() );
+	sensors_clock_update( system_micros() );
 }

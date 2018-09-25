@@ -1,9 +1,9 @@
 #include "calibration.h"
 #include "mavlink_system.h"
 
-#include "drv_status_io.h"
-#include "drv_system.h"
-#include "drv_pwm.h"
+#include "drivers/drv_status_io.h"
+#include "drivers/drv_system.h"
+#include "drivers/drv_pwm.h"
 #include "params.h"
 #include "mixer.h"
 
@@ -21,7 +21,7 @@ bool calibrate_esc(void) {
 		bool led_toggle = false;
 		for (uint8_t i = 0; i < 20; i++) {
 			status_led_arm_set(led_toggle);
-			delay(100);
+			system_pause_ms(100);
 		}
 
 		for (uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)

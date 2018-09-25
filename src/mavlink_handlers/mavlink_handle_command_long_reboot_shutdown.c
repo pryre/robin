@@ -2,7 +2,7 @@
 #include "mavlink_receive.h"
 
 #include "safety.h"
-#include "drv_system.h"
+#include "drivers/drv_system.h"
 
 MAV_RESULT mavlink_handle_command_long_reboot_shutdown( uint8_t port, float *params, uint8_t sysid, uint8_t compid ) {
 	MAV_RESULT command_result = MAV_RESULT_ENUM_END;

@@ -8,7 +8,7 @@
 #include "fix16.h"
 #include "fixextra.h"
 
-#include "drv_pwm.h"
+#include "drivers/drv_pwm.h"
 #include "mixer.h"
 #include "params.h"
 #include "safety.h"
@@ -325,10 +325,8 @@ static bool motor_test_in_progress( uint32_t time_now ) {
 						_motor_test.start = time_now;
 						_motor_test.motor_step++;
 
-						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
-						char mchar[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-						itoa(_motor_test.motor_step, mchar, 10);
-						strncat(text, mchar, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN -1);
+						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+						snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[MIXER] Testing motor: %d", _motor_test.motor_step);
 						mavlink_queue_broadcast_notice(text);
 				} else {
 					//Test is done, reset

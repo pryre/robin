@@ -36,6 +36,15 @@ PARAM_SENSOR_SAFETY_CBRK:
     option: "bool"
     default: 1
 ---
+PARAM_SENSOR_RC_SAFETY_CBRK:
+  type: "uint"
+  name: "CBRK_RC_SAFETY"
+  description: "Sensor circuit breaker arming check for RC input (set to 0 to disable checking device)"
+  reboot: true
+  value:
+    option: "bool"
+    default: 1
+---
 PARAM_SENSOR_MAG_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_MAG"
