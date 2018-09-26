@@ -1,0 +1,69 @@
+
+# Working directories
+ROOT		 = ./robin
+HERE         = ./robin
+SRC_DIR		 = $(ROOT)
+OBJECT_DIR	 = $(HERE)/build
+BIN_DIR		 = $(HERE)/build
+
+.PRECIOUS: %.s
+
+TARGET		 = $(PROJECT_NAME)_$(PROJECT_BUILD_TYPE)
+
+TARGET_BIN	 = $(BIN_DIR)/$(TARGET).bin
+TARGET_HEX	 = $(BIN_DIR)/$(TARGET).hex
+TARGET_ELF	 = $(BIN_DIR)/$(TARGET).elf
+TARGET_OBJS	 = $(addsuffix .o,$(addprefix $(OBJECT_DIR)/$(TARGET)/,$(basename $($(TARGET)_SRC))))
+TARGET_MAP   = $(OBJECT_DIR)/$(TARGET).map
+
+###############################################################################
+
+FOLDER_FILES = $(shell ls $(HERE))
+
+$(info $(FOLDER_FILES))
+
+# Parameter Generation
+PROJECT_DIR_PARAM_GEN = $(ROOT)/lib/param_generator
+PROJECT_SRC_PARAM_GEN = $(PROJECT_DIR_PARAM_GEN)/param_gen.c
+
+GEN_PARAMS := $(shell python3 $(PROJECT_DIR_PARAM_GEN)/gen_params.py $(PROJECT_DIR_PARAM_GEN) >&2; echo $$?)
+#$(info $$GEN_PARAMS is [${GEN_PARAMS}])
+ifeq ($(GEN_PARAMS),"0")
+    $(error Cannot continue make without parameters generated)
+endif
+
+GIT_VERSION_FLIGHT := $(shell git describe --abbrev=8 --always | sed 's/^ *//g' | head -c 8)
+GIT_VERSION_OS := $(shell git submodule status | grep BreezySTM32 | sed 's/^ *//g' | head -c 8)
+GIT_VERSION_MAVLINK := $(shell git submodule status | grep mavlink | sed 's/^ *//g' | head -c 8)
+
+EEPROM_CONF_VERSION := $(shell date +'%s')
+
+# Source files for high-level functions, comms handlers, calibrations, and shared drivers
+PROJECT_SRC_FILES = $(wildcard $(ROOT)/src/*.c) \
+					$(wildcard $(ROOT)/src/mavlink_handlers/*.c) \
+					$(wildcard $(ROOT)/src/calibrations/*.c) \
+					$(wildcard $(ROOT)/src/drivers/*.c)
+
+# Math Libs.
+PROJECT_DIR_LIBFIXMATH = $(ROOT)/lib/libfixmath/libfixmath
+PROJECT_DIR_LIBFIXMATRIX = $(ROOT)/lib/libfixmatrix
+
+PROJECT_SRC_LIBFIXMATH = $(PROJECT_DIR_LIBFIXMATH)/fix16.c \
+							$(PROJECT_DIR_LIBFIXMATH)/fix16_exp.c \
+							$(PROJECT_DIR_LIBFIXMATH)/fix16_sqrt.c \
+							$(PROJECT_DIR_LIBFIXMATH)/fix16_str.c \
+							$(PROJECT_DIR_LIBFIXMATH)/fix16_trig.c \
+							$(PROJECT_DIR_LIBFIXMATH)/fract32.c \
+							$(PROJECT_DIR_LIBFIXMATH)/uint32.c
+
+
+PROJECT_SRC_LIBFIXMATRIX = $(PROJECT_DIR_LIBFIXMATRIX)/fixarray.c \
+							$(PROJECT_DIR_LIBFIXMATRIX)/fixmatrix.c \
+							$(PROJECT_DIR_LIBFIXMATRIX)/fixquat.c \
+							$(PROJECT_DIR_LIBFIXMATRIX)/fixstring.c \
+							$(PROJECT_DIR_LIBFIXMATRIX)/fixvector2d.c \
+							$(PROJECT_DIR_LIBFIXMATRIX)/fixvector3d.c
+
+ARCH_FLAGS	= -DFIXMATH_NO_CACHE
+
+###############################################################################

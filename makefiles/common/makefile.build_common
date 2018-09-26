@@ -1,0 +1,100 @@
+###############################################################################
+# Things that need to be maintained as the source changes
+#
+
+# Source files common to all targets
+$(TARGET)_SRC = $(PROJECT_SRC_FILES) \
+			    $(PROJECT_SRC_PARAM_GEN) \
+			    $(PROJECT_SRC_LIBFIXMATH) \
+			    $(PROJECT_SRC_LIBFIXMATRIX) \
+			    $(DEVICE_SRC)
+
+###############################################################################
+# Things that might need changing to use different tools
+#
+
+# Tool names
+CC		 = $(DEVICE_BUILD_TOOL)
+OBJCOPY	 = $(DEVICE_BUILD_OBJCOPY)
+
+#
+# Tool options.
+#
+INCLUDE_DIRS = $(ROOT)/include \
+			   $(ROOT)/lib \
+			   $(PROJECT_DIR_LIBFIXMATH) \
+			   $(PROJECT_DIR_LIBFIXMATRIX) \
+			   $(DEVICE_INCLUDES)
+
+ifeq ($(DEBUG),GDB)
+OPTIMIZE	 = -Og
+LTO_FLAGS	 = $(OPTIMIZE)
+else
+OPTIMIZE	 = -Os
+LTO_FLAGS	 = -flto -fuse-linker-plugin $(OPTIMIZE)
+endif
+
+DEBUG_FLAGS	 = -ggdb3
+
+#XXX: (-Wno-char-subscripts -Wno-sign-compare) used to disable warnings
+#	  in the libfixmath and libfixmatrix compilations
+#XXX: (-Wno-unused-parameter) used to disable warnings
+#	  for driver / generic function parameters
+#XXX: (-Wno-unused-result) used to disable warnings about
+#	  not using return values for some functions
+CFLAGS	 = $(ARCH_FLAGS) \
+		   $(LTO_FLAGS) \
+		   $(DEBUG_FLAGS) \
+		   $(DEVICE_FLAGS) \
+		   $(addprefix -D,$(OPTIONS)) \
+		   $(addprefix -I,$(INCLUDE_DIRS)) \
+		   -Wall -pedantic -Wextra -Wshadow -Wunsafe-loop-optimizations \
+		   -Wno-char-subscripts -Wno-sign-compare -Wno-unused-parameter -Wno-unused-result \
+		   -ffunction-sections \
+		   -fdata-sections \
+		   -D$(TARGET) \
+		   -DGIT_VERSION_FLIGHT_STR=\"$(GIT_VERSION_FLIGHT)\" \
+		   -DGIT_VERSION_OS_STR=\"$(GIT_VERSION_OS)\" \
+		   -DGIT_VERSION_MAVLINK_STR=\"$(GIT_VERSION_MAVLINK)\" \
+		   -DEEPROM_CONF_VERSION_STR=\"$(EEPROM_CONF_VERSION)\"
+
+ASFLAGS	= $(ARCH_FLAGS) \
+		  -x assembler-with-cpp \
+		  $(addprefix -I,$(INCLUDE_DIRS))
+
+# XXX Map/crossref output?
+LDFLAGS	= $(ARCH_FLAGS) \
+		  $(LTO_FLAGS) \
+		  $(DEBUG_FLAGS) \
+		  $(DEVICE_LDFLAGS)
+
+# List of buildable ELF files and their object dependencies.
+# It would be nice to compute these lists, but that seems to be just beyond make.
+$(TARGET_BIN): $(TARGET_ELF)
+		$(V0) $(OBJCOPY) -O binary $< $@
+
+$(TARGET_HEX): $(TARGET_ELF)
+	$(OBJCOPY) -O ihex --set-start 0x8000000 $< $@
+
+$(TARGET_ELF): $(TARGET_OBJS)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+MKDIR_OBJDIR = @mkdir -p $(dir $@)
+
+# Compile C
+$(OBJECT_DIR)/$(TARGET)/%.o: %.c
+	$(MKDIR_OBJDIR)
+	@echo %% $< #$(notdir $<)
+	@$(CC) -c -o $@ $(CFLAGS) $<
+
+# Compile C++
+$(OBJECT_DIR)/$(TARGET)/%.o: %.cpp
+	$(MKDIR_OBJDIR)
+	@echo %% $(notdir $<)
+	@$(CC) -c -o $@ $(CFLAGS) $<
+
+# Assemble
+$(OBJECT_DIR)/$(TARGET)/%.o: %.S
+	$(MKDIR_OBJDIR)
+	@echo %% $(notdir $<)
+	@$(CC) -c -o $@ $(ASFLAGS) $<

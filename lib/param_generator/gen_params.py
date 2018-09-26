@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import yaml
 #path_params_pdf = "documents/params.pdf"
 
@@ -433,6 +434,8 @@ def gen_c(params, filepath):
 	return success
 
 def main():
+	proj_dir = str(sys.argv[1])
+
 	param_groups = ("Battery",
 					"Calibration",
 					"Communication",
@@ -443,18 +446,18 @@ def main():
 					"Sensors",
 					"System")
 
-	path_params_yaml = ("lib/param_generator/params_battery.yaml",
-						"lib/param_generator/params_calibration.yaml",
-						"lib/param_generator/params_comms.yaml",
-						"lib/param_generator/params_control.yaml",
-						"lib/param_generator/params_estimator.yaml",
-						"lib/param_generator/params_mixer.yaml",
-						"lib/param_generator/params_rc_input.yaml",
-						"lib/param_generator/params_sensors.yaml",
-						"lib/param_generator/params_system.yaml")
-	path_params_md = "lib/param_generator/PARAMS.md"
-	path_params_h = "lib/param_generator/param_gen.h"
-	path_params_c = "lib/param_generator/param_gen.c"
+	path_params_yaml = (proj_dir + "/params_battery.yaml",
+						proj_dir + "/params_calibration.yaml",
+						proj_dir + "/params_comms.yaml",
+						proj_dir + "/params_control.yaml",
+						proj_dir + "/params_estimator.yaml",
+						proj_dir + "/params_mixer.yaml",
+						proj_dir + "/params_rc_input.yaml",
+						proj_dir + "/params_sensors.yaml",
+						proj_dir + "/params_system.yaml")
+	path_params_md = proj_dir + "/PARAMS.md"
+	path_params_h = proj_dir + "/param_gen.h"
+	path_params_c = proj_dir + "/param_gen.c"
 
 	do_gen = False
 

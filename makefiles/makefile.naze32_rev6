@@ -1,2 +1,0 @@
-# Naze32 rev6 specific drivers
-PROJECT_SRC_FILES += $(wildcard src/drivers/naze32_rev6/*.c)
