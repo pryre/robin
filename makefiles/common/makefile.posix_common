@@ -2,7 +2,6 @@
 
 DEVICE_BUILD_TOOL = gcc
 DEVICE_BUILD_OBJCOPY = objcopy
-TARGET_BUILD_ID = elf
 PROJECT_SRC_FILES += $(wildcard $(ROOT)/src/drivers/posix_common/*.c)
 ARCH_FLAGS += -std=gnu11
 
