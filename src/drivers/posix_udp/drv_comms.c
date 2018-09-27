@@ -54,7 +54,6 @@ static void udp_buffer_send( comms_port_t port ) {
 	if( comms_is_open( port ) ) {
 		switch(port) {
 			case COMM_PORT_0: {
-
 				bytes_sent = sendto( sock_comm_0,
 									 buf_send_comm_0,
 									 len_send_comm_0,
@@ -121,7 +120,6 @@ static int init_udp_port( struct sockaddr_in *locAddr, struct sockaddr_in *gcAdd
 			return false;
 		}
 	}
-
 
 	memset( gcAddr, 0, sizeof(*gcAddr) );
 	gcAddr->sin_family = AF_INET;
@@ -209,7 +207,7 @@ void comms_send( comms_port_t port, uint8_t ch ) {
 				}
 
 				//Pack a new character into the buffer
-				if( len_send_comm_1 < (BUFFER_LENGTH - 1) ) {
+				if( len_send_comm_0 < (BUFFER_LENGTH - 1) ) {
 					buf_send_comm_0[len_send_comm_0++] = ch;
 					time_send_addbuf_comm_0 = system_micros();
 				}
@@ -225,7 +223,7 @@ void comms_send( comms_port_t port, uint8_t ch ) {
 
 				//Pack a new character into the buffer
 				if( len_send_comm_1 < (BUFFER_LENGTH - 1) ) {
-					buf_send_comm_1[len_send_comm_1++];
+					buf_send_comm_1[len_send_comm_1++] = ch;
 					time_send_addbuf_comm_1 = system_micros();
 				}
 
