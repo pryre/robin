@@ -108,10 +108,7 @@ void sensors_init(void) {
 			*/
 
 			//==-- IMU
-			sensor_status_init(&_sensors.imu.status, get_param_uint(PARAM_SENSOR_IMU_CBRK) );
-
-			if( _sensors.imu.status.present )
-				drv_sensors_imu_init( &_sensors.imu.accel_scale, &_sensors.imu.gyro_scale );
+			sensor_status_init(&_sensors.imu.status, drv_sensors_imu_init( &_sensors.imu.accel_scale, &_sensors.imu.gyro_scale ) );
 
 			//==-- Mag
 			if( get_param_fix16( PARAM_SENSOR_MAG_UPDATE_RATE ) > 0 ) {
@@ -145,7 +142,11 @@ void sensors_init(void) {
 			mavlink_queue_broadcast_error("[SENSOR] Unable to configure i2c, disabling board sensors!");
 		}
 	} else {
-		mavlink_queue_broadcast_notice("[SENSOR] HIL configured, ignoring board sensors");
+		sensor_status_init( &_sensors.imu.status, false );
+		sensor_status_init( &_sensors.mag.status, false );
+		sensor_status_init( &_sensors.baro.status, false );
+
+		mavlink_queue_broadcast_notice("[SENSOR] Using HIL, some sensors disabled");
 	}
 
 	//==-- Timer
@@ -573,3 +574,4 @@ bool sensors_read(uint32_t time_us) {
 
 	return new_data_read;
 }
+

@@ -9,8 +9,6 @@ cleanup() {
     exit 0
 }
 
-sudo -v
-
 ROBIN_SITL=./robin_posix_udp.elf
 
 

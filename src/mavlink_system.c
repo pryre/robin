@@ -430,26 +430,27 @@ void mavlink_stream_sys_status(mavlink_channel_t chan) {
 		uint32_t onboard_control_sensors_present = 0;
 		uint32_t onboard_control_sensors_enabled = 0;
 		uint32_t onboard_control_sensors_health = 0;
-		uint16_t load = 0;
+		uint16_t load = _sensors.clock.average_time/_sensors.clock.counter;
 		uint16_t voltage_battery = fix16_to_int(fix16_mul(_fc_1000,_sensors.voltage_monitor.state_filtered));
 		uint16_t current_battery = -1;
 		uint8_t battery_remaining = fix16_to_int(fix16_mul(_fc_100,_sensors.voltage_monitor.precentage));
-		/*
-		uint16_t num_packets_drop = mavlink_get_channel_status(MAVLINK_COMM_0)->packet_rx_drop_count +
+
+		uint32_t num_packets_drop = mavlink_get_channel_status(MAVLINK_COMM_0)->packet_rx_drop_count +
 									mavlink_get_channel_status(MAVLINK_COMM_1)->packet_rx_drop_count;
-		uint16_t num_packets_success = mavlink_get_channel_status(MAVLINK_COMM_0)->packet_rx_success_count +
+		uint32_t num_packets_success = mavlink_get_channel_status(MAVLINK_COMM_0)->packet_rx_success_count +
 									   mavlink_get_channel_status(MAVLINK_COMM_1)->packet_rx_success_count;
-		uint16_t drop_rate_comm = (100*num_packets_drop) / (num_packets_drop + num_packets_success);
-		uint16_t errors_comm = num_packets_success;
-		*/
+		uint32_t num_packets = num_packets_drop + num_packets_success;
 		uint16_t drop_rate_comm = 0;
-		uint16_t errors_comm = 0;
+		if(num_packets > 0) {
+			drop_rate_comm = (100 * num_packets_drop) / num_packets;
+		}
+		uint16_t errors_comm = comms_tx_error_num(COMM_PORT_0) + comms_rx_error_num(COMM_PORT_0) +
+							   comms_tx_error_num(COMM_PORT_1) + comms_rx_error_num(COMM_PORT_1);
+
 		uint16_t errors_count1 = _lpq.length;
 		uint16_t errors_count2 = fix16_to_int(_control_timing.average_update);
 		uint16_t errors_count3 = _sensors.clock.min;
 		uint16_t errors_count4 = _sensors.clock.max;
-
-		load = _sensors.clock.average_time/_sensors.clock.counter;
 
 		_sensors.clock.counter = 0;
 		_sensors.clock.average_time = 0;

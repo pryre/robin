@@ -14,8 +14,12 @@ void comms_set_open( comms_port_t port );
 void comms_set_closed( comms_port_t port );
 bool comms_is_open( comms_port_t port );
 
-
 void comms_send( comms_port_t port, uint8_t ch );
 
 bool comms_waiting( comms_port_t port );
 uint8_t comms_recv( comms_port_t port );
+
+void comms_tx_error( comms_port_t port );
+void comms_rx_error( comms_port_t port );
+uint32_t comms_tx_error_num( comms_port_t port );
+uint32_t comms_rx_error_num( comms_port_t port );

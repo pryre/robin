@@ -200,8 +200,7 @@ COM_RC_ARM_HYST | uint | Time threshold to activate RC arming | 1000000 | us | s
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
 TIMESYNC_ALPHA | float | TODO - also check min-max values | 0.8 |  | [min:0.0, max:1.0] | False
-CBRK_HIL | uint | Sensor circuit breaker to enable/disable HIL input (set to 0 to disable checking device) | 0 | 0 / 1 | boolean | True
-CBRK_IMU | uint | Sensor circuit breaker arming check for IMU (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
+CBRK_HIL | uint | Sensor circuit breaker to enable/disable HIL input (set to 0 to disable accepting HIL_* messages) | 0 | 0 / 1 | boolean | True
 CBRK_SAFETY | uint | Sensor circuit breaker arming check for safety button (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CBRK_RC_SAFETY | uint | Sensor circuit breaker arming check for RC input (set to 0 to disable checking device) | 1 | 0 / 1 | boolean | True
 CHK_RATE_MAG | float | Sensor update rate for magnetometer (set to 0 to disable, typical is 20Hz) | 0.0 | Hz | scalar | True

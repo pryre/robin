@@ -565,7 +565,8 @@ static void safety_health_update(uint32_t time_now) {
 					  ( !_sensors.mag.status.present || ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) ) &&
 					  ( !_sensors.baro.status.present || ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) ) &&
 					  ( !_sensors.sonar.status.present || ( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) ) &&
-					  ( !_sensors.ext_pose.status.present || ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) );
+					  ( !_sensors.ext_pose.status.present || ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) ) &&
+					  ( !_sensors.hil.status.present || ( _system_status.sensors.hil.health == SYSTEM_HEALTH_OK ) );
 
 	bool control_ok = check_control_mode_inputs(_system_status.control_mode);
 

@@ -37,7 +37,6 @@ bool drv_sensors_battery_monitor_init(void) {
 	return false;
 }
 
-
 bool drv_sensors_i2c_job_queued(void) {
 	return false;
 }
@@ -48,7 +47,6 @@ void drv_sensors_i2c_clear(void) {
 bool drv_sensors_i2c_read(uint32_t time_us) {
 	return false;
 }
-
 
 void drv_sensors_rc_input_read( uint16_t *readings ) {
 	for(int i=0; i<MAX_INPUTS; i++) {

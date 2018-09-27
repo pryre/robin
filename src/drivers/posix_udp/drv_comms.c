@@ -50,10 +50,12 @@ static uint32_t time_send_addbuf_comm_1;
 
 static void udp_buffer_send( comms_port_t port ) {
 	int bytes_sent;
+	int expected_send_len;
 
 	if( comms_is_open( port ) ) {
 		switch(port) {
 			case COMM_PORT_0: {
+				expected_send_len = len_send_comm_0;
 				bytes_sent = sendto( sock_comm_0,
 									 buf_send_comm_0,
 									 len_send_comm_0,
@@ -74,6 +76,7 @@ static void udp_buffer_send( comms_port_t port ) {
 				break;
 			}
 			case COMM_PORT_1: {
+				expected_send_len = len_send_comm_1;
 				bytes_sent = sendto( sock_comm_1,
 									 buf_send_comm_1,
 									 len_send_comm_1,
@@ -88,6 +91,10 @@ static void udp_buffer_send( comms_port_t port ) {
 				break;
 			}
 		}
+	}
+
+	if( bytes_sent != expected_send_len ) {
+		comms_tx_error(port);
 	}
 }
 
@@ -189,11 +196,7 @@ bool comms_init_port( comms_port_t port ) {
 	return success;
 }
 
-
-
 void comms_send( comms_port_t port, uint8_t ch ) {
-	int bytes_sent;
-
 	if( comms_is_open( port ) ) {
 		switch(port) {
 			case COMM_PORT_0: {
