@@ -11,9 +11,9 @@ cleanup() {
 
 sudo -v
 
-ROBIN_SITL=../$1
-SERIAL_PORT_0=$2
-SERIAL_PORT_1=$3
+ROBIN_SITL=./robin_posix_serial.elf
+SERIAL_PORT_0=$1
+SERIAL_PORT_1=$2
 
 
 # Initialise trap to call cleanup() when CTRL+C (SIGINT) is received
@@ -46,8 +46,8 @@ then
 	sudo chmod a+rw $SERIAL_PORT_1
 fi
 
-chmod +x ../$1
-bash -c "exec -a 'robin_sitl' ../$1" &
+chmod +x $ROBIN_SITL
+bash -c "exec -a 'robin_sitl' $ROBIN_SITL" &
 PID_ROBIN=$!
 echo "Started robin ($PID_ROBIN)"
 

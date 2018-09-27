@@ -67,34 +67,3 @@ LDFLAGS	= $(ARCH_FLAGS) \
 		  $(LTO_FLAGS) \
 		  $(DEBUG_FLAGS) \
 		  $(DEVICE_LDFLAGS)
-
-# List of buildable ELF files and their object dependencies.
-# It would be nice to compute these lists, but that seems to be just beyond make.
-$(TARGET_BIN): $(TARGET_ELF)
-		$(V0) $(OBJCOPY) -O binary $< $@
-
-$(TARGET_HEX): $(TARGET_ELF)
-	$(OBJCOPY) -O ihex --set-start 0x8000000 $< $@
-
-$(TARGET_ELF): $(TARGET_OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
-
-MKDIR_OBJDIR = @mkdir -p $(dir $@)
-
-# Compile C
-$(OBJECT_DIR)/$(TARGET)/%.o: %.c
-	$(MKDIR_OBJDIR)
-	@echo %% $< #$(notdir $<)
-	@$(CC) -c -o $@ $(CFLAGS) $<
-
-# Compile C++
-$(OBJECT_DIR)/$(TARGET)/%.o: %.cpp
-	$(MKDIR_OBJDIR)
-	@echo %% $(notdir $<)
-	@$(CC) -c -o $@ $(CFLAGS) $<
-
-# Assemble
-$(OBJECT_DIR)/$(TARGET)/%.o: %.S
-	$(MKDIR_OBJDIR)
-	@echo %% $(notdir $<)
-	@$(CC) -c -o $@ $(ASFLAGS) $<

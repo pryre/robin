@@ -40,7 +40,7 @@ void system_debug_print( char *msg ) {
 void system_rate_limit(void) {
 	struct timespec sleep_time;
 	sleep_time.tv_sec = 0;
-	sleep_time.tv_nsec = 10000;	//sleep for 0.01 millis
+	sleep_time.tv_nsec = (int)1e5;	//sleep for 0.1 millis
 
 	nanosleep(&sleep_time, NULL);
 }

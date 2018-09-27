@@ -18,8 +18,26 @@ OPTIONS		?=
 # Debugger optons, must be empty or GDB
 DEBUG		?=
 
-posix_serial:
-	$(MAKE) -C makefiles/posix_serial PROJECT_NAME=$(PROJECT_NAME)
+posix_udp: param_gen
+	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+
+posix_udp_run: posix_udp
+	@exec ./lib/scripts/sitl_udp_run.sh
+
+posix_serial: param_gen
+	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+
+posix_serial_run: posix_serial
+	@exec ./lib/scripts/sitl_serial_run.sh $(SERIAL_DEVICE) $(SERIAL_DEVICE_2)
+
+naze32_rev5: param_gen
+	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+
+naze32_rev6: param_gen
+	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+
+param_gen:
+	@python3 lib/param_generator/gen_params.py lib/param_generator >&2
 
 clean:
 #	rm -rf *.o obj $(TARGET_HEX) $(TARGET_ELF) $(TARGET_OBJS) $(TARGET_MAP)
@@ -43,11 +61,6 @@ mavlink_bootloader:
 reflash: reflash_$(TARGET)
 
 reflash_$(TARGET): $(TARGET_IMG) mavlink_bootloader flash_$(TARGET)
-
-run: run_$(TARGET)
-
-run_$(TARGET): $(TARGET_IMG)
-	@exec ./lib/scripts/sitl_run.sh $(TARGET_IMG) $(SERIAL_DEVICE) $(SERIAL_DEVICE_2)
 
 listen:
 	#picocom $(SERIAL_DEVICE) -b $(SERIAL_BAUD)

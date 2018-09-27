@@ -18,19 +18,15 @@ TARGET_MAP   = $(OBJECT_DIR)/$(TARGET).map
 
 ###############################################################################
 
-FOLDER_FILES = $(shell ls $(HERE))
-
-$(info $(FOLDER_FILES))
-
 # Parameter Generation
 PROJECT_DIR_PARAM_GEN = $(ROOT)/lib/param_generator
 PROJECT_SRC_PARAM_GEN = $(PROJECT_DIR_PARAM_GEN)/param_gen.c
 
-GEN_PARAMS := $(shell python3 $(PROJECT_DIR_PARAM_GEN)/gen_params.py $(PROJECT_DIR_PARAM_GEN) >&2; echo $$?)
+#GEN_PARAMS := $(shell python3 $(PROJECT_DIR_PARAM_GEN)/gen_params.py $(PROJECT_DIR_PARAM_GEN) >&2; echo $$?)
 #$(info $$GEN_PARAMS is [${GEN_PARAMS}])
-ifeq ($(GEN_PARAMS),"0")
-    $(error Cannot continue make without parameters generated)
-endif
+#ifeq ($(GEN_PARAMS),"0")
+#    $(error Cannot continue make without parameters generated)
+#endif
 
 GIT_VERSION_FLIGHT := $(shell git describe --abbrev=8 --always | sed 's/^ *//g' | head -c 8)
 GIT_VERSION_OS := $(shell git submodule status | grep BreezySTM32 | sed 's/^ *//g' | head -c 8)

@@ -2,15 +2,14 @@
 
 DEVICE_BUILD_TOOL = arm-none-eabi-gcc
 DEVICE_BUILD_OBJCOPY = arm-none-eabi-objcopy
-TARGET_BUILD_ID = hex
 
 ###############################################################################
 
 # Naze32 specific drivers
-PROJECT_SRC_FILES += $(wildcard src/drivers/naze32_common/*.c)
+PROJECT_SRC_FILES += $(wildcard $(ROOT)/src/drivers/naze32_common/*.c)
 
 # Change this to wherever you put BreezySTM32
-BREEZY_DIR	:= $(HERE)/lib/BreezySTM32
+BREEZY_DIR	:= $(ROOT)/lib/BreezySTM32
 
 F1_DIR		:= $(BREEZY_DIR)/f1
 
