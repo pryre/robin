@@ -33,6 +33,20 @@ void system_bootloader(void) {
 	systemResetToBootloader();
 }
 
+uint16_t system_vendor_id(void) {
+	//TODO: This is the serial vendor and product ID, should be dynamic?
+	return 0x10c4;
+}
+
+uint16_t system_product_id(void) {
+	//TODO: This is the serial vendor and product ID, should be dynamic?
+	return 0xea60;
+}
+
+uint64_t system_unique_id(void) {
+	return U_ID_0;
+}
+
 void system_debug_print( char *msg ) {
 	//XXX: We don't have a debug CLI
 }

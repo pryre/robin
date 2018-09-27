@@ -473,8 +473,7 @@ void mavlink_stream_sys_status(mavlink_channel_t chan) {
 		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL;
 		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
 
-		//TODO: We should have params for enabling specific sensors
-		//==-- Sensors Present
+		//==-- Sensors Enabled
 		onboard_control_sensors_enabled = MAV_SYS_STATUS_SENSOR_3D_GYRO |
 										  MAV_SYS_STATUS_SENSOR_3D_ACCEL |
 										  MAV_SYS_STATUS_SENSOR_3D_MAG |
@@ -810,10 +809,9 @@ void mavlink_prepare_protocol_version(mavlink_message_t *msg) {
 //Prepares an autopilot version details
 void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 	//TODO: Update capabilities
-	const uint64_t capabilities = MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT +
-								  MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET +
-								  MAV_PROTOCOL_CAPABILITY_SET_ACTUATOR_TARGET +
-								  MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION +
+	const uint64_t capabilities = MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT |
+								  MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET |
+								  MAV_PROTOCOL_CAPABILITY_SET_ACTUATOR_TARGET |
 							  	  MAV_PROTOCOL_CAPABILITY_MAVLINK2;
 
 	mavlink_msg_autopilot_version_pack(mavlink_system.sysid,
@@ -827,9 +825,9 @@ void mavlink_prepare_autopilot_version(mavlink_message_t *msg) {
 									   &blank_array_[0],
 									   &blank_array_[0],
 									   &blank_array_[0],
-									   0x10c4,	//TODO: This is the serial vendor and product ID, should be dynamic?
-									   0xea60,
-									   0,//U_ID_0,
+									   system_vendor_id(),
+									   system_product_id(),
+									   system_unique_id(),
 									   &blank_array_uid_[0]);
 }
 

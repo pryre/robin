@@ -4,7 +4,7 @@ cleanup() {
     # perform cleanup here
     echo "Shutting down SITL"
 
-    sudo kill $(pgrep -f "robin_sitl")
+    kill $(pgrep -f "robin_sitl")
 
     exit 0
 }
