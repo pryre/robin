@@ -4,7 +4,11 @@ cleanup() {
     # perform cleanup here
     echo "Shutting down SITL"
 
-    sudo kill $(pgrep -f "robin_sitl") $(pgrep -f "robin_socat")
+	PID_ROBIN_ALL=$(pgrep -f "robin_sitl")
+	if [ $PID_ROBIN_ALL ]; then
+	    echo "Killing all instances of robin_sitl"
+	    kill $PID_ROBIN_ALL
+	fi
 
     exit 0
 }
@@ -14,7 +18,6 @@ sudo -v
 ROBIN_SITL=./robin_posix_serial.elf
 SERIAL_PORT_0=$1
 SERIAL_PORT_1=$2
-
 
 # Initialise trap to call cleanup() when CTRL+C (SIGINT) is received
 trap "cleanup" 2
@@ -51,6 +54,14 @@ bash -c "exec -a 'robin_sitl' $ROBIN_SITL" &
 PID_ROBIN=$!
 echo "Started robin ($PID_ROBIN)"
 
-sleep infinity
+while [ 1 ]; do
+	#Lock terminal here, but check that robin is still alive
+	if ! kill -0 $PID_ROBIN 2>/dev/null; then
+		#If not running, then exit and perform cleanup
+		break
+	fi
+
+	sleep 0.5
+done
 
 cleanup
