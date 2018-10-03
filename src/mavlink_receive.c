@@ -89,7 +89,7 @@ static bool communication_decode(uint8_t port, uint8_t c) {
 					break;
 				}
 				case MAVLINK_MSG_ID_SET_ACTUATOR_CONTROL_TARGET: {
-					mavlink_handle_mission_request_list( port, &msg, &status );
+					mavlink_handle_set_actuator_control_target( port, &msg, &status );
 					break;
 				}
 				case MAVLINK_MSG_ID_HIL_SENSOR: {
