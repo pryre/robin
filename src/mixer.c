@@ -326,7 +326,7 @@ static bool motor_test_in_progress( uint32_t time_now ) {
 						_motor_test.motor_step++;
 
 						char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-						snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[MIXER] Testing motor: %d", _motor_test.motor_step);
+						snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, "[MIXER] Testing motor: %d", _motor_test.motor_step + 1);
 						mavlink_queue_broadcast_notice(text);
 				} else {
 					//Test is done, reset

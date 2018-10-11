@@ -29,7 +29,6 @@ int main(void) {
 	_system_status.mode = MAV_MODE_PREFLIGHT;
 
 	system_init();
-	safety_request_state( MAV_STATE_BOOT );
 
     setup();
 
@@ -47,6 +46,8 @@ void setup(void) {
 	communications_system_init();
 
 	safety_init();
+	//Critical systems are up, now we're into normal boot phase
+	safety_request_state( MAV_STATE_BOOT );
 
 	mixer_init();	//XXX: Must be called before pwm_init()
 	pwm_init();		//XXX: This locks boot for a while if ESC cal is active, so do it before i2c devices

@@ -15,3 +15,7 @@ A listing of supporting documentation for the robin autopilot. This should proba
    - As mavlink can have max messages of 250+ bytes, we want to send as little as possible each loop to allow catchup
  - Note about how mavesp8266 does not work well in AP mode (too many dropped packets)
  - Make sure to explain how to fully set up RC control and mode selection
+
+
+- automatic accel orientation detection during calibration
+- sensors cals output failure sound instead of success

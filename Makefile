@@ -10,6 +10,8 @@ SERIAL_DEVICE	?= /dev/ttyUSB0
 SERIAL_BAUD		?= 921600
 SERIAL_DEVICE_2 ?=
 
+TARGET_HEX = 
+
 ###############################################################################
 
 # Compile-time options
@@ -36,6 +38,13 @@ naze32_rev5: param_gen
 naze32_rev6: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
+naze32_rev6_flash: naze32_rev6
+	stm32flash -w build/robin_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+
+naze32_rev6_reflash: naze32_rev6 mavlink_bootloader
+	@sleep 1
+	stm32flash -w build/robin_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+
 param_gen:
 	@python3 lib/param_generator/gen_params.py lib/param_generator >&2
 
@@ -46,21 +55,16 @@ clean:
 	rm ./lib/param_generator/param_gen.c
 	rm ./lib/param_generator/PARAMS.md
 
-flash: flash_$(TARGET)
-
-flash_$(TARGET): $(TARGET_IMG)
+#flash:
 #	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb -ixon
 #	echo -n 'R' >$(SERIAL_DEVICE)
 #	sleep 1
-	stm32flash -w $(TARGET_HEX) -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+#	stm32flash -w $(TARGET_HEX) -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
 mavlink_bootloader:
 	./lib/scripts/reboot_bootloader --device $(SERIAL_DEVICE) --baudrate $(SERIAL_BAUD)
-	sleep 1
 
-reflash: reflash_$(TARGET)
-
-reflash_$(TARGET): $(TARGET_IMG) mavlink_bootloader flash_$(TARGET)
+#reflash: mavlink_bootloader flash
 
 listen:
 	#picocom $(SERIAL_DEVICE) -b $(SERIAL_BAUD)

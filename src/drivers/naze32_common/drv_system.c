@@ -10,11 +10,13 @@ extern void SetSysClock(bool overclock);
 void system_init(void) {
 	system_debug_print("--== robin ==--");
 
-    SetSysClock(false);
+	SetSysClock(false);
 
-    systemInit();
+	systemInit();
 
 	adcInit(false);
+	
+	system_pause_ms(100);
 }
 
 uint32_t system_micros( void ) {

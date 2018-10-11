@@ -14,10 +14,10 @@ static uint16_t pin_heart;
 GPIO_TypeDef *gpio_p_buzzer;
 static uint16_t pin_buzzer;
 
-void status_led_arm_init( void ) {
-	gpio_p_heart = LED1_GPIO;
-	pin_heart = LED1_PIN;
-
+void status_led_arm_init( void ) {	
+	gpio_p_arm = LED1_GPIO;
+	pin_arm = LED1_PIN;
+	
 	status_led_arm_set(false);
 }
 
@@ -59,9 +59,10 @@ void status_led_heart_set( bool on ) {
 }
 
 void status_buzzer_set( bool on ) {
+	//XXX: Buzzer Hi/Lo is backwards compared to LEDs
 	if( on ) {
-		digitalLo(gpio_p_buzzer, pin_buzzer);	//On
+		digitalHi(gpio_p_buzzer, pin_buzzer);	//On
 	} else {
-		digitalHi(gpio_p_buzzer, pin_buzzer);	//Off
+		digitalLo(gpio_p_buzzer, pin_buzzer);	//Off
 	}
 }
