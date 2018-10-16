@@ -151,6 +151,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_ACTUATORS_OB_PWM_DISARM_VALUE, fix16_from_float(0.0f));
 	init_param_uint(PARAM_ACTUATORS_OB_DIGITAL_DISARM_VALUE, 0);
 	init_param_uint(PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT, 1);
+	init_param_uint(PARAM_MOTOR_PWM_LINEARIZE, 1);
 	init_param_uint(PARAM_SERVO_PWM_SEND_RATE, 50);
 	init_param_uint(PARAM_MOTOR_PWM_SEND_RATE, 400);
 	init_param_uint(PARAM_MOTOR_PWM_IDLE, 1150);
@@ -351,6 +352,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"ACTUATOR_OB_PDV",
 	"ACTUATOR_OB_DDV",
 	"ACTUATOR_AUX_ZO",
+	"PWM_NONLINEAR_M",
 	"PWM_RATE_S",
 	"PWM_RATE_M",
 	"PWM_IDLE",

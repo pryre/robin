@@ -59,7 +59,7 @@ static int32_t int32_constrain(int32_t i, const int32_t min, const int32_t max) 
 
 static uint32_t map_fix16_to_pwm(fix16_t f) {
 	fix16_t fc = fix16_constrain(f, 0, _fc_1);
-	//range is -500 to 500
+	//range is 0 to 1000
 	fix16_t pwm_range = fix16_from_int( get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN) );
 	//Returns 1000 to 2000
 	return fix16_to_int(fix16_mul(fc, pwm_range)) + get_param_uint(PARAM_MOTOR_PWM_MIN);
@@ -67,8 +67,7 @@ static uint32_t map_fix16_to_pwm(fix16_t f) {
 
 static uint32_t map_fix16_to_pwm_dual(fix16_t f) {
 	fix16_t fc = fix16_constrain(f, -_fc_1, _fc_1);
-	//range is -500 to 500
-
+	//range is 0 to 500
 	uint16_t pwm_range = ( get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN) ) / 2;
 	//Returns 1000 to 2000
 	return fix16_to_int( fix16_mul( fc, fix16_from_int(pwm_range) ) ) + pwm_range + get_param_uint(PARAM_MOTOR_PWM_MIN);
@@ -243,7 +242,7 @@ void pwm_init() {
 //Direct write to the motor with failsafe checks
 //1000 <= value <= 2000
 //value_disarm (for motors) should be 1000
-static void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disarm) {
+static void write_output_pwm(const uint8_t index, const uint32_t value, const uint32_t value_disarm) {
 	if( safety_is_armed() ) {
 		_pwm_output[index] = value;
 	} else {
@@ -254,8 +253,17 @@ static void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disar
 }
 
 //Write a pwm value to the motor channel, value should be between 0 and 1
-static void write_motor(uint8_t index, fix16_t value) {
-	uint16_t pwm = map_fix16_to_pwm(value);
+static void write_motor(const uint8_t index, const fix16_t value) {
+	fix16_t cmd_throttle = fix16_constrain(value, 0, _fc_1);
+	
+	//Lift = 0.5*Cl*A*(V^2)
+	//Kl = 0.5*Cl*A
+	//Lift = Kl*(V^2)
+	//Throttle controls V, so to get linear lift, need to sqrt V
+	if( get_param_uint(PARAM_MOTOR_PWM_LINEARIZE) )
+		cmd_throttle = fix16_sqrt(cmd_throttle);
+	
+	uint16_t pwm = map_fix16_to_pwm(cmd_throttle);
 
 	//If there is an idle set
 	if( pwm < get_param_uint(PARAM_MOTOR_PWM_IDLE) )
@@ -265,14 +273,14 @@ static void write_motor(uint8_t index, fix16_t value) {
 }
 
 //Write a pwm value to the motor channel, value should be between -1 and 1
-static void write_servo(uint8_t index, fix16_t value) {
+static void write_servo(const uint8_t index, const fix16_t value) {
 	uint16_t pwm = map_fix16_to_pwm_dual(value);
 	uint16_t pwm_mid = get_param_uint(PARAM_MOTOR_PWM_MIN) + ( (get_param_uint(PARAM_MOTOR_PWM_MAX) - get_param_uint(PARAM_MOTOR_PWM_MIN)) / 2 );
 
 	write_output_pwm(index, pwm, pwm_mid);
 }
 
-static void write_aux_pwm(uint8_t index, fix16_t value, bool respect_arm, fix16_t value_disarm) {
+static void write_aux_pwm(const uint8_t index, const fix16_t value, const bool respect_arm, const fix16_t value_disarm) {
 	uint16_t pwm_act_disarm = 0;
 	uint16_t pwm_act_out = int32_constrain( map_fix16_to_pwm_dual( value ),
 															  get_param_uint(PARAM_MOTOR_PWM_MIN),
@@ -290,7 +298,7 @@ static void write_aux_pwm(uint8_t index, fix16_t value, bool respect_arm, fix16_
 	write_output_pwm(index, pwm_act_out, pwm_act_disarm);
 }
 
-static void write_aux_digital(uint8_t index, bool value, bool respect_arm, bool value_disarm) {
+static void write_aux_digital(const uint8_t index, const bool value, const bool respect_arm, const bool value_disarm) {
 	//XXX:
 	//The digital write is controlled as a PWM signal still
 	//but instead of all the fuss, we just fill up the
@@ -311,7 +319,7 @@ static void write_aux_digital(uint8_t index, bool value, bool respect_arm, bool 
 	write_output_pwm(index, pwm_act_out, pwm_act_disarm);
 }
 
-static bool motor_test_in_progress( uint32_t time_now ) {
+static bool motor_test_in_progress( const uint32_t time_now ) {
 	bool in_progress = false;
 
 	//Handle motor testing

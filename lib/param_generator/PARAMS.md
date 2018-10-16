@@ -171,6 +171,7 @@ ACTUATOR_OB_ARM | uint | Setting to false allows actuator group 2 outputs to be 
 ACTUATOR_OB_PDV | float | Set value will be output if `ACTUATOR_OB_ARM` is set true and the flight controller is disarmed. | 0.0 |  | [min:-1.0, max:1.0] | False
 ACTUATOR_OB_DDV | uint | Set value will be output if `ACTUATOR_OB_ARM` is set true and the flight controller is disarmed. | 0 |  | [0, 1] | False
 ACTUATOR_AUX_ZO | uint | Override disarm behaviour of all auxiliary outputs, such that if the flight controller is disarmed (and the groupings respect arm/disarm), zero output will be given. | 1 | 0 / 1 | boolean | False
+PWM_NONLINEAR_M | uint | Enables linearization of throttle commands for motor outputs, if you are running linear ESCs this should be disabled | 1 | 0 / 1 | boolean | False
 PWM_RATE_S | uint | Update rate for servo/actuator PWM outputs | 50 | ? | scalar | True
 PWM_RATE_M | uint | Update rate for motor PWM outputs | 400 | ? | scalar | True
 PWM_IDLE | uint | Idle output for motors (when armed) | 1150 | pwm | scalar | False

@@ -103,6 +103,15 @@ PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT:
     option: "bool"
     default: 1
 ---
+PARAM_MOTOR_PWM_LINEARIZE:
+  type: "uint"
+  name: "PWM_NONLINEAR_M"
+  description: "Enables linearization of throttle commands for motor outputs, if you are running linear ESCs this should be disabled"
+  reboot: false
+  value:
+    option: "bool"
+    default: 1
+---
 PARAM_SERVO_PWM_SEND_RATE:
   type: "uint"
   name: "PWM_RATE_S"
