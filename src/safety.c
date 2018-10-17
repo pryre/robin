@@ -343,7 +343,10 @@ bool safety_request_arm(void) {
 					strncpy(text_reason,
 							 "(ext_pose)",
 							 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
-
+				} else if(_sensors.hil.status.present && (_system_status.sensors.hil.health != SYSTEM_HEALTH_OK) ) {
+					strncpy(text_reason,
+							 "(HIL)",
+							 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN);
 				} else if(!control_check) {
 					if( (_system_status.control_mode == MAIN_MODE_STABILIZED) ||
 						(_system_status.control_mode == MAIN_MODE_ACRO) ) {
