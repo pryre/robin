@@ -2,7 +2,20 @@
 
 DEVICE_BUILD_TOOL = gcc
 DEVICE_BUILD_OBJCOPY = objcopy
+
 PROJECT_SRC_FILES += $(wildcard $(ROOT)/src/drivers/posix_common/*.c)
 ARCH_FLAGS += -std=gnu11
+
+DEVICE_LDFLAGS :=
+DEVICE_FLAGS :=
+
+# Add in posix sound drivers
+ifneq ("$(wildcard /usr/include/alsa/asoundlib.h)","")
+$(info Driver ALSA: found)
+DEVICE_LDFLAGS += -lasound
+DEVICE_FLAGS += -DUSE_ALSA_SOUND
+else
+$(info Driver ALSA: not found)
+endif
 
 ###############################################################################

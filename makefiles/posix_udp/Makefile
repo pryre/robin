@@ -18,6 +18,7 @@ TARGET_IMG = $(TARGET_ELF)
 
 $(info Building for: $(PROJECT_BUILD_TYPE))
 $(info Target: $(TARGET_IMG))
+#$(info Device flags: $(DEVICE_FLAGS))
 
 ###############################################################################
 

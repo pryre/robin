@@ -200,42 +200,42 @@ void calibration_run(void) {
 	if(_calibrations.type != CAL_NONE) {
 		switch(_calibrations.type) {
 			case CAL_GYRO: {
-				cal_mode_error = calibrate_gyro();
+				cal_mode_error = !calibrate_gyro();
 
 				break;
 			}
 			case CAL_MAG: {
-				cal_mode_error = calibrate_magnetometer();
+				cal_mode_error = !calibrate_magnetometer();
 
 				break;
 			}
 			case CAL_GND_PRESSURE: {
-				cal_mode_error = calibrate_ground_pressure();
+				cal_mode_error = !calibrate_ground_pressure();
 
 				break;
 			}
 			case CAL_RC: {
-				cal_mode_error = calibrate_rc();
+				cal_mode_error = !calibrate_rc();
 
 				break;
 			}
 			case CAL_ACCEL: {
-				cal_mode_error = calibrate_accel();
+				cal_mode_error = !calibrate_accel();
 
 				break;
 			}
 			case CAL_LEVEL_HORIZON: {
-				cal_mode_error = calibrate_level_horizon();
+				cal_mode_error = !calibrate_level_horizon();
 
 				break;
 			}
 			case CAL_INTER: {
-				cal_mode_error = calibrate_interference();
+				cal_mode_error = !calibrate_interference();
 
 				break;
 			}
 			case CAL_BARO: {
-				cal_mode_error = calibrate_barometer();
+				cal_mode_error = !calibrate_barometer();
 
 				break;
 			}
