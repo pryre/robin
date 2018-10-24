@@ -4,6 +4,11 @@
 #include "drivers/drv_status_io.h"
 #include "safety.h"
 
+#include "fix16.h"
+#include "fixextra.h"
+
+fix16_t _io_pin_states[8];
+
 static status_led_t led_arm;
 static status_led_t led_heart;
 static status_buzzer_t buzzer;
@@ -16,14 +21,19 @@ void status_devices_init( void ) {
 	led_arm.period_us = 500000;
 	led_arm.length_us = 250000;
 	led_arm.last_pulse = 0;
+	led_arm.state = false;
 
 	led_heart.period_us = 1000000;
 	led_heart.length_us = 250000;
 	led_heart.last_pulse = 0;
+	led_heart.state = false;
 
 	buzzer.num_beeps = 0;	//Number of beeps to make
 	buzzer.period = 0;		//200ms beep length
 	buzzer.last_beep = 0;	//Time last beep started
+
+	for(int i=0; i<8; i++)
+		_io_pin_states[i] = 0;
 }
 
 static void status_buzzer_new_beep_set( int8_t num, uint32_t period ) {
@@ -82,15 +92,19 @@ static bool status_led_calc_pulse( uint32_t time_now, status_led_t *led ) {
 static void status_led_update( uint32_t time_now ) {
 	// Safety LED
 	if( safety_is_armed() ) {
-		status_led_arm_set(true);
+		led_arm.state = true;
 	} else if( !safety_switch_engaged() ) {
-		status_led_arm_set( status_led_calc_pulse( time_now, &led_arm ) );
+		led_arm.state = status_led_calc_pulse( time_now, &led_arm );
 	} else {
-		status_led_arm_set(false);
+		led_arm.state = false;
 	}
 
 	//System heartbeat LED
-	status_led_heart_set( status_led_calc_pulse( time_now, &led_heart ) );
+	led_heart.state = status_led_calc_pulse( time_now, &led_heart );
+
+	//Actually set the pin states
+	status_led_heart_set(led_heart.state);
+	status_led_arm_set(led_arm.state);
 }
 
 void status_devices_run( uint32_t time_now ) {
@@ -99,4 +113,9 @@ void status_devices_run( uint32_t time_now ) {
 
 	//Update buzzer to see if it should be making any noise
 	status_buzzer_update( time_now );
+
+	//Update pin state data
+	_io_pin_states[IO_PIN_STATE_ID_HEART] = (led_heart.state) ? _fc_1 : 0;
+	_io_pin_states[IO_PIN_STATE_ID_ARM] = (led_arm.state) ? _fc_1 : 0;
+	_io_pin_states[IO_PIN_STATE_ID_BUZZER] = (buzzer.state) ? _fc_1 : 0;
 }

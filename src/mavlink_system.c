@@ -8,6 +8,7 @@
 
 #include "fix16.h"
 #include "fixextra.h"
+#include "drivers/drv_status_io.h"
 #include "params.h"
 #include "param_generator/param_gen.h"
 #include "safety.h"
@@ -37,11 +38,13 @@ mavlink_system_t mavlink_system;
 bool _ch_0_have_heartbeat;
 bool _ch_1_have_heartbeat;
 
-system_status_t _system_status;
-sensor_readings_t _sensors;
 params_t _params;
 const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
+
+system_status_t _system_status;
+sensor_readings_t _sensors;
 state_t _state_estimator;
+fix16_t _io_pin_states[8];
 
 command_input_t _control_input;
 int32_t _pwm_output[8];
@@ -423,6 +426,18 @@ void mavlink_stream_heartbeat(mavlink_channel_t chan) {
 							   _system_status.mode | MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,	//XXX: Set custom mode to allow for the pretend mode
 							   compat_encode_px4_main_mode( _system_status.control_mode ),	//We don't use custom_mode, but pretend to match px4 custom_mode for OFFBOARD
 							   _system_status.state);
+}
+
+
+void mavlink_stream_status_io(mavlink_channel_t chan) {
+	float status_io[8];
+	for(int i=0; i<8; i++)
+		status_io[i] = fix16_to_float(_io_pin_states[i]);
+
+	mavlink_msg_actuator_control_target_send(chan,
+							   system_micros(),
+							   IO_PIN_STATE_GROUP_MIX,
+							   &status_io[0]);
 }
 
 void mavlink_stream_sys_status(mavlink_channel_t chan) {

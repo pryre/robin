@@ -78,6 +78,7 @@ void lpq_queue_broadcast_msg(mavlink_message_t *msg);
 bool mavlink_stream_ready(mavlink_channel_t chan);
 void mavlink_stream_low_priority(mavlink_channel_t chan);
 void mavlink_stream_heartbeat(mavlink_channel_t chan);
+void mavlink_stream_status_io(mavlink_channel_t chan);
 void mavlink_stream_sys_status(mavlink_channel_t chan);
 void mavlink_stream_highres_imu(mavlink_channel_t chan);
 void mavlink_stream_attitude(mavlink_channel_t chan);

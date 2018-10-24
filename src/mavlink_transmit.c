@@ -16,6 +16,7 @@ system_status_t _system_status;
 //Stream rate in microseconds: 1s = 1,000,000ms
 static mavlink_stream_t mavlink_stream_comm_0[MAVLINK_STREAM_COUNT] = {
 	{ .param_rate = PARAM_STREAM_RATE_HEARTBEAT_0,				.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_heartbeat },
+	{ .param_rate = PARAM_STREAM_RATE_STATUS_IO_0,				.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_status_io },
 	{ .param_rate = PARAM_STREAM_RATE_SYS_STATUS_0,				.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_sys_status },
 	{ .param_rate = PARAM_STREAM_RATE_HIGHRES_IMU_0,			.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_highres_imu },
 	{ .param_rate = PARAM_STREAM_RATE_ATTITUDE_0,				.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_attitude },
@@ -29,6 +30,7 @@ static mavlink_stream_t mavlink_stream_comm_0[MAVLINK_STREAM_COUNT] = {
 };
 static mavlink_stream_t mavlink_stream_comm_1[MAVLINK_STREAM_COUNT] = {
 	{ .param_rate = PARAM_STREAM_RATE_HEARTBEAT_1,				.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_heartbeat },
+	{ .param_rate = PARAM_STREAM_RATE_STATUS_IO_1,				.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_status_io },
 	{ .param_rate = PARAM_STREAM_RATE_SYS_STATUS_1,				.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_sys_status },
 	{ .param_rate = PARAM_STREAM_RATE_HIGHRES_IMU_1,			.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_highres_imu },
 	{ .param_rate = PARAM_STREAM_RATE_ATTITUDE_1,				.period_update = 0,	.last_time_us = 0, .send_function = mavlink_stream_attitude },

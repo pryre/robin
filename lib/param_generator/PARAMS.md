@@ -90,6 +90,7 @@ BAUD_RATE_0 | uint | Baud rate for the the COMM_0 port - set to 0 to disable | 1
 BAUD_RATE_1 | uint | Baud rate for the the COMM_1 port - set to 0 to disable | 0 |  | [0, 9600, 57600, 115200, 921600] | True
 COMMS_WAIT | uint | Instructs autopilot to remain silent until it receives a valid heartbeat message (False:0,True:1) | 1 | 0 / 1 | boolean | True
 STRM0_HRTBT | float | Communication update rate for system heartbeat (set to 0 to turn off stream) | 1.0 | Hz | scalar | False
+STRM0_STATUS_IO | float | Communication update rate for system status IO pin outputs (set to 0 to turn off stream) | 0.0 | Hz | scalar | False
 STRM0_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
 STRM0_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 10.0 | Hz | scalar | False
 STRM0_ATT | float | Communication update rate for current attitude euler angles (set to 0 to turn off stream) | 0.0 | Hz | scalar | False
@@ -101,6 +102,7 @@ STRM0_TIMESYNC | float | Communication update rate for timesync (set to 0 to tur
 STRM0_BATTSTAT | float | Communication update rate for battery status (set to 0 to turn off stream) | 2.0 | Hz | scalar | False
 STRM0_LPQ | float | Communication update rate for all other messages (set to 0 to turn off stream) | 40.0 | Hz | scalar | False
 STRM1_HRTBT | float | Communication update rate for system heartbeat (set to 0 to turn off stream) | 1.0 | Hz | scalar | False
+STRM1_STATUS_IO | float | Communication update rate for system status IO pin outputs (set to 0 to turn off stream) | 0.0 | Hz | scalar | False
 STRM1_SYS_STAT | float | Communication update rate for system status (set to 0 to turn off stream) | 0.2 | Hz | scalar | False
 STRM1_HR_IMU | float | Communication update rate for IMU readings (set to 0 to turn off stream) | 20.0 | Hz | scalar | False
 STRM1_ATT | float | Communication update rate for current attitude euler angles (set to 0 to turn off stream) | 0.0 | Hz | scalar | False

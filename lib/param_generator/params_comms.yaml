@@ -91,6 +91,17 @@ PARAM_STREAM_RATE_HEARTBEAT_0:
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_HEARTBEAT);"
     unit: "Hz"
 ---
+PARAM_STREAM_RATE_STATUS_IO_0:
+  type: "float"
+  name: "STRM0_STATUS_IO"
+  description: "Communication update rate for system status IO pin outputs (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+    function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_STATUS_IO);"
+    unit: "Hz"
+---
 PARAM_STREAM_RATE_SYS_STATUS_0:
   type: "float"
   name: "STRM0_SYS_STAT"
@@ -210,6 +221,17 @@ PARAM_STREAM_RATE_HEARTBEAT_1:
     option: "scalar"
     default: 1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_HEARTBEAT);"
+    unit: "Hz"
+---
+PARAM_STREAM_RATE_STATUS_IO_1:
+  type: "float"
+  name: "STRM1_STATUS_IO"
+  description: "Communication update rate for system status IO pin outputs (set to 0 to turn off stream)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+    function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_STATUS_IO);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_SYS_STATUS_1:

@@ -85,6 +85,7 @@ void set_param_defaults(void) {
 	init_param_uint(PARAM_BAUD_RATE_1, 0);
 	init_param_uint(PARAM_WAIT_FOR_HEARTBEAT, 1);
 	init_param_fix16(PARAM_STREAM_RATE_HEARTBEAT_0, fix16_from_float(1.0f));
+	init_param_fix16(PARAM_STREAM_RATE_STATUS_IO_0, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_STREAM_RATE_SYS_STATUS_0, fix16_from_float(0.2f));
 	init_param_fix16(PARAM_STREAM_RATE_HIGHRES_IMU_0, fix16_from_float(10.0f));
 	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_0, fix16_from_float(0.0f));
@@ -96,6 +97,7 @@ void set_param_defaults(void) {
 	init_param_fix16(PARAM_STREAM_RATE_BATTERY_STATUS_0, fix16_from_float(2.0f));
 	init_param_fix16(PARAM_STREAM_RATE_LOW_PRIORITY_0, fix16_from_float(40.0f));
 	init_param_fix16(PARAM_STREAM_RATE_HEARTBEAT_1, fix16_from_float(1.0f));
+	init_param_fix16(PARAM_STREAM_RATE_STATUS_IO_1, fix16_from_float(0.0f));
 	init_param_fix16(PARAM_STREAM_RATE_SYS_STATUS_1, fix16_from_float(0.2f));
 	init_param_fix16(PARAM_STREAM_RATE_HIGHRES_IMU_1, fix16_from_float(20.0f));
 	init_param_fix16(PARAM_STREAM_RATE_ATTITUDE_1, fix16_from_float(0.0f));
@@ -286,6 +288,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"BAUD_RATE_1",
 	"COMMS_WAIT",
 	"STRM0_HRTBT",
+	"STRM0_STATUS_IO",
 	"STRM0_SYS_STAT",
 	"STRM0_HR_IMU",
 	"STRM0_ATT",
@@ -297,6 +300,7 @@ const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 	"STRM0_BATTSTAT",
 	"STRM0_LPQ",
 	"STRM1_HRTBT",
+	"STRM1_STATUS_IO",
 	"STRM1_SYS_STAT",
 	"STRM1_HR_IMU",
 	"STRM1_ATT",
@@ -511,6 +515,9 @@ void param_change_callback(param_id_t id) {
 		case PARAM_STREAM_RATE_HEARTBEAT_0:
 			communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_HEARTBEAT);
 			break;
+		case PARAM_STREAM_RATE_STATUS_IO_0:
+			communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_STATUS_IO);
+			break;
 		case PARAM_STREAM_RATE_SYS_STATUS_0:
 			communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_SYS_STATUS);
 			break;
@@ -543,6 +550,9 @@ void param_change_callback(param_id_t id) {
 			break;
 		case PARAM_STREAM_RATE_HEARTBEAT_1:
 			communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_HEARTBEAT);
+			break;
+		case PARAM_STREAM_RATE_STATUS_IO_1:
+			communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_STATUS_IO);
 			break;
 		case PARAM_STREAM_RATE_SYS_STATUS_1:
 			communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_SYS_STATUS);

@@ -3,6 +3,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "fix16.h"
+#include "fixextra.h"
+
 typedef enum {
 	STATUS_BUZZER_QUIET,
 	STATUS_BUZZER_SUCCESS,
@@ -14,6 +17,7 @@ typedef struct {
 	uint32_t period_us;
 	uint32_t length_us;
 	uint32_t last_pulse;
+	bool state;
 } status_led_t;
 
 typedef struct {
@@ -22,6 +26,13 @@ typedef struct {
 	uint32_t last_beep;
 	bool state;
 } status_buzzer_t;
+
+#define IO_PIN_STATE_GROUP_MIX 255
+#define IO_PIN_STATE_ID_HEART 0
+#define IO_PIN_STATE_ID_ARM 1
+#define IO_PIN_STATE_ID_BUZZER 7
+
+extern fix16_t _io_pin_states[8];
 
 //XXX: status_devices_init() calls the other init() to do hardware specific setup
 void status_devices_init( void );

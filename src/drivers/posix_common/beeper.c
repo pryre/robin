@@ -1,3 +1,5 @@
+#include "drivers/posix_common/beeper.h"
+
 #ifdef USE_ALSA_SOUND
 /*
  *  Small program to read a 16-bit, signed, 44.1kHz wave file and play it.
@@ -6,7 +8,6 @@
  */
 
 #include <alsa/asoundlib.h>
-#include "drivers/posix_common/beeper.h"
 
 // Open the PCM audio output device and configure it.
 // Returns a handle to the PCM device; needed for other actions.
