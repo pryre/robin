@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -103,3 +107,7 @@ void mavlink_handle_param_set( uint8_t port, mavlink_message_t *msg, mavlink_sta
 		}
 	} //Else this message is for someone else
 }
+
+#ifdef __cplusplus
+}
+#endif

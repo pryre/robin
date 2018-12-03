@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "fix16.h"
 #include "fixvector3d.h"
 #include "fixmatrix.h"
@@ -283,3 +287,7 @@ static inline v3d v3d_ned_to_enu(const v3d *ned) {
 	qf16_rotate(&enu, &NED_ENU_Q, ned);
 	return enu;
 }
+
+#ifdef __cplusplus
+}
+#endif

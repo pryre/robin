@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -23,3 +27,7 @@ void comms_tx_error( comms_port_t port );
 void comms_rx_error( comms_port_t port );
 uint32_t comms_tx_error_num( comms_port_t port );
 uint32_t comms_rx_error_num( comms_port_t port );
+
+#ifdef __cplusplus
+}
+#endif

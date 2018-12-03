@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -42,3 +46,7 @@ MAV_RESULT mavlink_handle_command_long_preflight_storage( uint8_t port, float *p
 
 	return command_result;
 }
+
+#ifdef __cplusplus
+}
+#endif

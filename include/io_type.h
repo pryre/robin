@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define PWM_MAX_PORTS 14
 
 #include <stdint.h>
@@ -17,3 +21,7 @@ typedef struct {
 	uint8_t port[PWM_MAX_PORTS];
 	uint8_t type[PWM_MAX_PORTS];
 } io_def_t;
+
+#ifdef __cplusplus
+}
+#endif

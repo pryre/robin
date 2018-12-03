@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "calibration.h"
 #include "sensors.h"
 #include "mavlink_system.h"
@@ -26,3 +30,7 @@ bool calibrate_level_horizon(void) {
 
 	return !failed;
 }
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -31,3 +35,7 @@ void mavlink_handle_hil_sensor( uint8_t port, mavlink_message_t *msg, mavlink_st
 		_sensors.hil.status.new_data = true;
 	}	//else no in HIL mode, discard
 }
+
+#ifdef __cplusplus
+}
+#endif

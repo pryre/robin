@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -271,3 +275,7 @@ void calibration_run(void) {
 		}
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif

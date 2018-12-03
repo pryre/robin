@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -12,3 +16,7 @@ void mavlink_handle_mission_request_list( uint8_t port, mavlink_message_t *msg, 
 								   0, 0);
 	lpq_queue_msg(port, &msg_out);
 }
+
+#ifdef __cplusplus
+}
+#endif

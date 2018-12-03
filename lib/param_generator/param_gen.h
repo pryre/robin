@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <mavlink/common/common.h>
 
 typedef enum {
@@ -210,3 +214,7 @@ extern const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM
 
 void params_init(void);
 void param_change_callback(param_id_t id);
+
+#ifdef __cplusplus
+}
+#endif

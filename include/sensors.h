@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -192,3 +196,7 @@ void sensors_update_rc_cal(void);
 //void sensors_poll(uint32_t time_us);
 
 //bool sensors_update(uint32_t time_us);
+
+#ifdef __cplusplus
+}
+#endif

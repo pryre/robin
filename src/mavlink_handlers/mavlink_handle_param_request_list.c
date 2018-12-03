@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -19,3 +23,7 @@ void mavlink_handle_param_request_list( uint8_t port, mavlink_message_t *msg, ma
 		mavlink_queue_broadcast_notice("[PARAM] Caution: Broadcasting param list!");
 	} //Else this message is for someone else
 }
+
+#ifdef __cplusplus
+}
+#endif

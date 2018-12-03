@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -148,3 +152,7 @@ void communication_receive(void) {
 	//TODO: Update global packet drops counter
 	//packet_drops += status.packet_rx_drop_count;
 }
+
+#ifdef __cplusplus
+}
+#endif

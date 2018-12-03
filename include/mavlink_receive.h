@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink/mavlink_types.h"
 #include "mavlink/common/mavlink.h"
 
@@ -34,3 +38,7 @@ MAV_RESULT mavlink_handle_command_long_get_home_position( uint8_t port, float *p
 MAV_RESULT mavlink_handle_command_long_preflight_storage( uint8_t port, float *params );
 MAV_RESULT mavlink_handle_command_long_reboot_shutdown( uint8_t port, float *params, uint8_t sysid, uint8_t compid );
 MAV_RESULT mavlink_handle_command_long_component_arm_disarm( uint8_t port, float *params );
+
+#ifdef __cplusplus
+}
+#endif

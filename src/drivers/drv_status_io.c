@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -119,3 +123,7 @@ void status_devices_run( uint32_t time_now ) {
 	_io_pin_states[IO_PIN_STATE_ID_ARM] = (led_arm.state) ? _fc_1 : 0;
 	_io_pin_states[IO_PIN_STATE_ID_BUZZER] = (buzzer.state) ? _fc_1 : 0;
 }
+
+#ifdef __cplusplus
+}
+#endif

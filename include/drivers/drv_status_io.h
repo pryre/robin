@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -49,3 +53,7 @@ void status_buzzer_failure( void );
 //void status_buzzer_set( int8_t num, uint32_t period );
 
 void status_devices_run( uint32_t time_now );
+
+#ifdef __cplusplus
+}
+#endif

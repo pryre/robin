@@ -1,4 +1,6 @@
-//#include "breezystm32.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "mavlink_transmit.h"
 #include "mavlink_system.h"
@@ -99,3 +101,7 @@ void communication_transmit(uint32_t time_us) {
 			break;
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif

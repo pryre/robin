@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -19,3 +23,7 @@ MAV_RESULT mavlink_handle_command_long_request_protocol_version( uint8_t port, f
 
 	return command_result;
 }
+
+#ifdef __cplusplus
+}
+#endif

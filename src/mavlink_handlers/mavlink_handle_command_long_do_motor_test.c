@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -69,3 +73,7 @@ MAV_RESULT mavlink_handle_command_long_do_motor_test( uint8_t port, float *param
 
 	return command_result;
 }
+
+#ifdef __cplusplus
+}
+#endif

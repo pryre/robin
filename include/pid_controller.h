@@ -41,7 +41,6 @@ void pid_init(pid_controller_t *pid, fix16_t kp, fix16_t ki, fix16_t kd, fix16_t
 //fix16_t pid_step(pid_controller_t *pid, uint32_t time_now, fix16_t sp, fix16_t x, fix16_t x_dot, bool use_x_dot);
 fix16_t pid_step(pid_controller_t *pid, fix16_t dt, fix16_t sp, fix16_t x);
 
-
 #ifdef __cplusplus
 }
 #endif

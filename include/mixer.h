@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -69,3 +73,7 @@ void mixer_init( void );
 
 void calc_mixer_output();
 void pwm_output( uint32_t time_now );
+
+#ifdef __cplusplus
+}
+#endif

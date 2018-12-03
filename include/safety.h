@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include "mavlink/mavlink_types.h"
 #include "params.h"
@@ -103,3 +107,6 @@ void safety_run( uint32_t time_now );
 
 void safety_prepare_graceful_shutdown( void );
 
+#ifdef __cplusplus
+}
+#endif

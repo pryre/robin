@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -575,3 +579,6 @@ bool sensors_read(uint32_t time_us) {
 	return new_data_read;
 }
 
+#ifdef __cplusplus
+}
+#endif

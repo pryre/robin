@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -149,3 +153,6 @@ bool calibrate_magnetometer(void);
 bool calibrate_rc(void);
 bool calibrate_esc(void);
 
+#ifdef __cplusplus
+}
+#endif

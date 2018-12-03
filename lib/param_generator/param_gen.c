@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include "params.h"
 #include "param_generator/param_gen.h"
@@ -630,3 +634,7 @@ void param_change_callback(param_id_t id) {
 
 	lpq_queue_param_broadcast(id);
 }
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "calibration.h"
 #include "mavlink_system.h"
 
@@ -41,3 +45,7 @@ bool calibrate_esc(void) {
 
 	return !failed;
 }
+
+#ifdef __cplusplus
+}
+#endif

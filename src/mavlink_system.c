@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink/mavlink_types.h"
 #include "mavlink/common/mavlink.h"
@@ -933,3 +937,7 @@ void mavlink_prepare_scaled_pressure(mavlink_message_t *msg) {
 								   _sensors.baro.raw_temp); //TODO: Should be a scaled value
 }
 */
+
+#ifdef __cplusplus
+}
+#endif

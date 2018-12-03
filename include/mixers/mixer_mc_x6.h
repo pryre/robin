@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "io_type.h"
 
 #include "fix16.h"
@@ -16,3 +20,6 @@ const mixer_t mixer_hexarotor_x = {
 	{-_fc_1, _fc_1,  -_fc_1,   _fc_1,    _fc_1,  -_fc_1, 0, 0}  // Z Mix
 };
 
+#ifdef __cplusplus
+}
+#endif

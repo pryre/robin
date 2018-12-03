@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "io_type.h"
 
 #include "fix16.h"
@@ -19,3 +23,7 @@ const mixer_t mixer_free = {
 	{ 0, 0, 0, 0, 0, 0, 0, 0}, // Y Mix
 	{ 0, 0, 0, 0, 0, 0, 0, 0}  // Z Mix
 };
+
+#ifdef __cplusplus
+}
+#endif

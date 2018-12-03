@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -37,3 +41,7 @@ void mavlink_handle_att_pos_mocap( uint8_t port, mavlink_message_t *msg, mavlink
 	_sensors.ext_pose.status.new_data = true;
 
 }
+
+#ifdef __cplusplus
+}
+#endif

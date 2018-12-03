@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -81,3 +85,7 @@ uint32_t comms_rx_error_num( comms_port_t port ) {
 
 	return error_count;
 }
+
+#ifdef __cplusplus
+}
+#endif

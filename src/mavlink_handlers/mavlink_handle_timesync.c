@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -54,3 +58,7 @@ void mavlink_handle_timesync( uint8_t port, mavlink_message_t *msg, mavlink_stat
 	_sensors.clock.rt_sync_last = now_ms;
 	*/
 }
+
+#ifdef __cplusplus
+}
+#endif

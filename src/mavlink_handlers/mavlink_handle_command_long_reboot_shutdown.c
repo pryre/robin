@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -38,3 +42,7 @@ MAV_RESULT mavlink_handle_command_long_reboot_shutdown( uint8_t port, float *par
 
 	return command_result;
 }
+
+#ifdef __cplusplus
+}
+#endif

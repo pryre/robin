@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -255,14 +259,14 @@ static void write_output_pwm(const uint8_t index, const uint32_t value, const ui
 //Write a pwm value to the motor channel, value should be between 0 and 1
 static void write_motor(const uint8_t index, const fix16_t value) {
 	fix16_t cmd_throttle = fix16_constrain(value, 0, _fc_1);
-	
+
 	//Lift = 0.5*Cl*A*(V^2)
 	//Kl = 0.5*Cl*A
 	//Lift = Kl*(V^2)
 	//Throttle controls V, so to get linear lift, need to sqrt V
 	if( get_param_uint(PARAM_MOTOR_PWM_LINEARIZE) )
 		cmd_throttle = fix16_sqrt(cmd_throttle);
-	
+
 	uint16_t pwm = map_fix16_to_pwm(cmd_throttle);
 
 	//If there is an idle set
@@ -492,3 +496,6 @@ void mixer_clear_outputs( void ) {
 	}
 }
 
+#ifdef __cplusplus
+}
+#endif

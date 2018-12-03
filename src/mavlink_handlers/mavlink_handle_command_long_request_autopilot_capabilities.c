@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -10,3 +14,7 @@ MAV_RESULT mavlink_handle_command_long_request_autopilot_capabilities( uint8_t p
 
 	return command_result;
 }
+
+#ifdef __cplusplus
+}
+#endif

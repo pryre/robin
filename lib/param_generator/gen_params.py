@@ -290,6 +290,10 @@ def gen_h(params, filepath):
 		# Prepare file headers
 		str_h = """#pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <mavlink/common/common.h>
 
 typedef enum {
@@ -310,6 +314,10 @@ extern const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM
 
 void params_init(void);
 void param_change_callback(param_id_t id);
+
+#ifdef __cplusplus
+}
+#endif
 """
 		param_gen_h.write(str_h)
 
@@ -329,7 +337,8 @@ def gen_c(params, filepath):
 
 	try:
 		# Prepare file headers
-		str_c = "#include <stdlib.h>\n"
+		str_c = "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n"
+		str_c += "#include <stdlib.h>\n"
 		str_c += "#include \"params.h\"\n"
 		str_c += "#include \"param_generator/param_gen.h\"\n"
 		str_c += "#include \"mavlink_system.h\"\n"
@@ -421,7 +430,8 @@ def gen_c(params, filepath):
 		#str_c += "\tmavlink_message_t msg_out;\n"
 		#str_c += "\tmavlink_prepare_param_value( &msg_out, id );\n"
 		#str_c += "\tlpq_queue_broadcast_msg( &msg_out );\n"
-		str_c += "}\n"
+		str_c += "}\n\n"
+		str_c += "#ifdef __cplusplus\n}\n#endif\n"
 		param_gen_c.write(str_c)
 
 		print("Finished generating C file: %s" % filepath)

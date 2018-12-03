@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "io_type.h"
 
 #include "fix16.h"
@@ -17,3 +21,7 @@ const mixer_t mixer_plane_standard = {
 
 	//TODO: Should double check this, but it would allow stabilize control with motor throughput and a servo out for ailerons, elevator and rudder
 };
+
+#ifdef __cplusplus
+}
+#endif

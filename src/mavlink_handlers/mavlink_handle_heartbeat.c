@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -26,3 +30,7 @@ void mavlink_handle_heartbeat( uint8_t port, mavlink_message_t *msg, mavlink_sta
 		}
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif

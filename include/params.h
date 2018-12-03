@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <mavlink_system.h>
 #include <mavlink/common/common.h>
 #include <stdbool.h>
@@ -52,3 +56,7 @@ bool set_param_fix16(param_id_t id, fix16_t value);
 bool set_param_by_name_uint(const char name[PARAMS_NAME_LENGTH], uint32_t value);
 bool set_param_by_name_int(const char name[PARAMS_NAME_LENGTH], int32_t value);
 bool set_param_by_name_fix16(const char name[PARAMS_NAME_LENGTH], fix16_t value);
+
+#ifdef __cplusplus
+}
+#endif

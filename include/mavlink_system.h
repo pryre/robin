@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
 //XXX: LPQ was 12
@@ -107,57 +111,7 @@ void mavlink_prepare_param_value(mavlink_message_t *msg, uint32_t index);
 void mavlink_prepare_statustext(mavlink_message_t *msg, uint8_t severity, char* text);
 void mavlink_prepare_debug(mavlink_message_t *msg, uint32_t stamp, uint8_t index, uint32_t value);
 
-//==-- Utility Messages
-
-//==-- List of supported mavlink messages
-	//o Optional
-	//- Needed
-	//+ Done!
-
-	//Receive
-	//- command_int.h
-	//- command_long.h
-	//- heartbeat.h
-	//- manual_setpoint.h
-	//- message_interval.h
-	//+ param_set.h
-	//+ param_request_list.h
-	//+ param_request_read.h
-	//- ping.h
-	//- raw_imu.h
-	//- raw_pressure.h
-	//- set_attitude_target.h
-	//- timesync.h
-	//o att_pos_mocap.h
-	//o power_status.h
-	//o radio_status.h
-
-	//Transmit
-		//Stream
-			//+ attitude_target.h
-			//- attitude_quaternion_cov.h
-			//o battery_status.h
-			//- distance_sensor.h
-			//+ heartbeat.h
-			//+ highres_imu.h
-			//- scaled_pressure.h
-			//+ servo_output_raw.h
-			//+ sys_status.h
-			//+ attitude.h
-			//+ attitude_quaternion.h
-			//o optical_flow.h
-			//o optical_flow_rad.h
-
-		//High Priority
-			//- ping.h
-			//- timesync.h
-			//- command_ack.h
-
-		//Low Priority
-			//+ debug.h					--	3 params	--	9 bytes
-			//- debug_vect.h			--	14 params	--	30 bytes
-			//+ autopilot_version.h		--	16 params	--	60 bytes
-			//- named_value_float.h		--	12 params	--	18 bytes
-			//- named_value_int.h		--	12 params	--	18 bytes
-			//+ param_value.h			--	20 params	--	25 bytes
+#ifdef __cplusplus
+}
+#endif
 

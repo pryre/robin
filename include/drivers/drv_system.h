@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 void system_init(void);
@@ -18,3 +22,7 @@ void system_debug_print( char *msg );
 
 //XXX: Used in systems (such as posix) to not overload the CPU
 void system_rate_limit(void);
+
+#ifdef __cplusplus
+}
+#endif

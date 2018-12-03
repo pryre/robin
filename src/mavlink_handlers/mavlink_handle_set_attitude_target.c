@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
@@ -42,3 +46,7 @@ void mavlink_handle_set_attitude_target( uint8_t port, mavlink_message_t *msg, m
 		safety_update_sensor(&_system_status.sensors.offboard_control);
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <fix16.h>
 
@@ -21,3 +25,7 @@ bool drv_sensors_i2c_read(uint32_t time_us);
 void drv_sensors_rc_input_read( uint16_t *readings );
 bool drv_sensors_safety_button_read(void);
 uint16_t drv_sensors_battery_monitor_read(void);
+
+#ifdef __cplusplus
+}
+#endif

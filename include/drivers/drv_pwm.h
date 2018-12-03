@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -15,3 +19,7 @@
 void pwmInit(io_def_t *io_map, bool usePwmFilter, uint32_t motorPwmRate, uint32_t servoPwmRate, uint16_t idlePulseUsec);
 void pwmWriteMotor(uint8_t index, uint16_t value);
 uint16_t pwmRead(uint8_t channel);
+
+#ifdef __cplusplus
+}
+#endif
