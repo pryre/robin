@@ -10,7 +10,7 @@ extern "C" {
 
 system_status_t _system_status;
 
-MAV_RESULT mavlink_handle_command_long_preflight_storage( uint8_t port, float *params ) {
+MAV_RESULT mavlink_handle_command_long_preflight_storage( mavlink_channel_t chan, float *params ) {
 	MAV_RESULT command_result = MAV_RESULT_ENUM_END;
 
 	if( _system_status.state == MAV_STATE_STANDBY) {

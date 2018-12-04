@@ -8,7 +8,7 @@ extern "C" {
 #include "params.h"
 #include "safety.h"
 
-void mavlink_handle_set_mode( uint8_t port, mavlink_message_t *msg, mavlink_status_t *status ) {
+void mavlink_handle_set_mode( mavlink_channel_t chan, mavlink_message_t *msg, mavlink_status_t *status ) {
 	uint8_t base_mode = mavlink_msg_set_mode_get_base_mode(msg);
 	uint32_t custom_mode = mavlink_msg_set_mode_get_custom_mode(msg);
 

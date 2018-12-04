@@ -23,31 +23,32 @@
 #define BUFFER_LENGTH 2048
 
 //#define BIND_HOST "127.0.0.1"
-#define BIND_PORT 14550   //The port on which to send data
+#define BIND_PORT 14555   //The port on which to send data
 #define REMOTE_HOST "127.0.0.1"
-#define REMOTE_PORT 14555   //The port on which to send data
+#define REMOTE_PORT 14550   //The port on which to send data
 
 
 static int sock_comm_0;
 static struct sockaddr_in locAddr_comm_0;
 static struct sockaddr_in gcAddr_comm_0;
 static uint8_t buf_recv_comm_0[BUFFER_LENGTH];
-static uint8_t buf_send_comm_0[BUFFER_LENGTH];
+//static uint8_t buf_send_comm_0[BUFFER_LENGTH];
 static int32_t len_recv_comm_0;
 static int32_t read_recv_comm_0;
-static uint32_t len_send_comm_0;
-static uint32_t time_send_addbuf_comm_0;
+//static uint32_t len_send_comm_0;
+//static uint32_t time_send_addbuf_comm_0;
 
 static int sock_comm_1;
 static struct sockaddr_in locAddr_comm_1;
 static struct sockaddr_in gcAddr_comm_1;
 static uint8_t buf_recv_comm_1[BUFFER_LENGTH];
-static uint8_t buf_send_comm_1[BUFFER_LENGTH];
+//static uint8_t buf_send_comm_1[BUFFER_LENGTH];
 static int32_t len_recv_comm_1;
 static int32_t read_recv_comm_1;
-static uint32_t len_send_comm_1;
-static uint32_t time_send_addbuf_comm_1;
+//static uint32_t len_send_comm_1;
+//static uint32_t time_send_addbuf_comm_1;
 
+/*
 static void udp_buffer_send( comms_port_t port ) {
 	int bytes_sent;
 	int expected_send_len;
@@ -97,6 +98,7 @@ static void udp_buffer_send( comms_port_t port ) {
 		comms_tx_error(port);
 	}
 }
+*/
 
 static int init_udp_port( struct sockaddr_in *locAddr, struct sockaddr_in *gcAddr, uint32_t bind_port, char *remote_ip, uint32_t remote_port ) {
 	// Change the target ip if parameter was given
@@ -147,8 +149,8 @@ bool comms_init_port( comms_port_t port ) {
 		case COMM_PORT_0: {
 			len_recv_comm_0 = 0;
 			read_recv_comm_0 = 0;
-			len_send_comm_0 = 0;
-			time_send_addbuf_comm_0 = 0;
+			//len_send_comm_0 = 0;
+			//time_send_addbuf_comm_0 = 0;
 
 			bind_port = BIND_PORT;
 			strncpy(remote_host, REMOTE_HOST, 100);
@@ -167,12 +169,12 @@ bool comms_init_port( comms_port_t port ) {
 		case COMM_PORT_1: {
 			len_recv_comm_1 = 0;
 			read_recv_comm_1 = 0;
-			len_send_comm_0 = 0;
-			time_send_addbuf_comm_1 = 0;
+			//len_send_comm_0 = 0;
+			//time_send_addbuf_comm_1 = 0;
 
 			bind_port = BIND_PORT + 1;
 			strncpy(remote_host, REMOTE_HOST, 100);
-			remote_port = REMOTE_PORT;
+			remote_port = REMOTE_PORT + 1;
 
 			sock_comm_0 = init_udp_port( &locAddr_comm_1,
 										 &gcAddr_comm_1,
@@ -195,7 +197,7 @@ bool comms_init_port( comms_port_t port ) {
 
 	return success;
 }
-
+/*
 void comms_send( comms_port_t port, uint8_t ch ) {
 	if( comms_is_open( port ) ) {
 		switch(port) {
@@ -233,6 +235,54 @@ void comms_send( comms_port_t port, uint8_t ch ) {
 				break;
 			}
 		}
+	}
+}
+*/
+
+void comms_send_datagram( comms_port_t port, uint8_t* datagram, uint32_t length) {
+	int bytes_sent;
+
+	if( comms_is_open( port ) ) {
+		switch(port) {
+			case COMM_PORT_0: {
+				bytes_sent = sendto( sock_comm_0,
+									 datagram,
+									 length,
+									 0,
+									 (struct sockaddr*)&gcAddr_comm_0,
+									 sizeof(struct sockaddr_in) );
+
+				//if(bytes_sent > 0) {
+				//	char info[250];
+				//	snprintf(info, 250, "[COMMS] Sent packet (bytes: %i)", bytes_sent);
+				//	system_debug_print(info);
+				//}
+
+				//memset( buf_send_comm_0, 0, BUFFER_LENGTH );
+				//len_send_comm_0 = 0;
+				//time_send_addbuf_comm_0 = 0;
+
+				break;
+			}
+			case COMM_PORT_1: {
+				bytes_sent = sendto( sock_comm_1,
+									 datagram,
+									 length,
+									 0,
+									 (struct sockaddr*)&gcAddr_comm_1,
+									 sizeof(struct sockaddr_in) );
+
+				//memset( buf_send_comm_1, 0, BUFFER_LENGTH );
+				//len_send_comm_1 = 0;
+				//time_send_addbuf_comm_1 = 0;
+
+				break;
+			}
+		}
+	}
+
+	if( bytes_sent != length ) {
+		comms_tx_error(port);
 	}
 }
 

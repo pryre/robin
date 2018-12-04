@@ -11,7 +11,7 @@ extern "C" {
 calibration_data_t _calibrations;
 system_status_t _system_status;
 
-MAV_RESULT mavlink_handle_command_long_preflight_calibration( uint8_t port, float *params, uint8_t sysid, uint8_t compid ) {
+MAV_RESULT mavlink_handle_command_long_preflight_calibration( mavlink_channel_t chan, float *params, uint8_t sysid, uint8_t compid ) {
 	MAV_RESULT command_result = MAV_RESULT_ENUM_END;
 
 	if(_system_status.state == MAV_STATE_CALIBRATING) {	//XXX: Only allow one calibration request at a time

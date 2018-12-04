@@ -7,7 +7,7 @@ extern "C" {
 
 #include "params.h"
 
-void mavlink_handle_param_set( uint8_t port, mavlink_message_t *msg, mavlink_status_t *status ) {
+void mavlink_handle_param_set( mavlink_channel_t chan, mavlink_message_t *msg, mavlink_status_t *status ) {
 	if( (mavlink_msg_param_set_get_target_system(msg) == mavlink_system.sysid) &&
 		(mavlink_msg_param_set_get_target_component(msg) == mavlink_system.compid)) {
 

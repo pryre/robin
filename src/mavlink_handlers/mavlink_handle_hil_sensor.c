@@ -9,7 +9,7 @@ extern "C" {
 
 sensor_readings_t _sensors;
 
-void mavlink_handle_hil_sensor( uint8_t port, mavlink_message_t *msg, mavlink_status_t *status ) {
+void mavlink_handle_hil_sensor( mavlink_channel_t chan, mavlink_message_t *msg, mavlink_status_t *status ) {
 	if(_sensors.hil.status.present) {
 		//Accelerometer
 		//XXX: TODO: THIS SHOULDN'T NEED TO BE INVERSED

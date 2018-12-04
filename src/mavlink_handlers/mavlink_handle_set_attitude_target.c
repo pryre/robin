@@ -13,7 +13,7 @@ extern "C" {
 
 command_input_t _cmd_ob_input;
 
-void mavlink_handle_set_attitude_target( uint8_t port, mavlink_message_t *msg, mavlink_status_t *status ) {
+void mavlink_handle_set_attitude_target( mavlink_channel_t chan, mavlink_message_t *msg, mavlink_status_t *status ) {
 	if( (mavlink_msg_set_attitude_target_get_target_system(msg) == mavlink_system.sysid) &&
 		(mavlink_msg_set_attitude_target_get_target_component(msg) == mavlink_system.compid) ) {
 

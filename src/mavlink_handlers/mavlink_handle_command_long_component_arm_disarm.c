@@ -7,7 +7,7 @@ extern "C" {
 
 #include "safety.h"
 
-MAV_RESULT mavlink_handle_command_long_component_arm_disarm( uint8_t port, float *params ) {
+MAV_RESULT mavlink_handle_command_long_component_arm_disarm( mavlink_channel_t chan, float *params ) {
 	MAV_RESULT command_result = MAV_RESULT_DENIED;
 
 	if( (bool)params[0] ) {	//ARM

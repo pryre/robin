@@ -5,7 +5,7 @@ extern "C" {
 #include "mavlink_system.h"
 #include "mavlink_receive.h"
 
-void mavlink_handle_timesync( uint8_t port, mavlink_message_t *msg, mavlink_status_t *status ) {
+void mavlink_handle_timesync( mavlink_channel_t chan, mavlink_message_t *msg, mavlink_status_t *status ) {
 	/*
 	//TODO: Get this working
 

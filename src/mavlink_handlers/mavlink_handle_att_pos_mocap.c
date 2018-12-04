@@ -13,7 +13,7 @@ extern "C" {
 
 sensor_readings_t _sensors;
 
-void mavlink_handle_att_pos_mocap( uint8_t port, mavlink_message_t *msg, mavlink_status_t *status ) {
+void mavlink_handle_att_pos_mocap( mavlink_channel_t chan, mavlink_message_t *msg, mavlink_status_t *status ) {
 	_sensors.ext_pose.status.present = true;
 
 	//TODO: Check timestamp was recent before accepting

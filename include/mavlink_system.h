@@ -46,6 +46,9 @@ void communications_system_init(void);
  */
 void comm_send_ch(mavlink_channel_t chan, uint8_t ch);
 
+mavlink_message_t* get_channel_buf(mavlink_channel_t chan);
+void comms_send_msg(mavlink_channel_t chan);
+
 #include "mavlink/common/mavlink.h"
 
 //==-- On-demand messages

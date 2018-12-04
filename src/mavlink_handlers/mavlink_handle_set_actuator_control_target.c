@@ -17,7 +17,7 @@ fix16_t _actuator_control_g3[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g4[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];
 
-void mavlink_handle_set_actuator_control_target( uint8_t port, mavlink_message_t *msg, mavlink_status_t *status ) {
+void mavlink_handle_set_actuator_control_target( mavlink_channel_t chan, mavlink_message_t *msg, mavlink_status_t *status ) {
 	if( (mavlink_msg_set_actuator_control_target_get_target_system(msg) == mavlink_system.sysid) &&
 		(mavlink_msg_set_actuator_control_target_get_target_component(msg) == mavlink_system.compid) ) {
 

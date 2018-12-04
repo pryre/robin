@@ -13,6 +13,7 @@
 #include "drivers/drv_system.h"
 
 #include "params.h"
+#include "mavlink_system.h"
 
 static int fd_comm_0;
 static int fd_comm_1;
@@ -173,7 +174,7 @@ bool comms_init_port( comms_port_t port ) {
 	return success;
 }
 
-void comms_send( comms_port_t port, uint8_t ch ) {
+static void comms_send( comms_port_t port, uint8_t ch ) {
 	/*
     // simple output
     wlen = write(fd, "Hello!\n", 7);
@@ -199,6 +200,12 @@ void comms_send( comms_port_t port, uint8_t ch ) {
 			}
 		}
 	}
+}
+
+void comms_send_datagram( comms_port_t port, uint8_t* datagram, uint32_t length) {
+	if(length <= MAVLINK_MAX_PACKET_LEN)
+		for(uint32_t i=0; i<length; i++)
+			comms_send(port, datagram[i]);
 }
 
 bool comms_waiting( comms_port_t port ) {

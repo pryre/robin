@@ -19,7 +19,7 @@ extern "C" {
 const mixer_t *_mixer_to_use;
 mixer_motor_test_t _motor_test;
 
-MAV_RESULT mavlink_handle_command_long_do_motor_test( uint8_t port, float *params ) {
+MAV_RESULT mavlink_handle_command_long_do_motor_test( mavlink_channel_t chan, float *params ) {
 	MAV_RESULT command_result = MAV_RESULT_ENUM_END;
 
 	if( !_mixer_to_use->mixer_ok ) {

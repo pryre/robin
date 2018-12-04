@@ -53,6 +53,8 @@ fix16_t _io_pin_states[8];
 command_input_t _control_input;
 int32_t _pwm_output[8];
 
+static mavlink_message_t mavlink_msg_buf_port0_;
+static mavlink_message_t mavlink_msg_buf_port1_;
 static const uint8_t blank_array_[8] = {0,0,0,0,0,0,0,0};
 static const uint8_t blank_array_uid_[18] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
@@ -102,6 +104,7 @@ static void comm_wait_ready( mavlink_channel_t chan ) {
 		}
 	}
 }
+		system_debug_print("Attempted to send data with comm_send_ch(MAVLINK_COMM_0,ch)");
 */
 
 /**
@@ -111,10 +114,42 @@ static void comm_wait_ready( mavlink_channel_t chan ) {
  * @param ch Character to send
  */
 void comm_send_ch( mavlink_channel_t chan, uint8_t ch ) {
+	/*
 	if( chan == MAVLINK_COMM_0 ) {
 		comms_send(COMM_PORT_0, ch);
 	} else if( chan == MAVLINK_COMM_1 ) {
 		comms_send(COMM_PORT_1, ch);
+	}
+	*/
+	
+	if( chan == MAVLINK_COMM_0 ) {
+		system_debug_print("Attempted to send data with comm_send_ch(MAVLINK_COMM_0,ch)");
+	} else if( chan == MAVLINK_COMM_1 ) {
+		system_debug_print("Attempted to send data with comm_send_ch(MAVLINK_COMM_1,ch)");
+	}
+}
+
+mavlink_message_t* get_channel_buf(mavlink_channel_t chan) {
+	mavlink_message_t *ch_buf = NULL;
+
+	if( chan == MAVLINK_COMM_0 ) {
+		ch_buf = &mavlink_msg_buf_port0_;
+	} else {
+		ch_buf = &mavlink_msg_buf_port1_;
+	}
+	return ch_buf;
+}
+
+//Sends out the current message buffer
+void comms_send_msg(mavlink_channel_t chan) {
+	uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+
+	if( chan == MAVLINK_COMM_0 ) {
+		uint32_t len = mavlink_msg_to_send_buffer(buf, &mavlink_msg_buf_port0_);
+		comms_send_datagram(COMM_PORT_0, buf, len);
+	} else if( chan == MAVLINK_COMM_1 ) {	
+		uint32_t len = mavlink_msg_to_send_buffer(buf, &mavlink_msg_buf_port1_);
+		comms_send_datagram(COMM_PORT_1, buf, len);
 	}
 }
 
@@ -125,9 +160,12 @@ static void mavlink_debug_cli_message( uint8_t severity, char* text ) {
 //==-- On-demand messages
 void mavlink_send_statustext(mavlink_channel_t chan, uint8_t severity, char* text) {
 	//comm_wait_ready(port);
-	mavlink_msg_statustext_send(chan,
+	mavlink_msg_statustext_pack(mavlink_system.sysid,
+							    mavlink_system.compid,
+							    get_channel_buf(chan),
 								severity,
 								&text[0]);
+	comms_send_msg(chan);
 }
 
 void mavlink_send_broadcast_statustext(uint8_t severity, char* text) {
@@ -143,9 +181,12 @@ void mavlink_send_broadcast_statustext(uint8_t severity, char* text) {
 void mavlink_send_timesync(mavlink_channel_t chan, uint64_t tc1, uint64_t ts1) {
 	//comm_wait_ready(port);
 
-	mavlink_msg_timesync_send(chan,
+	mavlink_msg_timesync_pack(mavlink_system.sysid,
+						      mavlink_system.compid,
+						      get_channel_buf(chan),
 							  tc1,
 							  ts1);
+	comms_send_msg(chan);
 }
 
 //==-- Low priority message queue
@@ -324,17 +365,19 @@ static void lpq_send(mavlink_channel_t chan) {
 	if(_lpq.length > 0) {
 		if( (chan == MAVLINK_COMM_0) && (_lpq.buffer_port[_lpq.position] | COMM_PORT_0) ) {
 			//Transmit the message to channel 0
-			for(uint16_t i = 0; i < _lpq.buffer_len[_lpq.position]; i++) {
-				comm_send_ch(chan, _lpq.buffer[_lpq.position][i]);
-			}
+			comms_send_datagram(COMM_PORT_0, _lpq.buffer[_lpq.position], _lpq.buffer_len[_lpq.position]);
+			//for(uint16_t i = 0; i < _lpq.buffer_len[_lpq.position]; i++) {
+			//	comm_send_ch(chan, _lpq.buffer[_lpq.position][i]);
+			//}
 
 			//Unset this channel
 			_lpq.buffer_port[_lpq.position] &= ~COMM_PORT_0;
 		} else if( (chan == MAVLINK_COMM_1) && (_lpq.buffer_port[_lpq.position] | COMM_PORT_1) ) {
 			//Transmit the message to channel 1
-			for(uint16_t i = 0; i < _lpq.buffer_len[_lpq.position]; i++) {
-				comm_send_ch(chan, _lpq.buffer[_lpq.position][i]);
-			}
+			comms_send_datagram(COMM_PORT_1, _lpq.buffer[_lpq.position], _lpq.buffer_len[_lpq.position]);
+			//for(uint16_t i = 0; i < _lpq.buffer_len[_lpq.position]; i++) {
+			//	comm_send_ch(chan, _lpq.buffer[_lpq.position][i]);
+			//}
 
 			//Unset this channel
 			_lpq.buffer_port[_lpq.position] &= ~COMM_PORT_1;
@@ -353,17 +396,19 @@ static void lpq_send(mavlink_channel_t chan) {
 
 		if( (chan == MAVLINK_COMM_0) && (_lpq.param_buffer_port[_lpq.param_position] | COMM_PORT_0) ) {
 			//Transmit the message to channel 0
-			for(uint16_t i = 0; i < msg_len; i++) {
-				comm_send_ch(chan, msg_buf[i]);
-			}
+			comms_send_datagram(COMM_PORT_0, msg_buf, msg_len);
+			//for(uint16_t i = 0; i < msg_len; i++) {
+			//	comm_send_ch(chan, msg_buf[i]);
+			//}
 
 			//Unset this channel
 			_lpq.param_buffer_port[_lpq.param_position] &= ~COMM_PORT_0;
 		} else if( (chan == MAVLINK_COMM_1) && (_lpq.param_buffer_port[_lpq.param_position] | COMM_PORT_1) ) {
 			//Transmit the message to channel 1
-			for(uint16_t i = 0; i < msg_len; i++) {
-				comm_send_ch(chan, msg_buf[i]);
-			}
+			comms_send_datagram(COMM_PORT_1, msg_buf, msg_len);
+			//for(uint16_t i = 0; i < msg_len; i++) {
+			//	comm_send_ch(chan, msg_buf[i]);
+			//}
 
 			//Unset this channel
 			_lpq.param_buffer_port[_lpq.param_position] &= ~COMM_PORT_1;
@@ -424,12 +469,15 @@ void mavlink_stream_heartbeat(mavlink_channel_t chan) {
 	//XXX: Always send heartbeat
 	//comm_wait_ready(port);
 
-	mavlink_msg_heartbeat_send(chan,
+	mavlink_msg_heartbeat_pack(mavlink_system.sysid,
+							   mavlink_system.compid,
+							   get_channel_buf(chan),
 							   get_param_uint(PARAM_MAV_TYPE),
 							   MAV_AUTOPILOT_PX4,	//XXX: This is to get compatibility for offboard software
 							   _system_status.mode | MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,	//XXX: Set custom mode to allow for the pretend mode
 							   compat_encode_px4_main_mode( _system_status.control_mode ),	//We don't use custom_mode, but pretend to match px4 custom_mode for OFFBOARD
 							   _system_status.state);
+	comms_send_msg(chan);
 }
 
 
@@ -438,10 +486,13 @@ void mavlink_stream_status_io(mavlink_channel_t chan) {
 	for(int i=0; i<8; i++)
 		status_io[i] = fix16_to_float(_io_pin_states[i]);
 
-	mavlink_msg_actuator_control_target_send(chan,
-							   system_micros(),
-							   IO_PIN_STATE_GROUP_MIX,
-							   &status_io[0]);
+	mavlink_msg_actuator_control_target_pack(mavlink_system.sysid,
+										     mavlink_system.compid,
+										     get_channel_buf(chan),
+										     system_micros(),
+										     IO_PIN_STATE_GROUP_MIX,
+											 &status_io[0]);
+	comms_send_msg(chan);
 }
 
 void mavlink_stream_sys_status(mavlink_channel_t chan) {
@@ -520,7 +571,9 @@ void mavlink_stream_sys_status(mavlink_channel_t chan) {
 		//TODO: Other sensors?
 		// MAV_SYS_STATUS_SENSOR_BATTERY, MAV_SYS_STATUS_SENSOR_OPTICAL_FLOW, MAV_SYS_STATUS_SENSOR_VISION_POSITION ...?
 
-		mavlink_msg_sys_status_send(chan,
+		mavlink_msg_sys_status_pack(mavlink_system.sysid,
+								    mavlink_system.compid,
+								    get_channel_buf(chan),
 									onboard_control_sensors_present,
 									onboard_control_sensors_enabled,
 									onboard_control_sensors_health,
@@ -534,6 +587,7 @@ void mavlink_stream_sys_status(mavlink_channel_t chan) {
 									errors_count2,
 									errors_count3,
 									errors_count4);
+		comms_send_msg(chan);
 	}
 }
 
@@ -590,7 +644,9 @@ void mavlink_stream_highres_imu(mavlink_channel_t chan) {
 			fields_updated |= (1<<9);
 		}
 
-		mavlink_msg_highres_imu_send(chan,
+		mavlink_msg_highres_imu_pack(mavlink_system.sysid,
+								     mavlink_system.compid,
+								     get_channel_buf(chan),
 									 _sensors.imu.status.time_read,
 									 xacc,
 									 yacc,
@@ -606,6 +662,7 @@ void mavlink_stream_highres_imu(mavlink_channel_t chan) {
 									 pressure_alt,
 									 temperature,
 									 fields_updated );
+		comms_send_msg(chan);
 	}
 }
 
@@ -618,7 +675,9 @@ void mavlink_stream_attitude(mavlink_channel_t chan) {
 		//Extract Euler Angles for controller
 		euler_from_quat(&_state_estimator.attitude, &roll, &pitch, &yaw);
 
-		mavlink_msg_attitude_send(chan,
+		mavlink_msg_attitude_pack(mavlink_system.sysid,
+								  mavlink_system.compid,
+								  get_channel_buf(chan),
 								  _sensors.imu.status.time_read,
 								  fix16_to_float(roll),
 								  fix16_to_float(pitch),
@@ -626,12 +685,15 @@ void mavlink_stream_attitude(mavlink_channel_t chan) {
 								  fix16_to_float(_state_estimator.p),
 								  fix16_to_float(_state_estimator.q),
 								  fix16_to_float(_state_estimator.r));
+		comms_send_msg(chan);
 	}
 }
 
 void mavlink_stream_attitude_quaternion(mavlink_channel_t chan) {
 	if( mavlink_stream_ready(chan) ) {
-		mavlink_msg_attitude_quaternion_send(chan,
+		mavlink_msg_attitude_quaternion_pack(mavlink_system.sysid,
+											 mavlink_system.compid,
+											 get_channel_buf(chan),
 											 _sensors.imu.status.time_read,
 											 fix16_to_float(_state_estimator.attitude.a),
 											 fix16_to_float(_state_estimator.attitude.b),
@@ -640,6 +702,7 @@ void mavlink_stream_attitude_quaternion(mavlink_channel_t chan) {
 											 fix16_to_float(_state_estimator.p),
 											 fix16_to_float(_state_estimator.q),
 											 fix16_to_float(_state_estimator.r));
+		comms_send_msg(chan);
 	}
 }
 
@@ -653,7 +716,9 @@ void mavlink_stream_attitude_target(mavlink_channel_t chan) {
 		//Use the control output for some of these commands as they reflect the actual goals
 		// The input mask applied is included, but the information will still potentially be useful
 		// The timestamp used is the one that is used to generate the commands
-		mavlink_msg_attitude_target_send(chan,
+		mavlink_msg_attitude_target_pack(mavlink_system.sysid,
+									     mavlink_system.compid,
+									     get_channel_buf(chan),
 										 sensors_clock_ls_get(),
 										 _control_input.input_mask,
 										 &q[0],
@@ -661,29 +726,35 @@ void mavlink_stream_attitude_target(mavlink_channel_t chan) {
 										 fix16_to_float(_control_input.p),
 										 fix16_to_float(_control_input.y),
 										 fix16_to_float(_control_input.T));
+		comms_send_msg(chan);
 	}
 }
 
 void mavlink_stream_rc_channels_raw(mavlink_channel_t chan) {
 	if( mavlink_stream_ready(chan) ) {
-		mavlink_msg_rc_channels_raw_send(chan,
-										  sensors_clock_ls_get(),
-										  0,	//Port 0
-										  _sensors.rc_input.raw[0],
-										  _sensors.rc_input.raw[1],
-										  _sensors.rc_input.raw[2],
-										  _sensors.rc_input.raw[3],
-										  _sensors.rc_input.raw[4],
-										  _sensors.rc_input.raw[5],
-										  _sensors.rc_input.raw[6],
-										  _sensors.rc_input.raw[7],
-										  255);
+		mavlink_msg_rc_channels_raw_pack(mavlink_system.sysid,
+									     mavlink_system.compid,
+									     get_channel_buf(chan),
+										 sensors_clock_ls_get(),
+										 0,	//Port 0
+										 _sensors.rc_input.raw[0],
+										 _sensors.rc_input.raw[1],
+										 _sensors.rc_input.raw[2],
+										 _sensors.rc_input.raw[3],
+										 _sensors.rc_input.raw[4],
+										 _sensors.rc_input.raw[5],
+										 _sensors.rc_input.raw[6],
+										 _sensors.rc_input.raw[7],
+										 255);
+		comms_send_msg(chan);
 	}
 }
 
 void mavlink_stream_servo_output_raw(mavlink_channel_t chan) {
 	if( mavlink_stream_ready(chan) ) {
-		mavlink_msg_servo_output_raw_send(chan,
+		mavlink_msg_servo_output_raw_pack(mavlink_system.sysid,
+										  mavlink_system.compid,
+										  get_channel_buf(chan),
 										  sensors_clock_ls_get(),
 										  0,	//Port 0
 										  _pwm_output[0],
@@ -695,14 +766,18 @@ void mavlink_stream_servo_output_raw(mavlink_channel_t chan) {
 										  _pwm_output[6],
 										  _pwm_output[7],
 										  0,0,0,0,0,0,0,0);	//XXX: We don't even have enough ports
+		comms_send_msg(chan);
 	}
 }
 
 void mavlink_stream_timesync(mavlink_channel_t chan) {
 	if( mavlink_stream_ready(chan) ) {
-		mavlink_msg_timesync_send(chan,
+		mavlink_msg_timesync_pack(mavlink_system.sysid,
+							      mavlink_system.compid,
+							      get_channel_buf(chan),
 								  0,
 								  ( (uint64_t)system_micros() ) * 1000);
+		comms_send_msg(chan);
 	}
 }
 
@@ -740,7 +815,9 @@ void mavlink_stream_battery_status(mavlink_channel_t chan) {
 			}
 		}
 
-		mavlink_msg_battery_status_send(chan,
+		mavlink_msg_battery_status_pack(mavlink_system.sysid,
+									   mavlink_system.compid,
+									   get_channel_buf(chan),
 									   batt_id,
 									   get_param_uint(PARAM_BATTERY_FUNCTION),
 									   get_param_uint(PARAM_BATTERY_TYPE),
@@ -752,6 +829,7 @@ void mavlink_stream_battery_status(mavlink_channel_t chan) {
 									   fix16_to_int(fix16_mul(_fc_100,_sensors.voltage_monitor.precentage)),
 									   0,
 									   charge_state);
+		comms_send_msg(chan);
 	}
 }
 

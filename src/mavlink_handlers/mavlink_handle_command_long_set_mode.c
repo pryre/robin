@@ -7,7 +7,7 @@ extern "C" {
 
 #include "safety.h"
 
-MAV_RESULT mavlink_handle_command_long_set_mode( uint8_t port, float *params ) {
+MAV_RESULT mavlink_handle_command_long_set_mode( mavlink_channel_t chan, float *params ) {
 	MAV_RESULT command_result = MAV_RESULT_ENUM_END;
 
 	//XXX: We only use custom mode
