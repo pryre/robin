@@ -186,6 +186,7 @@ set(ROBIN_SRC_DRIVERS
 	src/drivers/drv_status_io.c
 	src/drivers/posix_ros/drv_system.cpp
 	src/drivers/posix_udp/drv_comms.c
+	src/drivers/posix_common/drv_cmd_args.c
 	src/drivers/posix_common/drv_flash.c
 	src/drivers/posix_common/drv_pwm.c
 	src/drivers/posix_common/drv_sensors.c
