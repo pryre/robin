@@ -300,7 +300,10 @@ bool safety_request_arm(void) {
 			if(safety_request_state( MAV_STATE_ACTIVE ) ) {
 				do_safety_arm();
 				result = true;
-				_time_safety_arm_throttle_timeout = system_micros();	//Record down the arm time for throttle timeout
+
+				//Record down the arm time for throttle timeout if enabled
+				if( get_param_uint(PARAM_THROTTLE_TIMEOUT) > 0 )
+					_time_safety_arm_throttle_timeout = system_micros();
 			} else {
 				strncpy(text_reason,
 						 "state change from ",
