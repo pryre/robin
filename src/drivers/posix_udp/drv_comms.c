@@ -14,11 +14,13 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 
+#include "params.h"
+#include "mavlink_system.h"
+
 #include "drivers/drv_comms.h"
 #include "drivers/drv_system.h"
 
-#include "params.h"
-#include "mavlink_system.h"
+#include "drivers/posix_common/drv_cmd_args.h"
 
 #define BUFFER_LENGTH 2048
 
@@ -27,6 +29,7 @@
 #define REMOTE_HOST "127.0.0.1"
 #define REMOTE_PORT 14550   //The port on which to send data
 
+arguments_t _arguments;
 
 static int sock_comm_0;
 static struct sockaddr_in locAddr_comm_0;
@@ -138,11 +141,71 @@ static int init_udp_port( struct sockaddr_in *locAddr, struct sockaddr_in *gcAdd
 	return sock;
 }
 
+static bool udp_split( uint32_t *bind_port, char *remote_host, uint32_t *remote_port, const char* const conn_udp ) {
+	char bind_port_str[100];
+	char remote_host_str[100];
+	char remote_port_str[100];
+	uint32_t bind_port_cnt = 0;
+	uint32_t remote_host_cnt = 0;
+	uint32_t remote_port_cnt = 0;
+
+	bool found_lhost = false;
+	bool found_lport = false;
+	bool fount_rhost = false;
+	bool success = false;
+
+	int i = 0;
+	while( (conn_udp[i] != '\0') && (i<100) ) {
+		if(!found_lhost) {
+			//Skip local host
+			if( conn_udp[i] == ':') {
+				found_lhost = true;
+			}
+		} else if(!found_lport) {
+			//Get local port
+			if( conn_udp[i] == '@') {
+				found_lport = true;
+			} else {
+				bind_port_str[bind_port_cnt] = conn_udp[i];
+				bind_port_cnt++;
+			}
+		} else if(!fount_rhost) {
+			//Get remote host
+			if( conn_udp[i] == ':') {
+				fount_rhost = true;
+			} else {
+				remote_host_str[remote_host_cnt] = conn_udp[i];
+				remote_host_cnt++;
+			}
+		} else {
+			//Get remote port
+			remote_port_str[remote_port_cnt] = conn_udp[i];
+			remote_port_cnt++;
+		}
+
+		i++;
+	}
+
+	success = found_lhost && found_lport && fount_rhost;
+
+	if(success) {
+		*bind_port = atoi(bind_port_str);
+		if(remote_host_cnt == 0) {
+			strncpy(remote_host, "0.0.0.0", 7);
+		} else {
+			strncpy(remote_host, remote_host_str, 100);
+		}
+		*remote_port = atoi(remote_port_str);
+	}
+
+	return success;
+}
+
 bool comms_init_port( comms_port_t port ) {
 	bool success = false;
 
 	uint32_t bind_port;
-	char remote_host[100];
+	char *remote_host[100];
 	uint32_t remote_port;
 
 	switch(port) {
@@ -152,17 +215,21 @@ bool comms_init_port( comms_port_t port ) {
 			//len_send_comm_0 = 0;
 			//time_send_addbuf_comm_0 = 0;
 
-			bind_port = BIND_PORT;
-			strncpy(remote_host, REMOTE_HOST, 100);
-			remote_port = REMOTE_PORT;
+			char conn_udp[100];
+			strncpy(conn_udp, &_arguments.conn_telem0[6],94);
 
-			sock_comm_0 = init_udp_port( &locAddr_comm_0,
-										 &gcAddr_comm_0,
-										 bind_port,
-										 remote_host,
-										 remote_port );
-
-			success = (sock_comm_0 > 0);
+			if( udp_split(&bind_port, remote_host, &remote_port, conn_udp) ) {
+				sock_comm_0 = init_udp_port( &locAddr_comm_0,
+											 &gcAddr_comm_0,
+											 bind_port,
+											 remote_host,
+											 remote_port );
+				success = (sock_comm_0 > 0);
+			} else {
+				char error_str[100];
+				snprintf(error_str, 100, "[COMMS] Failed to parse telem0 comm port: %s", _arguments.conn_telem0);
+				system_debug_print(error_str);
+			}
 
 			break;
 		}
@@ -172,16 +239,21 @@ bool comms_init_port( comms_port_t port ) {
 			//len_send_comm_0 = 0;
 			//time_send_addbuf_comm_1 = 0;
 
-			bind_port = BIND_PORT + 1;
-			strncpy(remote_host, REMOTE_HOST, 100);
-			remote_port = REMOTE_PORT + 1;
+			char conn_udp[100];
+			strncpy(conn_udp, &_arguments.conn_telem1[6],94);
 
-			sock_comm_0 = init_udp_port( &locAddr_comm_1,
-										 &gcAddr_comm_1,
-										 bind_port,
-										 remote_host,
-										 remote_port );
-			success = (sock_comm_1 > 0);
+			if( udp_split(&bind_port, remote_host, &remote_port, conn_udp) ) {
+				sock_comm_1 = init_udp_port( &locAddr_comm_1,
+											 &gcAddr_comm_1,
+											 bind_port,
+											 remote_host,
+											 remote_port );
+				success = (sock_comm_1 > 0);
+			} else {
+				char error_str[100];
+				snprintf(error_str, 100, "[COMMS] Failed to parse telem1 comm port: %s", _arguments.conn_telem1);
+				system_debug_print(error_str);
+			}
 
 			break;
 		}

@@ -12,9 +12,8 @@ arguments_t _arguments;
 
 int main(int argc, char **argv) {
 
-	_arguments.bind_port = 14555;
-	strncpy(_arguments.remote_host, "127.0.0.1", 100);
-	_arguments.remote_port = 14550;
+	strncpy(_arguments.conn_telem0, "udp://:14555@:14550", 100);
+	strncpy(_arguments.conn_telem1, "udp://:14556@:14551", 100);
 
 	parse_arguments(&_arguments, argc, argv);
 

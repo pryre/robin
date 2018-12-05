@@ -5,11 +5,8 @@ extern "C" {
 #endif
 
 typedef struct {
-	//enum { CHARACTER_MODE, WORD_MODE, LINE_MODE } mode;
-	//bool isCaseInsensitive;
-	unsigned int bind_port;
-	char remote_host[100];
-	unsigned int remote_port;
+	char conn_telem0[100];
+	char conn_telem1[100];
 } arguments_t;
 
 extern arguments_t _arguments;
