@@ -2,11 +2,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/stat.h>
+#include <libgen.h>
 
-#include "drivers/drv_system.h"
 #include "params.h"
+#include "drivers/drv_system.h"
+#include "drivers/posix_common/drv_cmd_args.h"
 
 params_t _params;
+arguments_t _arguments;
 
 static uint64_t _eeprom_version;
 
@@ -51,8 +55,7 @@ bool drv_flash_read( void ) {
 
 	uint8_t buffer[sizeof(params_t)];
 	FILE *fp;
-
-	fp = fopen("robin_posix_eeprom.bin","rb");
+	fp = fopen(_arguments.eeprom_file,"rb");
 
 	if(fp != NULL) {
 		int num = fread(buffer, 1, sizeof(params_t), fp);
@@ -97,8 +100,12 @@ bool drv_flash_write( void ) {
 
 	//Write to file
 	FILE *fp;
+	char dirName[1000];
+	strncpy(dirName, _arguments.eeprom_file, 1000);
 
-	fp = fopen("robin_posix_eeprom.bin","wb");
+    if(mkdir(dirname(dirName), 0755) >= 0)
+		system_debug_print("[PARAM] EEPROM directory created");
+	fp = fopen(_arguments.eeprom_file,"wb");
 
 	if(fp != NULL) {
 		uint8_t buffer[sizeof(params_t)];
@@ -108,13 +115,18 @@ bool drv_flash_write( void ) {
 
 		if( num == sizeof(params_t) ) {
 			success = true;
+			char info[1000];
+			snprintf(info, 1000, "[PARAM] Parameter file written successfully: %s", _arguments.eeprom_file);
+			system_debug_print(info);
 		} else {
 			system_debug_print("[PARAM] File not written correctly");
 		}
 
 		fclose(fp);
 	} else {
-		system_debug_print("[PARAM] Unable to write to parameter file");
+		char info[1000];
+		snprintf(info, 1000, "[PARAM] Unable to write to parameter file: %s", _arguments.eeprom_file);
+		system_debug_print(info);
 	}
 
 	return success;

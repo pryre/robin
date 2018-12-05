@@ -205,7 +205,7 @@ bool comms_init_port( comms_port_t port ) {
 	bool success = false;
 
 	uint32_t bind_port;
-	char *remote_host[100];
+	char remote_host[100];
 	uint32_t remote_port;
 
 	switch(port) {
