@@ -11,7 +11,7 @@ typedef struct {
 
 extern arguments_t _arguments;
 
-void parse_arguments(arguments_t* arguments, int argc, char** argv);
+void parse_arguments(int argc, char** argv);
 
 #ifdef __cplusplus
 }
