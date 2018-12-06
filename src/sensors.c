@@ -216,7 +216,7 @@ void sensors_init(void) {
 	//==-- Safety button
 	sensor_status_init(&_sensors.safety_button.status, get_param_uint(PARAM_SENSOR_SAFETY_CBRK));
 	if(_sensors.safety_button.status.present) {
-		if( drv_sensors_safety_button_init() ) {
+		if( !drv_sensors_safety_button_init() ) {
 			mavlink_queue_broadcast_error("[SENSOR] Could not initialize safety button!");
 		}
 	}
