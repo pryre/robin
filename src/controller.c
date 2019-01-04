@@ -125,11 +125,13 @@ static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, con
 	qf16 qe;
 	qf16_inverse(&qe, q);
 	qf16_mul(&qe, &qe, &qd);
+	qf16_normalize_to_unit(&qe, &qe);
 	*/
 	//XXX: HERE!
 	qf16 qe;
 	qf16_inverse(&qe, q);
 	qf16_mul(&qe, &qe, q_sp);
+	qf16_normalize_to_unit(&qe, &qe);
 
 	// using sin(alpha/2) scaled rotation axis as attitude error (see quaternion definition by axis angle)
 	// also taking care of the antipodal unit quaternion ambiguity
