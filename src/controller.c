@@ -70,6 +70,7 @@ static void controller_set_input_failsafe(command_input_t *input) {
 
 //Technique adapted from the Pixhawk multirotor control scheme (~December 2018)
 static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, const fix16_t yaw_w) {
+	/*
 	mf16 R;
 	mf16 Rd;
 	qf16_to_matrix(&R, q);
@@ -124,6 +125,11 @@ static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, con
 	qf16 qe;
 	qf16_inverse(&qe, q);
 	qf16_mul(&qe, &qe, &qd);
+	*/
+	//XXX: HERE!
+	qf16 qe;
+	qf16_inverse(&qe, q);
+	qf16_mul(&qe, &qe, q_sp);
 
 	// using sin(alpha/2) scaled rotation axis as attitude error (see quaternion definition by axis angle)
 	// also taking care of the antipodal unit quaternion ambiguity
