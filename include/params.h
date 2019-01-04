@@ -9,7 +9,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "param_generator/param_gen.h"
+#include "param_gen.h"
 #include "fix16.h"
 
 //This needs to be 1 less, as we need to allow space for '\n'

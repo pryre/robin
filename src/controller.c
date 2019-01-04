@@ -68,6 +68,7 @@ static void controller_set_input_failsafe(command_input_t *input) {
 	input->input_mask |= CMD_IN_IGNORE_ATTITUDE;	//Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
 }
 
+/*
 static v3d rate_goals_from_attitude(const qf16 *q_sp, const qf16 *q_current) {
 		mf16 I;
 		I.rows = 3;
@@ -366,6 +367,274 @@ static void controller_run( uint32_t time_now ) {
 		//Caclulate goal body rotations
 		//XXX: v3d rates_sp = rate_goals_from_attitude(&q_control_lock, &q_body_lock);
 		v3d rates_sp = rate_goals_from_attitude(&q_control_lock, &_state_estimator.attitude);
+
+		//Set goal rates
+		goal_r = rates_sp.x;
+		goal_p = rates_sp.y;
+		goal_y = rates_sp.z;
+	}
+
+	//==-- Rate Control PIDs
+	//Roll Rate
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
+		//Use the commanded roll rate goal
+		goal_r = input.r;
+	}
+
+	//Pitch Rate
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
+		//Use the commanded pitch rate goal
+		goal_p = input.p;
+	}
+
+	//Yaw Rate
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
+		//Use the commanded yaw rate goal
+		goal_y = input.y;
+	}
+
+	//Constrain rates to set params
+	goal_r = fix16_constrain(goal_r, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));
+	goal_p = fix16_constrain(goal_p, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));
+	goal_y = fix16_constrain(goal_y, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));
+
+	//Save intermittent goals
+	_control_input.r = goal_r;
+	_control_input.p = goal_p;
+	_control_input.y = goal_y;
+
+	//Rate PID Controllers
+	fix16_t command_r = pid_step(&_pid_roll_rate, dt, goal_r, _state_estimator.p);
+	fix16_t command_p = pid_step(&_pid_pitch_rate, dt, goal_p, _state_estimator.q);
+	fix16_t command_y = pid_step(&_pid_yaw_rate, dt, goal_y, _state_estimator.r);
+
+	//XXX:
+	//"Post-Scale/Normalize" the commands to act within
+	//a range that is approriate for the motors. This
+	//allows us to have higher PID gains for the rates
+	//(by a factor of 100), and avoids complications
+	//of getting close to the fixed-point step size
+	_control_output.r = fix16_div(command_r, _fc_100);
+	_control_output.p = fix16_div(command_p, _fc_100);
+	_control_output.y = fix16_div(command_y, _fc_100);
+}
+*/
+
+//Technique adapted from the Pixhawk multirotor control scheme (~December 2018)
+static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, const fix16_t yaw_w) {
+	mf16 R;
+	mf16 Rd;
+	qf16_to_matrix(&R, q);
+	qf16_to_matrix(&Rd, q_sp);
+
+	// calculate reduced desired attitude neglecting vehicle's yaw to prioritize roll and pitch
+	v3d e_z;
+	v3d e_z_d;
+	dcm_to_basis_z(&e_z, &R);
+	dcm_to_basis_z(&e_z_d, &Rd);
+
+	qf16 qd_red;
+	qf16_from_shortest_path(&qd_red, &e_z, &e_z_d);
+
+	//Handle co-linear vectoring cases
+	if ( fix16_abs(qd_red.a) >= _fc_epsilon ) {
+		// There is little or no difference in thrust vector direction, so they are parrallel
+		// If they are parallel, we only need yaw motion, but we still need want to use qd_red
+		// to ensure that the yaw is scaled correctly by the gain/weight
+		qd_red.a = _fc_1;
+		qd_red.b = 0;
+		qd_red.c = 0;
+		qd_red.d = 0;
+	} else if ( fix16_abs(qd_red.b) >= _fc_epsilon ) {
+		// Otherwise they are in opposite directions which presents an ambiguous solution
+		// The best we can momenterily is to just accept bad weightings from the mixing and
+		// do the 'best' movement possible for 1 time step until things can be calculated
+		qd_red = *q_sp;
+	} else {
+		// transform rotation from current to desired thrust vector into a world frame reduced desired attitude
+		qf16_mul(&qd_red, &qd_red, q);
+	}
+
+	// mix full and reduced desired attitude
+	qf16 q_mix;
+	qf16_inverse(&qd_red, &qd_red);
+	qf16_mul(&q_mix, &qd_red, q_sp);
+	qf16_mul_s(&q_mix, &q_mix, fix16_sign_no_zero(q_mix.a));
+	// catch numerical problems with the domain of acosf and asinf
+	fix16_t q_mix_w = fix16_constrain(q_mix.a, -1.0, 1.0);
+	fix16_t q_mix_z = fix16_constrain(q_mix.d, -1.0, 1.0);
+	q_mix.a = fix16_cos( fix16_mul( yaw_w, fix16_acos(q_mix_w) ) );
+	q_mix.b = 0;
+	q_mix.c = 0;
+	q_mix.d = fix16_sin( fix16_mul( yaw_w, fix16_asin(q_mix_z) ) );
+	qf16_normalize_to_unit(&q_mix, &q_mix);
+
+	qf16 qd;
+	qf16_mul(&qd, &qd_red, &q_mix);
+
+	// quaternion attitude control law, qe is rotation from q to qd
+	qf16 qe;
+	qf16_inverse(&qe, q);
+	qf16_mul(&qe, &qe, &qd);
+
+	// using sin(alpha/2) scaled rotation axis as attitude error (see quaternion definition by axis angle)
+	// also taking care of the antipodal unit quaternion ambiguity
+	v3d e_R;
+	qf16_to_v3d(&e_R, &qe);
+	v3d_mul_s(&e_R, &e_R, fix16_mul( _fc_2, fix16_sign_no_zero(qe.a) ) );
+
+	v3d_mul_s( rates, &e_R, get_param_fix16(PARAM_MC_ANGLE_P) );
+}
+
+static void controller_run( uint32_t time_now ) {
+	//Variables that store the computed attitude goal rates
+	fix16_t goal_r = 0;
+	fix16_t goal_p = 0;
+	fix16_t goal_y = 0;
+	fix16_t goal_throttle = 0;
+
+	command_input_t input;
+	controller_set_input_failsafe(&input); //Failsafe input to be safe
+
+
+	//Handle controller input
+	if(_system_status.state != MAV_STATE_CRITICAL) {
+		//_system_status.mode |= MAV_MODE_FLAG_MANUAL_ENABLED
+		switch(_system_status.control_mode) {
+			case MAIN_MODE_OFFBOARD: {
+				//Offboard mode
+				input = _cmd_ob_input;
+
+				break;
+			}
+			case MAIN_MODE_STABILIZED: {
+				//Manual stabilize mode
+				//Roll/pitch angle and yaw rate
+				input.input_mask = 0;
+				input.input_mask |= CMD_IN_IGNORE_ROLL_RATE;
+				input.input_mask |= CMD_IN_IGNORE_PITCH_RATE;
+
+				fix16_t man_roll = fix16_mul(_sensors.rc_input.c_r, get_param_fix16(PARAM_MAX_ROLL_ANGLE));
+				fix16_t man_pitch = fix16_mul(_sensors.rc_input.c_p, get_param_fix16(PARAM_MAX_PITCH_ANGLE));
+
+				quat_from_euler(&input.q, man_roll, man_pitch, 0);
+
+				input.r = 0;
+				input.p = 0;
+				input.y = fix16_mul(_sensors.rc_input.c_y, get_param_fix16(PARAM_MAX_YAW_RATE));
+
+				input.T = _sensors.rc_input.c_T;
+
+				break;
+			}
+			case MAIN_MODE_ACRO: {
+				//Manual acro mode
+				//Roll/pitch/yaw rate
+				input.input_mask = 0;
+				input.input_mask |= CMD_IN_IGNORE_ATTITUDE;
+
+				input.q.a = 1.0;
+				input.q.b = 0;
+				input.q.c = 0;
+				input.q.d = 0;
+
+				input.r = fix16_mul(_sensors.rc_input.c_r, get_param_fix16(PARAM_MAX_ROLL_RATE));
+				input.p = fix16_mul(_sensors.rc_input.c_p, get_param_fix16(PARAM_MAX_PITCH_RATE));
+				input.y = fix16_mul(_sensors.rc_input.c_y, get_param_fix16(PARAM_MAX_YAW_RATE));
+
+				input.T = _sensors.rc_input.c_T;
+
+				break;
+			}
+			default: {
+				//Keep failsafe
+				break;
+			}
+		}
+	}
+
+	fix16_t dt = fix16_from_float(1e-6 * (float)(time_now - _control_timing.time_last));	//Delta time in seconds
+
+	if( (dt == 0) || (time_now - _control_timing.time_last > _control_timing.period_stale) ) {
+		dt = 0;
+		controller_reset();
+	}
+
+	//Get the control input mask to use
+	_control_input.input_mask = input.input_mask;
+
+	//==-- Throttle Control
+	//Trottle
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_THROTTLE) ) {
+		//Use the commanded throttle
+		goal_throttle = input.T;
+	}
+
+	_control_output.T = goal_throttle;
+
+	//Save intermittent goals
+	_control_input.T = goal_throttle;
+
+	//Don't allow for derivative or integral calculations if
+	// there is a very low throttle
+	if(goal_throttle < _fc_0_05) {
+		dt = 0;
+	}
+
+	//==-- Attitude Control
+	//Save intermittent goals
+	_control_input.q = input.q;
+
+	//If we should listen to attitude input
+	if( !(_control_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
+		/*
+		//======== Body Frame Lock ========//
+		//XXX: Very important!
+		//TODO: Make a very clear note about this
+		//The control method use here (px4 method) uses a method that allows
+		// say a pitch of 20 Deg, and a yaw of 180 Deg, which will cause the
+		// mav to pitch first, then rotate around to meet that angle, adjusting
+		// for a pitch of -20 Deg and at first while the yaw rotates to the
+		// correct angle.
+		//Because of this, if there is a control request to override a specic
+		// rotation body, and tell it that
+		// we assume that the attitude message sent up was in the body frame
+		qf16 q_control_lock;
+		q_control_lock = _control_input.q;
+
+		//Yaw control will be overriden
+		if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
+			qf16_align_to_axis(&q_control_lock, &q_control_lock, &_state_estimator.attitude, AXIS_LOCK_Z);
+		}
+
+		//Pitch control will be overriden
+		if( !(_control_input.input_mask & CMD_IN_IGNORE_PITCH_RATE) ) {
+			qf16_align_to_axis(&q_control_lock, &q_control_lock, &_state_estimator.attitude, AXIS_LOCK_Y);
+		}
+
+		//Roll control will be overriden
+		if( !(_control_input.input_mask & CMD_IN_IGNORE_ROLL_RATE) ) {
+			qf16_align_to_axis(&q_control_lock, &q_control_lock, &_state_estimator.attitude, AXIS_LOCK_X);
+		}
+
+		//Save intermittent goals
+		_control_input.q = q_control_lock;
+		//======== End Body Frame Lock ========//
+
+		//Caclulate goal body rotations
+		//XXX: v3d rates_sp = rate_goals_from_attitude(&q_control_lock, &q_body_lock);
+		v3d rates_sp = rate_goals_from_attitude(&q_control_lock, &_state_estimator.attitude);
+		*/
+
+		//If we are going to override the calculated yaw rate, just ignore it now
+		fix16_t yaw_w = get_param_fix16(PARAM_MC_ANGLE_YAW_W);
+
+		if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
+			yaw_w = 0;
+		}
+
+		v3d rates_sp;
+		rates_from_attitude(&rates_sp, &_control_input.q, &_state_estimator.attitude, yaw_w);
 
 		//Set goal rates
 		goal_r = rates_sp.x;

@@ -130,10 +130,10 @@ PARAM_MAX_YAW_RATE:
     unit: "rad/s"
     function: "pid_set_min_max(&_pid_yaw_rate, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));"
 ---
-PARAM_PID_ROLL_ANGLE_P:
+PARAM_MC_ANGLE_P:
   type: "float"
-  name: "MC_ROLL_P"
-  description: "Feed-forward gain for roll angle"
+  name: "MC_ANGLE_P"
+  description: "Feed-forward gain for attitude anglular error"
   reboot: false
   value:
     option: "scalar"
@@ -149,15 +149,6 @@ PARAM_MAX_ROLL_ANGLE:
     default: 0.786
     unit: "rad"
 ---
-PARAM_PID_PITCH_ANGLE_P:
-  type: "float"
-  name: "MC_PITCH_P"
-  description: "Feed-forward gain for pitch angle"
-  reboot: false
-  value:
-    option: "scalar"
-    default: 4.5
----
 PARAM_MAX_PITCH_ANGLE:
   type: "float"
   name: "MAX_PITCH_A"
@@ -168,11 +159,13 @@ PARAM_MAX_PITCH_ANGLE:
     default: 0.786
     unit: "rad"
 ---
-PARAM_PID_YAW_ANGLE_P:
+PARAM_MC_ANGLE_YAW_W:
   type: "float"
-  name: "MC_YAW_P"
-  description: "Feed-forward gain for yaw angle"
+  name: "MC_YAW_W"
+  description: "Weighting gain for yaw angle error dynamics. Values closer to 1.0 will make the yaw component of the attitude tracking more aggressive."
   reboot: false
   value:
-    option: "scalar"
-    default: 2.8
+    option: "range"
+    default: 0.6
+    min: 0.0
+    max: 1.0

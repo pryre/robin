@@ -14,7 +14,7 @@ extern "C" {
 #include "fixextra.h"
 #include "drivers/drv_status_io.h"
 #include "params.h"
-#include "param_generator/param_gen.h"
+#include "param_gen.h"
 #include "safety.h"
 #include "sensors.h"
 #include "estimator.h"
@@ -121,7 +121,7 @@ void comm_send_ch( mavlink_channel_t chan, uint8_t ch ) {
 		comms_send(COMM_PORT_1, ch);
 	}
 	*/
-	
+
 	if( chan == MAVLINK_COMM_0 ) {
 		system_debug_print("Attempted to send data with comm_send_ch(MAVLINK_COMM_0,ch)");
 	} else if( chan == MAVLINK_COMM_1 ) {
@@ -147,7 +147,7 @@ void comms_send_msg(mavlink_channel_t chan) {
 	if( chan == MAVLINK_COMM_0 ) {
 		uint32_t len = mavlink_msg_to_send_buffer(buf, &mavlink_msg_buf_port0_);
 		comms_send_datagram(COMM_PORT_0, buf, len);
-	} else if( chan == MAVLINK_COMM_1 ) {	
+	} else if( chan == MAVLINK_COMM_1 ) {
 		uint32_t len = mavlink_msg_to_send_buffer(buf, &mavlink_msg_buf_port1_);
 		comms_send_datagram(COMM_PORT_1, buf, len);
 	}

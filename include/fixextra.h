@@ -50,6 +50,14 @@ static inline fix16_t fix16_constrain(fix16_t i, const fix16_t min, const fix16_
 	return (i < min) ? min : (i > max) ? max : i;
 }
 
+static inline fix16_t fix16_sign(fix16_t x) {
+	return (x > 0) ? _fc_1 : ( (x == 0) ? 0 : -_fc_1 );
+}
+
+static inline fix16_t fix16_sign_no_zero(fix16_t x) {
+	return (x > 0) ? _fc_1 : -_fc_1;
+}
+
 static inline fix16_t v3d_sq_norm(const v3d *a) {
 	return fix16_add(fix16_add(fix16_sq(a->x), fix16_sq(a->y)), fix16_sq(a->z));
 }
@@ -105,7 +113,7 @@ static inline void qf16_from_shortest_path(qf16 *dest, const v3d *v1, const v3d 
 		q.c = v_c.y;
 		q.d = v_c.z;
 
-		qf16_normalize(dest, &q);
+		qf16_normalize_to_unit(dest, &q);
 	}
 }
 
@@ -169,18 +177,28 @@ static inline void matrix_to_qf16(qf16 *dest, const mf16 *mat) {
 	dest->d = temp[2];
 }
 
-static inline void dcm_to_basis(v3d *b_x, v3d *b_y, v3d *b_z, const mf16 *dcm) {
+static inline void dcm_to_basis_x(v3d *b_x, const mf16 *dcm) {
 		b_x->x = dcm->data[0][0];
 		b_x->y = dcm->data[0][1];
 		b_x->z = dcm->data[0][2];
+}
 
+static inline void dcm_to_basis_y(v3d *b_y, const mf16 *dcm) {
 		b_y->x = dcm->data[1][0];
 		b_y->y = dcm->data[1][1];
 		b_y->z = dcm->data[1][2];
+}
 
+static inline void dcm_to_basis_z(v3d *b_z, const mf16 *dcm) {
 		b_z->x = dcm->data[2][0];
 		b_z->y = dcm->data[2][1];
 		b_z->z = dcm->data[2][2];
+}
+
+static inline void dcm_to_basis(v3d *b_x, v3d *b_y, v3d *b_z, const mf16 *dcm) {
+		dcm_to_basis_x(b_x, dcm);
+		dcm_to_basis_y(b_y, dcm);
+		dcm_to_basis_z(b_z, dcm);
 }
 
 static inline void dcm_from_basis(mf16 *dcm, const v3d *b_x, const v3d *b_y, const v3d *b_z) {

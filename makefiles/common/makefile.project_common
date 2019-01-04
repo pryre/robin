@@ -19,8 +19,7 @@ TARGET_MAP   = $(OBJECT_DIR)/$(TARGET).map
 ###############################################################################
 
 # Parameter Generation
-PROJECT_DIR_PARAM_GEN = $(ROOT)/lib/param_generator
-PROJECT_SRC_PARAM_GEN = $(PROJECT_DIR_PARAM_GEN)/param_gen.c
+PROJECT_SRC_PARAM_GEN = $(ROOT)/build/param_gen.c
 
 #GEN_PARAMS := $(shell python3 $(PROJECT_DIR_PARAM_GEN)/gen_params.py $(PROJECT_DIR_PARAM_GEN) >&2; echo $$?)
 #$(info $$GEN_PARAMS is [${GEN_PARAMS}])

@@ -21,6 +21,7 @@ OBJCOPY	 = $(DEVICE_BUILD_OBJCOPY)
 # Tool options.
 #
 INCLUDE_DIRS = $(ROOT)/include \
+			   $(ROOT)/build \
 			   $(ROOT)/lib \
 			   $(PROJECT_DIR_LIBFIXMATH) \
 			   $(PROJECT_DIR_LIBFIXMATRIX) \

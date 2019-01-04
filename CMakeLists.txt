@@ -121,6 +121,14 @@ execute_process(COMMAND ${CMD_GIT_VERSION_OS} RESULT_VARIABLE GIT_VERSION_OS)
 execute_process(COMMAND ${CMD_GIT_VERSION_MAVLINK} RESULT_VARIABLE GIT_VERSION_MAVLINK)
 execute_process(COMMAND ${CMD_EEPROM_CONF_VERSION} RESULT_VARIABLE EEPROM_CONF_VERSION)
 
+file(GLOB PARAM_DEFINITIONS ${PROJECT_SOURCE_DIR}/lib/param_generator/definitions/*.yaml)
+
+add_custom_command(
+    OUTPUT  param_gen.h param_gen.cpp
+    COMMAND python ${PROJECT_SOURCE_DIR}/lib/param_generator/gen_params.py ${PROJECT_SOURCE_DIR}/lib/param_generator/definitions/ ${CMAKE_CURRENT_BINARY_DIR}/
+    DEPENDS ${PARAM_DEFINITIONS}
+)
+
 add_compile_options(
 	-DGIT_VERSION_FLIGHT_STR=\"${GIT_VERSION_FLIGHT}\"
 	-DGIT_VERSION_OS_STR=\"${GIT_VERSION_OS}\"
@@ -237,7 +245,7 @@ set(ROBIN_SRC_LIBFIXMATRIX
 )
 
 set(ROBIN_SRC_PARAMGEN
-	lib/param_generator/param_gen.c
+	${CMAKE_CURRENT_BINARY_DIR}/param_gen.c
 )
 
 ## Declare a C++ executable

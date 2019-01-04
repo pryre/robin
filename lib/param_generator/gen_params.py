@@ -3,6 +3,7 @@
 import os
 import sys
 import yaml
+import glob
 #path_params_pdf = "documents/params.pdf"
 
 def read_params(param_file):
@@ -340,7 +341,7 @@ def gen_c(params, filepath):
 		str_c = "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n"
 		str_c += "#include <stdlib.h>\n"
 		str_c += "#include \"params.h\"\n"
-		str_c += "#include \"param_generator/param_gen.h\"\n"
+		str_c += "#include \"param_gen.h\"\n"
 		str_c += "#include \"mavlink_system.h\"\n"
 		str_c += "#include \"mavlink_transmit.h\"\n"
 		str_c += "#include \"controller.h\"\n"
@@ -444,8 +445,10 @@ def gen_c(params, filepath):
 	return success
 
 def main():
-	proj_dir = str(sys.argv[1])
+	proj_dir_in = str(sys.argv[1])
+	proj_dir_out = str(sys.argv[2])
 
+	"""
 	param_groups = ("Battery",
 					"Calibration",
 					"Communication",
@@ -456,18 +459,29 @@ def main():
 					"Sensors",
 					"System")
 
-	path_params_yaml = (proj_dir + "/params_battery.yaml",
-						proj_dir + "/params_calibration.yaml",
-						proj_dir + "/params_comms.yaml",
-						proj_dir + "/params_control.yaml",
-						proj_dir + "/params_estimator.yaml",
-						proj_dir + "/params_mixer.yaml",
-						proj_dir + "/params_rc_input.yaml",
-						proj_dir + "/params_sensors.yaml",
-						proj_dir + "/params_system.yaml")
-	path_params_md = proj_dir + "/PARAMS.md"
-	path_params_h = proj_dir + "/param_gen.h"
-	path_params_c = proj_dir + "/param_gen.c"
+	path_params_yaml = (proj_dir_in + "/params_battery.yaml",
+						proj_dir_in + "/params_calibration.yaml",
+						proj_dir_in + "/params_comms.yaml",
+						proj_dir_in + "/params_control.yaml",
+						proj_dir_in + "/params_estimator.yaml",
+						proj_dir_in + "/params_mixer.yaml",
+						proj_dir_in + "/params_rc_input.yaml",
+						proj_dir_in + "/params_sensors.yaml",
+						proj_dir_in + "/params_system.yaml")
+	"""
+	print(os.path.dirname(proj_dir_in))
+	path_params_yaml = glob.glob( os.path.dirname(proj_dir_in) + "/*.yaml")
+
+	param_groups = []
+	for ppy in path_params_yaml:
+		param_groups.append(os.path.basename(ppy).split('.')[0])
+
+	if not os.path.exists(proj_dir_out):
+		os.mkdir(proj_dir_out)
+
+	path_params_md = os.path.dirname(proj_dir_in) + "/../PARAMS.md"
+	path_params_h = os.path.dirname(proj_dir_out) + "/param_gen.h"
+	path_params_c = os.path.dirname(proj_dir_out) + "/param_gen.c"
 
 	do_gen = False
 

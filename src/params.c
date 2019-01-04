@@ -15,7 +15,7 @@ extern "C" {
 #include "mixer.h"
 #include "fix16.h"
 
-#include "param_generator/param_gen.h"
+#include "param_gen.h"
 
 #include "safety.h"
 #include "mavlink_system.h"

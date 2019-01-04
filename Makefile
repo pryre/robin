@@ -53,14 +53,11 @@ naze32_rev6_reflash: naze32_rev6 mavlink_bootloader
 	stm32flash -w build/robin_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
 param_gen:
-	@python3 lib/param_generator/gen_params.py lib/param_generator >&2
+	@python3 lib/param_generator/gen_params.py ./lib/param_generator/definitions/ ./build/ >&2
 
 clean:
-#	rm -rf *.o obj $(TARGET_HEX) $(TARGET_ELF) $(TARGET_OBJS) $(TARGET_MAP)
-	rm -rf ./build
-	rm ./lib/param_generator/param_gen.h
-	rm ./lib/param_generator/param_gen.c
-	rm ./lib/param_generator/PARAMS.md
+	@rm -rf ./build
+	@mkdir ./build
 
 #flash:
 #	stty -F $(SERIAL_DEVICE) raw speed $(SERIAL_BAUD) -crtscts cs8 -parenb -cstopb -ixon
