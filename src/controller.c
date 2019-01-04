@@ -231,7 +231,7 @@ static void controller_run( uint32_t time_now ) {
 
 	//==-- Attitude Control
 	//Save intermittent goals
-	_control_input.q = input.q;
+	qf16_normalize_to_unit(&_control_input.q, &input.q);
 
 	//If we should listen to attitude input
 	if( !(_control_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {

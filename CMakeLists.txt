@@ -111,9 +111,9 @@ catkin_package(
 ## Build ##
 ###########
 
-set(CMD_GIT_VERSION_FLIGHT git describe --abbrev=8 --always | sed 's/^ *//g' | head -c 8)
-set(CMD_GIT_VERSION_OS git submodule status | grep BreezySTM32 | sed 's/^ *//g' | head -c 8)
-set(CMD_GIT_VERSION_MAVLINK git submodule status | grep mavlink | sed 's/^ *//g' | head -c 8)
+set(CMD_GIT_VERSION_FLIGHT cd ${PROJECT_SOURCE_DIR} && git describe --abbrev=8 --always | sed 's/^ *//g' | head -c 8)
+set(CMD_GIT_VERSION_OS cd ${PROJECT_SOURCE_DIR} && git submodule status | grep BreezySTM32 | sed 's/^ *//g' | head -c 8)
+set(CMD_GIT_VERSION_MAVLINK cd ${PROJECT_SOURCE_DIR} && git submodule status | grep mavlink | sed 's/^ *//g' | head -c 8)
 set(CMD_EEPROM_CONF_VERSION date +'%s')
 
 execute_process(COMMAND ${CMD_GIT_VERSION_FLIGHT} RESULT_VARIABLE GIT_VERSION_FLIGHT)
@@ -124,7 +124,7 @@ execute_process(COMMAND ${CMD_EEPROM_CONF_VERSION} RESULT_VARIABLE EEPROM_CONF_V
 file(GLOB PARAM_DEFINITIONS ${PROJECT_SOURCE_DIR}/lib/param_generator/definitions/*.yaml)
 
 add_custom_command(
-    OUTPUT  param_gen.h param_gen.cpp
+    OUTPUT  param_gen.h param_gen.c
     COMMAND python ${PROJECT_SOURCE_DIR}/lib/param_generator/gen_params.py ${PROJECT_SOURCE_DIR}/lib/param_generator/definitions/ ${CMAKE_CURRENT_BINARY_DIR}/
     DEPENDS ${PARAM_DEFINITIONS}
 )
@@ -148,6 +148,7 @@ include_directories(
   lib
   lib/libfixmath/libfixmath
   lib/libfixmatrix
+  ${CMAKE_CURRENT_BINARY_DIR}
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -245,7 +246,7 @@ set(ROBIN_SRC_LIBFIXMATRIX
 )
 
 set(ROBIN_SRC_PARAMGEN
-	${CMAKE_CURRENT_BINARY_DIR}/param_gen.c
+	param_gen.c
 )
 
 ## Declare a C++ executable
