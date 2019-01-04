@@ -21,6 +21,7 @@ extern "C" {
 #include "mixer.h"
 #include "pid_controller.h"
 
+//#include <stdio.h>
 
 system_status_t _system_status;
 sensor_readings_t _sensors;
@@ -70,7 +71,6 @@ static void controller_set_input_failsafe(command_input_t *input) {
 
 //Technique adapted from the Pixhawk multirotor control scheme (~December 2018)
 static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, const fix16_t yaw_w) {
-	/*
 	mf16 R;
 	mf16 Rd;
 	qf16_to_matrix(&R, q);
@@ -81,6 +81,9 @@ static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, con
 	v3d e_z_d;
 	dcm_to_basis_z(&e_z, &R);
 	dcm_to_basis_z(&e_z_d, &Rd);
+
+	//printf("e_z: [%0.2f,%0.2f,%0.2f]\n", fix16_to_float(e_z.x), fix16_to_float(e_z.y), fix16_to_float(e_z.z));
+	//printf("e_z_d: [%0.2f,%0.2f,%0.2f]\n", fix16_to_float(e_z_d.x), fix16_to_float(e_z_d.y), fix16_to_float(e_z_d.z));
 
 	qf16 qd_red;
 	qf16_from_shortest_path(&qd_red, &e_z, &e_z_d);
@@ -94,7 +97,7 @@ static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, con
 		qd_red.b = 0;
 		qd_red.c = 0;
 		qd_red.d = 0;
-	} else if ( fix16_abs(qd_red.b) >= _fc_epsilon ) {
+	} else if ( ( fix16_abs(qd_red.b) >= _fc_epsilon ) || ( fix16_abs(qd_red.c) >= _fc_epsilon ) ) {
 		// Otherwise they are in opposite directions which presents an ambiguous solution
 		// The best we can momenterily is to just accept bad weightings from the mixing and
 		// do the 'best' movement possible for 1 time step until things can be calculated
@@ -106,8 +109,11 @@ static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, con
 
 	// mix full and reduced desired attitude
 	qf16 q_mix;
-	qf16_inverse(&qd_red, &qd_red);
-	qf16_mul(&q_mix, &qd_red, q_sp);
+	qf16 qd_red_i;
+
+	qf16_inverse(&qd_red_i, &qd_red);
+	//qf16_normalize_to_unit(&qd_red_i, &qd_red_i);
+	qf16_mul(&q_mix, &qd_red_i, q_sp);
 	qf16_mul_s(&q_mix, &q_mix, fix16_sign_no_zero(q_mix.a));
 	// catch numerical problems with the domain of acosf and asinf
 	fix16_t q_mix_w = fix16_constrain(q_mix.a, -1.0, 1.0);
@@ -120,19 +126,21 @@ static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, con
 
 	qf16 qd;
 	qf16_mul(&qd, &qd_red, &q_mix);
+	qf16_normalize_to_unit(&qd, &qd);
 
 	// quaternion attitude control law, qe is rotation from q to qd
 	qf16 qe;
 	qf16_inverse(&qe, q);
 	qf16_mul(&qe, &qe, &qd);
 	qf16_normalize_to_unit(&qe, &qe);
-	*/
+
 	//XXX: HERE!
+	/*
 	qf16 qe;
 	qf16_inverse(&qe, q);
 	qf16_mul(&qe, &qe, q_sp);
 	qf16_normalize_to_unit(&qe, &qe);
-
+	*/
 	// using sin(alpha/2) scaled rotation axis as attitude error (see quaternion definition by axis angle)
 	// also taking care of the antipodal unit quaternion ambiguity
 	v3d e_R;

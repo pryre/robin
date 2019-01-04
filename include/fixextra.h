@@ -35,6 +35,7 @@ extern "C" {
 
 #define _fc_sqrt_0_5	0x0000B504	//0.70710754395 (slightly higher than sqrt 0.5)
 #define _fc_epsilon		0x0000FFFF	//0.99...
+#define _fc_eps			0x00000001	//0.0...1
 #define _fc_gravity		0x0009CE80	//Is equal to 9.80665 (Positive!) in Q16.16
 
 typedef enum {
@@ -81,21 +82,28 @@ static inline void qf16_normalize_to_unit(qf16 *dest, const qf16 *q) {
 	dest->d = fix16_div(q->d, d);
 }
 
+static inline void v3d_abs(v3d* dest, const v3d* v) {
+	dest->x = fix16_abs(v->x);
+	dest->y = fix16_abs(v->y);
+	dest->z = fix16_abs(v->z);
+}
+
 //Returns the rotation between two vectors
 static inline void qf16_from_shortest_path(qf16 *dest, const v3d *v1, const v3d *v2) {
+	/*
 	fix16_t v_dot = v3d_dot(v1, v2);
 
 	//Check to see if they are parallel
 	if(v_dot > _fc_epsilon) {	//The vectors are parallel
 		//Identity quaternion
-		dest->a = 1;
+		dest->a = _fc_1;
 		dest->b = 0;
 		dest->c = 0;
 		dest->d = 0;
 	} else if(v_dot < -_fc_epsilon) {	//The vectors are opposite
 		//180Deg Roll Quaternion
 		dest->a = 0;
-		dest->b = 1;
+		dest->b = _fc_1;
 		dest->c = 0;
 		dest->d = 0;
 	} else {	//The vectors aren't parallel
@@ -115,6 +123,50 @@ static inline void qf16_from_shortest_path(qf16 *dest, const v3d *v1, const v3d 
 
 		qf16_normalize_to_unit(dest, &q);
 	}
+	*/
+
+    v3d cr;
+	v3d_cross(&cr, v1, v2);
+    fix16_t dt = v3d_dot(v1,v2);
+
+    if( (v3d_norm(&cr) <= _fc_eps) || (dt < 0) ) {
+		// handle corner cases with 180 degree rotations
+		// if the two vectors are parallel, cross product is zero
+		// if they point opposite, the dot product is negative
+		v3d_abs(&cr, v1);
+		if(cr.x < cr.y) {
+			if(cr.x < cr.y) {
+				cr.x = _fc_1;
+				cr.y = 0;
+				cr.z = 0;
+			} else {
+				cr.x = 0;
+				cr.y = 0;
+				cr.z = _fc_1;
+			}
+		} else {
+			if(cr.y < cr.z) {
+				cr.x = 0;
+				cr.y = _fc_1;
+				cr.z = 0;
+			} else {
+				cr.x = 0;
+				cr.y = 0;
+				cr.z = _fc_1;
+			}
+		}
+
+		dest->a = 0;
+		v3d_cross(&cr, v1, &cr);
+	} else {
+		// normal case, do half-way quaternion solution
+		dest->a = fix16_add(dt,fix16_sqrt(fix16_mul(fix16_sq(v3d_norm(v1)),fix16_sq(v3d_norm(v2)))));
+	}
+
+    dest->b = cr.x;
+    dest->c = cr.y;
+    dest->d = cr.z;
+	qf16_normalize_to_unit(dest, dest);
 }
 
 //TODO: Should use the mavlink conversions as a base if we move to float
@@ -178,41 +230,41 @@ static inline void matrix_to_qf16(qf16 *dest, const mf16 *mat) {
 }
 
 static inline void dcm_to_basis_x(v3d *b_x, const mf16 *dcm) {
-		b_x->x = dcm->data[0][0];
-		b_x->y = dcm->data[0][1];
-		b_x->z = dcm->data[0][2];
+	b_x->x = dcm->data[0][0];
+	b_x->y = dcm->data[0][1];
+	b_x->z = dcm->data[0][2];
 }
 
 static inline void dcm_to_basis_y(v3d *b_y, const mf16 *dcm) {
-		b_y->x = dcm->data[1][0];
-		b_y->y = dcm->data[1][1];
-		b_y->z = dcm->data[1][2];
+	b_y->x = dcm->data[1][0];
+	b_y->y = dcm->data[1][1];
+	b_y->z = dcm->data[1][2];
 }
 
 static inline void dcm_to_basis_z(v3d *b_z, const mf16 *dcm) {
-		b_z->x = dcm->data[2][0];
-		b_z->y = dcm->data[2][1];
-		b_z->z = dcm->data[2][2];
+	b_z->x = dcm->data[2][0];
+	b_z->y = dcm->data[2][1];
+	b_z->z = dcm->data[2][2];
 }
 
 static inline void dcm_to_basis(v3d *b_x, v3d *b_y, v3d *b_z, const mf16 *dcm) {
-		dcm_to_basis_x(b_x, dcm);
-		dcm_to_basis_y(b_y, dcm);
-		dcm_to_basis_z(b_z, dcm);
+	dcm_to_basis_x(b_x, dcm);
+	dcm_to_basis_y(b_y, dcm);
+	dcm_to_basis_z(b_z, dcm);
 }
 
 static inline void dcm_from_basis(mf16 *dcm, const v3d *b_x, const v3d *b_y, const v3d *b_z) {
-		dcm->data[0][0] = b_x->x;
-		dcm->data[0][1] = b_x->y;
-		dcm->data[0][2] = b_x->z;
+	dcm->data[0][0] = b_x->x;
+	dcm->data[0][1] = b_x->y;
+	dcm->data[0][2] = b_x->z;
 
-		dcm->data[1][0] = b_y->x;
-		dcm->data[1][1] = b_y->y;
-		dcm->data[1][2] = b_y->z;
+	dcm->data[1][0] = b_y->x;
+	dcm->data[1][1] = b_y->y;
+	dcm->data[1][2] = b_y->z;
 
-		dcm->data[2][0] = b_z->x;
-		dcm->data[2][1] = b_z->y;
-		dcm->data[2][2] = b_z->z;
+	dcm->data[2][0] = b_z->x;
+	dcm->data[2][1] = b_z->y;
+	dcm->data[2][2] = b_z->z;
 }
 
 static inline void qf16_align_to_axis(qf16 *dest, const qf16 *input, const qf16 *reference, const qf16_axis_lock_t axis) {
