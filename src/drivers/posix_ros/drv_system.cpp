@@ -106,10 +106,11 @@ void system_debug_print( char *msg ) {
 }
 
 void system_rate_limit(void) {
-	ros::Duration sleep_time;
-	sleep_time.sec = 0;
-	sleep_time.nsec = (int)1e5;	//sleep for 0.1 millis
-
 	ros::spinOnce();
-	sleep_time.sleep();
+
+	struct timespec sleep_time;
+	sleep_time.tv_sec = 0;
+	sleep_time.tv_nsec = (int)1e5;	//sleep for 0.1 millis
+
+	nanosleep(&sleep_time, NULL);
 }

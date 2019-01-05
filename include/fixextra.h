@@ -63,29 +63,51 @@ static inline fix16_t v3d_sq_norm(const v3d *a) {
 	return fix16_add(fix16_add(fix16_sq(a->x), fix16_sq(a->y)), fix16_sq(a->z));
 }
 
-static inline void qf16_inverse(qf16 *dest, const qf16 *q) {
-	qf16 q_temp;
+static inline fix16_t qf16_dot_full(const qf16 *q1, const qf16 *q2) {
+	return fix16_add(fix16_add(fix16_add(fix16_mul(q1->a,q2->a),
+										 fix16_mul(q1->b,q2->b)),
+										 fix16_mul(q1->c,q2->c)),
+										 fix16_mul(q1->d,q2->d));
+}
 
-	//q_dot = conjugate(q)/norm(q)
-	qf16_conj(&q_temp, q);
-	qf16_div_s(dest, &q_temp, qf16_norm(q));
+static inline fix16_t qf16_norm_full(const qf16 *q) {
+	return fix16_sqrt(qf16_dot_full(q,q));
 }
 
 static inline void qf16_normalize_to_unit(qf16 *dest, const qf16 *q) {
-	fix16_t d = fix16_sqrt( fix16_add(fix16_sq(q->a),
-							fix16_add(fix16_sq(q->b),
-							fix16_add(fix16_sq(q->c), fix16_sq(q->d)))));
+	//fix16_t d = fix16_sqrt( fix16_add(fix16_sq(q->a),
+	//						fix16_add(fix16_sq(q->b),
+	//						fix16_add(fix16_sq(q->c), fix16_sq(q->d)))));
+	//dest->a = fix16_div(q->a, d);
+	//dest->b = fix16_div(q->b, d);
+	//dest->c = fix16_div(q->c, d);
+	//dest->d = fix16_div(q->d, d);
 
-	dest->a = fix16_div(q->a, d);
-	dest->b = fix16_div(q->b, d);
-	dest->c = fix16_div(q->c, d);
-	dest->d = fix16_div(q->d, d);
+	qf16_div_s(dest,q,qf16_norm_full(q));
+}
+
+static inline void qf16_inverse(qf16 *dest, const qf16 *q) {
+	fix16_t normSq = qf16_dot_full(q,q);
+	dest->a = fix16_div(q->a,normSq);
+	dest->b = -fix16_div(q->b,normSq);
+	dest->c = -fix16_div(q->c,normSq);
+	dest->d = -fix16_div(q->d,normSq);
+	qf16_normalize_to_unit(dest,dest);
+	//q_dot = conjugate(q)/norm(q)
+	//qf16_conj(&q_temp, q);
+	//qf16_div_s(dest, &q_temp, qf16_norm(q));
 }
 
 static inline void v3d_abs(v3d* dest, const v3d* v) {
 	dest->x = fix16_abs(v->x);
 	dest->y = fix16_abs(v->y);
 	dest->z = fix16_abs(v->z);
+}
+
+static inline void qf16_dcm_z(v3d* b_z, const qf16* q) {
+	b_z->x = fix16_mul(_fc_2, fix16_add(fix16_mul(q->a, q->c), fix16_mul(q->b, q->d)));
+	b_z->y = fix16_mul(_fc_2, fix16_sub(fix16_mul(q->c, q->d), fix16_mul(q->a, q->b)));
+	b_z->z = fix16_sub(fix16_sq(q->a), fix16_sub(fix16_sq(q->b), fix16_add(fix16_sq(q->c), fix16_sq(q->d))));
 }
 
 //Returns the rotation between two vectors
