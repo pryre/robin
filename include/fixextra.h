@@ -107,7 +107,7 @@ static inline void v3d_abs(v3d* dest, const v3d* v) {
 static inline void qf16_dcm_z(v3d* b_z, const qf16* q) {
 	b_z->x = fix16_mul(_fc_2, fix16_add(fix16_mul(q->a, q->c), fix16_mul(q->b, q->d)));
 	b_z->y = fix16_mul(_fc_2, fix16_sub(fix16_mul(q->c, q->d), fix16_mul(q->a, q->b)));
-	b_z->z = fix16_sub(fix16_sq(q->a), fix16_sub(fix16_sq(q->b), fix16_add(fix16_sq(q->c), fix16_sq(q->d))));
+	b_z->z = fix16_add(fix16_sq(q->a), fix16_add(-fix16_sq(q->b), fix16_add(-fix16_sq(q->c), fix16_sq(q->d))));
 }
 
 //Returns the rotation between two vectors
