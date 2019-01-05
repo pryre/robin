@@ -161,7 +161,7 @@ static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, con
 
 	v3d_mul_s( rates, &e_R, get_param_fix16(PARAM_MC_ANGLE_P) );
 
-	//printf("rates: [%0.4f,%0.4f,%0.4f]\n", fix16_to_float(rates->x), fix16_to_float(rates->y), fix16_to_float(rates->z));
+	printf("rates: [%0.4f,%0.4f,%0.4f]\n", fix16_to_float(rates->x), fix16_to_float(rates->y), fix16_to_float(rates->z));
 }
 
 static void controller_run( uint32_t time_now ) {
