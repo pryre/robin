@@ -82,7 +82,6 @@ void estimator_init( void ) {
 	time_last = 0;
 }
 
-
 void reset_adaptive_gyro_bias() {
 	b.x = 0;
 	b.y = 0;
@@ -294,7 +293,6 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 			qf16_normalize_to_unit(&q_hat, &q_hat_temp);
 		}
 	}
-
 
 	//==-- Heading data fusion
 	if( ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) &&
