@@ -15,7 +15,7 @@ void system_init(void) {
 	systemInit();
 
 	adcInit(false);
-	
+
 	system_pause_ms(100);
 }
 
@@ -49,10 +49,22 @@ uint64_t system_unique_id(void) {
 	return U_ID_0;
 }
 
-void system_debug_print( char *msg ) {
-	//XXX: We don't have a debug CLI
+
+int system_debug_print( const char *format, ... ) {
+	//XXX: Currently unsupported
+	/*
+	int result;
+    va_list args;
+
+    va_start(args, format);
+    result = vprintf(format, args);
+    va_end(args);
+
+    return result;
+	*/
 }
 
 void system_rate_limit(void) {
 	//XXX: Not required for naze32
 }
+
