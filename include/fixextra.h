@@ -9,6 +9,8 @@ extern "C" {
 #include "fixmatrix.h"
 #include "fixquat.h"
 
+#include "stdio.h"
+
 //Quaternion layout
 //q.a -> q.w
 //q.b -> q.x
@@ -56,7 +58,7 @@ static inline fix16_t fix16_sign(fix16_t x) {
 }
 
 static inline fix16_t fix16_sign_no_zero(fix16_t x) {
-	return (x > 0) ? _fc_1 : -_fc_1;
+	return (x >= 0) ? _fc_1 : -_fc_1;
 }
 
 static inline fix16_t v3d_sq_norm(const v3d *a) {
@@ -75,14 +77,6 @@ static inline fix16_t qf16_norm_full(const qf16 *q) {
 }
 
 static inline void qf16_normalize_to_unit(qf16 *dest, const qf16 *q) {
-	//fix16_t d = fix16_sqrt( fix16_add(fix16_sq(q->a),
-	//						fix16_add(fix16_sq(q->b),
-	//						fix16_add(fix16_sq(q->c), fix16_sq(q->d)))));
-	//dest->a = fix16_div(q->a, d);
-	//dest->b = fix16_div(q->b, d);
-	//dest->c = fix16_div(q->c, d);
-	//dest->d = fix16_div(q->d, d);
-
 	qf16_div_s(dest,q,qf16_norm_full(q));
 }
 
@@ -92,10 +86,6 @@ static inline void qf16_inverse(qf16 *dest, const qf16 *q) {
 	dest->b = -fix16_div(q->b,normSq);
 	dest->c = -fix16_div(q->c,normSq);
 	dest->d = -fix16_div(q->d,normSq);
-	qf16_normalize_to_unit(dest,dest);
-	//q_dot = conjugate(q)/norm(q)
-	//qf16_conj(&q_temp, q);
-	//qf16_div_s(dest, &q_temp, qf16_norm(q));
 }
 
 static inline void v3d_abs(v3d* dest, const v3d* v) {
@@ -111,70 +101,40 @@ static inline void qf16_dcm_z(v3d* b_z, const qf16* q) {
 }
 
 //Returns the rotation between two vectors
+//Method used derrived from PX4/Matrix
 static inline void qf16_from_shortest_path(qf16 *dest, const v3d *v1, const v3d *v2) {
-	/*
-	fix16_t v_dot = v3d_dot(v1, v2);
-
-	//Check to see if they are parallel
-	if(v_dot > _fc_epsilon) {	//The vectors are parallel
-		//Identity quaternion
-		dest->a = _fc_1;
-		dest->b = 0;
-		dest->c = 0;
-		dest->d = 0;
-	} else if(v_dot < -_fc_epsilon) {	//The vectors are opposite
-		//180Deg Roll Quaternion
-		dest->a = 0;
-		dest->b = _fc_1;
-		dest->c = 0;
-		dest->d = 0;
-	} else {	//The vectors aren't parallel
-		qf16 q;
-
-		//Calculate the rotation
-		v3d v_c;
-		v3d_cross(&v_c, v1, v2);
-
-		//q.w = sqrt((v1.length ^ 2) * (v2.length ^ 2)) + dotproduct(v1, v2)
-		//q.a = fix16_add(fix16_sqrt(fix16_mul(fix16_sq(v3d_norm(v1)), fix16_sq(v3d_norm(v2)))), v_dot);
-
-		q.a = fix16_add(_fc_1, v_dot);
-		q.b = v_c.x;
-		q.c = v_c.y;
-		q.d = v_c.z;
-
-		qf16_normalize_to_unit(dest, &q);
-	}
-	*/
-
     v3d cr;
 	v3d_cross(&cr, v1, v2);
     fix16_t dt = v3d_dot(v1,v2);
 
-    if( (v3d_norm(&cr) <= _fc_eps) || (dt < 0) ) {
+    if( (v3d_norm(&cr) <= _fc_eps) && (dt < 0) ) {
 		// handle corner cases with 180 degree rotations
 		// if the two vectors are parallel, cross product is zero
 		// if they point opposite, the dot product is negative
 		v3d_abs(&cr, v1);
 		if(cr.x < cr.y) {
-			if(cr.x < cr.y) {
+			if(cr.x < cr.z) {
 				cr.x = _fc_1;
 				cr.y = 0;
 				cr.z = 0;
+				printf("case a\n");
 			} else {
 				cr.x = 0;
 				cr.y = 0;
 				cr.z = _fc_1;
+				printf("case b\n");
 			}
 		} else {
 			if(cr.y < cr.z) {
 				cr.x = 0;
 				cr.y = _fc_1;
 				cr.z = 0;
+				printf("case c\n");
 			} else {
 				cr.x = 0;
 				cr.y = 0;
 				cr.z = _fc_1;
+				printf("case d\n");
 			}
 		}
 
@@ -360,6 +320,25 @@ static inline void qf16_align_to_axis(qf16 *dest, const qf16 *input, const qf16 
 
 	//Normalize quaternion
 	qf16_normalize_to_unit(dest, dest);
+}
+
+//Calculates the basis error representing body the rate rotations required
+//to rotate q1 to q2, in the frame of q1
+//This could be used to calculate angular control error, with q1 being the
+//state, and q2 being the reference
+static inline void qf16_basis_error( v3d* dest, const qf16* q1, const qf16* q2) {
+	qf16 qe;
+	qf16_inverse(&qe, q1);
+	qf16_normalize_to_unit(&qe, &qe);
+	//printf("q_i: [%0.4f,%0.4f,%0.4f,%0.4f]\n", fix16_to_float(qe.a), fix16_to_float(qe.b), fix16_to_float(qe.c), fix16_to_float(qe.d));
+	qf16_mul(&qe, &qe, q2);
+	qf16_normalize_to_unit(&qe, &qe);
+	//printf("qe: [%0.4f,%0.4f,%0.4f,%0.4f]\n", fix16_to_float(qe.a), fix16_to_float(qe.b), fix16_to_float(qe.c), fix16_to_float(qe.d));
+
+	// using sin(alpha/2) scaled rotation axis as attitude error (see quaternion definition by axis angle)
+	// also taking care of the antipodal unit quaternion ambiguity
+	qf16_to_v3d(dest, &qe);
+	v3d_mul_s(dest, dest, fix16_mul( _fc_2, fix16_sign_no_zero(qe.a) ) );
 }
 
 //static inline v3d v3d_imu_to_ned(const v3d *imu) {
