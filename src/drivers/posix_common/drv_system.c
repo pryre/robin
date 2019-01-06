@@ -109,6 +109,7 @@ int system_debug_print( const char *format, ... ) {
     va_start(args, format);
     result = vprintf(format, args);
     va_end(args);
+	printf("\n");
 
     return result;
 }

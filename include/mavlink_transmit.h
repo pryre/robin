@@ -10,7 +10,6 @@ extern "C" {
 
 #include <stdint.h>
 
-
 // typedefs
 typedef struct {
 	param_id_t param_rate;

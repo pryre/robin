@@ -83,263 +83,263 @@ PARAM_WAIT_FOR_HEARTBEAT:
 PARAM_STREAM_RATE_HEARTBEAT_0:
   type: "float"
   name: "STRM0_HRTBT"
-  description: "Communication update rate for system heartbeat (set to 0 to turn off stream)"
+  description: "Communication update rate for system heartbeat (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 1.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_HEARTBEAT);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_STATUS_IO_0:
   type: "float"
   name: "STRM0_STATUS_IO"
-  description: "Communication update rate for system status IO pin outputs (set to 0 to turn off stream)"
+  description: "Communication update rate for system status IO pin outputs (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 0.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_STATUS_IO);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_SYS_STATUS_0:
   type: "float"
   name: "STRM0_SYS_STAT"
-  description: "Communication update rate for system status (set to 0 to turn off stream)"
+  description: "Communication update rate for system status (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 0.2
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_SYS_STATUS);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_HIGHRES_IMU_0:
   type: "float"
   name: "STRM0_HR_IMU"
-  description: "Communication update rate for IMU readings (set to 0 to turn off stream)"
+  description: "Communication update rate for IMU readings (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 10.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_HIGHRES_IMU);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_0:
   type: "float"
   name: "STRM0_ATT"
-  description: "Communication update rate for current attitude euler angles (set to 0 to turn off stream)"
+  description: "Communication update rate for current attitude euler angles (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 0.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_ATTITUDE);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_QUATERNION_0:
   type: "float"
   name: "STRM0_ATT_Q"
-  description: "Communication update rate for current attitude quaternion (set to 0 to turn off stream)"
+  description: "Communication update rate for current attitude quaternion (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 10.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_TARGET_0:
   type: "float"
   name: "STRM0_ATT_T"
-  description: "Communication update rate for current attitude target (set to 0 to turn off stream)"
+  description: "Communication update rate for current attitude target (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 5.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_RC_CHANNELS_RAW_0:
   type: "float"
   name: "STRM0_RC_IN"
-  description: "Communication update rate for RC input channels (set to 0 to turn off stream)"
+  description: "Communication update rate for RC input channels (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 5.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_RC_CHANNELS_RAW);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_0:
   type: "float"
   name: "STRM0_SRV_OUT"
-  description: "Communication update rate for commanded servo output (set to 0 to turn off stream)"
+  description: "Communication update rate for commanded servo output (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 5.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_TIMESYNC_0:
   type: "float"
   name: "STRM0_TIMESYNC"
-  description: "Communication update rate for timesync (set to 0 to turn off stream)"
+  description: "Communication update rate for timesync (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 0.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_TIMESYNC);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_BATTERY_STATUS_0:
   type: "float"
   name: "STRM0_BATTSTAT"
-  description: "Communication update rate for battery status (set to 0 to turn off stream)"
+  description: "Communication update rate for battery status (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 2.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_BATTERY_STATUS);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_LOW_PRIORITY_0:
   type: "float"
   name: "STRM0_LPQ"
-  description: "Communication update rate for all other messages (set to 0 to turn off stream)"
+  description: "Communication update rate for all other messages (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 40.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_0, MAVLINK_STREAM_ID_LOW_PRIORITY);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_HEARTBEAT_1:
   type: "float"
   name: "STRM1_HRTBT"
-  description: "Communication update rate for system heartbeat (set to 0 to turn off stream)"
+  description: "Communication update rate for system heartbeat (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 1.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_HEARTBEAT);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_STATUS_IO_1:
   type: "float"
   name: "STRM1_STATUS_IO"
-  description: "Communication update rate for system status IO pin outputs (set to 0 to turn off stream)"
+  description: "Communication update rate for system status IO pin outputs (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 0.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_STATUS_IO);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_SYS_STATUS_1:
   type: "float"
   name: "STRM1_SYS_STAT"
-  description: "Communication update rate for system status (set to 0 to turn off stream)"
+  description: "Communication update rate for system status (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 0.2
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_SYS_STATUS);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_HIGHRES_IMU_1:
   type: "float"
   name: "STRM1_HR_IMU"
-  description: "Communication update rate for IMU readings (set to 0 to turn off stream)"
+  description: "Communication update rate for IMU readings (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 20.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_HIGHRES_IMU);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_1:
   type: "float"
   name: "STRM1_ATT"
-  description: "Communication update rate for current attitude euler angles (set to 0 to turn off stream)"
+  description: "Communication update rate for current attitude euler angles (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 0.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_ATTITUDE);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_QUATERNION_1:
   type: "float"
   name: "STRM1_ATT_Q"
-  description: "Communication update rate for current attitude quaternion (set to 0 to turn off stream)"
+  description: "Communication update rate for current attitude quaternion (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 20.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_ATTITUDE_QUATERNION);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_ATTITUDE_TARGET_1:
   type: "float"
   name: "STRM1_ATT_T"
-  description: "Communication update rate for current attitude target (set to 0 to turn off stream)"
+  description: "Communication update rate for current attitude target (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 10.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_ATTITUDE_TARGET);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_RC_CHANNELS_RAW_1:
   type: "float"
   name: "STRM1_RC_IN"
-  description: "Communication update rate for RC input channels (set to 0 to turn off stream)"
+  description: "Communication update rate for RC input channels (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 5.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_RC_CHANNELS_RAW);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_SERVO_OUTPUT_RAW_1:
   type: "float"
   name: "STRM1_SRV_OUT"
-  description: "Communication update rate for commanded servo output (set to 0 to turn off stream)"
+  description: "Communication update rate for commanded servo output (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 5.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_SERVO_OUTPUT_RAW);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_TIMESYNC_1:
   type: "float"
   name: "STRM1_TIMESYNC"
-  description: "Communication update rate for timesync (set to 0 to turn off stream)"
+  description: "Communication update rate for timesync (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 2.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_TIMESYNC);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_BATTERY_STATUS_1:
   type: "float"
   name: "STRM1_BATTSTAT"
-  description: "Communication update rate for battery status (set to 0 to turn off stream)"
+  description: "Communication update rate for battery status (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 2.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_BATTERY_STATUS);"
     unit: "Hz"
 ---
 PARAM_STREAM_RATE_LOW_PRIORITY_1:
   type: "float"
   name: "STRM1_LPQ"
-  description: "Communication update rate for all other messages (set to 0 to turn off stream)"
+  description: "Communication update rate for all other messages (0: disable stream, -1: auto-rate)"
   reboot: false
   value:
     option: "scalar"
-    default: 20.0
+    default: -1.0
     function: "communication_calc_period_update(COMM_PORT_1, MAVLINK_STREAM_ID_LOW_PRIORITY);"
     unit: "Hz"

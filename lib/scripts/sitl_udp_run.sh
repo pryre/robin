@@ -17,9 +17,11 @@ ROBIN_SITL=./robin_posix_udp.elf
 
 # Initialise trap to call cleanup() when CTRL+C (SIGINT) is received
 trap "cleanup" 2
+echo ""
 echo "+----------------------+"
 echo "| Press CTRL+C to exit |"
 echo "+----------------------+"
+echo ""
 
 cd ./build
 
