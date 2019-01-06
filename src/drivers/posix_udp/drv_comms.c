@@ -149,8 +149,6 @@ bool comms_init_port( comms_port_t port ) {
 		case COMM_PORT_0: {
 			len_recv_comm_0 = 0;
 			read_recv_comm_0 = 0;
-			//len_send_comm_0 = 0;
-			//time_send_addbuf_comm_0 = 0;
 
 			char conn_udp[100];
 			strncpy(conn_udp, &_arguments.conn_telem0[6],94);
@@ -171,8 +169,6 @@ bool comms_init_port( comms_port_t port ) {
 		case COMM_PORT_1: {
 			len_recv_comm_1 = 0;
 			read_recv_comm_1 = 0;
-			//len_send_comm_0 = 0;
-			//time_send_addbuf_comm_1 = 0;
 
 			char conn_udp[100];
 			strncpy(conn_udp, &_arguments.conn_telem1[6],94);
@@ -249,13 +245,6 @@ bool comms_waiting( comms_port_t port ) {
 												0,
 												(struct sockaddr *)&gcAddr_comm_0,
 												&fromlen );
-					/*
-					if(len_recv_comm_0 > 0) {
-						char info[100];
-						snprintf(info, 100, "[COMMS] Read packet (bytes: %i)", len_recv_comm_0);
-						system_debug_print(info);
-					}
-					*/
 				}
 
 				bytes_available = (len_recv_comm_0 > 0) ? len_recv_comm_0 : 0;
