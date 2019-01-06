@@ -55,6 +55,9 @@ naze32_rev6_reflash: naze32_rev6 mavlink_bootloader
 param_gen:
 	@python3 lib/param_generator/gen_params.py ./lib/param_generator/definitions/ ./build/ >&2
 
+lint:
+	@./lib/scripts/lint.sh
+
 clean:
 	@rm -rf ./build
 	@mkdir ./build
