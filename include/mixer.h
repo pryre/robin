@@ -4,11 +4,11 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
-#include "fix16.h"
 #include "controller.h"
+#include "fix16.h"
 
 #include "io_type.h"
 
@@ -49,23 +49,22 @@ typedef struct {
 //extern int32_t _pwm_control[MIXER_NUM_MOTORS];
 
 extern int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
-extern fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];	//Motors Controls
-extern fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];	//Motor Additions
-extern fix16_t _actuator_control_g2[MIXER_NUM_MOTORS];	//RC PWM
-extern fix16_t _actuator_control_g3[MIXER_NUM_MOTORS];	//RC Digital
-extern fix16_t _actuator_control_g4[MIXER_NUM_MOTORS];	//OB PWM
-extern fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];	//OB Digital
+extern fix16_t _actuator_control_g0[MIXER_NUM_MOTORS]; //Motors Controls
+extern fix16_t _actuator_control_g1[MIXER_NUM_MOTORS]; //Motor Additions
+extern fix16_t _actuator_control_g2[MIXER_NUM_MOTORS]; //RC PWM
+extern fix16_t _actuator_control_g3[MIXER_NUM_MOTORS]; //RC Digital
+extern fix16_t _actuator_control_g4[MIXER_NUM_MOTORS]; //OB PWM
+extern fix16_t _actuator_control_g5[MIXER_NUM_MOTORS]; //OB Digital
 
 extern mixer_motor_test_t _motor_test;
 
 extern int32_t _pwm_output[MIXER_NUM_MOTORS];
-extern const mixer_t *_mixer_to_use;
+extern const mixer_t* _mixer_to_use;
 
 void mixer_clear_outputs( void );
 
 void pwm_init( void );
 void mixer_init( void );
-
 
 //void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disarm);
 //void write_motor(uint8_t index, uint32_t value);

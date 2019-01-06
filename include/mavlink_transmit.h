@@ -4,8 +4,8 @@
 extern "C" {
 #endif
 
-#include "mavlink_system.h"
 #include "mavlink/mavlink_types.h"
+#include "mavlink_system.h"
 #include "params.h"
 
 #include <stdint.h>
@@ -15,7 +15,7 @@ typedef struct {
 	param_id_t param_rate;
 	uint32_t period_update;
 	uint32_t last_time_us;
-	void (*send_function)(mavlink_channel_t port);
+	void ( *send_function )( mavlink_channel_t port );
 } mavlink_stream_t;
 
 // type definitions
@@ -36,8 +36,8 @@ typedef enum {
 } mavlink_stream_id_t;
 
 // function declarations
-void communication_transmit(uint32_t time_us);
-void communication_calc_period_update(uint8_t comm_port, mavlink_stream_id_t stream_id);
+void communication_transmit( uint32_t time_us );
+void communication_calc_period_update( uint8_t comm_port, mavlink_stream_id_t stream_id );
 
 #ifdef __cplusplus
 }

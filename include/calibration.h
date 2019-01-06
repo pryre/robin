@@ -4,12 +4,12 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
-#include "fixvector3d.h"
-#include "fixquat.h"
 #include "fix16.h"
+#include "fixquat.h"
+#include "fixvector3d.h"
 //#include "breezystm32.h"
 
 //RC CAL DEFINES
@@ -138,20 +138,20 @@ typedef struct {
 
 extern calibration_data_t _calibrations;
 
-void calibration_init(void);
-bool calibration_request(calibration_request_t req);
-void calibration_run(void);
-void calibration_done(void);
+void calibration_init( void );
+bool calibration_request( calibration_request_t req );
+void calibration_run( void );
+void calibration_done( void );
 
-bool calibrate_accel(void);
-bool calibrate_barometer(void);
-bool calibrate_ground_pressure(void);
-bool calibrate_gyro(void);
-bool calibrate_interference(void);
-bool calibrate_level_horizon(void);
-bool calibrate_magnetometer(void);
-bool calibrate_rc(void);
-bool calibrate_esc(void);
+bool calibrate_accel( void );
+bool calibrate_barometer( void );
+bool calibrate_ground_pressure( void );
+bool calibrate_gyro( void );
+bool calibrate_interference( void );
+bool calibrate_level_horizon( void );
+bool calibrate_magnetometer( void );
+bool calibrate_rc( void );
+bool calibrate_esc( void );
 
 #ifdef __cplusplus
 }

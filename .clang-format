@@ -1,26 +1,44 @@
 ---
 Language:        Cpp
 # BasedOnStyle:  WebKit
-AccessModifierOffset: -4
-AlignAfterOpenBracket: false
+AccessModifierOffset: 0
+AlignAfterOpenBracket: true
+AlignConsecutiveDeclarations: false
 AlignEscapedNewlinesLeft: false
-AlignOperands:   false
-AlignTrailingComments: false
+AlignOperands: true
+AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: false
-AllowShortIfStatementsOnASingleLine: false
-AllowShortLoopsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: All
 AlwaysBreakAfterDefinitionReturnType: false
 AlwaysBreakTemplateDeclarations: false
 AlwaysBreakBeforeMultilineStrings: false
 BreakBeforeBinaryOperators: All
-BreakBeforeTernaryOperators: true
+BreakBeforeTernaryOperators: false
+#BreakBeforeBraces: Attach
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterObjCDeclaration: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: true
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
 BreakConstructorInitializersBeforeComma: false
 BinPackParameters: true
 BinPackArguments: true
-ColumnLimit:     0
+ColumnLimit: 0
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 4
 DerivePointerAlignment: false
@@ -46,10 +64,9 @@ Cpp11BracedListStyle: true
 Standard:        Cpp11
 IndentWidth:     4
 TabWidth:        4
-UseTab:          Never
-BreakBeforeBraces: Stroustrup
+UseTab:          Always
 # SortIncludes: false
-SpacesInParentheses: false
+SpacesInParentheses: true
 SpacesInSquareBrackets: false
 SpacesInAngles:  false
 SpaceInEmptyParentheses: false
@@ -58,8 +75,7 @@ SpaceAfterCStyleCast: false
 SpacesInContainerLiterals: true
 SpaceBeforeAssignmentOperators: true
 ContinuationIndentWidth: 4
-CommentPragmas:  '^ IWYU pragma:'
-ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
+CommentPragmas:  ''
 SpaceBeforeParens: ControlStatements
 DisableFormat:   false
 ...

@@ -2,10 +2,10 @@
 extern "C" {
 #endif
 
-#include "mavlink_system.h"
 #include "mavlink_receive.h"
+#include "mavlink_system.h"
 
-void mavlink_handle_timesync( mavlink_channel_t chan, mavlink_message_t *msg, mavlink_status_t *status ) {
+void mavlink_handle_timesync( mavlink_channel_t chan, mavlink_message_t* msg, mavlink_status_t* status ) {
 	/*
 	//TODO: Get this working
 

@@ -4,27 +4,27 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include "sensors.h"
-#include "safety.h"
-#include "params.h"
 #include "estimator.h"
+#include "params.h"
+#include "safety.h"
+#include "sensors.h"
 
-#include "fix16.h"
-#include "fixvector3d.h"
-#include "fixquat.h"
-#include "fixextra.h"
 #include "drivers/drv_system.h"
+#include "fix16.h"
+#include "fixextra.h"
+#include "fixquat.h"
+#include "fixvector3d.h"
 
 state_t _state_estimator;
 v3d _adaptive_gyro_bias;
 sensor_readings_t _sensors;
 
-static v3d g;	//Gravity vector
+static v3d g; //Gravity vector
 
-static v3d w1;	//Integrator for quad int
-static v3d w2;	//Integrator for quad int
-static v3d b;	//Integrator for adaptive bias
-static qf16 q_hat;	//Attitude estimate
+static v3d w1;	 //Integrator for quad int
+static v3d w2;	 //Integrator for quad int
+static v3d b;	  //Integrator for adaptive bias
+static qf16 q_hat; //Attitude estimate
 static uint32_t time_last;
 
 static uint32_t init_time;
@@ -77,7 +77,7 @@ void estimator_init( void ) {
 	_gyro_LPF.y = 0;
 	_gyro_LPF.z = 0;
 
-	init_time = get_param_uint( PARAM_INIT_TIME ) * 1000;	//nano->microseconds
+	init_time = get_param_uint( PARAM_INIT_TIME ) * 1000; //nano->microseconds
 
 	time_last = 0;
 }
@@ -88,52 +88,52 @@ void reset_adaptive_gyro_bias() {
 	b.z = 0;
 }
 
-static void lpf_update(v3d *accel, v3d *gyro) {
+static void lpf_update( v3d* accel, v3d* gyro ) {
 	//value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
-	fix16_t alpha_acc = get_param_fix16(PARAM_ACC_ALPHA);
-	_accel_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.x), fix16_smul(alpha_acc, accel->x));
-	_accel_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.y), fix16_smul(alpha_acc, accel->y));
-	_accel_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_acc), _accel_LPF.z), fix16_smul(alpha_acc, accel->z));
+	fix16_t alpha_acc = get_param_fix16( PARAM_ACC_ALPHA );
+	_accel_LPF.x = fix16_sadd( fix16_smul( fix16_ssub( _fc_1, alpha_acc ), _accel_LPF.x ), fix16_smul( alpha_acc, accel->x ) );
+	_accel_LPF.y = fix16_sadd( fix16_smul( fix16_ssub( _fc_1, alpha_acc ), _accel_LPF.y ), fix16_smul( alpha_acc, accel->y ) );
+	_accel_LPF.z = fix16_sadd( fix16_smul( fix16_ssub( _fc_1, alpha_acc ), _accel_LPF.z ), fix16_smul( alpha_acc, accel->z ) );
 
-	fix16_t alpha_gyro = get_param_fix16(PARAM_GYRO_ALPHA);
-	_gyro_LPF.x = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.x), fix16_smul(alpha_gyro, gyro->x));
-	_gyro_LPF.y = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.y), fix16_smul(alpha_gyro, gyro->y));
-	_gyro_LPF.z = fix16_sadd(fix16_smul(fix16_ssub(_fc_1, alpha_gyro), _gyro_LPF.z), fix16_smul(alpha_gyro, gyro->z));
+	fix16_t alpha_gyro = get_param_fix16( PARAM_GYRO_ALPHA );
+	_gyro_LPF.x = fix16_sadd( fix16_smul( fix16_ssub( _fc_1, alpha_gyro ), _gyro_LPF.x ), fix16_smul( alpha_gyro, gyro->x ) );
+	_gyro_LPF.y = fix16_sadd( fix16_smul( fix16_ssub( _fc_1, alpha_gyro ), _gyro_LPF.y ), fix16_smul( alpha_gyro, gyro->y ) );
+	_gyro_LPF.z = fix16_sadd( fix16_smul( fix16_ssub( _fc_1, alpha_gyro ), _gyro_LPF.z ), fix16_smul( alpha_gyro, gyro->z ) );
 }
 
-static void fuse_heading_estimate( qf16 *q_est, const qf16 *q_mes, const fix16_t alpha) {
+static void fuse_heading_estimate( qf16* q_est, const qf16* q_mes, const fix16_t alpha ) {
 	qf16 q_temp;
 	qf16 dq;
 
-	qf16_inverse(&q_temp, q_est);
-	qf16_mul(&dq, q_mes, &q_temp);	//Difference between current estimate and measured
-	qf16_normalize_to_unit(&dq, &dq);
+	qf16_inverse( &q_temp, q_est );
+	qf16_mul( &dq, q_mes, &q_temp ); //Difference between current estimate and measured
+	qf16_normalize_to_unit( &dq, &dq );
 
 	v3d fv;
 	fv.x = _fc_1;
 	fv.y = 0;
 	fv.z = 0;
 
-	qf16_rotate(&fv, &dq, &fv);
+	qf16_rotate( &fv, &dq, &fv );
 	fv.z = 0;
-	v3d_normalize(&fv, &fv);	//Rotated vector in the XY plane
+	v3d_normalize( &fv, &fv ); //Rotated vector in the XY plane
 
-	fix16_t rot_a = fix16_atan2(fv.y, fv.x);
-	rot_a = fix16_mul(alpha, rot_a);
+	fix16_t rot_a = fix16_atan2( fv.y, fv.x );
+	rot_a = fix16_mul( alpha, rot_a );
 	v3d rot_axis;
 	rot_axis.x = 0;
 	rot_axis.y = 0;
 	rot_axis.z = _fc_1;
-	qf16_from_axis_angle(&q_temp, &rot_axis, rot_a);	//Create a rotation quaternion for the flat rotation around Z axis
+	qf16_from_axis_angle( &q_temp, &rot_axis, rot_a ); //Create a rotation quaternion for the flat rotation around Z axis
 
-	qf16_mul(q_est, &q_temp, q_est);	//Rotate the estimate
+	qf16_mul( q_est, &q_temp, q_est ); //Rotate the estimate
 
 	//Normalize quaternion
-	qf16_normalize_to_unit(q_est, q_est);
+	qf16_normalize_to_unit( q_est, q_est );
 }
 
 //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
-static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
+static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 	//XXX: This will exit on the first loop, not a nice way of doing it though
 	if ( time_last == 0 ) {
 		time_last = time_now;
@@ -141,7 +141,7 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 	}
 
 	//Converts dt from micros to secs
-	fix16_t dt = fix16_from_float(1e-6 * (float)(time_now - time_last));
+	fix16_t dt = fix16_from_float( 1e-6 * (float)( time_now - time_last ) );
 	time_last = time_now;
 
 	//Gains for accelerometer compensation
@@ -154,7 +154,7 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 	}
 
 	//Run LPF to reject a lot of noise
-	lpf_update(accel, gyro);
+	lpf_update( accel, gyro );
 
 	//Accelerometer compensation
 	//The reading must be reasonably close to something that resembles a hover
@@ -164,39 +164,37 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 	w_acc.z = 0;
 	fix16_t a_sqrd_norm = v3d_sq_norm( &_accel_LPF );
 
-	if( ( get_param_uint( PARAM_EST_USE_ACC_COR ) ) &&
-	  (a_sqrd_norm < fix16_mul( fix16_sq( _fc_1_15 ), fix16_sq( _fc_gravity ) ) ) &&
-	  (a_sqrd_norm > fix16_mul( fix16_sq( _fc_0_85 ), fix16_sq( _fc_gravity ) ) ) ) {
+	if ( ( get_param_uint( PARAM_EST_USE_ACC_COR ) ) && ( a_sqrd_norm < fix16_mul( fix16_sq( _fc_1_15 ), fix16_sq( _fc_gravity ) ) ) && ( a_sqrd_norm > fix16_mul( fix16_sq( _fc_0_85 ), fix16_sq( _fc_gravity ) ) ) ) {
 
 		//Determine the rotation estimate as read by the accelerometer
 		qf16 q_acc;
-		qf16_from_shortest_path(&q_acc, &g, &_accel_LPF);
+		qf16_from_shortest_path( &q_acc, &g, &_accel_LPF );
 
 		//Determine the yaw-free rotation of the current attitude estimate
 		v3d body_z;
 		qf16 q_hat_inv;
-		qf16_inverse(&q_hat_inv, &q_hat);	//Need to invert to bring the vector into the body frame
-		qf16_dcm_z(&body_z, &q_hat_inv);
+		qf16_inverse( &q_hat_inv, &q_hat ); //Need to invert to bring the vector into the body frame
+		qf16_dcm_z( &body_z, &q_hat_inv );
 
 		qf16 q_hat_acc;
-		qf16_from_shortest_path(&q_hat_acc, &g, &body_z);
+		qf16_from_shortest_path( &q_hat_acc, &g, &body_z );
 
 		//Use the basis error method to calculate body-fixed rotation error
 		v3d e_R;
-		qf16_basis_error(&e_R, &q_hat_acc, &q_acc);
+		qf16_basis_error( &e_R, &q_hat_acc, &q_acc );
 
 		// Calculate correction rates and integrate biases from accelerometer feedback
 		v3d_mul_s( &w_acc, &e_R, kp );
 
-		b.x = fix16_add(b.x, fix16_mul(ki, fix16_mul(e_R.x, dt)));
-		b.y = fix16_add(b.y, fix16_mul(ki, fix16_mul(e_R.y, dt)));
-		b.z = fix16_add(b.z, fix16_mul(ki, fix16_mul(e_R.z, dt)));
+		b.x = fix16_add( b.x, fix16_mul( ki, fix16_mul( e_R.x, dt ) ) );
+		b.y = fix16_add( b.y, fix16_mul( ki, fix16_mul( e_R.y, dt ) ) );
+		b.z = fix16_add( b.z, fix16_mul( ki, fix16_mul( e_R.z, dt ) ) );
 	}
 
 	v3d wbar = _gyro_LPF;
 
 	// Pull out Gyro measurements
-	if( get_param_uint( PARAM_EST_USE_QUAD_INT ) ) {
+	if ( get_param_uint( PARAM_EST_USE_QUAD_INT ) ) {
 		// Quadratic Integration (Eq. 14 Casey Paper)
 		// this integration step adds 12 us on the STM32F10x chips
 		//wbar = ((-1.0f / 12.0f) * w2) + ((8.0f / 12.0f) * w1) + ((5.0f / 12.0f) * _gyro_LPF);
@@ -229,15 +227,15 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 	//Propagate Dynamics (only if we've moved)
 	fix16_t sqrd_norm_w = v3d_sq_norm( &wfinal );
 
-	if( sqrd_norm_w > 0 ) {
-		fix16_t p = wfinal.x;	//Roll Rate
-		fix16_t q = wfinal.y;	//Pitch Rate
-		fix16_t r = wfinal.z;	//Yaw Rate
+	if ( sqrd_norm_w > 0 ) {
+		fix16_t p = wfinal.x; //Roll Rate
+		fix16_t q = wfinal.y; //Pitch Rate
+		fix16_t r = wfinal.z; //Yaw Rate
 
 		qf16 q_hat_temp;
 		qf16 qdot;
 
-		if( get_param_uint( PARAM_EST_USE_MAT_EXP ) ) {
+		if ( get_param_uint( PARAM_EST_USE_MAT_EXP ) ) {
 			// Matrix Exponential Approximation (From Attitude Representation and Kinematic
 			// Propagation for Low-Cost UAVs by Robert T. Casey)
 			// (Eq. 12 Casey Paper)
@@ -246,8 +244,8 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 
 			//This is can cause some serious RAM issues if either caching or lookup tables are enabled
 			//XXX: Even with caching turned off, this should give a good performance increase (hopefully around 25%)
-			fix16_t t1 = fix16_cos(fix16_div(fix16_mul(norm_w, dt), _fc_2));
-			fix16_t t2 = fix16_mul(fix16_div(_fc_1, norm_w), fix16_sin(fix16_div(fix16_mul(norm_w, dt), _fc_2)));
+			fix16_t t1 = fix16_cos( fix16_div( fix16_mul( norm_w, dt ), _fc_2 ) );
+			fix16_t t2 = fix16_mul( fix16_div( _fc_1, norm_w ), fix16_sin( fix16_div( fix16_mul( norm_w, dt ), _fc_2 ) ) );
 
 			/*
 			qhat_np1.w = t1*q_hat.w   + t2*(          - p*q_hat.x - q*q_hat.y - r*q_hat.z);
@@ -257,18 +255,18 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 			*/
 
 			//qdot.w = t2*(((-p*q_hat.x) + (-q*q_hat.y)) + (-r*q_hat.z)
-			qdot.a = fix16_mul(t2, fix16_add(fix16_add(fix16_mul(-p, q_hat.b), fix16_mul(-q, q_hat.c)), fix16_mul(-r, q_hat.d)));
-			qdot.b = fix16_mul(t2, fix16_add(fix16_add(fix16_mul(p, q_hat.a), fix16_mul(r, q_hat.c)), fix16_mul(-q, q_hat.d)));
-			qdot.c = fix16_mul(t2, fix16_add(fix16_add(fix16_mul(q, q_hat.a), fix16_mul(-r, q_hat.b)), fix16_mul(p, q_hat.d)));
-			qdot.d = fix16_mul(t2, fix16_add(fix16_add(fix16_mul(r, q_hat.a), fix16_mul(q, q_hat.b)), fix16_mul(-p, q_hat.c)));
+			qdot.a = fix16_mul( t2, fix16_add( fix16_add( fix16_mul( -p, q_hat.b ), fix16_mul( -q, q_hat.c ) ), fix16_mul( -r, q_hat.d ) ) );
+			qdot.b = fix16_mul( t2, fix16_add( fix16_add( fix16_mul( p, q_hat.a ), fix16_mul( r, q_hat.c ) ), fix16_mul( -q, q_hat.d ) ) );
+			qdot.c = fix16_mul( t2, fix16_add( fix16_add( fix16_mul( q, q_hat.a ), fix16_mul( -r, q_hat.b ) ), fix16_mul( p, q_hat.d ) ) );
+			qdot.d = fix16_mul( t2, fix16_add( fix16_add( fix16_mul( r, q_hat.a ), fix16_mul( q, q_hat.b ) ), fix16_mul( -p, q_hat.c ) ) );
 
 			//qhat_np1.w = (t1*q_hat.w) + qdot.w);
-			q_hat_temp.a = fix16_add(fix16_mul(t1, q_hat.a), qdot.a);
-			q_hat_temp.b = fix16_add(fix16_mul(t1, q_hat.b), qdot.b);
-			q_hat_temp.c = fix16_add(fix16_mul(t1, q_hat.c), qdot.c);
-			q_hat_temp.d = fix16_add(fix16_mul(t1, q_hat.d), qdot.d);
+			q_hat_temp.a = fix16_add( fix16_mul( t1, q_hat.a ), qdot.a );
+			q_hat_temp.b = fix16_add( fix16_mul( t1, q_hat.b ), qdot.b );
+			q_hat_temp.c = fix16_add( fix16_mul( t1, q_hat.c ), qdot.c );
+			q_hat_temp.d = fix16_add( fix16_mul( t1, q_hat.d ), qdot.d );
 
-			qf16_normalize_to_unit(&q_hat, &q_hat_temp);
+			qf16_normalize_to_unit( &q_hat, &q_hat_temp );
 		} else {
 			// Euler Integration
 			// (Eq. 47a Mahoney Paper), but this is pretty straight-forward
@@ -280,35 +278,33 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 							    };
 			*/
 
-			qdot.a = fix16_mul(_fc_0_5, fix16_add(fix16_mul(-p, q_hat.b), fix16_add(fix16_mul(-q, q_hat.c), fix16_mul(-r, q_hat.d))));
-			qdot.b = fix16_mul(_fc_0_5, fix16_add(fix16_mul(p, q_hat.a), fix16_add(fix16_mul(r, q_hat.c), fix16_mul(-q, q_hat.d))));
-			qdot.c = fix16_mul(_fc_0_5, fix16_add(fix16_mul(q, q_hat.a), fix16_add(fix16_mul(-r, q_hat.b), fix16_mul(p, q_hat.d))));
-			qdot.d = fix16_mul(_fc_0_5, fix16_add(fix16_mul(r, q_hat.a), fix16_add(fix16_mul(q, q_hat.b), fix16_mul(-p, q_hat.c))));
+			qdot.a = fix16_mul( _fc_0_5, fix16_add( fix16_mul( -p, q_hat.b ), fix16_add( fix16_mul( -q, q_hat.c ), fix16_mul( -r, q_hat.d ) ) ) );
+			qdot.b = fix16_mul( _fc_0_5, fix16_add( fix16_mul( p, q_hat.a ), fix16_add( fix16_mul( r, q_hat.c ), fix16_mul( -q, q_hat.d ) ) ) );
+			qdot.c = fix16_mul( _fc_0_5, fix16_add( fix16_mul( q, q_hat.a ), fix16_add( fix16_mul( -r, q_hat.b ), fix16_mul( p, q_hat.d ) ) ) );
+			qdot.d = fix16_mul( _fc_0_5, fix16_add( fix16_mul( r, q_hat.a ), fix16_add( fix16_mul( q, q_hat.b ), fix16_mul( -p, q_hat.c ) ) ) );
 
-			q_hat_temp.a = fix16_add(q_hat.a, fix16_mul(qdot.a, dt));
-			q_hat_temp.b = fix16_add(q_hat.b, fix16_mul(qdot.b, dt));
-			q_hat_temp.c = fix16_add(q_hat.c, fix16_mul(qdot.c, dt));
-			q_hat_temp.d = fix16_add(q_hat.d, fix16_mul(qdot.d, dt));
+			q_hat_temp.a = fix16_add( q_hat.a, fix16_mul( qdot.a, dt ) );
+			q_hat_temp.b = fix16_add( q_hat.b, fix16_mul( qdot.b, dt ) );
+			q_hat_temp.c = fix16_add( q_hat.c, fix16_mul( qdot.c, dt ) );
+			q_hat_temp.d = fix16_add( q_hat.d, fix16_mul( qdot.d, dt ) );
 
-			qf16_normalize_to_unit(&q_hat, &q_hat_temp);
+			qf16_normalize_to_unit( &q_hat, &q_hat_temp );
 		}
 	}
 
 	//==-- Heading data fusion
-	if( ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) &&
-		_sensors.ext_pose.status.new_data ) {
-		fuse_heading_estimate( &q_hat, &_sensors.ext_pose.q, get_param_fix16( PARAM_FUSE_EXT_HDG_W ));
+	if ( ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) && _sensors.ext_pose.status.new_data ) {
+		fuse_heading_estimate( &q_hat, &_sensors.ext_pose.q, get_param_fix16( PARAM_FUSE_EXT_HDG_W ) );
 		_sensors.ext_pose.status.new_data = false;
-	} else if( ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) &&
-		_sensors.mag.status.new_data ) {
-		fuse_heading_estimate( &q_hat, &_sensors.mag.q, get_param_fix16( PARAM_FUSE_MAG_HDG_W ));
+	} else if ( ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) && _sensors.mag.status.new_data ) {
+		fuse_heading_estimate( &q_hat, &_sensors.mag.q, get_param_fix16( PARAM_FUSE_MAG_HDG_W ) );
 		_sensors.mag.status.new_data = false;
 	}
 
 	//q_hat is given as z-down (NED)
 
 	//Perform level horizon measurements
-	if( get_param_uint( PARAM_EST_USE_LEVEL_HORIZON ) ) {
+	if ( get_param_uint( PARAM_EST_USE_LEVEL_HORIZON ) ) {
 		qf16 q_lh;
 		qf16 q_lh_inv;
 		qf16 q_hat_lvl;
@@ -316,11 +312,11 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 		q_lh.b = get_param_fix16( PARAM_EST_LEVEL_HORIZON_X );
 		q_lh.c = get_param_fix16( PARAM_EST_LEVEL_HORIZON_Y );
 		q_lh.d = get_param_fix16( PARAM_EST_LEVEL_HORIZON_Z );
-		qf16_normalize_to_unit(&q_lh, &q_lh);
-		qf16_inverse(&q_lh_inv, &q_lh);
+		qf16_normalize_to_unit( &q_lh, &q_lh );
+		qf16_inverse( &q_lh_inv, &q_lh );
 
-		qf16_mul(&q_hat_lvl, &q_hat, &q_lh_inv);
-		qf16_normalize_to_unit(&_state_estimator.attitude, &q_hat_lvl);
+		qf16_mul( &q_hat_lvl, &q_hat, &q_lh_inv );
+		qf16_normalize_to_unit( &_state_estimator.attitude, &q_hat_lvl );
 	} else {
 		_state_estimator.attitude = q_hat;
 	}
@@ -328,8 +324,8 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 	// Extract Euler Angles for controller
 	//euler_from_quat(&q_hat, &_state_estimator.phi, &_state_estimator.theta, &_state_estimator.psi);
 
-	if( !get_param_uint( PARAM_EST_USE_ADPT_BIAS ) )
-		reset_adaptive_gyro_bias();	//TODO: XXX: The adaptive bias' are good, but without proper mag support, they cause lasting errors if the mav is turned upside down
+	if ( !get_param_uint( PARAM_EST_USE_ADPT_BIAS ) )
+		reset_adaptive_gyro_bias(); //TODO: XXX: The adaptive bias' are good, but without proper mag support, they cause lasting errors if the mav is turned upside down
 
 	// Save old adjust gyro measurements with estimated biases for control
 	v3d_add( &wbar, &wbar, &b );
@@ -348,19 +344,19 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 	_adaptive_gyro_bias.z = b.z;
 }
 
-void estimator_update_sensors(uint32_t now) {
-	estimator_update(now, &_sensors.imu.accel, &_sensors.imu.gyro);
+void estimator_update_sensors( uint32_t now ) {
+	estimator_update( now, &_sensors.imu.accel, &_sensors.imu.gyro );
 
 	_sensors.imu.status.new_data = false;
 }
 
-void estimator_update_hil(uint32_t now) {
-	estimator_update(now, &_sensors.hil.accel, &_sensors.hil.gyro);
+void estimator_update_hil( uint32_t now ) {
+	estimator_update( now, &_sensors.hil.accel, &_sensors.hil.gyro );
 
 	_sensors.hil.status.new_data = false;
 }
 
-void estimator_calc_lvl_horz(qf16* qlh) {
+void estimator_calc_lvl_horz( qf16* qlh ) {
 	mf16 ratt;
 	mf16 rlh;
 	v3d bx;
@@ -370,8 +366,8 @@ void estimator_calc_lvl_horz(qf16* qlh) {
 	v3d lhy;
 	v3d lhz;
 	//Get DCM of current attitude estimate and extract axes
-	qf16_to_matrix(&ratt, &q_hat);
-	dcm_to_basis(&bx, &by, &bz, &ratt);
+	qf16_to_matrix( &ratt, &q_hat );
+	dcm_to_basis( &bx, &by, &bz, &ratt );
 
 	//Build the new rotation matrix with pure roll/pitch
 	lhy.x = 0;
@@ -379,19 +375,18 @@ void estimator_calc_lvl_horz(qf16* qlh) {
 	lhy.z = 0;
 	lhz = bz;
 
-	v3d_cross(&lhx, &lhy, &lhz);
-	v3d_normalize(&lhx, &lhx);
+	v3d_cross( &lhx, &lhy, &lhz );
+	v3d_normalize( &lhx, &lhx );
 
-	v3d_cross(&lhy, &lhz, &lhx);
-	v3d_normalize(&lhy, &lhy);
+	v3d_cross( &lhy, &lhz, &lhx );
+	v3d_normalize( &lhy, &lhy );
 
-	dcm_from_basis(&rlh, &lhx, &lhy, &lhz);
+	dcm_from_basis( &rlh, &lhx, &lhy, &lhz );
 
-	matrix_to_qf16(qlh, &rlh );
-	qf16_normalize_to_unit(qlh, qlh);
+	matrix_to_qf16( qlh, &rlh );
+	qf16_normalize_to_unit( qlh, qlh );
 }
 
 #ifdef __cplusplus
 }
 #endif
-

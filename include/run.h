@@ -8,8 +8,8 @@ extern "C" {
 This file contains the primary runtime loops for the system
 The sofware itself can be implemented similarly to:
 
-#include <stdbool.h>
 #include <run.h>
+#include <stdbool.h>
 
 int main(void) {
 	setup();
@@ -19,9 +19,9 @@ int main(void) {
 }
 */
 
-void setup(void);
+void setup( void );
 
-void loop(void);
+void loop( void );
 
 #ifdef __cplusplus
 }

@@ -2,23 +2,23 @@
 extern "C" {
 #endif
 
-#include "mavlink_system.h"
 #include "mavlink_receive.h"
+#include "mavlink_system.h"
 
 #include "safety.h"
 
-MAV_RESULT mavlink_handle_command_long_set_mode( mavlink_channel_t chan, float *params ) {
+MAV_RESULT mavlink_handle_command_long_set_mode( mavlink_channel_t chan, float* params ) {
 	MAV_RESULT command_result = MAV_RESULT_ENUM_END;
 
 	//XXX: We only use custom mode
 	uint8_t base_mode = (int)params[0];
 	uint8_t custom_mode = (int)params[1];
 
-	if( base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED ) {
-		if( safety_request_control_mode(compat_decode_px4_main_mode(custom_mode)) ) {
+	if ( base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED ) {
+		if ( safety_request_control_mode( compat_decode_px4_main_mode( custom_mode ) ) ) {
 			command_result = MAV_RESULT_ACCEPTED;
 		} else {
-			mavlink_queue_broadcast_error("[SAFETY] Rejecting mode switch");
+			mavlink_queue_broadcast_error( "[SAFETY] Rejecting mode switch" );
 			command_result = MAV_RESULT_DENIED;
 		}
 	} else {
