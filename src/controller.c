@@ -71,45 +71,31 @@ static void controller_set_input_failsafe(command_input_t *input) {
 
 //Technique adapted from the Pixhawk multirotor control scheme (~December 2018)
 static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, const fix16_t yaw_w) {
-	//printf("---\n");
-	//printf("q: [%0.4f,%0.4f,%0.4f,%0.4f]\n", fix16_to_float(q->a), fix16_to_float(q->b), fix16_to_float(q->c), fix16_to_float(q->d));
-	//printf("q_sp: [%0.4f,%0.4f,%0.4f,%0.4f]\n", fix16_to_float(q_sp->a), fix16_to_float(q_sp->b), fix16_to_float(q_sp->c), fix16_to_float(q_sp->d));
-
-	//mf16 R;
-	//mf16 Rd;
-	//qf16_to_matrix(&R, q);
-	//qf16_to_matrix(&Rd, q_sp);
-
-	// calculate reduced desired attitude neglecting vehicle's yaw to prioritize roll and pitch
-	//v3d e_z;
-	//v3d e_z_d;
-	//dcm_to_basis_z(&e_z, &R);
-	//dcm_to_basis_z(&e_z_d, &Rd);
+	/*
+	XXX: Shorthand method that doesn't allow for separate yaw tuning
+	v3d e_R;
+	qf16_basis_error(&e_R, q, q_sp);
+	v3d_mul_s( rates, &e_R, get_param_fix16(PARAM_MC_ANGLE_P) );
+	*/
 
 	v3d e_z;
 	v3d e_z_d;
 	qf16_dcm_z(&e_z, q);
 	qf16_dcm_z(&e_z_d, q_sp);
 
-	//printf("e_z: [%0.2f,%0.2f,%0.2f]\n", fix16_to_float(e_z.x), fix16_to_float(e_z.y), fix16_to_float(e_z.z));
-	//printf("e_z_d: [%0.2f,%0.2f,%0.2f]\n", fix16_to_float(e_z_d.x), fix16_to_float(e_z_d.y), fix16_to_float(e_z_d.z));
-
 	qf16 qd_red;
 	qf16_from_shortest_path(&qd_red, &e_z, &e_z_d);
 	qf16_normalize_to_unit(&qd_red, &qd_red);
-	//printf("qd_red: [%0.4f,%0.4f,%0.4f,%0.4f]\n", fix16_to_float(qd_red.a), fix16_to_float(qd_red.b), fix16_to_float(qd_red.c), fix16_to_float(qd_red.d));
 
 	//Handle co-linear vectoring cases
 	if ( ( fix16_abs(qd_red.b) >= _fc_epsilon ) || ( fix16_abs(qd_red.c) >= _fc_epsilon ) ) {
-		// Otherwise they are in opposite directions which presents an ambiguous solution
+		// They are in opposite directions which presents an ambiguous solution
 		// The best we can momenterily is to just accept bad weightings from the mixing and
 		// do the 'best' movement possible for 1 time step until things can be calculated
-		//printf("opposite\n");
-
 		qd_red = *q_sp;
 	} else {
-		// transform rotation from current to desired thrust vector into a world frame reduced desired attitude
-		//printf("normal\n");
+		// Transform rotation from current to desired thrust vector into a world
+		// frame reduced desired attitude reference
 		qf16_mul(&qd_red, &qd_red, q);
 	}
 
@@ -121,11 +107,9 @@ static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, con
 
 	qf16_inverse(&qd_red_i, &qd_red);
 	qf16_normalize_to_unit(&qd_red_i, &qd_red_i);
-	//printf("qd_red_i: [%0.4f,%0.4f,%0.4f,%0.4f]\n", fix16_to_float(qd_red_i.a), fix16_to_float(qd_red_i.b), fix16_to_float(qd_red_i.c), fix16_to_float(qd_red_i.d));
 
 	qf16_mul(&q_mix, &qd_red_i, q_sp);
 	qf16_normalize_to_unit(&q_mix, &q_mix);
-	//printf("q_mix: [%0.4f,%0.4f,%0.4f,%0.4f]\n", fix16_to_float(q_mix.a), fix16_to_float(q_mix.b), fix16_to_float(q_mix.c), fix16_to_float(q_mix.d));
 	qf16_mul_s(&q_mix, &q_mix, fix16_sign_no_zero(q_mix.a));
 	// catch numerical problems with the domain of acosf and asinf
 	fix16_t q_mix_w = fix16_constrain(q_mix.a, -_fc_1, _fc_1);
@@ -139,29 +123,10 @@ static void rates_from_attitude(v3d *rates, const qf16 *q_sp, const qf16 *q, con
 	qf16 qd;
 	qf16_mul(&qd, &qd_red, &q_mix);
 	qf16_normalize_to_unit(&qd, &qd);
-	//printf("qd: [%0.4f,%0.4f,%0.4f,%0.4f]\n", fix16_to_float(qd.a), fix16_to_float(qd.b), fix16_to_float(qd.c), fix16_to_float(qd.d));
 
-	// quaternion attitude control law, qe is rotation from q to qd
-	qf16 qe;
-	qf16_inverse(&qe, q);
-	qf16_mul(&qe, &qe, &qd);
-	//qf16_normalize_to_unit(&qe, &qe);
-
-	/*
-	qf16 qe;
-	qf16_inverse(&qe, q);
-	qf16_mul(&qe, &qe, q_sp);
-	qf16_normalize_to_unit(&qe, &qe);
-	*/
-	// using sin(alpha/2) scaled rotation axis as attitude error (see quaternion definition by axis angle)
-	// also taking care of the antipodal unit quaternion ambiguity
 	v3d e_R;
-	qf16_to_v3d(&e_R, &qe);
-	v3d_mul_s(&e_R, &e_R, fix16_mul( _fc_2, fix16_sign_no_zero(qe.a) ) );
-
+	qf16_basis_error(&e_R, q, &qd);
 	v3d_mul_s( rates, &e_R, get_param_fix16(PARAM_MC_ANGLE_P) );
-
-	//printf("rates: [%0.4f,%0.4f,%0.4f]\n", fix16_to_float(rates->x), fix16_to_float(rates->y), fix16_to_float(rates->z));
 }
 
 static void controller_run( uint32_t time_now ) {
@@ -173,7 +138,6 @@ static void controller_run( uint32_t time_now ) {
 
 	command_input_t input;
 	controller_set_input_failsafe(&input); //Failsafe input to be safe
-
 
 	//Handle controller input
 	if(_system_status.state != MAV_STATE_CRITICAL) {
@@ -265,9 +229,9 @@ static void controller_run( uint32_t time_now ) {
 
 	//If we should listen to attitude input
 	if( !(_control_input.input_mask & CMD_IN_IGNORE_ATTITUDE) ) {
-		//If we are going to override the calculated yaw rate, just ignore it now
 		fix16_t yaw_w = get_param_fix16(PARAM_MC_ANGLE_YAW_W);
 
+		//If we are going to override the calculated yaw rate, just ignore it
 		if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
 			yaw_w = 0;
 		}
