@@ -13,6 +13,7 @@ extern "C" {
 #include "fixvector3d.h"
 #include "fixquat.h"
 #include "fixextra.h"
+#include "drivers/drv_system.h"
 
 state_t _state_estimator;
 v3d _adaptive_gyro_bias;
@@ -20,14 +21,10 @@ sensor_readings_t _sensors;
 
 static v3d g;	//Gravity vector
 
-static v3d w1;
-static v3d w2;
-static v3d wbar;
-static v3d wfinal;
-static v3d w_acc;
-static v3d b;
-static qf16 q_tilde;
-static qf16 q_hat;
+static v3d w1;	//Integrator for quad int
+static v3d w2;	//Integrator for quad int
+static v3d b;	//Integrator for adaptive bias
+static qf16 q_hat;	//Attitude estimate
 static uint32_t time_last;
 
 static uint32_t init_time;
@@ -52,11 +49,6 @@ void estimator_init( void ) {
 	q_hat.c = 0;
 	q_hat.d = 0;
 
-	q_tilde.a = _fc_1;
-	q_tilde.b = 0;
-	q_tilde.c = 0;
-	q_tilde.d = 0;
-
 	g.x = 0;
 	g.y = 0;
 	g.z = _fc_1;
@@ -68,10 +60,6 @@ void estimator_init( void ) {
 	w2.x = 0;
 	w2.y = 0;
 	w2.z = 0;
-
-	w_acc.x = 0;
-	w_acc.y = 0;
-	w_acc.z = 0;
 
 	b.x = 0;
 	b.y = 0;
@@ -147,9 +135,6 @@ static void fuse_heading_estimate( qf16 *q_est, const qf16 *q_mes, const fix16_t
 
 //  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
 static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
-	fix16_t kp = get_param_fix16( PARAM_EST_FILTER_KP );
-	fix16_t ki = get_param_fix16( PARAM_EST_FILTER_KI );
-
 	//XXX: This will exit on the first loop, not a nice way of doing it though
 	if ( time_last == 0 ) {
 		time_last = time_now;
@@ -157,94 +142,59 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 	}
 
 	//Converts dt from micros to secs
-	fix16_t dt = fix16_sdiv( ( time_now - time_last ), 1e6f );
+	fix16_t dt = fix16_from_float(1e-6 * (float)(time_now - time_last));
 	time_last = time_now;
 
+	//Gains for accelerometer compensation
+	fix16_t kp = get_param_fix16( PARAM_EST_FILTER_KP );
+	fix16_t ki = get_param_fix16( PARAM_EST_FILTER_KI );
 	//Crank up the gains for the first few seconds for quick convergence
 	if ( time_now < init_time ) {
 		kp = fix16_smul( kp, _fc_10 );
-		ki = fix16_smul( kp, _fc_10 );
+		ki = fix16_smul( ki, _fc_10 );
 	}
 
 	//Run LPF to reject a lot of noise
 	lpf_update(accel, gyro);
 
-	//Add in accelerometer
-	//a_sqrd_norm = x^2 + y^2 + z^2
+	//Accelerometer compensation
+	//The reading must be reasonably close to something that resembles a hover
+	v3d w_acc;
+	w_acc.x = 0;
+	w_acc.y = 0;
+	w_acc.z = 0;
 	fix16_t a_sqrd_norm = v3d_sq_norm( &_accel_LPF );
 
-	//If we should use accelerometer compensation, and the reading is reasonably small
 	if( ( get_param_uint( PARAM_EST_USE_ACC_COR ) ) &&
 	  (a_sqrd_norm < fix16_mul( fix16_sq( _fc_1_15 ), fix16_sq( _fc_gravity ) ) ) &&
 	  (a_sqrd_norm > fix16_mul( fix16_sq( _fc_0_85 ), fix16_sq( _fc_gravity ) ) ) ) {
 
-		// Get error estimated by accelerometer measurement
-		v3d a;
-		v3d_normalize(&a, &_accel_LPF);
-
-		// Get the quaternion from accelerometer (low-frequency measure q)
-		// (Not in either paper)
-		// Rotation from accel reading to gravity
+		//Determine the rotation estimate as read by the accelerometer
 		qf16 q_acc;
-		qf16 q_acc_inv;
-		qf16_from_shortest_path(&q_acc, &a, &g);
-		qf16_inverse(&q_acc_inv, &q_acc);
+		qf16_from_shortest_path(&q_acc, &g, &_accel_LPF);
 
-		// Get the error quaternion between observer and low-freq q
-		// First we need to take out the Z (Yaw) component as it is unobservable with just imu
-		qf16 q_hat_acc;
-		mf16 rot_mat;
-		qf16_to_matrix(&rot_mat, &q_hat);
-
-		v3d yaw_c;
-		v3d body_x;
-		v3d body_y;
+		//Determine the yaw-free rotation of the current attitude estimate
 		v3d body_z;
-		yaw_c.x = 0;
-		yaw_c.y = _fc_1;	//TODO: This should be aligned with NED and Compass North: yaw_c = [-sin(yaw), cos(yaw), 0.0f] XXX: MAYBE!;
-		yaw_c.z = 0;
-		body_z.x = rot_mat.data[2][0];
-		body_z.y = rot_mat.data[2][1];
-		body_z.z = rot_mat.data[2][2];
+		qf16 q_hat_inv;
+		qf16_inverse(&q_hat_inv, &q_hat);	//Need to invert to bring the vector into the body frame
+		qf16_dcm_z(&body_z, &q_hat_inv);
 
-		v3d_cross(&body_x, &yaw_c, &body_z);
+		qf16 q_hat_acc;
+		qf16_from_shortest_path(&q_hat_acc, &g, &body_z);
 
-		//Invert the frame if the FCU is upside down
-		//if (body_z.z < 0) {
-		//		body_x.x = -body_x.x;
-		//		body_x.y = -body_x.y;
-		//		body_x.z = -body_x.z;
-		//}
+		//Use the basis error method to calculate body-fixed rotation error
+		v3d e_R;
+		qf16_basis_error(&e_R, &q_hat_acc, &q_acc);
 
-		v3d_normalize(&body_x, &body_x);
+		// Calculate correction rates and integrate biases from accelerometer feedback
+		v3d_mul_s( &w_acc, &e_R, kp );
 
-		v3d_cross(&body_y, &body_z, &body_x);
-		v3d_normalize(&body_y, &body_y);
-
-		dcm_from_basis(&rot_mat, &body_x, &body_y, &body_z);
-
-		matrix_to_qf16(&q_hat_acc, &rot_mat );
-		qf16_normalize_to_unit(&q_hat_acc, &q_hat_acc);
-
-		// Below Eq. 45 Mahoney Paper
-		qf16_mul(&q_tilde, &q_acc_inv, &q_hat_acc);
-
-		// Correction Term of Eq. 47a and 47b Mahoney Paper
-		// w_acc = -2*s_tilde*v_tilde
-		w_acc.x = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.b));
-		w_acc.y = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.c));
-		w_acc.z = fix16_mul(-_fc_2, fix16_mul(q_tilde.a, q_tilde.d));
-
-		// integrate biases from accelerometer feedback
-		// (eq 47b Mahoney Paper, using correction term w_acc found above)
-		b.x = fix16_sub(b.x, fix16_mul(ki, fix16_mul(w_acc.x, dt)));
-		b.y = fix16_sub(b.y, fix16_mul(ki, fix16_mul(w_acc.y, dt)));
-		b.z = fix16_sub(b.z, fix16_mul(ki, fix16_mul(w_acc.z, dt)));
-	} else {
-		w_acc.x = 0;
-		w_acc.y = 0;
-		w_acc.z = 0;
+		b.x = fix16_add(b.x, fix16_mul(ki, fix16_mul(e_R.x, dt)));
+		b.y = fix16_add(b.y, fix16_mul(ki, fix16_mul(e_R.y, dt)));
+		b.z = fix16_add(b.z, fix16_mul(ki, fix16_mul(e_R.z, dt)));
 	}
+
+	v3d wbar = _gyro_LPF;
 
 	// Pull out Gyro measurements
 	if( get_param_uint( PARAM_EST_USE_QUAD_INT ) ) {
@@ -268,19 +218,14 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 
 		w2 = w1;
 		w1 = _gyro_LPF;
-	} else {
-		wbar = _gyro_LPF;
 	}
 
 	// Build the composite omega vector for kinematic propagation
 	// This is the stuff inside the p function in eq. 47a - Mahoney Paper
-	//wfinal = (wbar - b) + (kp * w_acc);
-	v3d wfinal_temp_scale;
-	v3d wfinal_temp_sub;
-
-	v3d_mul_s( &wfinal_temp_scale, &w_acc, kp );
-	v3d_sub( &wfinal_temp_sub, &wbar, &b );
-	v3d_add( &wfinal, &wfinal_temp_sub, &wfinal_temp_scale );
+	//wfinal = wbar - b - w_acc;
+	v3d wfinal;
+	v3d_sub( &wfinal, &wbar, &b );
+	v3d_sub( &wfinal, &wfinal, &w_acc );
 
 	//Propagate Dynamics (only if we've moved)
 	fix16_t sqrd_norm_w = v3d_sq_norm( &wfinal );
@@ -362,7 +307,6 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 		_sensors.mag.status.new_data = false;
 	}
 
-
 	//q_hat is given as z-down (NED)
 
 	//Perform level horizon measurements
@@ -390,8 +334,7 @@ static void estimator_update( uint32_t time_now, v3d *accel, v3d *gyro ) {
 		reset_adaptive_gyro_bias();	//TODO: XXX: The adaptive bias' are good, but without proper mag support, they cause lasting errors if the mav is turned upside down
 
 	// Save old adjust gyro measurements with estimated biases for control
-	v3d wbar_old = wbar;
-	v3d_sub( &wbar, &wbar_old, &b );
+	v3d_add( &wbar, &wbar, &b );
 
 	_state_estimator.p = fix16_sub( _gyro_LPF.x, _adaptive_gyro_bias.x );
 	_state_estimator.q = fix16_sub( _gyro_LPF.y, _adaptive_gyro_bias.y );
