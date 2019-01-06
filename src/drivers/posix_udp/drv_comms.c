@@ -128,7 +128,7 @@ static bool udp_split( uint32_t *bind_port, char *remote_host, uint32_t *remote_
 	if(success) {
 		*bind_port = atoi(bind_port_str);
 		if(remote_host_cnt == 0) {
-			strncpy(remote_host, "0.0.0.0", 7);
+			strncpy(remote_host, "0.0.0.0", 8);
 		} else {
 			strncpy(remote_host, remote_host_str, 100);
 		}
