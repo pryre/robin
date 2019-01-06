@@ -4,7 +4,9 @@
 A parameter listing is dynamically generated on compile. During this time, the parameter headers, initializing functions, update funcitons, and a parameter reference document are generated and placed in `lib/param_generator`.
 
 ## Parameter Reference Document
-The generated reference document can be [found here](/lib/param_generator/PARAMS.md), or at `lib/param_generator/PARAMS.md`. This document contains a listing of the following headings:
+The parameter reference document (`lib/param_generator/PARAMS.md`) can be [found here](/lib/param_generator/PARAMS.md).
+
+This document contains a listing of the following headings:
 - Name: Parameter name as sent through MAVLINK
 - Type: The type of parameter this is (uint, int, float)
 - Description: A brief description of what this parameter does in the code
