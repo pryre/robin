@@ -17,7 +17,7 @@ def read_params(param_file):
 			#	print(p)
 			#	print("\n")
 
-			print("Parameters Loaded: %i" % len(params_ret))
+			print("\t%s: \t%i" % ( os.path.basename(param_file).split('.')[0], len(params_ret) ) )
 			return params_ret
 		except yaml.YAMLError as e:
 			print(e)
@@ -448,29 +448,8 @@ def main():
 	proj_dir_in = str(sys.argv[1])
 	proj_dir_out = str(sys.argv[2])
 
-	"""
-	param_groups = ("Battery",
-					"Calibration",
-					"Communication",
-					"Control",
-					"Estimator",
-					"Mixer",
-					"RC Input",
-					"Sensors",
-					"System")
-
-	path_params_yaml = (proj_dir_in + "/params_battery.yaml",
-						proj_dir_in + "/params_calibration.yaml",
-						proj_dir_in + "/params_comms.yaml",
-						proj_dir_in + "/params_control.yaml",
-						proj_dir_in + "/params_estimator.yaml",
-						proj_dir_in + "/params_mixer.yaml",
-						proj_dir_in + "/params_rc_input.yaml",
-						proj_dir_in + "/params_sensors.yaml",
-						proj_dir_in + "/params_system.yaml")
-	"""
 	print(os.path.dirname(proj_dir_in))
-	path_params_yaml = glob.glob( os.path.dirname(proj_dir_in) + "/*.yaml")
+	path_params_yaml = sorted(glob.glob( os.path.dirname(proj_dir_in) + "/*.yaml"))
 
 	param_groups = []
 	for ppy in path_params_yaml:

@@ -4,7 +4,6 @@
 extern "C" {
 #endif
 
-#include <mavlink/common/common.h>
 #include <mavlink_system.h>
 #include <stdbool.h>
 #include <stdint.h>
