@@ -39,7 +39,7 @@ void estimator_init( void ) {
 	_state_estimator.p = 0;
 	_state_estimator.q = 0;
 	_state_estimator.r = 0;
-	_state_estimator.attitude.a = 1;
+	_state_estimator.attitude.a = _fc_1;
 	_state_estimator.attitude.b = 0;
 	_state_estimator.attitude.c = 0;
 	_state_estimator.attitude.d = 0;

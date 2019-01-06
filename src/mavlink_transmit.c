@@ -157,6 +157,7 @@ void communication_calc_period_update(uint8_t comm_port, mavlink_stream_id_t str
 				auto_rate = fix16_from_float( default_stream_rate_lookup_minimal[stream_id] );
 			}
 
+			//Calculate the auto-rate period and set it
 			(*lookup)[stream_id].period_update = calc_period(auto_rate);
 		} else {
 			//Otherwise the user has specified a rate, so lets use that
