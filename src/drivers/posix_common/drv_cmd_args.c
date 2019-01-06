@@ -7,9 +7,9 @@ extern "C" {
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "drivers/posix_common/drv_cmd_args.h"
+#include "drivers/drv_system.h"
 
 const char *argp_program_version = GIT_VERSION_FLIGHT_STR;
 const char *argp_program_bug_address = "<pryre.dev@outlook.com>";

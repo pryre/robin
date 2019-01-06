@@ -7,6 +7,15 @@ PARAM_RATE_CONTROL:
     option: "scalar"
     default: 250.0
 ---
+PARAM_CONTROL_OB_FUSE_YAW_RATE:
+  type: "uint"
+  name: "MC_FUSE_YAWRATE"
+  description: "If set to true (1), the control scheme will utilise the full attitude reference by fusing the body_rate_z value with the references calculated by the attitude controller. This parameter bypasses the IGNORE_YAWRATE flag in the attitude reference message"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
+---
 PARAM_PID_ROLL_RATE_P:
   type: "float"
   name: "MC_ROLLRATE_P"

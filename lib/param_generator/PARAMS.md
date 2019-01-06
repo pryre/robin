@@ -227,6 +227,7 @@ STRM1_LPQ | float | Communication update rate for all other messages (set to 0 t
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
 RATE_CONTROL | float | Update rate of the controller | 250.0 |  | scalar | True
+MC_FUSE_YAWRATE | uint | If set to true (1), the control scheme will utilise the full attitude reference by fusing the body_rate_z value with the references calculated by the attitude controller. This parameter bypasses the IGNORE_YAWRATE flag in the attitude reference message | 0 |  | scalar | False
 MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 5.0 |  | scalar | False
 MC_ROLLRATE_I | float | Integral gain for roll rate PID | 1.0 |  | scalar | False
 MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.1 |  | scalar | False

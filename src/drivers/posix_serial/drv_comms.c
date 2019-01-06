@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
@@ -22,9 +21,7 @@ static int set_interface_attribs(int fd, int speed) {
     struct termios tty;
 
     if (tcgetattr(fd, &tty) < 0) {
-		char err[100];
-        snprintf(err, 100, "[COMM] Error from tcgetattr: %s", strerror(errno));
-		system_debug_print(err);
+        system_debug_print("[COMM] Error from tcgetattr: %s", strerror(errno));
         return -1;
     }
 
@@ -34,82 +31,18 @@ static int set_interface_attribs(int fd, int speed) {
 	cfmakeraw(&tty);
 
 	if (tcsetattr(fd, TCSANOW, &tty) != 0) {
-		char err[100];
-        snprintf(err, 100, "[COMM] Error from tcsetattr: %s", strerror(errno));
-		system_debug_print(err);
+        system_debug_print("[COMM] Error from tcsetattr: %s", strerror(errno));
         return -1;
     }
     return 0;
 }
-
-/*
-static int set_interface_attribs(int fd, int speed) {
-    struct termios tty;
-
-    if (tcgetattr(fd, &tty) < 0) {
-		char err[100];
-        snprintf(err, 100, "[COMM] Error from tcgetattr: %s", strerror(errno));
-		system_debug_print(err);
-        return -1;
-    }
-
-    cfsetospeed(&tty, (speed_t)speed);
-    cfsetispeed(&tty, (speed_t)speed);
-
-    tty.c_cflag |= (CLOCAL | CREAD);    // ignore modem controls
-    tty.c_cflag &= ~CSIZE;
-    tty.c_cflag |= CS8;         / 8-bit characters
-    tty.c_cflag &= ~PARENB;     // no parity bit
-    tty.c_cflag &= ~CSTOPB;     // only need 1 stop bit
-    tty.c_cflag &= ~CRTSCTS;    // no hardware flowcontrol
-
-    // setup for non-canonical mode
-    tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
-    tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
-    tty.c_oflag &= ~OPOST;
-
-    // fetch bytes as they become available
-    tty.c_cc[VMIN] = 1;
-    tty.c_cc[VTIME] = 1;
-
-    if (tcsetattr(fd, TCSANOW, &tty) != 0) {
-		char err[100];
-        snprintf(err, 100, "[COMM] Error from tcsetattr: %s", strerror(errno));
-		system_debug_print(err);
-        return -1;
-    }
-    return 0;
-}
-
-static void set_mincount(int fd, int mcount) {
-    struct termios tty;
-
-    if (tcgetattr(fd, &tty) < 0) {
-		char err[100];
-        snprintf(err, 100, "Error tcgetattr: %s\n", strerror(errno));
-		system_debug_print(err);
-        return;
-    }
-
-    tty.c_cc[VMIN] = mcount ? 1 : 0;
-    tty.c_cc[VTIME] = 5;        // half second timer
-
-    if (tcsetattr(fd, TCSANOW, &tty) < 0) {
-		char err[100];
-        snprintf(err, 100, "Error tcsetattr: %s\n", strerror(errno));
-		system_debug_print(err);
-	}
-}
-*/
 
 int init_serial_port( char *portname, uint32_t buadrate ) {
     int fd;
 
     fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd < 0) {
-		char err[100];
-        snprintf(err, 100, "[COMM] Error opening %s: %s", portname, strerror(errno));
-		system_debug_print(err);
+        system_debug_print("[COMM] Error opening %s: %s", portname, strerror(errno));
         return -1;
     }
 
@@ -166,9 +99,7 @@ bool comms_init_port( comms_port_t port ) {
 	if(success) {
 		comms_set_open( port );
 
-		char info[100];
-        snprintf(info, 100, "[COMM] Openned comm port %s", portname);
-		system_debug_print(info);
+        system_debug_print("[COMM] Openned comm port %s", portname);
 	}
 
 	return success;
@@ -228,22 +159,6 @@ bool comms_waiting( comms_port_t port ) {
 }
 
 uint8_t comms_recv( comms_port_t port ) {
-	/* simple noncanonical input
-    do {
-        unsigned char buf[80];
-        int rdlen;
-
-        rdlen = read(fd, buf, sizeof(buf) - 1);
-        if (rdlen > 0) {
-            buf[rdlen] = 0;
-            printf("Read %d: \"%s\"\n", rdlen, buf);
-        } else if (rdlen < 0) {
-            printf("Error from read: %d: %s\n", rdlen, strerror(errno));
-        }
-        // repeat read to get full message
-    } while (1);
-	*/
-
 	uint8_t ch = 0;
 	uint8_t buf[2];
 	int rdlen = 0;

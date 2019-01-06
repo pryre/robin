@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -35,73 +34,15 @@ static int sock_comm_0;
 static struct sockaddr_in locAddr_comm_0;
 static struct sockaddr_in gcAddr_comm_0;
 static uint8_t buf_recv_comm_0[BUFFER_LENGTH];
-//static uint8_t buf_send_comm_0[BUFFER_LENGTH];
 static int32_t len_recv_comm_0;
 static int32_t read_recv_comm_0;
-//static uint32_t len_send_comm_0;
-//static uint32_t time_send_addbuf_comm_0;
 
 static int sock_comm_1;
 static struct sockaddr_in locAddr_comm_1;
 static struct sockaddr_in gcAddr_comm_1;
 static uint8_t buf_recv_comm_1[BUFFER_LENGTH];
-//static uint8_t buf_send_comm_1[BUFFER_LENGTH];
 static int32_t len_recv_comm_1;
 static int32_t read_recv_comm_1;
-//static uint32_t len_send_comm_1;
-//static uint32_t time_send_addbuf_comm_1;
-
-/*
-static void udp_buffer_send( comms_port_t port ) {
-	int bytes_sent;
-	int expected_send_len;
-
-	if( comms_is_open( port ) ) {
-		switch(port) {
-			case COMM_PORT_0: {
-				expected_send_len = len_send_comm_0;
-				bytes_sent = sendto( sock_comm_0,
-									 buf_send_comm_0,
-									 len_send_comm_0,
-									 0,
-									 (struct sockaddr*)&gcAddr_comm_0,
-									 sizeof(struct sockaddr_in) );
-
-				//if(bytes_sent > 0) {
-				//	char info[250];
-				//	snprintf(info, 250, "[COMMS] Sent packet (bytes: %i)", bytes_sent);
-				//	system_debug_print(info);
-				//}
-
-				memset( buf_send_comm_0, 0, BUFFER_LENGTH );
-				len_send_comm_0 = 0;
-				time_send_addbuf_comm_0 = 0;
-
-				break;
-			}
-			case COMM_PORT_1: {
-				expected_send_len = len_send_comm_1;
-				bytes_sent = sendto( sock_comm_1,
-									 buf_send_comm_1,
-									 len_send_comm_1,
-									 0,
-									 (struct sockaddr*)&gcAddr_comm_1,
-									 sizeof(struct sockaddr_in) );
-
-				memset( buf_send_comm_1, 0, BUFFER_LENGTH );
-				len_send_comm_1 = 0;
-				time_send_addbuf_comm_1 = 0;
-
-				break;
-			}
-		}
-	}
-
-	if( bytes_sent != expected_send_len ) {
-		comms_tx_error(port);
-	}
-}
-*/
 
 static int init_udp_port( struct sockaddr_in *locAddr, struct sockaddr_in *gcAddr, uint32_t bind_port, char *remote_ip, uint32_t remote_port ) {
 	// Change the target ip if parameter was given
@@ -114,9 +55,7 @@ static int init_udp_port( struct sockaddr_in *locAddr, struct sockaddr_in *gcAdd
 
 	// Bind the socket to port BIND_PORT
 	if ( bind( sock, (struct sockaddr *)locAddr, sizeof(struct sockaddr) ) < 0 ) {
-		char info[100];
-        snprintf(info, 100, "[COMMS] Error: port bind failed (%i)", bind_port);
-		system_debug_print(info);
+        system_debug_print("[COMMS] Error: port bind failed (%i)", bind_port);
 
 		close(sock);
 		return false;
@@ -124,9 +63,7 @@ static int init_udp_port( struct sockaddr_in *locAddr, struct sockaddr_in *gcAdd
 
 	if(sock > 0 ) {
 		if ( fcntl( sock, F_SETFL, O_NONBLOCK | O_ASYNC ) < 0 ) {
-			char info[100];
-			snprintf(info, 100, "[COMMS] Error: error setting nonblocking (%s)", strerror(errno));
-			system_debug_print(info);
+			system_debug_print("[COMMS] Error: error setting nonblocking (%s)", strerror(errno));
 
 			close(sock);
 			return false;
@@ -226,9 +163,7 @@ bool comms_init_port( comms_port_t port ) {
 											 remote_port );
 				success = (sock_comm_0 > 0);
 			} else {
-				char error_str[100];
-				snprintf(error_str, 100, "[COMMS] Failed to parse telem0 comm port: %s", _arguments.conn_telem0);
-				system_debug_print(error_str);
+				system_debug_print("[COMMS] Failed to parse telem0 comm port: %s", _arguments.conn_telem0);
 			}
 
 			break;
@@ -250,9 +185,7 @@ bool comms_init_port( comms_port_t port ) {
 											 remote_port );
 				success = (sock_comm_1 > 0);
 			} else {
-				char error_str[100];
-				snprintf(error_str, 100, "[COMMS] Failed to parse telem1 comm port: %s", _arguments.conn_telem1);
-				system_debug_print(error_str);
+				system_debug_print("[COMMS] Failed to parse telem1 comm port: %s", _arguments.conn_telem1);
 			}
 
 			break;
@@ -261,55 +194,11 @@ bool comms_init_port( comms_port_t port ) {
 
 	if(success) {
 		comms_set_open( port );
-
-		char info[100];
-        snprintf(info, 100, "[COMMS] Openned comm port: udp://:%i@%s:%i", bind_port, remote_host, remote_port);
-		system_debug_print(info);
+        system_debug_print("[COMMS] Openned comm port: udp://:%i@%s:%i", bind_port, remote_host, remote_port);
 	}
 
 	return success;
 }
-/*
-void comms_send( comms_port_t port, uint8_t ch ) {
-	if( comms_is_open( port ) ) {
-		switch(port) {
-			case COMM_PORT_0: {
-				//If the buffer is full or the last character was added >1ms ago
-				//	Then assume we're on a new message and send out the buffer
-				//XXX: Maybe do this elsewhere on a proper timer?
-				if( (len_send_comm_0 >= (BUFFER_LENGTH - 1) ) ||
-					( ( (system_micros() - time_send_addbuf_comm_0) > 10 ) &&
-					  ( time_send_addbuf_comm_0 != 0 ) ) ) {
-					udp_buffer_send( port );
-				}
-
-				//Pack a new character into the buffer
-				if( len_send_comm_0 < (BUFFER_LENGTH - 1) ) {
-					buf_send_comm_0[len_send_comm_0++] = ch;
-					time_send_addbuf_comm_0 = system_micros();
-				}
-
-				break;
-			}
-			case COMM_PORT_1: {
-				if( (len_send_comm_1 >= (BUFFER_LENGTH - 1) ) ||
-					( ( (system_micros() - time_send_addbuf_comm_1) > 10 ) &&
-					  ( time_send_addbuf_comm_1 != 0 ) ) ) {
-					udp_buffer_send( port );
-				}
-
-				//Pack a new character into the buffer
-				if( len_send_comm_1 < (BUFFER_LENGTH - 1) ) {
-					buf_send_comm_1[len_send_comm_1++] = ch;
-					time_send_addbuf_comm_1 = system_micros();
-				}
-
-				break;
-			}
-		}
-	}
-}
-*/
 
 void comms_send_datagram( comms_port_t port, uint8_t* datagram, uint32_t length) {
 	int bytes_sent;
@@ -324,16 +213,6 @@ void comms_send_datagram( comms_port_t port, uint8_t* datagram, uint32_t length)
 									 (struct sockaddr*)&gcAddr_comm_0,
 									 sizeof(struct sockaddr_in) );
 
-				//if(bytes_sent > 0) {
-				//	char info[250];
-				//	snprintf(info, 250, "[COMMS] Sent packet (bytes: %i)", bytes_sent);
-				//	system_debug_print(info);
-				//}
-
-				//memset( buf_send_comm_0, 0, BUFFER_LENGTH );
-				//len_send_comm_0 = 0;
-				//time_send_addbuf_comm_0 = 0;
-
 				break;
 			}
 			case COMM_PORT_1: {
@@ -343,10 +222,6 @@ void comms_send_datagram( comms_port_t port, uint8_t* datagram, uint32_t length)
 									 0,
 									 (struct sockaddr*)&gcAddr_comm_1,
 									 sizeof(struct sockaddr_in) );
-
-				//memset( buf_send_comm_1, 0, BUFFER_LENGTH );
-				//len_send_comm_1 = 0;
-				//time_send_addbuf_comm_1 = 0;
 
 				break;
 			}

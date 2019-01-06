@@ -4,7 +4,6 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "mavlink_system.h"

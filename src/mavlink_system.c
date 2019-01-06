@@ -21,7 +21,6 @@ extern "C" {
 #include "controller.h"
 #include "mixer.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 
 /* Struct that stores the communication settings of this system.

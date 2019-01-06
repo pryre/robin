@@ -1,9 +1,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <time.h>
 #include <sys/time.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <sys/ioctl.h>
@@ -101,8 +102,15 @@ uint64_t system_unique_id(void) {
 	return uid;
 }
 
-void system_debug_print( char *msg ) {
-	puts( msg );
+int system_debug_print( const char *format, ... ) {
+	int result;
+    va_list args;
+
+    va_start(args, format);
+    result = vprintf(format, args);
+    va_end(args);
+
+    return result;
 }
 
 void system_rate_limit(void) {

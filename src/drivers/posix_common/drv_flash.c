@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <sys/stat.h>
 #include <libgen.h>
 
@@ -115,18 +114,14 @@ bool drv_flash_write( void ) {
 
 		if( num == sizeof(params_t) ) {
 			success = true;
-			char info[1000];
-			snprintf(info, 1000, "[PARAM] Parameter file written successfully: %s", _arguments.eeprom_file);
-			system_debug_print(info);
+			system_debug_print("[PARAM] Parameter file written successfully: %s", _arguments.eeprom_file);
 		} else {
 			system_debug_print("[PARAM] File not written correctly");
 		}
 
 		fclose(fp);
 	} else {
-		char info[1000];
-		snprintf(info, 1000, "[PARAM] Unable to write to parameter file: %s", _arguments.eeprom_file);
-		system_debug_print(info);
+		system_debug_print("[PARAM] Unable to write to parameter file: %s", _arguments.eeprom_file);
 	}
 
 	return success;

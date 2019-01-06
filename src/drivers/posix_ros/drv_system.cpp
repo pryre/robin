@@ -5,7 +5,6 @@
 
 #include <time.h>
 #include <sys/time.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <sys/ioctl.h>
@@ -101,8 +100,22 @@ uint64_t system_unique_id(void) {
 	return uid;
 }
 
-void system_debug_print( char *msg ) {
+int system_debug_print( const char *format, ... ) {
+	char msg[1000];
+	int result;
+    va_list args;
+
+    va_start(args, format);
+    result = vsnprintf(msg, 1000, format, args);
+    va_end(args);
+
 	ROS_INFO( "%s", msg );
+
+    return result;
+}
+
+void system_debug_print( char *msg ) {
+
 }
 
 void system_rate_limit(void) {

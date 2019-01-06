@@ -14,8 +14,6 @@ extern "C" {
 
 #include "fixextra.h"
 
-#include <stdio.h>
-
 system_status_t _system_status;
 sensor_readings_t _sensors;
 command_input_t _cmd_ob_input;

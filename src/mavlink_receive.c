@@ -9,9 +9,6 @@ extern "C" {
 #include "drivers/drv_comms.h"
 #include "drivers/drv_system.h"
 
-#include <stdio.h>
-//#include "fixextra.h"
-
 mavlink_system_t _mavlink_gcs;
 
 static bool communication_decode(mavlink_channel_t chan, uint8_t c) {

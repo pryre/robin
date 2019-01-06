@@ -21,8 +21,6 @@ extern "C" {
 #include "mixer.h"
 #include "pid_controller.h"
 
-//#include <stdio.h>
-
 system_status_t _system_status;
 sensor_readings_t _sensors;
 state_t _state_estimator;
@@ -243,6 +241,15 @@ static void controller_run( uint32_t time_now ) {
 		goal_r = rates_sp.x;
 		goal_p = rates_sp.y;
 		goal_y = rates_sp.z;
+
+		//If we're in offboard mode, and we aren't going to override yaw rate, and we want to fuse
+		//XXX: Ideally this would be handled as an additional case using the IGNORE flags, somehow...
+		if( (_system_status.control_mode == MAIN_MODE_OFFBOARD) &&
+			(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) &&
+			get_param_uint(PARAM_CONTROL_OB_FUSE_YAW_RATE) ) {
+			//Add in the additional yaw rate input
+			goal_y = fix16_add(goal_y, input.y);
+		}
 	}
 
 	//==-- Rate Control PIDs
@@ -262,7 +269,7 @@ static void controller_run( uint32_t time_now ) {
 	if( !(_control_input.input_mask & CMD_IN_IGNORE_YAW_RATE) ) {
 		//Use the commanded yaw rate goal
 		goal_y = input.y;
-	}
+	} else
 
 	//Constrain rates to set params
 	goal_r = fix16_constrain(goal_r, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));

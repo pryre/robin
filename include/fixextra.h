@@ -9,8 +9,6 @@ extern "C" {
 #include "fixmatrix.h"
 #include "fixquat.h"
 
-#include "stdio.h"
-
 //Quaternion layout
 //q.a -> q.w
 //q.b -> q.x
@@ -117,24 +115,20 @@ static inline void qf16_from_shortest_path(qf16 *dest, const v3d *v1, const v3d 
 				cr.x = _fc_1;
 				cr.y = 0;
 				cr.z = 0;
-				printf("case a\n");
 			} else {
 				cr.x = 0;
 				cr.y = 0;
 				cr.z = _fc_1;
-				printf("case b\n");
 			}
 		} else {
 			if(cr.y < cr.z) {
 				cr.x = 0;
 				cr.y = _fc_1;
 				cr.z = 0;
-				printf("case c\n");
 			} else {
 				cr.x = 0;
 				cr.y = 0;
 				cr.z = _fc_1;
-				printf("case d\n");
 			}
 		}
 
@@ -330,22 +324,14 @@ static inline void qf16_basis_error( v3d* dest, const qf16* q1, const qf16* q2) 
 	qf16 qe;
 	qf16_inverse(&qe, q1);
 	qf16_normalize_to_unit(&qe, &qe);
-	//printf("q_i: [%0.4f,%0.4f,%0.4f,%0.4f]\n", fix16_to_float(qe.a), fix16_to_float(qe.b), fix16_to_float(qe.c), fix16_to_float(qe.d));
 	qf16_mul(&qe, &qe, q2);
 	qf16_normalize_to_unit(&qe, &qe);
-	//printf("qe: [%0.4f,%0.4f,%0.4f,%0.4f]\n", fix16_to_float(qe.a), fix16_to_float(qe.b), fix16_to_float(qe.c), fix16_to_float(qe.d));
 
 	// using sin(alpha/2) scaled rotation axis as attitude error (see quaternion definition by axis angle)
 	// also taking care of the antipodal unit quaternion ambiguity
 	qf16_to_v3d(dest, &qe);
 	v3d_mul_s(dest, dest, fix16_mul( _fc_2, fix16_sign_no_zero(qe.a) ) );
 }
-
-//static inline v3d v3d_imu_to_ned(const v3d *imu) {
-//	v3d ned;
-//	qf16_rotate(&ned, &NED_IMU_Q, imu);
-//	return ned;
-//}
 
 static inline v3d v3d_enu_to_ned(const v3d *enu) {
 	v3d ned;

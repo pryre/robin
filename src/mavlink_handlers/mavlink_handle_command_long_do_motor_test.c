@@ -2,7 +2,6 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "mavlink_system.h"
