@@ -52,15 +52,17 @@ uint64_t system_unique_id( void ) {
 int system_debug_print( const char* format, ... ) {
 	// XXX: Currently unsupported
 	/*
-int result;
-va_list args;
+	int result;
+	va_list args;
 
-va_start(args, format);
-result = vprintf(format, args);
-va_end(args);
+	va_start(args, format);
+	result = vprintf(format, args);
+	va_end(args);
 
-return result;
-*/
+	return result;
+	*/
+
+	return 0;
 }
 
 void system_rate_limit( void ) {

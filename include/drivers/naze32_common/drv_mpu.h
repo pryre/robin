@@ -21,6 +21,8 @@
 
 #pragma once
 #include <math.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 /* Generic driver for invensense gyro/acc devices.
  *
