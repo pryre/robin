@@ -31,6 +31,10 @@ bool calibrate_accel( void ) {
 			int32_t y_bias = _calibrations.data.accel.data.y_flat_av_sum / 4;
 			int32_t z_bias = _calibrations.data.accel.data.z_flat_av_sum / 4;
 
+			set_param_int( PARAM_ACC_X_BIAS, x_bias );
+			set_param_int( PARAM_ACC_Y_BIAS, y_bias );
+			set_param_int( PARAM_ACC_Z_BIAS, z_bias );
+
 			// Correct for measurement biases
 			fix16_t accel_x_down_1g = fix16_mul( fix16_from_int( _calibrations.data.accel.data.x_down_av - get_param_int( PARAM_ACC_X_BIAS ) ),
 												 _sensors.imu.accel_scale );
@@ -45,19 +49,20 @@ bool calibrate_accel( void ) {
 			fix16_t accel_z_up_1g = fix16_mul( fix16_from_int( _calibrations.data.accel.data.z_up_av - get_param_int( PARAM_ACC_Z_BIAS ) ),
 											   _sensors.imu.accel_scale );
 
-			fix16_t accel_x_scale_p = fix16_div( _fc_gravity, accel_x_down_1g );
-			fix16_t accel_y_scale_p = fix16_div( _fc_gravity, accel_y_down_1g );
-			fix16_t accel_z_scale_p = fix16_div( _fc_gravity, accel_z_down_1g );
-			fix16_t accel_x_scale_n = fix16_div( -_fc_gravity, accel_x_up_1g );
-			fix16_t accel_y_scale_n = fix16_div( -_fc_gravity, accel_y_up_1g );
-			fix16_t accel_z_scale_n = fix16_div( -_fc_gravity, accel_z_up_1g );
+			fix16_t accel_x_scale_p = fix16_div( _fc_gravity, accel_x_up_1g );
+			fix16_t accel_y_scale_p = fix16_div( _fc_gravity, accel_y_up_1g );
+			fix16_t accel_z_scale_p = fix16_div( _fc_gravity, accel_z_up_1g );
+			fix16_t accel_x_scale_n = fix16_div( -_fc_gravity, accel_x_down_1g );
+			fix16_t accel_y_scale_n = fix16_div( -_fc_gravity, accel_y_down_1g );
+			fix16_t accel_z_scale_n = fix16_div( -_fc_gravity, accel_z_down_1g );
 
 			// Sanity check to make sure the scaling is positive and not far too large
-			if ( ( ( accel_x_scale_p > _fc_0_5 ) && ( accel_x_scale_p < _fc_2 ) ) && ( ( accel_y_scale_p > _fc_0_5 ) && ( accel_y_scale_p < _fc_2 ) ) && ( ( accel_z_scale_p > _fc_0_5 ) && ( accel_z_scale_p < _fc_2 ) ) && ( ( accel_x_scale_n > _fc_0_5 ) && ( accel_x_scale_n < _fc_2 ) ) && ( ( accel_y_scale_n > _fc_0_5 ) && ( accel_y_scale_n < _fc_2 ) ) && ( ( accel_z_scale_n > _fc_0_5 ) && ( accel_z_scale_n < _fc_2 ) ) ) {
-
-				set_param_int( PARAM_ACC_X_BIAS, x_bias );
-				set_param_int( PARAM_ACC_Y_BIAS, y_bias );
-				set_param_int( PARAM_ACC_Z_BIAS, z_bias );
+			if ( ( ( accel_x_scale_p > _fc_0_5 ) && ( accel_x_scale_p < _fc_2 ) ) &&
+				 ( ( accel_y_scale_p > _fc_0_5 ) && ( accel_y_scale_p < _fc_2 ) ) &&
+				 ( ( accel_z_scale_p > _fc_0_5 ) && ( accel_z_scale_p < _fc_2 ) ) &&
+				 ( ( accel_x_scale_n > _fc_0_5 ) && ( accel_x_scale_n < _fc_2 ) ) &&
+				 ( ( accel_y_scale_n > _fc_0_5 ) && ( accel_y_scale_n < _fc_2 ) ) &&
+				 ( ( accel_z_scale_n > _fc_0_5 ) && ( accel_z_scale_n < _fc_2 ) ) ) {
 
 				set_param_fix16( PARAM_ACC_X_SCALE_POS, accel_x_scale_p );
 				set_param_fix16( PARAM_ACC_Y_SCALE_POS, accel_y_scale_p );

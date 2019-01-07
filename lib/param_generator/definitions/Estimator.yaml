@@ -1,39 +1,12 @@
-PARAM_INIT_TIME:
+PARAM_EST_INIT_TIME:
   type: "uint"
   name: "EST_FLTR_INIT"
   description: "Time from boot where the estimator will use quick convergence"
   reboot: true
   value:
     option: "scalar"
-    default: 3000
+    default: 10000
     unit: "ms"
----
-PARAM_EST_USE_ACC_COR:
-  type: "uint"
-  name: "EST_ACC_COR"
-  description: "Toggle to enable accelerometer correction (required for angular control) in the attitude estimator (0:false,1:true)"
-  reboot: false
-  value:
-    option: "scalar"
-    default: 1
----
-PARAM_EST_USE_MAT_EXP:
-  type: "uint"
-  name: "EST_MAT_EXP"
-  description: "Toggle to enable matrix expotential approximation (adds decent estimation accuracy) in the attitude estimator (0:false,1:true)"
-  reboot: false
-  value:
-    option: "scalar"
-    default: 1
----
-PARAM_EST_USE_QUAD_INT:
-  type: "uint"
-  name: "EST_QUAD_INT"
-  description: "Toggle to enable quadratic integration (adds a small amount of additional accuracy) in the attitude estimator (0:false,1:true)"
-  reboot: false
-  value:
-    option: "scalar"
-    default: 1
 ---
 PARAM_EST_USE_ADPT_BIAS:
   type: "uint"
@@ -89,19 +62,19 @@ PARAM_EST_LEVEL_HORIZON_Z:
     option: "scalar"
     default: 0.0
 ---
-PARAM_EST_FILTER_KP:
+PARAM_EST_ACC_KP:
   type: "float"
-  name: "EST_FLTR_KP"
-  description: "Adjusts the amount of proportional filtering done on the attitude estimation"
+  name: "EST_ACC_P"
+  description: "Adjusts the proportional gain done on the attitude estimation"
   reboot: false
   value:
     option: "scalar"
     default: 1.0
 ---
-PARAM_EST_FILTER_KI:
+PARAM_EST_BIAS_KP:
   type: "float"
-  name: "EST_FLTR_KI"
-  description: "Adjusts the amount of integral filtering done on the attitude estimation"
+  name: "EST_W_BIAS_P"
+  description: "Adjusts the amount of integral used for the adaptive bias estimation"
   reboot: false
   value:
     option: "scalar"

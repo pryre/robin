@@ -141,18 +141,15 @@ MC_YAW_W | float | Weighting gain for yaw angle error dynamics. Values closer to
 
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
-EST_FLTR_INIT | uint | Time from boot where the estimator will use quick convergence | 3000 | ms | scalar | True
-EST_ACC_COR | uint | Toggle to enable accelerometer correction (required for angular control) in the attitude estimator (0:false,1:true) | 1 |  | scalar | False
-EST_MAT_EXP | uint | Toggle to enable matrix expotential approximation (adds decent estimation accuracy) in the attitude estimator (0:false,1:true) | 1 |  | scalar | False
-EST_QUAD_INT | uint | Toggle to enable quadratic integration (adds a small amount of additional accuracy) in the attitude estimator (0:false,1:true) | 1 |  | scalar | False
+EST_FLTR_INIT | uint | Time from boot where the estimator will use quick convergence | 10000 | ms | scalar | True
 EST_ADPT_BIAS | uint | Toggle to enable adaptive bias estimation (accounts for some additional sensor fluctuations) in the attitude estimator (0:false,1:true) | 0 |  | scalar | False
 EST_LVL_HORZ | uint | Toggle to enable level horizon calibration for the attitude estimation (0:false,1:true) | 1 |  | scalar | False
 EST_LVL_HORZ_W | float | Level horizon offset quaternion calibration data (W) | 1.0 |  | scalar | False
 EST_LVL_HORZ_X | float | Level horizon offset quaternion calibration data (X) | 0.0 |  | scalar | False
 EST_LVL_HORZ_Y | float | Level horizon offset quaternion calibration data (Y) | 0.0 |  | scalar | False
 EST_LVL_HORZ_Z | float | Level horizon offset quaternion calibration data (Z) | 0.0 |  | scalar | False
-EST_FLTR_KP | float | Adjusts the amount of proportional filtering done on the attitude estimation | 1.0 |  | scalar | False
-EST_FLTR_KI | float | Adjusts the amount of integral filtering done on the attitude estimation | 0.05 |  | scalar | False
+EST_ACC_P | float | Adjusts the proportional gain done on the attitude estimation | 1.0 |  | scalar | False
+EST_W_BIAS_P | float | Adjusts the amount of integral used for the adaptive bias estimation | 0.05 |  | scalar | False
 EST_LPF_GYRO_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.04 |  | scalar | False
 EST_LPF_ACC_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.04 |  | scalar | False
 FSE_EXT_HDG_W | float | Weighting for external heading fusion (0 means don't trust, 1 means trust fully) | 0.2 |  | scalar | False

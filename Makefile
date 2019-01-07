@@ -7,7 +7,8 @@ PROJECT_NAME = robin
 ###############################################################################
 
 SERIAL_DEVICE	?= /dev/ttyUSB0
-SERIAL_BAUD		?= 921600
+SERIAL_BAUD		?= 115200
+FLASH_SERIAL_BAUD		?= 921600
 SERIAL_DEVICE_2 ?=
 
 TARGET_HEX =
@@ -36,21 +37,21 @@ naze32_rev5: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
 naze32_rev5_flash: naze32_rev5
-	stm32flash -w build/robin_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+	stm32flash -w build/robin_naze32_rev5.hex -v -g 0x0 -b $(FLASH_SERIAL_BAUD) $(SERIAL_DEVICE)
 
 naze32_rev5_reflash: naze32_rev5 mavlink_bootloader
 	@sleep 1
-	stm32flash -w build/robin_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+	stm32flash -w build/robin_naze32_rev5.hex -v -g 0x0 -b $(FLASH_SERIAL_BAUD) $(SERIAL_DEVICE)
 
 naze32_rev6: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
 naze32_rev6_flash: naze32_rev6
-	stm32flash -w build/robin_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+	stm32flash -w build/robin_naze32_rev6.hex -v -g 0x0 -b $(FLASH_SERIAL_BAUD) $(SERIAL_DEVICE)
 
 naze32_rev6_reflash: naze32_rev6 mavlink_bootloader
 	@sleep 1
-	stm32flash -w build/robin_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+	stm32flash -w build/robin_naze32_rev6.hex -v -g 0x0 -b $(FLASH_SERIAL_BAUD) $(SERIAL_DEVICE)
 
 param_gen:
 	@python3 lib/param_generator/gen_params.py ./lib/param_generator/definitions/ ./build/ >&2

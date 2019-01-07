@@ -121,9 +121,9 @@ bool drv_sensors_i2c_read( uint32_t time_us ) {
 
 		//==-- Save raw data
 		// XXX: Some values need to be inversed to be in the NED frame
-		_sensors.imu.accel_raw.x = -read_accel_raw[0];
-		_sensors.imu.accel_raw.y = read_accel_raw[1];
-		_sensors.imu.accel_raw.z = read_accel_raw[2];
+		_sensors.imu.accel_raw.x = read_accel_raw[0];
+		_sensors.imu.accel_raw.y = -read_accel_raw[1];
+		_sensors.imu.accel_raw.z = -read_accel_raw[2];
 
 		_sensors.imu.gyro_raw.x = read_gyro_raw[0];
 		_sensors.imu.gyro_raw.y = -read_gyro_raw[1];
