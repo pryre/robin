@@ -174,7 +174,7 @@ static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 			kp = fix16_smul( kp, _fc_10 );
 			ki = fix16_smul( ki, _fc_10 );
 		}
-
+		/*
 		//Determine the rotation estimate as read by the accelerometer
 		qf16_from_shortest_path( &q_acc, &g_, &accel_lpf_ );
 
@@ -194,12 +194,11 @@ static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 
 		// Calculate correction rates and integrate biases from accelerometer feedback
 		v3d_mul_s( &w_acc, &e_R, kp );
-
+		*/
 		//b.x = fix16_add( b.x, fix16_mul( ki, fix16_mul( e_R.x, dt ) ) );
 		//b.y = fix16_add( b.y, fix16_mul( ki, fix16_mul( e_R.y, dt ) ) );
 		//b.z = fix16_add( b.z, fix16_mul( ki, fix16_mul( e_R.z, dt ) ) );
 
-		/*
 		// Accelerometer correction
 		v3d b_z;
 		qf16_dcm_z( &b_z, &q_hat_ );
@@ -211,7 +210,6 @@ static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 		v3d e_R;
 		v3d_cross(&e_R, &b_z, &a_z);
 		v3d_mul_s(&w_acc, &e_R, kp);
-		*/
 	}
 
 	/*
