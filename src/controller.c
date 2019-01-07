@@ -160,8 +160,10 @@ static void controller_run( uint32_t time_now ) {
 			input.input_mask |= CMD_IN_IGNORE_ROLL_RATE;
 			input.input_mask |= CMD_IN_IGNORE_PITCH_RATE;
 
-			fix16_t man_roll = fix16_mul( _sensors.rc_input.c_r, get_param_fix16( PARAM_MAX_ROLL_ANGLE ) );
-			fix16_t man_pitch = fix16_mul( _sensors.rc_input.c_p, get_param_fix16( PARAM_MAX_PITCH_ANGLE ) );
+			fix16_t man_roll = fix16_mul( _sensors.rc_input.c_r,
+										  get_param_fix16( PARAM_MAX_ROLL_ANGLE ) );
+			fix16_t man_pitch = fix16_mul( _sensors.rc_input.c_p,
+										   get_param_fix16( PARAM_MAX_PITCH_ANGLE ) );
 
 			quat_from_euler( &input.q, man_roll, man_pitch, 0 );
 
@@ -184,8 +186,10 @@ static void controller_run( uint32_t time_now ) {
 			input.q.c = 0;
 			input.q.d = 0;
 
-			input.r = fix16_mul( _sensors.rc_input.c_r, get_param_fix16( PARAM_MAX_ROLL_RATE ) );
-			input.p = fix16_mul( _sensors.rc_input.c_p, get_param_fix16( PARAM_MAX_PITCH_RATE ) );
+			input.r = fix16_mul( _sensors.rc_input.c_r,
+								 get_param_fix16( PARAM_MAX_ROLL_RATE ) );
+			input.p = fix16_mul( _sensors.rc_input.c_p,
+								 get_param_fix16( PARAM_MAX_PITCH_RATE ) );
 			input.y = fix16_mul( _sensors.rc_input.c_y, get_param_fix16( PARAM_MAX_YAW_RATE ) );
 
 			input.T = _sensors.rc_input.c_T;

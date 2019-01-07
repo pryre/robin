@@ -105,10 +105,10 @@ for (addr=0; addr<128; ++addr) {
 delay(50);
 if (i2cWriteRegister(addr, 0x00, 0x00)) {
 
-    char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-    snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
+char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
 "[PARAM] I2C sniff found: 0x%x", addr);
-    mavlink_queue_broadcast_notice(text);
+mavlink_queue_broadcast_notice(text);
 }
 }
 */

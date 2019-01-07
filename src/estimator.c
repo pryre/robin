@@ -301,16 +301,14 @@ qhat_np1.z = t1*q_hat.z   + t2*(r*q_hat.w + q*q_hat.x - p*q_hat.y);
 			// Euler Integration
 			// (Eq. 47a Mahoney Paper), but this is pretty straight-forward
 			/*
-quaternion_t qdot = {0.5f * (           - p*q_hat.x - q*q_hat.y -
-r*q_hat.z),
-                         0.5f * ( p*q_hat.w             +
-r*q_hat.y - q*q_hat.z),
-                         0.5f * ( q*q_hat.w - r*q_hat.x
-+ p*q_hat.z),
-                         0.5f * ( r*q_hat.w + q*q_hat.x -
-p*q_hat.y            )
-                        };
-*/
+      quaternion_t qdot = {0.5f * ( - p*q_hat.x - q*q_hat.y - r*q_hat.z),
+                                               0.5f * ( p*q_hat.w + r*q_hat.y -
+      q*q_hat.z),
+                                               0.5f * ( q*q_hat.w - r*q_hat.x +
+      p*q_hat.z),
+                                               0.5f * ( r*q_hat.w + q*q_hat.x -
+      p*q_hat.y)};
+      */
 
 			qdot.a = fix16_mul( _fc_0_5, fix16_add( fix16_mul( -p, q_hat.b ),
 													fix16_add( fix16_mul( -q, q_hat.c ),

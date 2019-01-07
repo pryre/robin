@@ -118,9 +118,9 @@ comm_send_ch(MAVLINK_COMM_0,ch)");
 void comm_send_ch( mavlink_channel_t chan, uint8_t ch ) {
 	/*
 if( chan == MAVLINK_COMM_0 ) {
-    comms_send(COMM_PORT_0, ch);
+comms_send(COMM_PORT_0, ch);
 } else if( chan == MAVLINK_COMM_1 ) {
-    comms_send(COMM_PORT_1, ch);
+comms_send(COMM_PORT_1, ch);
 }
 */
 
@@ -325,12 +325,12 @@ static bool lpq_queue_param_port( uint8_t port, uint32_t index ) {
 	}
 	/*
 } else {
-    if( micros() - _lpq.timer_param_warn_full > 1000000) {	//XXX:
+if( micros() - _lpq.timer_param_warn_full > 1000000) {	//XXX:
 Only outout the error at 1/s maximum otherwise buffer will never catch up
-            mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[COMMS]
+      mavlink_send_broadcast_statustext(MAV_SEVERITY_ERROR, "[COMMS]
 LPQ param message dropped!");
-            _lpq.timer_param_warn_full = micros();
-    }
+      _lpq.timer_param_warn_full = micros();
+}
 }
 */
 	return success;

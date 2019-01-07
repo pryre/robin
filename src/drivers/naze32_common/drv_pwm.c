@@ -322,7 +322,7 @@ void pwmInit( io_def_t* io_map, bool usePwmFilter, uint32_t motorPwmRate,
 // determine motor writer function
 pwmWritePtr = pwmWriteStandard;
 if (motorPwmRate > 500) {
-    pwmWritePtr = pwmWriteBrushed;
+pwmWritePtr = pwmWriteBrushed;
 }
 */
 }
@@ -330,7 +330,7 @@ if (motorPwmRate > 500) {
 void pwmWriteMotor( uint8_t index, uint16_t value ) {
 	/*
 if (index < numMotors)
-    pwmWritePtr(index, value);
+pwmWritePtr(index, value);
 */
 	if ( index < numMotors )
 		pwmWriteStandard( index, value );

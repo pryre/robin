@@ -20,17 +20,17 @@ void status_led_heart_init( void ) {
 void status_buzzer_init() {
 	/*
 #ifdef USE_ALSA_SOUND
-    // Configure Output Device
-    audio_sink_handle = Audio_openDevice();
+// Configure Output Device
+audio_sink_handle = Audio_openDevice();
 
-    Audio_readWaveFileIntoMemory(AUDIO_FILE_BEEP, &beepFile);
+Audio_readWaveFileIntoMemory(AUDIO_FILE_BEEP, &beepFile);
 
-    // Cleanup, letting the music in buffer play out (drain), then close
+// Cleanup, letting the music in buffer play out (drain), then close
 and free.
-    //snd_pcm_drain(handle);
-    //snd_pcm_hw_free(handle);
-    //snd_pcm_close(handle);
-    //free(sampleFile.pData);
+//snd_pcm_drain(handle);
+//snd_pcm_hw_free(handle);
+//snd_pcm_close(handle);
+//free(sampleFile.pData);
 #endif
 */
 }
