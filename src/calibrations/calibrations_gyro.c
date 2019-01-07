@@ -30,7 +30,8 @@ bool calibrate_gyro( void ) {
 		int gyro_z_bias = _calibrations.data.gyro.sum_z / _calibrations.data.gyro.count;
 
 		if ( ( abs( gyro_x_bias ) > CAL_GYRO_HIGH_BIAS ) || ( abs( gyro_y_bias ) > CAL_GYRO_HIGH_BIAS ) || ( abs( gyro_z_bias ) > CAL_GYRO_HIGH_BIAS ) ) {
-			mavlink_queue_broadcast_error( "[SENSOR] Warning: high gyro biases detected!" );
+			mavlink_queue_broadcast_error(
+				"[SENSOR] Warning: high gyro biases detected!" );
 		}
 
 		set_param_int( PARAM_GYRO_X_BIAS, gyro_x_bias );

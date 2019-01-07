@@ -38,7 +38,8 @@ typedef struct {
 
 extern fix16_t _io_pin_states[8];
 
-//XXX: status_devices_init() calls the other init() to do hardware specific setup
+// XXX: status_devices_init() calls the other init() to do hardware specific
+// setup
 void status_devices_init( void );
 void status_led_arm_init( void );
 void status_led_heart_init( void );
@@ -50,7 +51,7 @@ void status_buzzer_set( bool on );
 
 void status_buzzer_success( void );
 void status_buzzer_failure( void );
-//void status_buzzer_set( int8_t num, uint32_t period );
+// void status_buzzer_set( int8_t num, uint32_t period );
 
 void status_devices_run( uint32_t time_now );
 

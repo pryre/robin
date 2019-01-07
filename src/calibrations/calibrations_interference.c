@@ -13,7 +13,7 @@ sensor_readings_t _sensors;
 bool calibrate_interference( void ) {
 	bool failed = false;
 
-	//TODO CAL INTERFERENCE
+	// TODO CAL INTERFERENCE
 	calibration_done();
 
 	return !failed;

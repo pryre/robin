@@ -56,7 +56,8 @@ param_gen:
 	@python3 lib/param_generator/gen_params.py ./lib/param_generator/definitions/ ./build/ >&2
 
 lint:
-	@./lib/scripts/lint.sh
+	@find ./include -name '*.h' -exec clang-format -i '{}' \;
+	@find ./src -name '*.c' -exec clang-format -i '{}' \;
 
 clean:
 	@rm -rf ./build

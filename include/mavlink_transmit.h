@@ -37,7 +37,8 @@ typedef enum {
 
 // function declarations
 void communication_transmit( uint32_t time_us );
-void communication_calc_period_update( uint8_t comm_port, mavlink_stream_id_t stream_id );
+void communication_calc_period_update( uint8_t comm_port,
+									   mavlink_stream_id_t stream_id );
 
 #ifdef __cplusplus
 }

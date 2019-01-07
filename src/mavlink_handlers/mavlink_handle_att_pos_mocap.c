@@ -13,18 +13,20 @@ extern "C" {
 
 sensor_readings_t _sensors;
 
-void mavlink_handle_att_pos_mocap( mavlink_channel_t chan, mavlink_message_t* msg, mavlink_status_t* status ) {
+void mavlink_handle_att_pos_mocap( mavlink_channel_t chan,
+								   mavlink_message_t* msg,
+								   mavlink_status_t* status ) {
 	_sensors.ext_pose.status.present = true;
 
-	//TODO: Check timestamp was recent before accepting
+	// TODO: Check timestamp was recent before accepting
 	_sensors.ext_pose.status.time_read = system_micros();
 
-	//Position
+	// Position
 	_sensors.ext_pose.p.x = fix16_from_float( mavlink_msg_att_pos_mocap_get_x( msg ) );
 	_sensors.ext_pose.p.y = fix16_from_float( mavlink_msg_att_pos_mocap_get_y( msg ) );
 	_sensors.ext_pose.p.z = fix16_from_float( mavlink_msg_att_pos_mocap_get_z( msg ) );
 
-	//Attitude
+	// Attitude
 	float qt_float[4];
 	qf16 qt_fix;
 	mavlink_msg_att_pos_mocap_get_q( msg, &qt_float[0] );
@@ -36,7 +38,7 @@ void mavlink_handle_att_pos_mocap( mavlink_channel_t chan, mavlink_message_t* ms
 
 	qf16_normalize_to_unit( &_sensors.ext_pose.q, &qt_fix );
 
-	//Update Sensor
+	// Update Sensor
 	safety_update_sensor( &_system_status.sensors.ext_pose );
 	_sensors.ext_pose.status.new_data = true;
 }

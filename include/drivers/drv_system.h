@@ -21,7 +21,7 @@ uint64_t system_unique_id( void );
 
 int system_debug_print( const char* format, ... );
 
-//XXX: Used in systems (such as posix) to not overload the CPU
+// XXX: Used in systems (such as posix) to not overload the CPU
 void system_rate_limit( void );
 
 #ifdef __cplusplus

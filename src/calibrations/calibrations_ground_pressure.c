@@ -13,7 +13,7 @@ sensor_readings_t _sensors;
 bool calibrate_ground_pressure( void ) {
 	bool failed = false;
 
-	//TODO CAL BAROMETER
+	// TODO CAL BAROMETER
 	calibration_done();
 
 	return !failed;

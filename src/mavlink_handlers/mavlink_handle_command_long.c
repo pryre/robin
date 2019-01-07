@@ -7,8 +7,9 @@ extern "C" {
 
 #include "drivers/drv_status_io.h"
 
-void mavlink_handle_command_long( mavlink_channel_t chan, mavlink_message_t* msg, mavlink_status_t* status ) {
-	//A command should always have an acknowledge
+void mavlink_handle_command_long( mavlink_channel_t chan, mavlink_message_t* msg,
+								  mavlink_status_t* status ) {
+	// A command should always have an acknowledge
 	MAV_RESULT command_result = MAV_RESULT_ENUM_END;
 	uint16_t command = mavlink_msg_command_long_get_command( msg );
 
@@ -23,7 +24,8 @@ void mavlink_handle_command_long( mavlink_channel_t chan, mavlink_message_t* msg
 
 	switch ( command ) {
 	case MAV_CMD_PREFLIGHT_CALIBRATION: {
-		command_result = mavlink_handle_command_long_preflight_calibration( chan, params, msg->sysid, msg->compid );
+		command_result = mavlink_handle_command_long_preflight_calibration(
+			chan, params, msg->sysid, msg->compid );
 		break;
 	}
 	case MAV_CMD_DO_SET_MODE: {
@@ -39,7 +41,8 @@ void mavlink_handle_command_long( mavlink_channel_t chan, mavlink_message_t* msg
 		break;
 	}
 	case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES: {
-		command_result = mavlink_handle_command_long_request_autopilot_capabilities( chan, params );
+		command_result = mavlink_handle_command_long_request_autopilot_capabilities(
+			chan, params );
 		break;
 	}
 	case MAV_CMD_GET_HOME_POSITION: {
@@ -51,7 +54,8 @@ void mavlink_handle_command_long( mavlink_channel_t chan, mavlink_message_t* msg
 		break;
 	}
 	case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN: {
-		command_result = mavlink_handle_command_long_reboot_shutdown( chan, params, msg->sysid, msg->compid );
+		command_result = mavlink_handle_command_long_reboot_shutdown(
+			chan, params, msg->sysid, msg->compid );
 		break;
 	}
 	case MAV_CMD_COMPONENT_ARM_DISARM: {
@@ -66,7 +70,8 @@ void mavlink_handle_command_long( mavlink_channel_t chan, mavlink_message_t* msg
 
 	if ( command_result < MAV_RESULT_ENUM_END ) {
 		mavlink_message_t msg_out;
-		mavlink_prepare_command_ack( &msg_out, command, command_result, msg->sysid, msg->compid, 0xFF );
+		mavlink_prepare_command_ack( &msg_out, command, command_result, msg->sysid,
+									 msg->compid, 0xFF );
 		lpq_queue_msg( chan, &msg_out );
 
 		if ( command_result == MAV_RESULT_ACCEPTED ) {

@@ -13,20 +13,25 @@ extern "C" {
 
 command_input_t _cmd_ob_input;
 
-void mavlink_handle_set_attitude_target( mavlink_channel_t chan, mavlink_message_t* msg, mavlink_status_t* status ) {
+void mavlink_handle_set_attitude_target( mavlink_channel_t chan,
+										 mavlink_message_t* msg,
+										 mavlink_status_t* status ) {
 	if ( ( mavlink_msg_set_attitude_target_get_target_system( msg ) == mavlink_system.sysid ) && ( mavlink_msg_set_attitude_target_get_target_component( msg ) == mavlink_system.compid ) ) {
 
-		//TODO: Check timestamp was recent before accepting
+		// TODO: Check timestamp was recent before accepting
 
-		//Input Mask
+		// Input Mask
 		_cmd_ob_input.input_mask = mavlink_msg_set_attitude_target_get_type_mask( msg );
 
-		//Rates
-		_cmd_ob_input.r = fix16_from_float( mavlink_msg_set_attitude_target_get_body_roll_rate( msg ) );
-		_cmd_ob_input.p = fix16_from_float( mavlink_msg_set_attitude_target_get_body_pitch_rate( msg ) );
-		_cmd_ob_input.y = fix16_from_float( mavlink_msg_set_attitude_target_get_body_yaw_rate( msg ) );
+		// Rates
+		_cmd_ob_input.r = fix16_from_float(
+			mavlink_msg_set_attitude_target_get_body_roll_rate( msg ) );
+		_cmd_ob_input.p = fix16_from_float(
+			mavlink_msg_set_attitude_target_get_body_pitch_rate( msg ) );
+		_cmd_ob_input.y = fix16_from_float(
+			mavlink_msg_set_attitude_target_get_body_yaw_rate( msg ) );
 
-		//Attitude
+		// Attitude
 		float qt_float[4];
 		qf16 qt_fix;
 		mavlink_msg_set_attitude_target_get_q( msg, &qt_float[0] );
@@ -38,10 +43,10 @@ void mavlink_handle_set_attitude_target( mavlink_channel_t chan, mavlink_message
 
 		qf16_normalize_to_unit( &_cmd_ob_input.q, &qt_fix );
 
-		//Trottle
+		// Trottle
 		_cmd_ob_input.T = fix16_from_float( mavlink_msg_set_attitude_target_get_thrust( msg ) );
 
-		//Update Sensor
+		// Update Sensor
 		safety_update_sensor( &_system_status.sensors.offboard_control );
 	}
 }

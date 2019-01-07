@@ -12,11 +12,12 @@ extern "C" {
 const mixer_t mixer_none = {
 	false,
 
-	//Ch1, Ch2,  Ch3,  Ch4,  Ch5,  Ch6,  Ch7,  Ch8
-	{IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N}, // output_type
+	// Ch1, Ch2,  Ch3,  Ch4,  Ch5,  Ch6,  Ch7,  Ch8
+	{IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N, IO_TYPE_N,
+	 IO_TYPE_N, IO_TYPE_N}, // output_type
 
-	//Channels
-	//1, 2, 3, 4, 5, 6, 7, 8
+	// Channels
+	// 1, 2, 3, 4, 5, 6, 7, 8
 	{0, 0, 0, 0, 0, 0, 0, 0}, // F Mix
 	{0, 0, 0, 0, 0, 0, 0, 0}, // X Mix
 	{0, 0, 0, 0, 0, 0, 0, 0}, // Y Mix

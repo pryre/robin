@@ -13,7 +13,7 @@ sensor_readings_t _sensors;
 bool calibrate_magnetometer( void ) {
 	bool failed = false;
 
-	//TODO CAL MAG
+	// TODO CAL MAG
 	calibration_done();
 
 	return !failed;

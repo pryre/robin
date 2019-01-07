@@ -7,10 +7,11 @@ extern "C" {
 
 #include "safety.h"
 
-MAV_RESULT mavlink_handle_command_long_set_mode( mavlink_channel_t chan, float* params ) {
+MAV_RESULT mavlink_handle_command_long_set_mode( mavlink_channel_t chan,
+												 float* params ) {
 	MAV_RESULT command_result = MAV_RESULT_ENUM_END;
 
-	//XXX: We only use custom mode
+	// XXX: We only use custom mode
 	uint8_t base_mode = (int)params[0];
 	uint8_t custom_mode = (int)params[1];
 
@@ -22,7 +23,8 @@ MAV_RESULT mavlink_handle_command_long_set_mode( mavlink_channel_t chan, float* 
 			command_result = MAV_RESULT_DENIED;
 		}
 	} else {
-		mavlink_send_broadcast_statustext( MAV_SEVERITY_ERROR, "[SAFETY] Unsupported mode" );
+		mavlink_send_broadcast_statustext( MAV_SEVERITY_ERROR,
+										   "[SAFETY] Unsupported mode" );
 		command_result = MAV_RESULT_FAILED;
 	}
 

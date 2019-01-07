@@ -17,7 +17,9 @@ fix16_t _actuator_control_g3[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g4[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];
 
-void mavlink_handle_set_actuator_control_target( mavlink_channel_t chan, mavlink_message_t* msg, mavlink_status_t* status ) {
+void mavlink_handle_set_actuator_control_target( mavlink_channel_t chan,
+												 mavlink_message_t* msg,
+												 mavlink_status_t* status ) {
 	if ( ( mavlink_msg_set_actuator_control_target_get_target_system( msg ) == mavlink_system.sysid ) && ( mavlink_msg_set_actuator_control_target_get_target_component( msg ) == mavlink_system.compid ) ) {
 
 		float act_float[8];
@@ -35,7 +37,8 @@ void mavlink_handle_set_actuator_control_target( mavlink_channel_t chan, mavlink
 			safety_update_sensor( &_system_status.sensors.offboard_mixer_g1_control );
 		} else if ( mavlink_msg_set_actuator_control_target_get_group_mlx( msg ) == 4 ) {
 			if ( !got_actuator_g4 ) {
-				mavlink_queue_broadcast_info( "[MIXER] Accepted OB AUX PWM actuator control" );
+				mavlink_queue_broadcast_info(
+					"[MIXER] Accepted OB AUX PWM actuator control" );
 				got_actuator_g4 = true;
 			}
 
@@ -43,7 +46,8 @@ void mavlink_handle_set_actuator_control_target( mavlink_channel_t chan, mavlink
 				_actuator_control_g4[i] = fix16_from_float( act_float[i] );
 		} else if ( mavlink_msg_set_actuator_control_target_get_group_mlx( msg ) == 5 ) {
 			if ( !got_actuator_g5 ) {
-				mavlink_queue_broadcast_info( "[MIXER] Accepted OB AUX digital actuator control" );
+				mavlink_queue_broadcast_info(
+					"[MIXER] Accepted OB AUX digital actuator control" );
 				got_actuator_g5 = true;
 			}
 

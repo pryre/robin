@@ -11,8 +11,8 @@ extern "C" {
 #include "fix16.h"
 #include "param_gen.h"
 
-//This needs to be 1 less, as we need to allow space for '\n'
-//MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1
+// This needs to be 1 less, as we need to allow space for '\n'
+// MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN + 1
 #define PARAMS_NAME_LENGTH MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
 
 // type definitions
@@ -52,9 +52,11 @@ bool set_param_uint( param_id_t id, uint32_t value );
 bool set_param_int( param_id_t id, int32_t value );
 bool set_param_fix16( param_id_t id, fix16_t value );
 
-bool set_param_by_name_uint( const char name[PARAMS_NAME_LENGTH], uint32_t value );
+bool set_param_by_name_uint( const char name[PARAMS_NAME_LENGTH],
+							 uint32_t value );
 bool set_param_by_name_int( const char name[PARAMS_NAME_LENGTH], int32_t value );
-bool set_param_by_name_fix16( const char name[PARAMS_NAME_LENGTH], fix16_t value );
+bool set_param_by_name_fix16( const char name[PARAMS_NAME_LENGTH],
+							  fix16_t value );
 
 #ifdef __cplusplus
 }

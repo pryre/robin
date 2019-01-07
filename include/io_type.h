@@ -9,12 +9,12 @@ extern "C" {
 #include <stdint.h>
 
 typedef enum {
-	IO_TYPE_N = 0, //None
-	IO_TYPE_IP,	//Input PPM
-	IO_TYPE_IW,	//Input PWM
-	IO_TYPE_OD,	//Output Digital
-	IO_TYPE_OM,	//Output Motor
-	IO_TYPE_OS	 //Output Servo
+	IO_TYPE_N = 0, // None
+	IO_TYPE_IP,	// Input PPM
+	IO_TYPE_IW,	// Input PWM
+	IO_TYPE_OD,	// Output Digital
+	IO_TYPE_OM,	// Output Motor
+	IO_TYPE_OS	 // Output Servo
 } io_type_t;
 
 typedef struct {

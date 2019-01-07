@@ -6,7 +6,7 @@ extern "C" {
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
-//XXX: LPQ was 12
+// XXX: LPQ was 12
 #define LOW_PRIORITY_QUEUE_SIZE 8
 #define LOW_PRIORITY_QUEUE_PARAMS_SIZE 32
 
@@ -52,22 +52,25 @@ void comms_send_msg( mavlink_channel_t chan );
 #include "mavlink/common/mavlink.h"
 
 //==-- On-demand messages
-void mavlink_send_statustext( mavlink_channel_t chan, uint8_t severity, char* text );
+void mavlink_send_statustext( mavlink_channel_t chan, uint8_t severity,
+							  char* text );
 void mavlink_send_broadcast_statustext( uint8_t severity, char* text );
 void mavlink_send_timesync( mavlink_channel_t chan, uint64_t tc1, uint64_t ts1 );
 
 //==-- Low priority message queue
 typedef struct {
-	uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE][MAVLINK_MAX_PACKET_LEN]; //List of buffered messages
-	uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE];					 //Lengths of buffered messages
+	uint8_t buffer[LOW_PRIORITY_QUEUE_SIZE]
+				  [MAVLINK_MAX_PACKET_LEN];		  // List of buffered messages
+	uint16_t buffer_len[LOW_PRIORITY_QUEUE_SIZE]; // Lengths of buffered messages
 	uint8_t buffer_port[LOW_PRIORITY_QUEUE_SIZE];
-	uint16_t position; //Current position in the queue
-	uint16_t length;   //Current length of the queue						//List representing which comm port to send message to
+	uint16_t position; // Current position in the queue
+	uint16_t length;   // Current length of the queue
+	// //List representing which comm port to send message to
 
 	uint32_t param_buffer[LOW_PRIORITY_QUEUE_PARAMS_SIZE];
 	uint8_t param_buffer_port[LOW_PRIORITY_QUEUE_PARAMS_SIZE];
-	uint16_t param_position; //Current position in the queue
-	uint16_t param_length;   //Current length of the queue
+	uint16_t param_position; // Current position in the queue
+	uint16_t param_length;   // Current length of the queue
 	int32_t request_all_params_port0;
 	int32_t request_all_params_port1;
 
@@ -107,12 +110,16 @@ void mavlink_prepare_protocol_version( mavlink_message_t* msg );
 void mavlink_prepare_autopilot_version( mavlink_message_t* msg );
 
 void mavlink_prepare_home_position( mavlink_message_t* msg );
-//void mavlink_prepare_scaled_pressure(mavlink_message_t *msg);
+// void mavlink_prepare_scaled_pressure(mavlink_message_t *msg);
 
-void mavlink_prepare_command_ack( mavlink_message_t* msg, uint16_t command, uint8_t result, uint8_t sender_sysid, uint8_t sender_compid, uint8_t progress );
+void mavlink_prepare_command_ack( mavlink_message_t* msg, uint16_t command,
+								  uint8_t result, uint8_t sender_sysid,
+								  uint8_t sender_compid, uint8_t progress );
 void mavlink_prepare_param_value( mavlink_message_t* msg, uint32_t index );
-void mavlink_prepare_statustext( mavlink_message_t* msg, uint8_t severity, char* text );
-void mavlink_prepare_debug( mavlink_message_t* msg, uint32_t stamp, uint8_t index, uint32_t value );
+void mavlink_prepare_statustext( mavlink_message_t* msg, uint8_t severity,
+								 char* text );
+void mavlink_prepare_debug( mavlink_message_t* msg, uint32_t stamp,
+							uint8_t index, uint32_t value );
 
 #ifdef __cplusplus
 }

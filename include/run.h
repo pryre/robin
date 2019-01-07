@@ -12,10 +12,10 @@ The sofware itself can be implemented similarly to:
 #include <stdbool.h>
 
 int main(void) {
-	setup();
+        setup();
 
-	while (true)
-		loop();
+        while (true)
+                loop();
 }
 */
 

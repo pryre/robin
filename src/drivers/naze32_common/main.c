@@ -2,13 +2,13 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
 #include <run.h>
+#include <stdbool.h>
 
-int main(void) {
+int main( void ) {
 	setup();
 
-	while(true)
+	while ( true )
 		loop();
 }
 

@@ -12,31 +12,31 @@ extern "C" {
 #include "fixvector3d.h"
 //#include "breezystm32.h"
 
-//RC CAL DEFINES
+// RC CAL DEFINES
 #define SENSOR_RC_CAL_MIN 0
 #define SENSOR_RC_CAL_MID 1
 #define SENSOR_RC_CAL_MAX 2
 
-//XXX: Defined in MAV_CMD_PREFLIGHT_CALIBRATION
-//Param1
+// XXX: Defined in MAV_CMD_PREFLIGHT_CALIBRATION
+// Param1
 #define CAL_CMD_GYRO 1
 #define CAL_CMD_GYRO_TEMP 3
-//Param2
+// Param2
 #define CAL_CMD_MAG 1
-//Param3
+// Param3
 #define CAL_CMD_PRESSURE_GND 1
-//Param4
+// Param4
 #define CAL_CMD_RC 1
 #define CAL_CMD_RC_TRIM 2
-//Param5
+// Param5
 #define CAL_CMD_ACCEL 1
 #define CAL_CMD_ACCEL_LEVEL 2
 #define CAL_CMD_ACCEL_TEMP 3
 #define CAL_CMD_ACCEL_SIMPLE 4
-//Param6
+// Param6
 #define CAL_CMD_COMPASS_MOTOR 1
 #define CAL_CMD_AIRPSEED 2
-//Param7
+// Param7
 #define CAL_CMD_ESC 1
 #define CAL_CMD_BAROMETER 3
 
@@ -117,7 +117,7 @@ typedef struct {
 
 	bool waiting;
 
-	//uint16_t acc1G;
+	// uint16_t acc1G;
 	fix16_t temp_scale;
 	fix16_t temp_shift;
 } calibration_accel_data_t;

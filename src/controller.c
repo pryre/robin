@@ -64,17 +64,21 @@ static void controller_set_input_failsafe( command_input_t* input ) {
 	input->q.c = 0;
 	input->q.d = 0;
 	input->T = get_param_fix16( PARAM_FAILSAFE_THROTTLE );
-	input->input_mask |= CMD_IN_IGNORE_ATTITUDE; //Set it to just hold rpy rates (as this skips unnessessary computing during boot, and is possibly safer)
+	input->input_mask |= CMD_IN_IGNORE_ATTITUDE; // Set it to just hold rpy rates
+												 // (as this skips unnessessary
+												 // computing during boot, and is
+												 // possibly safer)
 }
 
-//Technique adapted from the Pixhawk multirotor control scheme (~December 2018)
-static void rates_from_attitude( v3d* rates, const qf16* q_sp, const qf16* q, const fix16_t yaw_w ) {
+// Technique adapted from the Pixhawk multirotor control scheme (~December 2018)
+static void rates_from_attitude( v3d* rates, const qf16* q_sp, const qf16* q,
+								 const fix16_t yaw_w ) {
 	/*
-	XXX: Shorthand method that doesn't allow for separate yaw tuning
-	v3d e_R;
-	qf16_basis_error(&e_R, q, q_sp);
-	v3d_mul_s( rates, &e_R, get_param_fix16(PARAM_MC_ANGLE_P) );
-	*/
+XXX: Shorthand method that doesn't allow for separate yaw tuning
+v3d e_R;
+qf16_basis_error(&e_R, q, q_sp);
+v3d_mul_s( rates, &e_R, get_param_fix16(PARAM_MC_ANGLE_P) );
+*/
 
 	v3d e_z;
 	v3d e_z_d;
@@ -85,11 +89,13 @@ static void rates_from_attitude( v3d* rates, const qf16* q_sp, const qf16* q, co
 	qf16_from_shortest_path( &qd_red, &e_z, &e_z_d );
 	qf16_normalize_to_unit( &qd_red, &qd_red );
 
-	//Handle co-linear vectoring cases
+	// Handle co-linear vectoring cases
 	if ( ( fix16_abs( qd_red.b ) >= _fc_epsilon ) || ( fix16_abs( qd_red.c ) >= _fc_epsilon ) ) {
 		// They are in opposite directions which presents an ambiguous solution
-		// The best we can momenterily is to just accept bad weightings from the mixing and
-		// do the 'best' movement possible for 1 time step until things can be calculated
+		// The best we can momenterily is to just accept bad weightings from the
+		// mixing and
+		// do the 'best' movement possible for 1 time step until things can be
+		// calculated
 		qd_red = *q_sp;
 	} else {
 		// Transform rotation from current to desired thrust vector into a world
@@ -128,28 +134,28 @@ static void rates_from_attitude( v3d* rates, const qf16* q_sp, const qf16* q, co
 }
 
 static void controller_run( uint32_t time_now ) {
-	//Variables that store the computed attitude goal rates
+	// Variables that store the computed attitude goal rates
 	fix16_t goal_r = 0;
 	fix16_t goal_p = 0;
 	fix16_t goal_y = 0;
 	fix16_t goal_throttle = 0;
 
 	command_input_t input;
-	controller_set_input_failsafe( &input ); //Failsafe input to be safe
+	controller_set_input_failsafe( &input ); // Failsafe input to be safe
 
-	//Handle controller input
+	// Handle controller input
 	if ( _system_status.state != MAV_STATE_CRITICAL ) {
 		//_system_status.mode |= MAV_MODE_FLAG_MANUAL_ENABLED
 		switch ( _system_status.control_mode ) {
 		case MAIN_MODE_OFFBOARD: {
-			//Offboard mode
+			// Offboard mode
 			input = _cmd_ob_input;
 
 			break;
 		}
 		case MAIN_MODE_STABILIZED: {
-			//Manual stabilize mode
-			//Roll/pitch angle and yaw rate
+			// Manual stabilize mode
+			// Roll/pitch angle and yaw rate
 			input.input_mask = 0;
 			input.input_mask |= CMD_IN_IGNORE_ROLL_RATE;
 			input.input_mask |= CMD_IN_IGNORE_PITCH_RATE;
@@ -168,8 +174,8 @@ static void controller_run( uint32_t time_now ) {
 			break;
 		}
 		case MAIN_MODE_ACRO: {
-			//Manual acro mode
-			//Roll/pitch/yaw rate
+			// Manual acro mode
+			// Roll/pitch/yaw rate
 			input.input_mask = 0;
 			input.input_mask |= CMD_IN_IGNORE_ATTITUDE;
 
@@ -187,109 +193,116 @@ static void controller_run( uint32_t time_now ) {
 			break;
 		}
 		default: {
-			//Keep failsafe
+			// Keep failsafe
 			break;
 		}
 		}
 	}
 
-	fix16_t dt = fix16_from_float( 1e-6 * (float)( time_now - _control_timing.time_last ) ); //Delta time in seconds
+	fix16_t dt = fix16_from_float(
+		1e-6 * (float)( time_now - _control_timing.time_last ) ); // Delta time in seconds
 
 	if ( ( dt == 0 ) || ( time_now - _control_timing.time_last > _control_timing.period_stale ) ) {
 		dt = 0;
 		controller_reset();
 	}
 
-	//Get the control input mask to use
+	// Get the control input mask to use
 	_control_input.input_mask = input.input_mask;
 
 	//==-- Throttle Control
-	//Trottle
+	// Trottle
 	if ( !( _control_input.input_mask & CMD_IN_IGNORE_THROTTLE ) ) {
-		//Use the commanded throttle
+		// Use the commanded throttle
 		goal_throttle = input.T;
 	}
 
 	_control_output.T = goal_throttle;
 
-	//Save intermittent goals
+	// Save intermittent goals
 	_control_input.T = goal_throttle;
 
-	//Don't allow for derivative or integral calculations if
+	// Don't allow for derivative or integral calculations if
 	// there is a very low throttle
 	if ( goal_throttle < _fc_0_05 ) {
 		dt = 0;
 	}
 
 	//==-- Attitude Control
-	//Save intermittent goals
+	// Save intermittent goals
 	qf16_normalize_to_unit( &_control_input.q, &input.q );
 
-	//If we should listen to attitude input
+	// If we should listen to attitude input
 	if ( !( _control_input.input_mask & CMD_IN_IGNORE_ATTITUDE ) ) {
 		fix16_t yaw_w = get_param_fix16( PARAM_MC_ANGLE_YAW_W );
 
-		//If we are going to override the calculated yaw rate, just ignore it
+		// If we are going to override the calculated yaw rate, just ignore it
 		if ( !( _control_input.input_mask & CMD_IN_IGNORE_YAW_RATE ) ) {
 			yaw_w = 0;
 		}
 
 		v3d rates_sp;
-		rates_from_attitude( &rates_sp, &_control_input.q, &_state_estimator.attitude, yaw_w );
+		rates_from_attitude( &rates_sp, &_control_input.q,
+							 &_state_estimator.attitude, yaw_w );
 
-		//Set goal rates
+		// Set goal rates
 		goal_r = rates_sp.x;
 		goal_p = rates_sp.y;
 		goal_y = rates_sp.z;
 
-		//If we're in offboard mode, and we aren't going to override yaw rate, and we want to fuse
-		//XXX: Ideally this would be handled as an additional case using the IGNORE flags, somehow...
+		// If we're in offboard mode, and we aren't going to override yaw rate, and
+		// we want to fuse
+		// XXX: Ideally this would be handled as an additional case using the IGNORE
+		// flags, somehow...
 		if ( ( _system_status.control_mode == MAIN_MODE_OFFBOARD ) && ( _control_input.input_mask & CMD_IN_IGNORE_YAW_RATE ) && get_param_uint( PARAM_CONTROL_OB_FUSE_YAW_RATE ) ) {
-			//Add in the additional yaw rate input
+			// Add in the additional yaw rate input
 			goal_y = fix16_add( goal_y, input.y );
 		}
 	}
 
 	//==-- Rate Control PIDs
-	//Roll Rate
+	// Roll Rate
 	if ( !( _control_input.input_mask & CMD_IN_IGNORE_ROLL_RATE ) ) {
-		//Use the commanded roll rate goal
+		// Use the commanded roll rate goal
 		goal_r = input.r;
 	}
 
-	//Pitch Rate
+	// Pitch Rate
 	if ( !( _control_input.input_mask & CMD_IN_IGNORE_PITCH_RATE ) ) {
-		//Use the commanded pitch rate goal
+		// Use the commanded pitch rate goal
 		goal_p = input.p;
 	}
 
-	//Yaw Rate
+	// Yaw Rate
 	if ( !( _control_input.input_mask & CMD_IN_IGNORE_YAW_RATE ) ) {
-		//Use the commanded yaw rate goal
+		// Use the commanded yaw rate goal
 		goal_y = input.y;
 	} else
 
-		//Constrain rates to set params
-		goal_r = fix16_constrain( goal_r, -get_param_fix16( PARAM_MAX_ROLL_RATE ), get_param_fix16( PARAM_MAX_ROLL_RATE ) );
-	goal_p = fix16_constrain( goal_p, -get_param_fix16( PARAM_MAX_PITCH_RATE ), get_param_fix16( PARAM_MAX_PITCH_RATE ) );
-	goal_y = fix16_constrain( goal_y, -get_param_fix16( PARAM_MAX_YAW_RATE ), get_param_fix16( PARAM_MAX_YAW_RATE ) );
+		// Constrain rates to set params
+		goal_r = fix16_constrain( goal_r, -get_param_fix16( PARAM_MAX_ROLL_RATE ),
+								  get_param_fix16( PARAM_MAX_ROLL_RATE ) );
+	goal_p = fix16_constrain( goal_p, -get_param_fix16( PARAM_MAX_PITCH_RATE ),
+							  get_param_fix16( PARAM_MAX_PITCH_RATE ) );
+	goal_y = fix16_constrain( goal_y, -get_param_fix16( PARAM_MAX_YAW_RATE ),
+							  get_param_fix16( PARAM_MAX_YAW_RATE ) );
 
-	//Save intermittent goals
+	// Save intermittent goals
 	_control_input.r = goal_r;
 	_control_input.p = goal_p;
 	_control_input.y = goal_y;
 
-	//Rate PID Controllers
+	// Rate PID Controllers
 	fix16_t command_r = pid_step( &_pid_roll_rate, dt, goal_r, _state_estimator.p );
 	fix16_t command_p = pid_step( &_pid_pitch_rate, dt, goal_p, _state_estimator.q );
 	fix16_t command_y = pid_step( &_pid_yaw_rate, dt, goal_y, _state_estimator.r );
 
-	//XXX:
+	// XXX:
 	//"Post-Scale/Normalize" the commands to act within
-	//a range that is approriate for the motors. This
-	//allows us to have higher PID gains for the rates
+	// a range that is approriate for the motors. This
+	// allows us to have higher PID gains for the rates
 	//(by a factor of 100), and avoids complications
-	//of getting close to the fixed-point step size
+	// of getting close to the fixed-point step size
 	_control_output.r = fix16_div( command_r, _fc_100 );
 	_control_output.p = fix16_div( command_p, _fc_100 );
 	_control_output.y = fix16_div( command_y, _fc_100 );
@@ -299,29 +312,26 @@ void control_init( void ) {
 	_system_status.control_mode = 0;
 	_control_timing.time_last = 0;
 	_control_timing.period_update = 1000 * fix16_to_int( fix16_div( _fc_1000, get_param_fix16( PARAM_RATE_CONTROL ) ) );
-	_control_timing.period_stale = 4 * _control_timing.period_update; //Allow for some variance in update rate
+	_control_timing.period_stale = 4 * _control_timing.period_update; // Allow for some variance in update rate
 	_control_timing.average_update = 0;
 
-	pid_init( &_pid_roll_rate,
-			  get_param_fix16( PARAM_PID_ROLL_RATE_P ),
+	pid_init( &_pid_roll_rate, get_param_fix16( PARAM_PID_ROLL_RATE_P ),
 			  get_param_fix16( PARAM_PID_ROLL_RATE_I ),
-			  get_param_fix16( PARAM_PID_ROLL_RATE_D ),
-			  _state_estimator.p,
-			  0, 0, -_fc_100, _fc_100 ); //XXX: Mixer input is normalized from 100/-100 to 1/-1
+			  get_param_fix16( PARAM_PID_ROLL_RATE_D ), _state_estimator.p, 0, 0,
+			  -_fc_100,
+			  _fc_100 ); // XXX: Mixer input is normalized from 100/-100 to 1/-1
 
-	pid_init( &_pid_pitch_rate,
-			  get_param_fix16( PARAM_PID_PITCH_RATE_P ),
+	pid_init( &_pid_pitch_rate, get_param_fix16( PARAM_PID_PITCH_RATE_P ),
 			  get_param_fix16( PARAM_PID_PITCH_RATE_I ),
-			  get_param_fix16( PARAM_PID_PITCH_RATE_D ),
-			  _state_estimator.q,
-			  0, 0, -_fc_100, _fc_100 ); //XXX: Mixer input is normalized from 100/-100 to 1/-1
+			  get_param_fix16( PARAM_PID_PITCH_RATE_D ), _state_estimator.q, 0, 0,
+			  -_fc_100,
+			  _fc_100 ); // XXX: Mixer input is normalized from 100/-100 to 1/-1
 
-	pid_init( &_pid_yaw_rate,
-			  get_param_fix16( PARAM_PID_YAW_RATE_P ),
+	pid_init( &_pid_yaw_rate, get_param_fix16( PARAM_PID_YAW_RATE_P ),
 			  get_param_fix16( PARAM_PID_YAW_RATE_I ),
-			  get_param_fix16( PARAM_PID_YAW_RATE_D ),
-			  _state_estimator.r,
-			  0, 0, -_fc_100, _fc_100 ); //XXX: Mixer input is normalized from 100/-100 to 1/-1
+			  get_param_fix16( PARAM_PID_YAW_RATE_D ), _state_estimator.r, 0, 0,
+			  -_fc_100,
+			  _fc_100 ); // XXX: Mixer input is normalized from 100/-100 to 1/-1
 
 	_cmd_ob_input.r = 0;
 	_cmd_ob_input.p = 0;
@@ -338,20 +348,24 @@ void control_init( void ) {
 }
 
 void control_run( uint32_t now ) {
-	//Run the control loop at a slower frequency so it is more resilient against noise
+	// Run the control loop at a slower frequency so it is more resilient against
+	// noise
 	if ( ( now - _control_timing.time_last ) > _control_timing.period_update ) {
 		if ( ( safety_is_armed() ) && ( _system_status.state != MAV_STATE_EMERGENCY ) ) {
 			//==-- Update Controller
-			controller_run( sensors_clock_imu_int_get() ); //Apply the current commands and update the PID controllers
+			controller_run( sensors_clock_imu_int_get() ); // Apply the current commands
+														   // and update the PID
+														   // controllers
 		} else {
 			//==-- Reset Controller
-			controller_reset(); //Reset the PIDs and output flat 0s for control
+			controller_reset(); // Reset the PIDs and output flat 0s for control
 		}
 
 		calc_mixer_output();
 
-		//Calculate timings for feedback
-		_control_timing.average_update = fix16_div( _fc_1000, fix16_from_int( ( now - _control_timing.time_last ) / 1000 ) );
+		// Calculate timings for feedback
+		_control_timing.average_update = fix16_div(
+			_fc_1000, fix16_from_int( ( now - _control_timing.time_last ) / 1000 ) );
 
 		_control_timing.time_last = now;
 	}

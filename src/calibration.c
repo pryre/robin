@@ -53,7 +53,7 @@ void calibration_init( void ) {
 	_calibrations.data.rc.waiting = false;
 	_calibrations.data.rc.step = CAL_RC_RANGE_INIT;
 	for ( int i = 0; i < 8; i++ ) {
-		//XXX: Init all to "true stick centre"
+		// XXX: Init all to "true stick centre"
 		_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] = 1500;
 		_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MID] = 1500;
 		_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX] = 1500;
@@ -68,7 +68,8 @@ static bool calibration_request_state( void ) {
 	bool success = safety_request_state( MAV_STATE_CALIBRATING );
 
 	if ( !success ) {
-		mavlink_queue_broadcast_error( "[SENSOR] Cannot enter calibration in this mode!" );
+		mavlink_queue_broadcast_error(
+			"[SENSOR] Cannot enter calibration in this mode!" );
 	}
 
 	return success;
@@ -83,9 +84,7 @@ bool calibration_request( calibration_request_t req ) {
 		if ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
 			success = calibration_request_state();
 		} else {
-			strncpy( text_reason,
-					 "gyro",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
+			strncpy( text_reason, "gyro", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
 		}
 
 		break;
@@ -94,9 +93,7 @@ bool calibration_request( calibration_request_t req ) {
 		if ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) {
 			success = calibration_request_state();
 		} else {
-			strncpy( text_reason,
-					 "mag",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
+			strncpy( text_reason, "mag", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
 		}
 
 		break;
@@ -105,9 +102,7 @@ bool calibration_request( calibration_request_t req ) {
 		if ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) {
 			success = calibration_request_state();
 		} else {
-			strncpy( text_reason,
-					 "gnd press",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
+			strncpy( text_reason, "gnd press", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
 		}
 
 		break;
@@ -122,9 +117,7 @@ bool calibration_request( calibration_request_t req ) {
 				mavlink_queue_broadcast_error( "[SENSOR] RC mapping params no set" );
 			}
 
-			strncpy( text_reason,
-					 "rc",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
+			strncpy( text_reason, "rc", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
 		}
 
 		break;
@@ -133,9 +126,7 @@ bool calibration_request( calibration_request_t req ) {
 		if ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
 			success = calibration_request_state();
 		} else {
-			strncpy( text_reason,
-					 "accel",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
+			strncpy( text_reason, "accel", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
 		}
 
 		break;
@@ -144,15 +135,13 @@ bool calibration_request( calibration_request_t req ) {
 		if ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
 			success = calibration_request_state();
 		} else {
-			strncpy( text_reason,
-					 "level",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
+			strncpy( text_reason, "level", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
 		}
 
 		break;
 	}
 	case CAL_INTER: {
-		//TODO: Need to check sensors required are present
+		// TODO: Need to check sensors required are present
 		success = calibration_request_state();
 
 		break;
@@ -161,17 +150,12 @@ bool calibration_request( calibration_request_t req ) {
 		if ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) {
 			success = calibration_request_state();
 		} else {
-			strncpy( text_reason,
-					 "baro",
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
+			strncpy( text_reason, "baro", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN );
 		}
 
 		break;
 	}
-	default: {
-
-		break;
-	}
+	default: { break; }
 	}
 
 	if ( success ) {
@@ -179,7 +163,8 @@ bool calibration_request( calibration_request_t req ) {
 	} else {
 		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Cannot cal ";
 		strncat( text, text_reason, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1 );
-		strncat( text, " no input detected!", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1 );
+		strncat( text, " no input detected!",
+				 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1 );
 		mavlink_queue_broadcast_error( text );
 	}
 
@@ -189,15 +174,15 @@ bool calibration_request( calibration_request_t req ) {
 void calibration_done( void ) {
 	safety_request_state( MAV_STATE_STANDBY );
 
-	calibration_init(); //Reset calibration data
+	calibration_init(); // Reset calibration data
 }
 
-//TODO: This does not take into account temperature
-//Returns true if all calibrations are complete
+// TODO: This does not take into account temperature
+// Returns true if all calibrations are complete
 void calibration_run( void ) {
 	bool cal_mode_error = false;
 
-	//If we actually need to do a calibration
+	// If we actually need to do a calibration
 	if ( _calibrations.type != CAL_NONE ) {
 		switch ( _calibrations.type ) {
 		case CAL_GYRO: {
@@ -243,28 +228,34 @@ void calibration_run( void ) {
 		default: {
 			calibration_done();
 			cal_mode_error = true;
-			mavlink_queue_broadcast_error( "[SENSOR] Invalid calibration mode, clearing" );
+			mavlink_queue_broadcast_error(
+				"[SENSOR] Invalid calibration mode, clearing" );
 
 			break;
 		}
 		}
 
-		//If there was a calibration running, but it finished this pass
+		// If there was a calibration running, but it finished this pass
 		if ( _calibrations.type == CAL_NONE ) {
 			mavlink_message_t msg;
 
 			if ( _system_status.state == MAV_STATE_CALIBRATING ) {
 				calibration_done();
-				mavlink_queue_broadcast_error( "[SENSOR] Invalid calibration state, clearing" );
+				mavlink_queue_broadcast_error(
+					"[SENSOR] Invalid calibration state, clearing" );
 			}
 
 			if ( cal_mode_error ) {
-				//Send a message saying that it has failed
-				mavlink_prepare_command_ack( &msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_FAILED, _calibrations.req_sysid, _calibrations.req_compid, 0xFF );
+				// Send a message saying that it has failed
+				mavlink_prepare_command_ack( &msg, MAV_CMD_PREFLIGHT_CALIBRATION,
+											 MAV_RESULT_FAILED, _calibrations.req_sysid,
+											 _calibrations.req_compid, 0xFF );
 				status_buzzer_failure();
 			} else {
-				//Send a message saying that it has completed 100%
-				mavlink_prepare_command_ack( &msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_IN_PROGRESS, _calibrations.req_sysid, _calibrations.req_compid, 100 );
+				// Send a message saying that it has completed 100%
+				mavlink_prepare_command_ack(
+					&msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_IN_PROGRESS,
+					_calibrations.req_sysid, _calibrations.req_compid, 100 );
 				status_buzzer_success();
 			}
 

@@ -15,7 +15,8 @@ bool calibrate_esc( void ) {
 	bool failed = false;
 
 	if ( get_param_uint( PARAM_DO_ESC_CAL ) ) {
-		mavlink_send_broadcast_statustext( MAV_SEVERITY_NOTICE, "[MIXER] Performing ESC calibration" );
+		mavlink_send_broadcast_statustext( MAV_SEVERITY_NOTICE,
+										   "[MIXER] Performing ESC calibration" );
 
 		for ( uint8_t i = 0; i < MIXER_NUM_MOTORS; i++ )
 			if ( _mixer_to_use->output_type[i] == IO_TYPE_OM )
@@ -36,7 +37,8 @@ bool calibrate_esc( void ) {
 		status_led_heart_set( false );
 
 		status_buzzer_success();
-		mavlink_send_broadcast_statustext( MAV_SEVERITY_INFO, "[MIXER] ESC calibration complete!" );
+		mavlink_send_broadcast_statustext( MAV_SEVERITY_INFO,
+										   "[MIXER] ESC calibration complete!" );
 
 		set_param_uint( PARAM_DO_ESC_CAL, 0 );
 
