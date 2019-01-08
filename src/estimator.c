@@ -18,6 +18,7 @@ extern "C" {
 state_t _state_estimator;
 sensor_readings_t _sensors;
 
+#include <stdio.h>
 
 //static v3d w1;	 //Integrator for quad int
 //static v3d w2;	 //Integrator for quad int
@@ -86,25 +87,39 @@ static void lpf_update( v3d* accel, v3d* gyro ) {
 	gyro_lpf_.z = fix16_add( fix16_mul( fix16_sub( _fc_1, alpha_gyro ), gyro_lpf_.z ), fix16_mul( alpha_gyro, gyro->z ) );
 }
 
-/*
-static void corr_heading_estimate( v3d* corr, const qf16* q, const v3d* m, const fix16_t alpha, const fix16_t mag_decl ) {
-	v3d mw;	//World measurement
-	qf16_rotate( &mw, q, m );
-	fix16_t mocap_hdg_err = wrap_pi(fix16_sub(fix16_atan2(mw.y,mw.x), mag_decl));
-	v3d yaw_c;
-	yaw_c.x = 0;
-	yaw_c.y = 0;
-	yaw_c.z = -mocap_hdg_err;
-	// Project correction to body frame
-	qf16 qi;
-	qf16_inverse(&qi,q);
-	v3d err;
-	qf16_rotate( &err, &qi, &yaw_c );
-	v3d_mul_s(corr, &err, alpha);
-}
-*/
+static void corr_heading_estimate( v3d* corr, const qf16* q, const v3d* mag, const fix16_t mag_decl, const fix16_t alpha ) {
+	//Figure out what world frame mag reading
+	v3d mag_w;
+	qf16_rotate(&mag_w, q, mag);
+	//Calculate the world error, accounting for declination
+	fix16_t m_e = fix16_wrap_pi( fix16_sub( fix16_atan2( mag_w.y, mag_w.x ), mag_decl ) );
 
-//  212 | 195 us (acc and gyro only, not exp propagation no quadratic integration)
+	/*
+	//TODO: Correction scaling reduction based on large w spin rates
+	float gainMult = 1.0f;
+	const float fifty_dps = 0.873f;
+
+	if (spinRate > fifty_dps) {
+		gainMult = math::min(spinRate / fifty_dps, 10.0f);
+	}
+	*/
+
+	// Project magnetometer correction to body frame
+	v3d m_e_z;
+	m_e_z.x = 0;
+	m_e_z.y = 0;
+	m_e_z.z = -m_e;	//Negitive to have it error correct
+
+	v3d m_e_b;
+	qf16_i_rotate(&m_e_b, q, &m_e_z);
+
+	//Calculate the correction term
+	v3d_mul_s(corr, &m_e_b, alpha);	//TODO: gainMult * alpha;
+}
+
+//Base estimation method derrived from Eq. 47a, Mahoney, R. 2008
+//Nonlinear Complementary Filters on the Special Orthogonal Group
+//Mag, heading, and accel fusion techniques based on PX4/Baseflight methods
 static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 	//XXX: This will exit on the first loop, not a nice way of doing it though
 	if ( time_last_ == 0 ) {
@@ -116,11 +131,13 @@ static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 	fix16_t dt = fix16_from_float( 1e-6 * (float)( time_now - time_last_ ) );
 	time_last_ = time_now;
 
-	//Gains for accelerometer correction and adaptive bias
-	fix16_t w_a_kp = get_param_fix16( PARAM_EST_ACC_KP );
-	fix16_t w_b_ki = get_param_fix16( PARAM_EST_BIAS_KI );
+	//Gains for integrated corrections terms
+	fix16_t w_m_kp = get_param_fix16( PARAM_EST_HDG_P_MAG );	//Magnetometer
+	fix16_t w_a_kp = get_param_fix16( PARAM_EST_ACC_KP );	//Accelerometer
+	fix16_t w_b_ki = get_param_fix16( PARAM_EST_BIAS_KI );	//Bias
 	//Crank up the gains for the first few seconds for quick convergence
 	if ( time_now < init_time_ ) {
+		w_m_kp = fix16_smul( w_a_kp, _fc_10 );
 		w_a_kp = fix16_smul( w_a_kp, _fc_10 );
 		w_b_ki = fix16_smul( w_b_ki, _fc_10 );
 	}
@@ -137,15 +154,40 @@ static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 	w_cor.z = 0;
 
 	//Heading correction
-	/*
-	if ( ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) && _sensors.ext_pose.status.new_data ) {
-		fuse_heading_estimate( &q_hat_, &_sensors.ext_pose.q, get_param_fix16( PARAM_FUSE_EXT_HDG_W ) );
-		_sensors.ext_pose.status.new_data = false;
-	} else if ( ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) && _sensors.mag.status.new_data ) {
-		fuse_heading_estimate( &q_hat_, &_sensors.mag.q, get_param_fix16( PARAM_FUSE_MAG_HDG_W ) );
-		_sensors.mag.status.new_data = false;
+	if( get_param_uint( PARAM_EST_USE_HDG_FUSION ) ) {
+		v3d w_hdg;
+		w_hdg.x = 0;
+		w_hdg.y = 0;
+		w_hdg.z = 0;
+
+		//Mag north reading in the world frame
+		v3d mag_n;
+		mag_n.x = _fc_1;
+		mag_n.y = 0;
+		mag_n.z = 0;
+
+		//Pick which sensor to use based on what is available
+		//(sticks to the highest-trusted source we've received)
+		//Then only fuse if we have a good link, and have new data
+		if( _sensors.ext_pose.status.present ) {
+			if( ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) && _sensors.ext_pose.status.new_data ) {
+				v3d mag_b;
+				qf16_i_rotate(&mag_b, &_sensors.ext_pose.q, &mag_n);	//Figure out what the mag reading would look in the body frame
+				//qf16_rotate(&mag_w, &q_hat_, &mag_b);	//Rotate it into the world frame
+
+				corr_heading_estimate( &w_hdg, &q_hat_, &mag_b, 0, get_param_fix16( PARAM_EST_HDG_P_EXT ) );
+				_sensors.ext_pose.status.new_data = false;
+			}
+		} else if( _sensors.mag.status.present ) {
+			if( ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) && _sensors.mag.status.new_data ) {
+				corr_heading_estimate( &w_hdg, &q_hat_, &_sensors.mag.mag, get_param_fix16( PARAM_EST_MAG_DECL ), w_m_kp );
+				_sensors.mag.status.new_data = false;
+			}
+		}
+
+		//Add the heading correction to the running correction term
+		v3d_add(&w_cor, &w_cor, &w_hdg);
 	}
-	*/
 
 	//Accelerometer Correction
 	//The reading must be reasonably close to something that resembles a hover
@@ -178,13 +220,14 @@ static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 		const fix16_t i_max = get_param_fix16(PARAM_EST_BIAS_MAX);
 		v3d_mul_s(&w_cor_i, &w_cor, fix16_mul( w_b_ki ,dt ) );
 
-		//Constrain the terms
-		w_cor_i.x = fix16_constrain(w_cor_i.x, -i_max, i_max);
-		w_cor_i.y = fix16_constrain(w_cor_i.y, -i_max, i_max);
-		w_cor_i.z = fix16_constrain(w_cor_i.z, -i_max, i_max);
-
 		//Integrate the bias terms
 		v3d_add(&w_bias_, &w_bias_, &w_cor_i);
+
+		//Constrain the bias
+		w_bias_.x = fix16_constrain(w_bias_.x, -i_max, i_max);
+		w_bias_.y = fix16_constrain(w_bias_.y, -i_max, i_max);
+		w_bias_.z = fix16_constrain(w_bias_.z, -i_max, i_max);
+
 	} else {
 		//Otherwise reset the bias terms, to be safe
 		reset_adaptive_gyro_bias();

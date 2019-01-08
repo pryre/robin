@@ -168,13 +168,9 @@ mavlink_queue_broadcast_notice(text);
 	_sensors.mag.raw.x = 0;
 	_sensors.mag.raw.y = 0;
 	_sensors.mag.raw.z = 0;
-	_sensors.mag.scaled.x = 0;
-	_sensors.mag.scaled.y = 0;
-	_sensors.mag.scaled.z = 0;
-	_sensors.mag.q.a = _fc_1;
-	_sensors.mag.q.b = 0;
-	_sensors.mag.q.c = 0;
-	_sensors.mag.q.d = 0;
+	_sensors.mag.mag.x = 0;
+	_sensors.mag.mag.y = 0;
+	_sensors.mag.mag.z = 0;
 
 	_sensors.baro.period_update = 1000 * fix16_to_int( fix16_div(
 											 _fc_1000, get_param_fix16( PARAM_SENSOR_BARO_UPDATE_RATE ) ) );

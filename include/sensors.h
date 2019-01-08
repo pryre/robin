@@ -88,8 +88,7 @@ typedef struct {
 	uint32_t period_update; // update rate in ms
 
 	vector_int32_t raw;
-	v3d scaled;
-	qf16 q;
+	v3d mag;
 } sensor_readings_magnometer_t;
 
 typedef struct {

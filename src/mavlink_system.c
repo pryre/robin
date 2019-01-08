@@ -617,9 +617,9 @@ zgyro = fix16_to_float(_sensors.imu.gyro.z);
 		}
 
 		if ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) {
-			xmag = fix16_to_float( _sensors.mag.scaled.x );
-			ymag = fix16_to_float( _sensors.mag.scaled.y );
-			zmag = fix16_to_float( _sensors.mag.scaled.z );
+			xmag = fix16_to_float( _sensors.mag.mag.x );
+			ymag = fix16_to_float( _sensors.mag.mag.y );
+			zmag = fix16_to_float( _sensors.mag.mag.z );
 
 			fields_updated |= ( 1 << 6 ) | ( 1 << 7 ) | ( 1 << 8 );
 		}
