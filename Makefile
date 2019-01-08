@@ -36,22 +36,21 @@ posix_serial_run: posix_serial
 naze32_rev5: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
-naze32_rev5_flash: naze32_rev5
-	stm32flash -w build/robin_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
-
-naze32_rev5_reflash: naze32_rev5 mavlink_bootloader
-	@sleep 1
-	stm32flash -w build/robin_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
-
 naze32_rev6: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+
+naze32_rev5_flash: naze32_rev5
+	stm32flash -w build/robin_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
 naze32_rev6_flash: naze32_rev6
 	stm32flash -w build/robin_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
-naze32_rev6_reflash: naze32_rev6 mavlink_bootloader
+naze32_rev6_reflash: naze32_rev6 mavlink_bootloader sleep naze32_rev6_flash
+
+naze32_rev5_reflash: naze32_rev5 mavlink_bootloader sleep naze32_rev5_flash
+
+sleep:
 	@sleep 1
-	stm32flash -w build/robin_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
 param_gen:
 	@python3 lib/param_generator/gen_params.py ./lib/param_generator/definitions/ ./build/ >&2
