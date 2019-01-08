@@ -64,17 +64,26 @@ PARAM_EST_LEVEL_HORIZON_Z:
 ---
 PARAM_EST_ACC_KP:
   type: "float"
-  name: "EST_ACC_P"
+  name: "EST_ACC_KP"
   description: "Adjusts the proportional gain done on the attitude estimation"
   reboot: false
   value:
     option: "scalar"
-    default: 1.0
+    default: 0.2
 ---
-PARAM_EST_BIAS_KP:
+PARAM_EST_BIAS_KI:
   type: "float"
-  name: "EST_W_BIAS_P"
+  name: "EST_W_BIAS_KI"
   description: "Adjusts the amount of integral used for the adaptive bias estimation"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.1
+---
+PARAM_EST_BIAS_MAX:
+  type: "float"
+  name: "EST_W_BIAS_MAX"
+  description: "Maximum for the adaptive bias compensation"
   reboot: false
   value:
     option: "scalar"

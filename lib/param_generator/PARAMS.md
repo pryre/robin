@@ -148,8 +148,9 @@ EST_LVL_HORZ_W | float | Level horizon offset quaternion calibration data (W) | 
 EST_LVL_HORZ_X | float | Level horizon offset quaternion calibration data (X) | 0.0 |  | scalar | False
 EST_LVL_HORZ_Y | float | Level horizon offset quaternion calibration data (Y) | 0.0 |  | scalar | False
 EST_LVL_HORZ_Z | float | Level horizon offset quaternion calibration data (Z) | 0.0 |  | scalar | False
-EST_ACC_P | float | Adjusts the proportional gain done on the attitude estimation | 1.0 |  | scalar | False
-EST_W_BIAS_P | float | Adjusts the amount of integral used for the adaptive bias estimation | 0.05 |  | scalar | False
+EST_ACC_KP | float | Adjusts the proportional gain done on the attitude estimation | 0.2 |  | scalar | False
+EST_W_BIAS_KI | float | Adjusts the amount of integral used for the adaptive bias estimation | 0.1 |  | scalar | False
+EST_W_BIAS_MAX | float | Maximum for the adaptive bias compensation | 0.05 |  | scalar | False
 EST_LPF_GYRO_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.04 |  | scalar | False
 EST_LPF_ACC_A | float | Alpha parameter for gyroscope measurement low pass filter (noise reduction) | 0.04 |  | scalar | False
 FSE_EXT_HDG_W | float | Weighting for external heading fusion (0 means don't trust, 1 means trust fully) | 0.2 |  | scalar | False

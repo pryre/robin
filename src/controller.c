@@ -87,7 +87,7 @@ v3d_mul_s( rates, &e_R, get_param_fix16(PARAM_MC_ANGLE_P) );
 
 	qf16 qd_red;
 	qf16_from_shortest_path( &qd_red, &e_z, &e_z_d );
-	qf16_normalize_to_unit( &qd_red, &qd_red );
+	//qf16_normalize_to_unit( &qd_red, &qd_red );
 
 	// Handle co-linear vectoring cases
 	if ( ( fix16_abs( qd_red.b ) >= _fc_epsilon ) || ( fix16_abs( qd_red.c ) >= _fc_epsilon ) ) {
