@@ -74,7 +74,7 @@ void reset_adaptive_gyro_bias() {
 	w_bias_.z = 0;
 }
 
-static void lpf_update( v3d* accel, v3d* gyro ) {
+static void lpf_update( const v3d* accel, const v3d* gyro ) {
 	//value_lpf = ((1 - alpha) * value) + (alpha * value_lpf);
 	fix16_t alpha_acc = get_param_fix16( PARAM_ACC_ALPHA );
 	accel_lpf_.x = fix16_add( fix16_mul( fix16_sub( _fc_1, alpha_acc ), accel_lpf_.x ), fix16_mul( alpha_acc, accel->x ) );
@@ -120,7 +120,7 @@ static void corr_heading_estimate( v3d* corr, const qf16* q, const v3d* mag, con
 //Base estimation method derrived from Eq. 47a, Mahoney, R. 2008
 //Nonlinear Complementary Filters on the Special Orthogonal Group
 //Mag, heading, and accel fusion techniques based on PX4/Baseflight methods
-static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
+static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gyro, const v3d* mag, const bool mag_present, const bool mag_use_data) {
 	//XXX: This will exit on the first loop, not a nice way of doing it though
 	if ( time_last_ == 0 ) {
 		time_last_ = time_now;
@@ -160,8 +160,15 @@ static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 		w_hdg.y = 0;
 		w_hdg.z = 0;
 
-		//Mag north reading in the world frame
-		v3d mag_n;
+
+		v3d mag_b;	//Mag reading in the body frame
+		mag_b.x = 0;
+		mag_b.y = 0;
+		mag_b.z = 0;
+		fix16_t decl = 0;
+		fix16_t m_kp = 0;
+
+		v3d mag_n;	//Mag north reading in the world frame
 		mag_n.x = _fc_1;
 		mag_n.y = 0;
 		mag_n.z = 0;
@@ -171,22 +178,30 @@ static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 		//Then only fuse if we have a good link, and have new data
 		if( _sensors.ext_pose.status.present ) {
 			if( ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) && _sensors.ext_pose.status.new_data ) {
-				v3d mag_b;
-				qf16_i_rotate(&mag_b, &_sensors.ext_pose.q, &mag_n);	//Figure out what the mag reading would look in the body frame
-				//qf16_rotate(&mag_w, &q_hat_, &mag_b);	//Rotate it into the world frame
+				//Figure out what the mag reading would look in the body frame
+				qf16_i_rotate(&mag_b, &_sensors.ext_pose.q, &mag_n);
+				decl = 0;	//XXX: Perhaps we can try get this from gazebo?
+				m_kp = get_param_fix16( PARAM_EST_HDG_P_EXT );
 
-				corr_heading_estimate( &w_hdg, &q_hat_, &mag_b, 0, get_param_fix16( PARAM_EST_HDG_P_EXT ) );
 				_sensors.ext_pose.status.new_data = false;
 			}
-		} else if( _sensors.mag.status.present ) {
-			if( ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) && _sensors.mag.status.new_data ) {
-				corr_heading_estimate( &w_hdg, &q_hat_, &_sensors.mag.mag, get_param_fix16( PARAM_EST_MAG_DECL ), w_m_kp );
-				_sensors.mag.status.new_data = false;
+		} else if( mag_present ) {
+			if( mag_use_data ) {
+				mag_b = *mag;
+				decl = get_param_fix16( PARAM_EST_MAG_DECL );
+				m_kp = w_m_kp;
 			}
 		}
 
-		//Add the heading correction to the running correction term
-		v3d_add(&w_cor, &w_cor, &w_hdg);
+		system_debug_print("mag_b: [%0.5f, %0.5f, %0.5f]", fix16_to_float(mag_b.x), fix16_to_float(mag_b.y), fix16_to_float(mag_b.z) );
+
+		//Only use the data if we have a reading
+		if( v3d_norm(&mag_b) > _fc_0_05) {
+			corr_heading_estimate( &w_hdg, &q_hat_, &mag_b, decl, m_kp);
+
+			//Add the heading correction to the running correction term
+			v3d_add(&w_cor, &w_cor, &w_hdg);
+		}
 	}
 
 	//Accelerometer Correction
@@ -284,13 +299,28 @@ static void estimator_update( uint32_t time_now, v3d* accel, v3d* gyro ) {
 }
 
 void estimator_update_sensors( uint32_t now ) {
-	estimator_update( now, &_sensors.imu.accel, &_sensors.imu.gyro );
+	bool mag_use_data = ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) && _sensors.mag.status.new_data;
+
+	estimator_update( now,
+					  &_sensors.imu.accel,
+					  &_sensors.imu.gyro,
+					  &_sensors.mag.mag,
+					  _sensors.mag.status.present,
+					  mag_use_data );
 
 	_sensors.imu.status.new_data = false;
+
+	if(mag_use_data)
+		_sensors.mag.status.new_data = false;
 }
 
 void estimator_update_hil( uint32_t now ) {
-	estimator_update( now, &_sensors.hil.accel, &_sensors.hil.gyro );
+	estimator_update( now,
+					  &_sensors.hil.accel,
+					  &_sensors.hil.gyro,
+					  &_sensors.hil.mag,
+					  true,
+					  true );
 
 	_sensors.hil.status.new_data = false;
 }

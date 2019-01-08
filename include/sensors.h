@@ -75,8 +75,8 @@ typedef struct {
 	vector_int32_t gyro_raw;
 	int16_t temp_raw;
 
-	v3d accel;			 // Vector of accel data
-	v3d gyro;			 // Vector of gyro data
+	v3d accel;			 // Vector of acceleration data (m/s/s)
+	v3d gyro;			 // Vector of rotation rate data (rad/s)
 	fix16_t temperature; // Sensor temperature reading
 
 	fix16_t accel_scale; // Scale to correct raw accel data
@@ -88,7 +88,7 @@ typedef struct {
 	uint32_t period_update; // update rate in ms
 
 	vector_int32_t raw;
-	v3d mag;
+	v3d mag; // Vector of magnetic field data (gauss)
 } sensor_readings_magnometer_t;
 
 typedef struct {
