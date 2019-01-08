@@ -183,11 +183,11 @@ bool drv_sensors_i2c_read( uint32_t time_us ) {
 		_sensors.mag.raw.z = read_mag_raw[2];
 
 		_sensors.mag.mag.x = fix16_div( fix16_from_int( _sensors.mag.raw.x ),
-										   fix16_from_int( HMC5883L_GAIN_FACTOR ) );
+										fix16_from_int( HMC5883L_GAIN_FACTOR ) );
 		_sensors.mag.mag.y = fix16_div( fix16_from_int( _sensors.mag.raw.y ),
-										   fix16_from_int( HMC5883L_GAIN_FACTOR ) );
+										fix16_from_int( HMC5883L_GAIN_FACTOR ) );
 		_sensors.mag.mag.z = fix16_div( fix16_from_int( _sensors.mag.raw.z ),
-										   fix16_from_int( HMC5883L_GAIN_FACTOR ) );
+										fix16_from_int( HMC5883L_GAIN_FACTOR ) );
 
 		// TODO: Do remaining mag scaling / calibration steps
 

@@ -62,13 +62,13 @@ static inline fix16_t fix16_sign_no_zero( const fix16_t x ) {
 static inline fix16_t fix16_wrap_pi( const fix16_t x ) {
 	fix16_t a = x;
 
-	if(a > 0) {
-		while(a > fix16_pi) {
-			a = fix16_sub(a,fix16_pi);
+	if ( a > 0 ) {
+		while ( a > fix16_pi ) {
+			a = fix16_sub( a, fix16_pi );
 		}
 	} else {
-		while(a < -fix16_pi) {
-			a = fix16_add(a,fix16_pi);
+		while ( a < -fix16_pi ) {
+			a = fix16_add( a, fix16_pi );
 		}
 	}
 
@@ -404,8 +404,8 @@ static inline void qf16_basis_error( v3d* dest, const qf16* q1, const qf16* q2 )
 static inline void qf16_i_rotate( v3d* dest, const qf16* q, const v3d* v ) {
 	//Could be done much more efficiently by doing the reverse operation instead
 	qf16 qi;
-	qf16_inverse(&qi, q);
-	qf16_rotate(dest, &qi, v);
+	qf16_inverse( &qi, q );
+	qf16_rotate( dest, &qi, v );
 }
 
 static inline v3d v3d_enu_to_ned( const v3d* enu ) {

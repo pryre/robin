@@ -22,7 +22,7 @@ sensor_readings_t _sensors;
 
 //static v3d w1;	 //Integrator for quad int
 //static v3d w2;	 //Integrator for quad int
-static v3d w_bias_;	  //Integrator for adaptive bias
+static v3d w_bias_; //Integrator for adaptive bias
 static qf16 q_hat_; //Attitude estimate
 //static v3d g_; //Gravity vector
 
@@ -90,7 +90,7 @@ static void lpf_update( const v3d* accel, const v3d* gyro ) {
 static void corr_heading_estimate( v3d* corr, const qf16* q, const v3d* mag, const fix16_t mag_decl, const fix16_t alpha ) {
 	//Figure out what world frame mag reading
 	v3d mag_w;
-	qf16_rotate(&mag_w, q, mag);
+	qf16_rotate( &mag_w, q, mag );
 	//Calculate the world error, accounting for declination
 	fix16_t m_e = fix16_wrap_pi( fix16_sub( fix16_atan2( mag_w.y, mag_w.x ), mag_decl ) );
 
@@ -108,19 +108,19 @@ static void corr_heading_estimate( v3d* corr, const qf16* q, const v3d* mag, con
 	v3d m_e_z;
 	m_e_z.x = 0;
 	m_e_z.y = 0;
-	m_e_z.z = -m_e;	//Negitive to have it error correct
+	m_e_z.z = -m_e; //Negitive to have it error correct
 
 	v3d m_e_b;
-	qf16_i_rotate(&m_e_b, q, &m_e_z);
+	qf16_i_rotate( &m_e_b, q, &m_e_z );
 
 	//Calculate the correction term
-	v3d_mul_s(corr, &m_e_b, alpha);	//TODO: gainMult * alpha;
+	v3d_mul_s( corr, &m_e_b, alpha ); //TODO: gainMult * alpha;
 }
 
 //Base estimation method derrived from Eq. 47a, Mahoney, R. 2008
 //Nonlinear Complementary Filters on the Special Orthogonal Group
 //Mag, heading, and accel fusion techniques based on PX4/Baseflight methods
-static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gyro, const v3d* mag, const bool mag_present, const bool mag_use_data) {
+static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gyro, const v3d* mag, const bool mag_present, const bool mag_use_data ) {
 	//XXX: This will exit on the first loop, not a nice way of doing it though
 	if ( time_last_ == 0 ) {
 		time_last_ = time_now;
@@ -132,9 +132,9 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 	time_last_ = time_now;
 
 	//Gains for integrated corrections terms
-	fix16_t w_m_kp = get_param_fix16( PARAM_EST_HDG_P_MAG );	//Magnetometer
+	fix16_t w_m_kp = get_param_fix16( PARAM_EST_HDG_P_MAG ); //Magnetometer
 	fix16_t w_a_kp = get_param_fix16( PARAM_EST_ACC_KP );	//Accelerometer
-	fix16_t w_b_ki = get_param_fix16( PARAM_EST_BIAS_KI );	//Bias
+	fix16_t w_b_ki = get_param_fix16( PARAM_EST_BIAS_KI );   //Bias
 	//Crank up the gains for the first few seconds for quick convergence
 	if ( time_now < init_time_ ) {
 		w_m_kp = fix16_smul( w_a_kp, _fc_10 );
@@ -154,21 +154,20 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 	w_cor.z = 0;
 
 	//Heading correction
-	if( get_param_uint( PARAM_EST_USE_HDG_FUSION ) ) {
+	if ( get_param_uint( PARAM_EST_USE_HDG_FUSION ) ) {
 		v3d w_hdg;
 		w_hdg.x = 0;
 		w_hdg.y = 0;
 		w_hdg.z = 0;
 
-
-		v3d mag_b;	//Mag reading in the body frame
+		v3d mag_b; //Mag reading in the body frame
 		mag_b.x = 0;
 		mag_b.y = 0;
 		mag_b.z = 0;
 		fix16_t decl = 0;
 		fix16_t m_kp = 0;
 
-		v3d mag_n;	//Mag north reading in the world frame
+		v3d mag_n; //Mag north reading in the world frame
 		mag_n.x = _fc_1;
 		mag_n.y = 0;
 		mag_n.z = 0;
@@ -176,31 +175,31 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 		//Pick which sensor to use based on what is available
 		//(sticks to the highest-trusted source we've received)
 		//Then only fuse if we have a good link, and have new data
-		if( _sensors.ext_pose.status.present ) {
-			if( ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) && _sensors.ext_pose.status.new_data ) {
+		if ( _sensors.ext_pose.status.present ) {
+			if ( ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) && _sensors.ext_pose.status.new_data ) {
 				//Figure out what the mag reading would look in the body frame
-				qf16_i_rotate(&mag_b, &_sensors.ext_pose.q, &mag_n);
-				decl = 0;	//XXX: Perhaps we can try get this from gazebo?
+				qf16_i_rotate( &mag_b, &_sensors.ext_pose.q, &mag_n );
+				decl = 0; //XXX: Perhaps we can try get this from gazebo?
 				m_kp = get_param_fix16( PARAM_EST_HDG_P_EXT );
 
 				_sensors.ext_pose.status.new_data = false;
 			}
-		} else if( mag_present ) {
-			if( mag_use_data ) {
+		} else if ( mag_present ) {
+			if ( mag_use_data ) {
 				mag_b = *mag;
 				decl = get_param_fix16( PARAM_EST_MAG_DECL );
 				m_kp = w_m_kp;
 			}
 		}
 
-		system_debug_print("mag_b: [%0.5f, %0.5f, %0.5f]", fix16_to_float(mag_b.x), fix16_to_float(mag_b.y), fix16_to_float(mag_b.z) );
+		system_debug_print( "mag_b: [%0.5f, %0.5f, %0.5f]", fix16_to_float( mag_b.x ), fix16_to_float( mag_b.y ), fix16_to_float( mag_b.z ) );
 
 		//Only use the data if we have a reading
-		if( v3d_norm(&mag_b) > _fc_0_05) {
-			corr_heading_estimate( &w_hdg, &q_hat_, &mag_b, decl, m_kp);
+		if ( v3d_norm( &mag_b ) > _fc_0_05 ) {
+			corr_heading_estimate( &w_hdg, &q_hat_, &mag_b, decl, m_kp );
 
 			//Add the heading correction to the running correction term
-			v3d_add(&w_cor, &w_cor, &w_hdg);
+			v3d_add( &w_cor, &w_cor, &w_hdg );
 		}
 	}
 
@@ -219,11 +218,11 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 		v3d_normalize( &a_z, &accel_lpf_ );
 
 		v3d e_R;
-		v3d_cross(&e_R, &b_z, &a_z);
-		v3d_mul_s(&w_acc, &e_R, w_a_kp);
+		v3d_cross( &e_R, &b_z, &a_z );
+		v3d_mul_s( &w_acc, &e_R, w_a_kp );
 
 		//Add the accel correction to the running correction term
-		v3d_add(&w_cor, &w_cor, &w_acc);
+		v3d_add( &w_cor, &w_cor, &w_acc );
 	}
 
 	//Integrate adaptive bias
@@ -232,16 +231,16 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 		v3d w_cor_i;
 
 		//Calculate the bias error for this time step
-		const fix16_t i_max = get_param_fix16(PARAM_EST_BIAS_MAX);
-		v3d_mul_s(&w_cor_i, &w_cor, fix16_mul( w_b_ki ,dt ) );
+		const fix16_t i_max = get_param_fix16( PARAM_EST_BIAS_MAX );
+		v3d_mul_s( &w_cor_i, &w_cor, fix16_mul( w_b_ki, dt ) );
 
 		//Integrate the bias terms
-		v3d_add(&w_bias_, &w_bias_, &w_cor_i);
+		v3d_add( &w_bias_, &w_bias_, &w_cor_i );
 
 		//Constrain the bias
-		w_bias_.x = fix16_constrain(w_bias_.x, -i_max, i_max);
-		w_bias_.y = fix16_constrain(w_bias_.y, -i_max, i_max);
-		w_bias_.z = fix16_constrain(w_bias_.z, -i_max, i_max);
+		w_bias_.x = fix16_constrain( w_bias_.x, -i_max, i_max );
+		w_bias_.y = fix16_constrain( w_bias_.y, -i_max, i_max );
+		w_bias_.z = fix16_constrain( w_bias_.z, -i_max, i_max );
 
 	} else {
 		//Otherwise reset the bias terms, to be safe
@@ -250,7 +249,7 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 
 	//Estimate rotation rates (with the adaptive bias term)
 	v3d w_est;
-	v3d_add(&w_est, &gyro_lpf_, &w_bias_);
+	v3d_add( &w_est, &gyro_lpf_, &w_bias_ );
 
 	// Build the composite omega vector for dynamics propagation
 	//w_bar = w_est + w_cor;
@@ -260,16 +259,16 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 	//Propagate dynamics
 	//q_hat += q_hat.derivative1(wbar) * dt;
 
-	qf16 q_w;	//q_hat.derivative1(wbar)
-	qf16_from_v3d(&q_w, &w_bar, 0);
-	qf16_mul(&q_w,&q_hat_,&q_w);
-	qf16_mul_s(&q_w,&q_w,_fc_0_5);
+	qf16 q_w; //q_hat.derivative1(wbar)
+	qf16_from_v3d( &q_w, &w_bar, 0 );
+	qf16_mul( &q_w, &q_hat_, &q_w );
+	qf16_mul_s( &q_w, &q_w, _fc_0_5 );
 
-	qf16_mul_s(&q_w, &q_w, dt);
+	qf16_mul_s( &q_w, &q_w, dt );
 
-	qf16_add(&q_hat_, &q_hat_, &q_w);
+	qf16_add( &q_hat_, &q_hat_, &q_w );
 
-	qf16_normalize_to_unit(&q_hat_, &q_hat_);
+	qf16_normalize_to_unit( &q_hat_, &q_hat_ );
 
 	//Perform level horizon measurements
 	if ( get_param_uint( PARAM_EST_USE_LEVEL_HORIZON ) ) {
@@ -310,7 +309,7 @@ void estimator_update_sensors( uint32_t now ) {
 
 	_sensors.imu.status.new_data = false;
 
-	if(mag_use_data)
+	if ( mag_use_data )
 		_sensors.mag.status.new_data = false;
 }
 
