@@ -346,7 +346,6 @@ void control_init( void ) {
 	_cmd_ob_input.q.d = 0;
 	_cmd_ob_input.T = 0;
 	_cmd_ob_input.input_mask = 0;
-	;
 
 	controller_reset();
 }
