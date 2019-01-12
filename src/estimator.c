@@ -192,8 +192,6 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 			}
 		}
 
-		system_debug_print( "mag_b: [%0.5f, %0.5f, %0.5f]", fix16_to_float( mag_b.x ), fix16_to_float( mag_b.y ), fix16_to_float( mag_b.z ) );
-
 		//Only use the data if we have a reading
 		if ( v3d_norm( &mag_b ) > _fc_0_05 ) {
 			corr_heading_estimate( &w_hdg, &q_hat_, &mag_b, decl, m_kp );

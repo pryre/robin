@@ -13,10 +13,9 @@ void mavlink_handle_hil_sensor( mavlink_channel_t chan, mavlink_message_t* msg,
 								mavlink_status_t* status ) {
 	if ( _sensors.hil.status.present ) {
 		// Accelerometer
-		// XXX: TODO: THIS SHOULDN'T NEED TO BE INVERSED
-		_sensors.hil.accel.x = -fix16_from_float( mavlink_msg_hil_sensor_get_xacc( msg ) );
-		_sensors.hil.accel.y = -fix16_from_float( mavlink_msg_hil_sensor_get_yacc( msg ) );
-		_sensors.hil.accel.z = -fix16_from_float( mavlink_msg_hil_sensor_get_zacc( msg ) );
+		_sensors.hil.accel.x = fix16_from_float( mavlink_msg_hil_sensor_get_xacc( msg ) );
+		_sensors.hil.accel.y = fix16_from_float( mavlink_msg_hil_sensor_get_yacc( msg ) );
+		_sensors.hil.accel.z = fix16_from_float( mavlink_msg_hil_sensor_get_zacc( msg ) );
 		// Gyroscope
 		_sensors.hil.gyro.x = fix16_from_float( mavlink_msg_hil_sensor_get_xgyro( msg ) );
 		_sensors.hil.gyro.y = fix16_from_float( mavlink_msg_hil_sensor_get_ygyro( msg ) );
