@@ -46,11 +46,31 @@ PARAM_FAILSAFE_THROTTLE:
 PARAM_THROTTLE_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_THRTL"
-  description: "Throttle timeout in to prevent accidentally leaving armed"
+  description: "Throttle timeout in to prevent accidentally leaving armed (0 to disable)"
   reboot: false
   value:
     option: "scalar"
     default: 10000000
+    unit: "us"
+---
+PARAM_THROTTLE_TIMEOUT_VALUE:
+  type: "float"
+  name: "TIMEOUT_THRTL_V"
+  description: "Throttle amount that must be reached to cancel the throttle timeout"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05
+    unit: "us"
+---
+PARAM_CRITICAL_TIMEOUT:
+  type: "uint"
+  name: "TIMEOUT_CRIT_EM"
+  description: "Critical state timeout, system is put into emergency state after this time if not resolved"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 5000000
     unit: "us"
 ---
 PARAM_RESET_PARAMS:

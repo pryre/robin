@@ -22,7 +22,8 @@ control_output_t _control_output;
 char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
 char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
 
-static uint32_t _time_safety_arm_throttle_timeout;
+static uint32_t _time_safety_arm_throttle_timeout;	//Used to auto-disarm if no input detected after arm
+static uint32_t _time_safety_critical_timeout;	//Used to "upgrade" to emergency status if in critical state is not recovered from
 static uint32_t _time_safety_button_pressed;
 static bool _new_safety_button_press;
 
@@ -70,6 +71,7 @@ void safety_init() {
 	// PARAM_SENSOR_PWM_CTRL_STRM_COUNT, PARAM_SENSOR_PWM_CTRL_TIMEOUT);
 
 	_time_safety_arm_throttle_timeout = 0;
+	_time_safety_critical_timeout = 0;
 
 	_new_safety_button_press = false;
 	_time_safety_button_pressed = 0;
@@ -110,7 +112,8 @@ bool safety_switch_engaged( void ) {
 bool safety_request_state( uint8_t req_state ) {
 	bool change_state = false;
 
-	if ( _system_status.state == req_state ) { // XXX: State request to same state, just say OK
+	// XXX: State request to same state, just say OK as we don't want to taint timeouts
+	if ( _system_status.state == req_state ) {
 		change_state = true;
 	} else {
 		switch ( req_state ) {
@@ -144,8 +147,13 @@ bool safety_request_state( uint8_t req_state ) {
 			break;
 		}
 		case MAV_STATE_CRITICAL: {
-			if ( _system_status.state == MAV_STATE_ACTIVE )
+			if ( _system_status.state == MAV_STATE_ACTIVE ) {
+
+				if( get_param_uint( PARAM_CRITICAL_TIMEOUT ) )
+					_time_safety_critical_timeout = system_micros();
+
 				change_state = true;
+			}
 
 			break;
 		}
@@ -474,57 +482,89 @@ static void safety_check_sensor( timeout_status_t* sensor, uint32_t time_now ) {
 	}
 }
 
-void safety_check_failsafe( void ) {
-	if ( _system_status.health != SYSTEM_HEALTH_OK ) {
+static void safety_arm_throttle_timeout( uint32_t time_now ) {
+	if ( _time_safety_arm_throttle_timeout ) { // If the timeout is active
+		if ( _control_input.T > get_param_fix16( PARAM_THROTTLE_TIMEOUT_VALUE ) ) {
+			_time_safety_arm_throttle_timeout = 0; // We have recieved throttle input, disable timeout
+		} else if ( ( time_now - _time_safety_arm_throttle_timeout ) > get_param_uint( PARAM_THROTTLE_TIMEOUT ) ) {
+			mavlink_queue_broadcast_error( "[SAFETY] Throttle timeout, disarming!" );
+			safety_request_disarm();
+		}
+	}
+}
+
+void safety_check_failsafe( uint32_t time_now ) {
+	// Auto throttle timeout
+	safety_arm_throttle_timeout( time_now );
+
+	// Handle system health issues
+	if( _system_status.health != SYSTEM_HEALTH_OK ) {
 		// If flight-critical systems are down
-		if ( ( _system_status.sensors.imu.health != SYSTEM_HEALTH_OK ) ) { // Emergency //TODO: More?
+		// Make sure the system is not in HIL mode, as flight-critical sensors missing
+		// Normally, we only really need to worry about IMU (XXX: more?)
+		if( ( !_sensors.hil.status.present ) &&
+			( _system_status.sensors.imu.health != SYSTEM_HEALTH_OK ) ) { // Flight-critical issue, call emergency state
 			safety_request_state( MAV_STATE_EMERGENCY );
-			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] WARNING! Enabling hard failsafe!";
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] EMERGENCY! Unhealthy, hard failsafe!";
 			mavlink_queue_broadcast_error( &text[0] );
-		} else { // Critical
+		} else { // Non-flight-critical, call critical system state
 			safety_request_state( MAV_STATE_CRITICAL );
-			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] WARNING! Enabling soft failsafe!";
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SAFETY] CRITICAL! Unhealthy, soft failsafe!";
 			mavlink_queue_broadcast_error( &text[0] );
 		}
 	}
 }
 
-static void system_state_update( void ) {
+static void safety_critical_timeout( uint32_t time_now ) {
+	// If the timeout is active
+	if ( _time_safety_critical_timeout ) {
+		if ( ( time_now - _time_safety_critical_timeout ) > get_param_uint( PARAM_CRITICAL_TIMEOUT ) ) {
+			mavlink_queue_broadcast_error( "[SAFETY] EMERGENCY! Critical state unrecoverable!" );
+			safety_request_state( MAV_STATE_EMERGENCY );
+		}
+	}
+}
+
+static void system_state_update( uint32_t time_now ) {
 	//==-- System State Machine
 	switch ( _system_status.state ) {
-	case MAV_STATE_UNINIT: {
-		break;
-	}
-	case MAV_STATE_BOOT: {
-		break;
-	}
-	case MAV_STATE_CALIBRATING: {
-		break;
-	}
-	case MAV_STATE_STANDBY: {
-		break;
-	}
-	case MAV_STATE_ACTIVE: {
-		safety_check_failsafe(); // Check if system should failsafe
+		case MAV_STATE_UNINIT: {
+			break;
+		}
+		case MAV_STATE_BOOT: {
+			break;
+		}
+		case MAV_STATE_CALIBRATING: {
+			break;
+		}
+		case MAV_STATE_STANDBY: {
+			break;
+		}
+		case MAV_STATE_ACTIVE: {
+			// Check if system for failsafe tasks
+			safety_check_failsafe( time_now );
 
-		break;
-	}
-	case MAV_STATE_CRITICAL: {
-		break;
-	}
-	case MAV_STATE_EMERGENCY: {
-		safety_request_disarm();
+			break;
+		}
+		case MAV_STATE_CRITICAL: {
+			// Check to see if we need to elevate to emergency state
+			safety_critical_timeout( time_now );
 
-		break;
-	}
-	default: {
-		safety_request_state( MAV_STATE_EMERGENCY );
+			break;
+		}
+		case MAV_STATE_EMERGENCY: {
+			safety_request_disarm();
 
-		mavlink_queue_broadcast_error(
-			"[SAFETY] Emergency! Mav entered unknown state!" );
+			break;
+		}
+		default: {
+			safety_request_state( MAV_STATE_EMERGENCY );
 
-		break;
-	}
+			mavlink_queue_broadcast_error(
+				"[SAFETY] Emergency! Mav entered unknown state!" );
+
+			break;
+		}
 	}
 
 	//==-- System Mode Reporting
@@ -535,8 +575,8 @@ static void system_state_update( void ) {
 		_system_status.mode |= MAV_MODE_FLAG_SAFETY_ARMED;
 
 	// Report if mav is controlling itself
-	if ( _system_status.state == MAV_STATE_CRITICAL )
-		_system_status.mode |= MAV_MODE_FLAG_AUTO_ENABLED;
+	//if ( _system_status.state == MAV_STATE_CRITICAL )
+	//	_system_status.mode |= MAV_MODE_FLAG_AUTO_ENABLED;
 
 	// Report offboard input status
 	bool ctrl_mode_ok = false;
@@ -567,17 +607,6 @@ static void safety_health_update( uint32_t time_now ) {
 		_system_status.health = SYSTEM_HEALTH_OK;
 	} else {
 		_system_status.health = SYSTEM_HEALTH_ERROR;
-	}
-}
-
-static void safety_arm_throttle_timeout( uint32_t time_now ) {
-	if ( _time_safety_arm_throttle_timeout ) { // If the timeout is active
-		if ( _control_input.T > _fc_0_05 ) {
-			_time_safety_arm_throttle_timeout = 0; // We have recieved throttle input, disable timeout
-		} else if ( ( time_now - _time_safety_arm_throttle_timeout ) > get_param_uint( PARAM_THROTTLE_TIMEOUT ) ) {
-			mavlink_queue_broadcast_error( "[SAFETY] Throttle timeout, disarming!" );
-			safety_request_disarm();
-		}
 	}
 }
 
@@ -615,10 +644,7 @@ void safety_run( uint32_t time_now ) {
 	safety_switch_update( time_now );
 
 	// Make sure current system state and mode are valid, and handle changes
-	system_state_update();
-
-	// Auto throttle timeout
-	safety_arm_throttle_timeout( time_now );
+	system_state_update( time_now );
 }
 
 void safety_prepare_graceful_shutdown( void ) {

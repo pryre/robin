@@ -241,6 +241,8 @@ VERSION_FW | uint | A compile-time stamp for the flight firmware version |  | | 
 VERSION_SW | uint | A compile-time stamp for the OS firmware version |  | | | False
 RELAXED_SET | uint | Allows for 'unit' type parameters to be set when send as 'int' type | 1 | 0 / 1 | boolean | False
 FAILSAFE_THRTL | float | Throttle percentage output when in failsafe mode | 0.25 |  | scalar | False
-TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed | 10000000 | us | scalar | False
+TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed (0 to disable) | 10000000 | us | scalar | False
+TIMEOUT_THRTL_V | float | Throttle amount that must be reached to cancel the throttle timeout | 0.05 | us | scalar | False
+TIMEOUT_CRIT_EM | uint | Critical state timeout, system is put into emergency state after this time if not resolved | 5000000 | us | scalar | False
 SYS_AUTOCONFIG | uint | Tells the system to reset all parameters to default on next boot | 0 |  | scalar | True
 

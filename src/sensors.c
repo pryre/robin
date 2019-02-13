@@ -216,10 +216,10 @@ mavlink_queue_broadcast_notice(text);
 	sensors_update_rc_cal();
 
 	// RC Safety toggle
-	sensor_status_init( &_sensors.rc_safety_toggle.status,
+	sensor_status_init( &_sensors.rc_arm_toggle.status,
 						get_param_uint( PARAM_SENSOR_RC_SAFETY_CBRK ) );
-	_sensors.rc_safety_toggle.arm_req_made = false;
-	_sensors.rc_safety_toggle.timer_start_us = 0;
+	_sensors.rc_arm_toggle.arm_req_made = false;
+	_sensors.rc_arm_toggle.timer_start_us = 0;
 
 	//==-- Safety button
 	sensor_status_init( &_sensors.safety_button.status,
@@ -500,28 +500,28 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 			}
 
 			// Handle the logic for saftey toggling
-			_sensors.rc_safety_toggle.status.time_read = time_us;
-			_sensors.rc_safety_toggle.status.new_data = true;
+			_sensors.rc_arm_toggle.status.time_read = time_us;
+			_sensors.rc_arm_toggle.status.new_data = true;
 
 			if ( ( _sensors.rc_input.c_T < _fc_0_05 ) && ( fix16_abs( _sensors.rc_input.c_y ) > _fc_0_95 ) ) {
 
-				if ( _sensors.rc_safety_toggle.timer_start_us == 0 )
-					_sensors.rc_safety_toggle.timer_start_us = time_us;
+				if ( _sensors.rc_arm_toggle.timer_start_us == 0 )
+					_sensors.rc_arm_toggle.timer_start_us = time_us;
 
-				if ( time_us > ( _sensors.rc_safety_toggle.timer_start_us + get_param_uint( PARAM_RC_ARM_TIMER ) ) ) {
-					if ( !_sensors.rc_safety_toggle.arm_req_made ) {
+				if ( time_us > ( _sensors.rc_arm_toggle.timer_start_us + get_param_uint( PARAM_RC_ARM_TIMER ) ) ) {
+					if ( !_sensors.rc_arm_toggle.arm_req_made ) {
 						if ( _sensors.rc_input.c_y < 0 ) {
 							safety_request_disarm();
 						} else {
 							safety_request_arm();
 						}
 
-						_sensors.rc_safety_toggle.arm_req_made = true;
+						_sensors.rc_arm_toggle.arm_req_made = true;
 					}
 				}
 			} else {
-				_sensors.rc_safety_toggle.arm_req_made = false;
-				_sensors.rc_safety_toggle.timer_start_us = 0;
+				_sensors.rc_arm_toggle.arm_req_made = false;
+				_sensors.rc_arm_toggle.timer_start_us = 0;
 			}
 		}
 	}
