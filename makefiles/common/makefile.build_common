@@ -9,7 +9,6 @@ $(TARGET)_SRC = $(PROJECT_SRC_FILES) \
 			    $(PROJECT_SRC_LIBFIXMATRIX) \
 			    $(DEVICE_SRC)
 
-
 ###############################################################################
 # Things that might need changing to use different tools
 #
@@ -30,10 +29,8 @@ INCLUDE_DIRS = $(ROOT)/include \
 
 ifeq ($(DEBUG),GDB)
 OPTIMIZE	 = -Og
-LTO_FLAGS	 = $(OPTIMIZE)
 else
-OPTIMIZE	 = -Os
-LTO_FLAGS	 = -flto -fuse-linker-plugin $(OPTIMIZE)
+OPTIMIZE	 = -Os -MD
 endif
 
 #XXX: (-Wno-char-subscripts -Wno-sign-compare) used to disable warnings
@@ -43,7 +40,6 @@ endif
 #XXX: (-Wno-unused-result) used to disable warnings about
 #	  not using return values for some functions
 CFLAGS	 = $(ARCH_FLAGS) \
-		   $(LTO_FLAGS) \
 		   $(DEBUG_FLAGS) \
 		   $(DEVICE_FLAGS) \
 		   $(DEVICE_CFLAGS) \
@@ -65,6 +61,7 @@ ASFLAGS	= $(ARCH_FLAGS) \
 
 # XXX Map/crossref output?
 LDFLAGS	= $(ARCH_FLAGS) \
-		  $(LTO_FLAGS) \
+		  $(DEVICE_FLAGS) \
 		  $(DEBUG_FLAGS) \
-		  $(DEVICE_LDFLAGS)
+		  $(DEVICE_LDFLAGS) \
+		  --static

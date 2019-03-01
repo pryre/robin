@@ -13,13 +13,12 @@ static volatile uint32_t time_secs;
 static volatile uint32_t time_usecs;
 
 void sys_tick_handler(void) {
+	//Called every 10us
 	time_usecs += 10;
 
 	if (time_usecs >= 1000000) {
 		time_secs++;
 		time_usecs -= 1000000;
-
-		gpio_clear(GPIOB, GPIO3 | GPIO4);
 	}
 }
 
@@ -28,14 +27,9 @@ static void clock_setup(void) {
 	rcc_clock_setup_in_hse_8mhz_out_72mhz();
 
 	// Enable GPIO Clocks
-	//rcc_periph_clock_enable(RCC_GPIOA);
+	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_AFIO);
-
-	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO3 | GPIO4);
-
-	gpio_set(GPIOB, GPIO3 | GPIO4);
 
 	// Diable JTAG IO, used for status LEDs on Naze32
 	AFIO_MAPR |= AFIO_MAPR_SWJ_CFG_JTAG_OFF_SW_ON;
@@ -49,7 +43,7 @@ static void clock_setup(void) {
 	// SysTick interrupt every N clock pulses: set reload to N-1
 	//systick_set_reload(8999);
 	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
-	systick_set_reload(719);	//overflows at 10us
+	systick_set_reload(719);	//overflows at 10us	//TODO: Need to see if this can be dropped to 1us
 	systick_interrupt_enable();
 	systick_counter_enable();	// Start counting.
 }
@@ -58,8 +52,6 @@ void system_init( void ) {
 	system_debug_print( "--== robin ==--" );
 
 	clock_setup();
-
-	while (1); // Halt.
 }
 
 uint32_t system_micros( void ) {

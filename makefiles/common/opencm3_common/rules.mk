@@ -75,10 +75,9 @@ DEVICE_CFLAGS := $(TGT_CFLAGS)
 DEVICE_LDFLAGS := -lm \
 				  -nostartfiles \
 				  -lc \
-				  --specs=rdimon.specs \
 				  -static \
 				  -Wl,-gc-sections,-Map,$(TARGET_MAP) \
 				  -T$(LDSCRIPT) \
 				  -L$(OBJECT_DIR)/lib/libopencm3 \
 				  $(LDLIBS)
-
+				  #--specs=rdimon.specs \
