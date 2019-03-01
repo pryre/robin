@@ -68,7 +68,7 @@ void estimator_init( void ) {
 	time_last_ = 0;
 }
 
-void reset_adaptive_gyro_bias() {
+void reset_adaptive_gyro_bias(void) {
 	w_bias_.x = 0;
 	w_bias_.y = 0;
 	w_bias_.z = 0;

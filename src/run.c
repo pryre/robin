@@ -2,6 +2,8 @@
 extern "C" {
 #endif
 
+#include "run.h"
+
 #include "calibration.h"
 #include "controller.h"
 #include "estimator.h"

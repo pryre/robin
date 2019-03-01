@@ -49,6 +49,14 @@ naze32_rev6_reflash: naze32_rev6 mavlink_bootloader sleep naze32_rev6_flash
 
 naze32_rev5_reflash: naze32_rev5 mavlink_bootloader sleep naze32_rev5_flash
 
+opencm3_naze32_rev5: param_gen
+	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+
+opencm3_naze32_rev5_flash: opencm3_naze32_rev5
+	stm32flash -w build/robin_opencm3_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+
+opencm3_naze32_rev5_reflash: opencm3_naze32_rev5 mavlink_bootloader sleep opencm3_naze32_rev5_flash
+
 sleep:
 	@sleep 1
 

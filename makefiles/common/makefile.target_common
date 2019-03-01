@@ -1,13 +1,29 @@
 # List of buildable ELF files and their object dependencies.
 # It would be nice to compute these lists, but that seems to be just beyond make.
+
+
+$(OBJECT_DIR)/lib/libopencm3/lib$(LIBNAME).a:
+ifeq (,$(wildcard $@))
+	$(warning $(LIBNAME).a not found, attempting to rebuild in $(OPENCM3_DIR))
+	$(MAKE) -C $(OPENCM3_DIR)
+	mkdir -p $(OBJECT_DIR)/lib/libopencm3/
+	cp $(OPENCM3_DIR)/lib/lib$(LIBNAME).a $(OBJECT_DIR)/lib/libopencm3/lib$(LIBNAME).a
+endif
+
 $(TARGET_BIN): $(TARGET_ELF)
 		$(V0) $(OBJCOPY) -O binary $< $@
 
 $(TARGET_HEX): $(TARGET_ELF)
 	$(OBJCOPY) -O ihex --set-start 0x8000000 $< $@
 
+# If we're using OPENCM3, need to link it as well
+ifndef OPENCM3_DIR
 $(TARGET_ELF): $(TARGET_OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
+else
+$(TARGET_ELF): $(TARGET_OBJS) $(OBJECT_DIR)/lib/libopencm3/lib$(LIBNAME).a
+	$(CC) -o $@ $^ $(LDFLAGS)
+endif
 
 MKDIR_OBJDIR = @mkdir -p $(dir $@)
 

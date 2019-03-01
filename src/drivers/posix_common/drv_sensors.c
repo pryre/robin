@@ -3,8 +3,6 @@
 
 #include "drivers/drv_pwm.h"
 
-uint32_t _imu_time_ready;
-
 bool drv_sensors_i2c_init( void ) {
 	return false;
 }

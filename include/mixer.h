@@ -70,7 +70,7 @@ void mixer_init( void );
 // void write_motor(uint8_t index, uint32_t value);
 // void write_servo(uint8_t index, int32_t value);
 
-void calc_mixer_output();
+void calc_mixer_output(void);
 void pwm_output( uint32_t time_now );
 
 #ifdef __cplusplus

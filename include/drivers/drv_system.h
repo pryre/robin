@@ -10,6 +10,7 @@ extern "C" {
 void system_init( void );
 
 uint32_t system_micros( void );
+void system_pause_us( uint32_t ms );
 void system_pause_ms( uint32_t ms );
 
 void system_reset( void );

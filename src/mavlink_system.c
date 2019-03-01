@@ -189,7 +189,7 @@ void mavlink_send_timesync( mavlink_channel_t chan, uint64_t tc1, uint64_t ts1 )
 }
 
 //==-- Low priority message queue
-static uint16_t get_lpq_next_slot() {
+static uint16_t get_lpq_next_slot(void) {
 	uint16_t next_slot = 0;
 
 	next_slot = _lpq.position + _lpq.length;
@@ -201,12 +201,12 @@ static uint16_t get_lpq_next_slot() {
 	return next_slot;
 }
 
-static bool check_lpq_space_free() {
+static bool check_lpq_space_free(void) {
 	// If the count is at the queue size limit, return false
 	return ( _lpq.length < LOW_PRIORITY_QUEUE_SIZE );
 }
 
-static void remove_current_lpq_message() {
+static void remove_current_lpq_message(void) {
 	_lpq.position++;
 
 	if ( _lpq.position >= LOW_PRIORITY_QUEUE_SIZE )
@@ -216,7 +216,7 @@ static void remove_current_lpq_message() {
 		_lpq.length--;
 }
 
-static uint16_t get_lpq_param_next_slot() {
+static uint16_t get_lpq_param_next_slot(void) {
 	uint16_t next_slot = 0;
 
 	next_slot = _lpq.param_position + _lpq.param_length;
@@ -228,12 +228,12 @@ static uint16_t get_lpq_param_next_slot() {
 	return next_slot;
 }
 
-static bool check_lpq_param_space_free() {
+static bool check_lpq_param_space_free(void) {
 	// If the count is at the queue size limit, return false
 	return ( _lpq.param_length < LOW_PRIORITY_QUEUE_PARAMS_SIZE );
 }
 
-static void remove_current_lpq_param_message() {
+static void remove_current_lpq_param_message(void) {
 	_lpq.param_position++;
 
 	if ( _lpq.param_position >= LOW_PRIORITY_QUEUE_PARAMS_SIZE )

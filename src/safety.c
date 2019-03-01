@@ -493,7 +493,7 @@ static void safety_arm_throttle_timeout( uint32_t time_now ) {
 	}
 }
 
-void safety_check_failsafe( uint32_t time_now ) {
+static void safety_check_failsafe( uint32_t time_now ) {
 	// Auto throttle timeout
 	safety_arm_throttle_timeout( time_now );
 

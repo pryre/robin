@@ -86,7 +86,7 @@ static void motor_test_reset( void ) {
 	_motor_test.motor_step = 0;
 }
 
-void mixer_init() {
+void mixer_init(void) {
 	switch ( get_param_uint( PARAM_MIXER ) ) {
 	case MIXER_FREE: {
 		_mixer_to_use = &mixer_free;
@@ -200,7 +200,7 @@ void mixer_init() {
 	mavlink_queue_broadcast_notice( text_map );
 }
 
-void pwm_init() {
+void pwm_init(void) {
 	// XXX: Loop backwards through the IO map to set the number of motor/servo
 	// ports
 	uint8_t io_c = 0;

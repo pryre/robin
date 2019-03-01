@@ -1,13 +1,14 @@
 ###############################################################################
 # Things that need to be maintained as the source changes
 #
-
+#PROJECT_SRC_FILES = $(HERE)/src/drivers/opencm3_naze32_common/led.c
 # Source files common to all targets
 $(TARGET)_SRC = $(PROJECT_SRC_FILES) \
 			    $(PROJECT_SRC_PARAM_GEN) \
 			    $(PROJECT_SRC_LIBFIXMATH) \
 			    $(PROJECT_SRC_LIBFIXMATRIX) \
 			    $(DEVICE_SRC)
+
 
 ###############################################################################
 # Things that might need changing to use different tools
@@ -35,8 +36,6 @@ OPTIMIZE	 = -Os
 LTO_FLAGS	 = -flto -fuse-linker-plugin $(OPTIMIZE)
 endif
 
-DEBUG_FLAGS	 = -ggdb3
-
 #XXX: (-Wno-char-subscripts -Wno-sign-compare) used to disable warnings
 #	  in the libfixmath and libfixmatrix compilations
 #XXX: (-Wno-unused-parameter) used to disable warnings
@@ -47,6 +46,7 @@ CFLAGS	 = $(ARCH_FLAGS) \
 		   $(LTO_FLAGS) \
 		   $(DEBUG_FLAGS) \
 		   $(DEVICE_FLAGS) \
+		   $(DEVICE_CFLAGS) \
 		   $(addprefix -D,$(OPTIONS)) \
 		   $(addprefix -I,$(INCLUDE_DIRS)) \
 		   -Wall -pedantic -Wextra -Wshadow -Wunsafe-loop-optimizations \

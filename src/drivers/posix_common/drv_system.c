@@ -75,6 +75,14 @@ uint32_t system_micros( void ) {
 	return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
 }
 
+void system_pause_us( uint32_t us ) {
+	struct timespec sleep_time;
+	sleep_time.tv_sec = 0;
+	sleep_time.tv_nsec = 1000 * us; // micros to nanos
+
+	nanosleep( &sleep_time, NULL );
+}
+
 void system_pause_ms( uint32_t ms ) {
 	struct timespec sleep_time;
 	sleep_time.tv_sec = 0;
