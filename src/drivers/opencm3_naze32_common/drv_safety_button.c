@@ -2,28 +2,19 @@
 
 #include "drivers/drv_sensors.h"
 
-/*
-#include "breezystm32.h"
+#include <libopencm3/stm32/gpio.h>
 
-static GPIO_TypeDef* gpio_p_safety;
-static uint16_t pin_safety;
-*/
+#define GPIO_SAFETY GPIOA
+#define PIN_SAFETY GPIO6
+
 bool drv_sensors_safety_button_init( void ) {
-/*
-	gpio_p_safety = GPIOA;
-	pin_safety = Pin_6;
+	//Set safety button for input pull-up
+	gpio_set_mode(GPIO_SAFETY, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, PIN_SAFETY);
+	gpio_set(GPIO_SAFETY, PIN_SAFETY);
 
-	gpio_config_t safety_button_cfg;
-	safety_button_cfg.pin = pin_safety;
-	safety_button_cfg.mode = Mode_IPU;
-	safety_button_cfg.speed = Speed_2MHz;
-	gpioInit( gpio_p_safety, &safety_button_cfg );
-
-*/
 	return true;
 }
 
 bool drv_sensors_safety_button_read( void ) {
-//	return digitalIn( gpio_p_safety, pin_safety );
-return false;
+	return gpio_get(GPIO_SAFETY, PIN_SAFETY);
 }
