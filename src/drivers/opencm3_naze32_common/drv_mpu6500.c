@@ -43,7 +43,6 @@ bool mpu6500_init( uint32_t i2c, drv_mpu_accel_fsr_e accelFSR, drv_mpu_gyro_fsr_
 		drv_i2c_write_register(i2c, MPU_ADDRESS, MPU_RA_CONFIG, INV_FILTER_42HZ );
 		// gyroFSR := INV_FSR_2000DPS
 		drv_i2c_write_register(i2c, MPU_ADDRESS, MPU_RA_GYRO_CONFIG, gyroFSR << 3 );
-
 		// Accel config
 		drv_i2c_write_register(i2c, MPU_ADDRESS, MPU_RA_ACCEL_CONFIG, accelFSR << 3 );
 

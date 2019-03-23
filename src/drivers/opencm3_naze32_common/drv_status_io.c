@@ -5,19 +5,6 @@
 
 #include <libopencm3/stm32/gpio.h>
 
-/*
-#include "breezystm32.h"
-
-static GPIO_TypeDef* gpio_p_arm;
-static uint16_t pin_arm;
-
-GPIO_TypeDef* gpio_p_heart;
-static uint16_t pin_heart;
-
-GPIO_TypeDef* gpio_p_buzzer;
-static uint16_t pin_buzzer;
-*/
-
 #define GPIO_ARM GPIOB
 #define GPIO_HEART GPIOB
 #define GPIO_BUZZER GPIOA
