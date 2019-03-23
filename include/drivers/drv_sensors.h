@@ -10,9 +10,10 @@ extern "C" {
 extern uint32_t _imu_time_ready;
 
 bool drv_sensors_i2c_init( void );
-bool drv_sensors_imu_init( fix16_t* scale_accel, fix16_t* scale_gyro );
-bool drv_sensors_mag_init( void );
-bool drv_sensors_baro_init( void );
+bool drv_sensors_imu_init( uint32_t i2c, fix16_t* scale_accel, fix16_t* scale_gyro );
+void drv_sensors_imu_configure_int(void ( *functionPtr )( void ));
+bool drv_sensors_mag_init( uint32_t i2c );
+bool drv_sensors_baro_init( uint32_t i2c );
 bool drv_sensors_sonar_init( void );
 bool drv_sensors_rc_input_init( void );
 bool drv_sensors_safety_button_init( void );

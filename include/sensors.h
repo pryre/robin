@@ -37,7 +37,7 @@ typedef struct {
 	uint32_t max;		   // Maximum dt so far
 	uint32_t min;		   // Minimum dt so far
 
-	uint32_t imu_time_read;
+	uint32_t imu_time_ready;
 
 	int64_t rt_offset_ns;
 	float rt_drift;
@@ -178,6 +178,7 @@ extern sensor_readings_t _sensors;
 
 // function declarations
 void sensors_init( void );
+void sensor_status_init( sensor_status_t* status, bool sensor_present );
 bool sensors_read( uint32_t time_us );
 
 // void sensors_poll(void);

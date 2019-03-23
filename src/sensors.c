@@ -53,7 +53,7 @@ static void clock_init( void ) {
 	_sensors.clock.max = 0;
 	_sensors.clock.min = 1000;
 
-	_sensors.clock.imu_time_read = 0;
+	_sensors.clock.imu_time_ready = 0;
 
 	_sensors.clock.rt_offset_ns = 0;
 	_sensors.clock.rt_drift = 1.0;
@@ -62,7 +62,7 @@ static void clock_init( void ) {
 	_sensors.clock.rt_sync_last = 0;
 }
 
-static void sensor_status_init( sensor_status_t* status, bool sensor_present ) {
+void sensor_status_init( sensor_status_t* status, bool sensor_present ) {
 	status->present = sensor_present;
 	status->new_data = false;
 	status->time_read = 0;
@@ -97,54 +97,7 @@ void sensors_init( void ) {
 	sensors_init_hil();
 
 	if ( !_sensors.hil.status.present ) {
-		if ( drv_sensors_i2c_init() ) {
-			/*
-// XXX: I2C Sniffer
-uint8_t addr;
-for (addr=0; addr<128; ++addr) {
-delay(50);
-if (i2cWriteRegister(addr, 0x00, 0x00)) {
-
-char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-snprintf(text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
-"[PARAM] I2C sniff found: 0x%x", addr);
-mavlink_queue_broadcast_notice(text);
-}
-}
-*/
-
-			//==-- IMU
-			sensor_status_init( &_sensors.imu.status,
-								drv_sensors_imu_init( &_sensors.imu.accel_scale,
-													  &_sensors.imu.gyro_scale ) );
-
-			//==-- Mag
-			if ( get_param_fix16( PARAM_SENSOR_MAG_UPDATE_RATE ) > 0 ) {
-				mavlink_queue_broadcast_error( "[SENSOR] Mag support is not stable!" );
-
-				sensor_status_init( &_sensors.mag.status, drv_sensors_mag_init() );
-
-				// If we expected it to be present, but it failed
-				if ( !_sensors.mag.status.present )
-					mavlink_queue_broadcast_error(
-						"[SENSOR] Unable to configure mag, disabling!" );
-			} else {
-				sensor_status_init( &_sensors.mag.status, false );
-			}
-
-			//==-- Baro
-			if ( get_param_fix16( PARAM_SENSOR_BARO_UPDATE_RATE ) > 0 ) {
-				sensor_status_init( &_sensors.baro.status, drv_sensors_baro_init() );
-
-				// If we expected it to be present, but it failed
-				if ( !_sensors.baro.status.present )
-					mavlink_queue_broadcast_error(
-						"[SENSOR] Unable to configure baro, disabling!" );
-			} else {
-				sensor_status_init( &_sensors.baro.status, false );
-			}
-		} else {
-
+		if ( !drv_sensors_i2c_init() ) {
 			sensor_status_init( &_sensors.imu.status, false );
 			sensor_status_init( &_sensors.mag.status, false );
 			sensor_status_init( &_sensors.baro.status, false );
@@ -289,7 +242,7 @@ uint64_t sensors_clock_rt_get( void ) {
 }
 
 uint32_t sensors_clock_imu_int_get( void ) {
-	return _sensors.clock.imu_time_read;
+	return _sensors.clock.imu_time_ready;
 }
 
 static fix16_t dual_normalized_input( uint16_t pwm, uint16_t min, uint16_t mid,

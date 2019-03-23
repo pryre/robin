@@ -8,7 +8,6 @@
 #include <libopencm3/cm3/systick.h>	//Needed for clock
 #include <libopencm3/cm3/scb.h>		//Needed for resets
 #include <libopencm3/cm3/nvic.h>	//Needed for sys_tick_handler()
-#include <libopencm3/cm3/cortex.h>	//Need for atomic blocking
 
 
 #define BOOT_SYSCHK_VAL 0xDEADBEEF
@@ -28,18 +27,22 @@ void sys_tick_handler(void) {
 	uptime_ms_++;
 }
 
-static void clock_setup(void) {
+static void rcc_setup(void) {
 	// Set STM32 to 72 MHz.
 	rcc_clock_setup_in_hse_8mhz_out_72mhz();
 
-	// Enable GPIO Clocks
+	// Enable GPIO clocks.
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOB);
+	rcc_periph_clock_enable(RCC_GPIOC);
 	rcc_periph_clock_enable(RCC_AFIO);
 
 	// Diable JTAG IO, used for status LEDs on Naze32
-	AFIO_MAPR |= AFIO_MAPR_SWJ_CFG_JTAG_OFF_SW_ON;
+	//AFIO_MAPR |= AFIO_MAPR_SWJ_CFG_JTAG_OFF_SW_OFF;
+	gpio_primary_remap(AFIO_MAPR_SWJ_CFG_JTAG_OFF_SW_OFF, 0);
+}
 
+static void clock_setup(void) {
 	// Do SysTick setup
 	uptime_ms_ = 0;
 	// 72MHz / 8 => 9000000 counts per second
@@ -95,6 +98,7 @@ static void check_reboot_bootloader(void) {
 void system_init( void ) {
 	system_debug_print( "--== robin ==--" );
 
+	rcc_setup();
 	clock_setup();
 }
 

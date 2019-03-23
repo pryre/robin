@@ -1,44 +1,125 @@
-#include "breezystm32.h"
-
 #include "drivers/drv_sensors.h"
 #include "drivers/drv_system.h"
-#include "drivers/naze32_common/drv_bmp280.h"
-#include "drivers/naze32_common/drv_hmc5883l.h"
-#include "drivers/naze32_common/drv_mpu.h"
+
+#include <libopencm3/stm32/i2c.h>
+#include "drivers/opencm3_naze32_common/drv_i2c.h"
+
+#include "drivers/opencm3_naze32_common/drv_bmp280.h"
+#include "drivers/opencm3_naze32_common/drv_hmc5883l.h"
+#include "drivers/opencm3_naze32_common/drv_mpu.h"
 
 #include "calibration.h"
 #include "params.h"
 #include "safety.h"
 #include "sensors.h"
+#include "mavlink_system.h"
 
 #include "fix16.h"
 #include "fixextra.h"
 
-uint32_t _imu_time_ready;
+
+#define NAZE32_I2C_SENSOR_CHANNEL I2C2
+
+
 sensor_readings_t _sensors;
 calibration_data_t _calibrations;
+
+static volatile uint32_t imu_time_ready_;
 
 static volatile uint8_t accel_status = 0;
 static volatile uint8_t gyro_status = 0;
 static volatile uint8_t temp_status = 0;
+static volatile uint8_t mag_status = 0;
+static volatile uint8_t baro_status = 0;
+static volatile uint8_t sonar_status = 0;
 
-static int16_t read_accel_raw[3];
-static int16_t read_gyro_raw[3];
+static volatile int16_t read_accel_raw[3];
+static volatile int16_t read_gyro_raw[3];
 static volatile int16_t read_temp_raw;
 
-static volatile uint8_t mag_status = 0;
-static int16_t read_mag_raw[3];
-static volatile uint8_t baro_status = 0;
-static int32_t read_baro_raw[2];
-static volatile uint8_t sonar_status = 0;
-// static int32_t read_baro_raw[2];
+static volatile int16_t read_mag_raw[3];
+static volatile int32_t read_baro_raw[2];
+
+static void drv_sensors_imu_ready(void) {
+	//==-- Timing setup get loop time
+	imu_time_ready_ = system_micros();
+}
+
+static void drv_sensors_i2c_scan(void) {
+	for(uint8_t addr=0; addr<0x80; ++addr) {
+		system_pause_ms(50);
+
+		if (drv_i2c_write_register(NAZE32_I2C_SENSOR_CHANNEL, addr, 0x00, 0x00)) {
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+			snprintf(text,
+					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
+					 "[PARAM] i2c_scan() found: 0x%x",
+					 addr);
+			mavlink_queue_broadcast_notice(text);
+		}
+	}
+}
 
 bool drv_sensors_i2c_init( void ) {
-	_imu_time_ready = 0;
+	imu_time_ready_ = 0;
 
-	system_pause_ms( 500 ); // Wait for i2c devices to boot properly
+	system_pause_ms( 100 ); // Wait for i2c devices to boot properly
 
-	i2cInit( I2CDEV );
+	drv_i2c_init( NAZE32_I2C_SENSOR_CHANNEL );
+
+	accel_status = I2C_JOB_DEFAULT;
+	gyro_status = I2C_JOB_DEFAULT;
+	temp_status = I2C_JOB_DEFAULT;
+	mag_status = I2C_JOB_DEFAULT;
+	baro_status = I2C_JOB_DEFAULT;
+	sonar_status = I2C_JOB_DEFAULT;
+
+	//==-- Initialize i2c sensors
+
+	// IMU
+	sensor_status_init( &_sensors.imu.status,
+						drv_sensors_imu_init( NAZE32_I2C_SENSOR_CHANNEL,
+											  &_sensors.imu.accel_scale,
+											  &_sensors.imu.gyro_scale ) );
+
+
+	if(_sensors.imu.status.present) {
+		//Set up to be interrupt-driven data read
+		drv_sensors_imu_configure_int(&drv_sensors_imu_ready);
+	} else {
+		// Something is wrong with the board / addresses
+		// Do a scan to help out the user
+
+		mavlink_queue_broadcast_error( "[SENSOR] Could not connect to IMU!" );
+
+		drv_sensors_i2c_scan();
+	}
+
+	// Mag
+	if ( get_param_fix16( PARAM_SENSOR_MAG_UPDATE_RATE ) > 0 ) {
+		mavlink_queue_broadcast_error( "[SENSOR] Mag support is not stable!" );
+
+		sensor_status_init( &_sensors.mag.status, drv_sensors_mag_init(NAZE32_I2C_SENSOR_CHANNEL) );
+
+		// If we expected it to be present, but it failed
+		if ( !_sensors.mag.status.present )
+			mavlink_queue_broadcast_error(
+				"[SENSOR] Unable to configure mag, disabling!" );
+	} else {
+		sensor_status_init( &_sensors.mag.status, false );
+	}
+
+	// Baro
+	if ( get_param_fix16( PARAM_SENSOR_BARO_UPDATE_RATE ) > 0 ) {
+		sensor_status_init( &_sensors.baro.status, drv_sensors_baro_init(NAZE32_I2C_SENSOR_CHANNEL) );
+
+		// If we expected it to be present, but it failed
+		if ( !_sensors.baro.status.present )
+			mavlink_queue_broadcast_error(
+				"[SENSOR] Unable to configure baro, disabling!" );
+	} else {
+		sensor_status_init( &_sensors.baro.status, false );
+	}
 
 	return true;
 }
@@ -55,21 +136,25 @@ bool drv_sensors_i2c_job_queued( void ) {
 }
 
 void drv_sensors_i2c_clear( void ) {
-	while ( drv_sensors_i2c_job_queued() )
-		__asm__("nop"_;
+	while ( drv_sensors_i2c_job_queued() );
 }
 
 static void drv_sensors_i2c_poll( uint32_t time_us ) {
 	//==-- Update IMU
 	if ( _sensors.imu.status.present ) {
 		// Update the imu sensor if we've recieved a new interrupt
-		if ( ( _imu_time_ready > sensors_clock_imu_int_get() ) && ( accel_status == I2C_JOB_DEFAULT ) && ( gyro_status == I2C_JOB_DEFAULT ) && ( temp_status == I2C_JOB_DEFAULT ) ) {
+		// and we're not collecting data already
+		if( ( imu_time_ready_ > sensors_clock_imu_int_get() ) &&
+			( accel_status == I2C_JOB_DEFAULT ) &&
+			( gyro_status == I2C_JOB_DEFAULT ) &&
+			( temp_status == I2C_JOB_DEFAULT ) ) {
 
-			mpu_request_async_accel_read( read_accel_raw, &accel_status );
-			mpu_request_async_gyro_read( read_gyro_raw, &gyro_status );
-			mpu_request_async_temp_read( &( read_temp_raw ), &temp_status );
+			mavlink_queue_broadcast_notice("Update IMU");
+			mpu_request_async_accel_read( NAZE32_I2C_SENSOR_CHANNEL, read_accel_raw, &accel_status );
+			mpu_request_async_gyro_read( NAZE32_I2C_SENSOR_CHANNEL, read_gyro_raw, &gyro_status );
+			mpu_request_async_temp_read( NAZE32_I2C_SENSOR_CHANNEL, &read_temp_raw, &temp_status );
 
-			_sensors.clock.imu_time_read = _imu_time_ready;
+			_sensors.clock.imu_time_ready = imu_time_ready_;
 		}
 	}
 
@@ -80,7 +165,7 @@ static void drv_sensors_i2c_poll( uint32_t time_us ) {
 	if ( _sensors.mag.status.present && !aux_sensor_req ) {
 		// Update the sensor if it's time (and it's not currently reading)
 		if ( ( ( time_us - _sensors.mag.status.time_read ) > _sensors.mag.period_update ) && ( mag_status == I2C_JOB_DEFAULT ) ) {
-			hmc5883l_request_async_read( read_mag_raw, &mag_status );
+			hmc5883l_request_async_read( NAZE32_I2C_SENSOR_CHANNEL, read_mag_raw, &mag_status );
 			aux_sensor_req = true;
 		}
 	}
@@ -89,7 +174,7 @@ static void drv_sensors_i2c_poll( uint32_t time_us ) {
 	if ( _sensors.baro.status.present && !aux_sensor_req ) {
 		// Update the sensor if it's time (and it's not currently reading)
 		if ( ( ( time_us - _sensors.baro.status.time_read ) > _sensors.baro.period_update ) && ( baro_status == I2C_JOB_DEFAULT ) ) {
-			bmp280_request_async_read( read_baro_raw, &baro_status );
+			bmp280_request_async_read( NAZE32_I2C_SENSOR_CHANNEL, read_baro_raw, &baro_status );
 			aux_sensor_req = true;
 		}
 	}
@@ -111,6 +196,15 @@ bool drv_sensors_i2c_read( uint32_t time_us ) {
 	bool mag_job_complete = false;
 	bool baro_job_complete = false;
 	bool sonar_job_complete = false;
+
+
+	//TODO: Handle errors!
+	if( accel_status == I2C_JOB_ERROR )
+		accel_status = I2C_JOB_DEFAULT;
+	if( gyro_status == I2C_JOB_ERROR )
+		gyro_status = I2C_JOB_DEFAULT;
+	if( temp_status == I2C_JOB_ERROR )
+		temp_status = I2C_JOB_DEFAULT;
 
 	// Check IMU status
 	if ( ( accel_status == I2C_JOB_COMPLETE ) && ( gyro_status == I2C_JOB_COMPLETE ) && ( temp_status == I2C_JOB_COMPLETE ) ) {
@@ -170,8 +264,12 @@ bool drv_sensors_i2c_read( uint32_t time_us ) {
 		safety_update_sensor( &_system_status.sensors.imu );
 	}
 
+
 	if ( mag_status == I2C_JOB_DEFAULT ) {
 		mag_job_complete = true;
+	} else if ( mag_status == I2C_JOB_ERROR ) {
+		mag_job_complete = true;
+		mag_status = I2C_JOB_DEFAULT;
 	} else if ( mag_status == I2C_JOB_COMPLETE ) {
 		mag_job_complete = true;
 		mag_status = I2C_JOB_DEFAULT;
@@ -216,13 +314,17 @@ bool drv_sensors_i2c_read( uint32_t time_us ) {
 		*/
 
 		// Other Mag updates
-		_sensors.mag.status.time_read = micros();
+		_sensors.mag.status.time_read = system_micros();
 		_sensors.mag.status.new_data = true;
 		safety_update_sensor( &_system_status.sensors.mag );
 	}
 
+
 	if ( baro_status == I2C_JOB_DEFAULT ) {
 		baro_job_complete = true;
+	} else if ( baro_status == I2C_JOB_ERROR ) {
+		baro_job_complete = true;
+		baro_status = I2C_JOB_DEFAULT;
 	} else if ( baro_status == I2C_JOB_COMPLETE ) {
 		baro_job_complete = true;
 		baro_status = I2C_JOB_DEFAULT;
@@ -232,26 +334,29 @@ bool drv_sensors_i2c_read( uint32_t time_us ) {
 		_sensors.baro.raw_temp = read_baro_raw[1];
 
 		// Other Baro updates
-		_sensors.baro.status.time_read = micros();
+		_sensors.baro.status.time_read = system_micros();
 		_sensors.baro.status.new_data = true;
 		safety_update_sensor( &_system_status.sensors.baro );
 	}
 
 	if ( sonar_status == I2C_JOB_DEFAULT ) {
 		sonar_job_complete = true;
+	} else if ( sonar_status == I2C_JOB_ERROR ) {
+		sonar_job_complete = true;
+		sonar_status = I2C_JOB_DEFAULT;
 	} else if ( sonar_status == I2C_JOB_COMPLETE ) {
 		sonar_job_complete = true;
 		sonar_status = I2C_JOB_DEFAULT;
-		/*
-//Handle raw values
-_sensors.baro.raw_press = read_baro_raw[0];
-_sensors.baro.raw_temp = read_baro_raw[1];
 
-//Other Baro updates
-_sensors.baro.status.time_read = micros();
-_sensors.baro.status.new_data = true;
-safety_update_sensor(&_system_status.sensors.baro);
-*/
+		//Handle raw values
+		//_sensors.baro.raw_press = read_baro_raw[0];
+		//_sensors.baro.raw_temp = read_baro_raw[1];
+
+		//Other Baro updates
+		//_sensors.baro.status.time_read = micros();
+		//_sensors.baro.status.new_data = true;
+		//safety_update_sensor(&_system_status.sensors.baro);
+
 	}
 
 	// TODO: Check other status
