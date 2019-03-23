@@ -13,3 +13,6 @@
 [submodule "lib/mavlink"]
 	path = lib/mavlink
 	url = https://github.com/mavlink/c_library_v2
+[submodule "lib/libopencm3"]
+	path = lib/libopencm3
+	url = https://github.com/libopencm3/libopencm3
