@@ -301,34 +301,64 @@ static void i2c_er_handler(uint32_t i2c) {
 	//Some basic error determination
 	if( I2C_SR1(i2c) & I2C_SR1_AF) {
 		job->error = I2C_JOB_ERROR_ACK;
+		//say("ic2_er: ack");
 	} else if( I2C_SR1(i2c) & I2C_SR1_ARLO) {
 		job->error = I2C_JOB_ERROR_ARBITRATION;
+		//say("ic2_er: arlo");
 	} else if( I2C_SR1(i2c) & I2C_SR1_BERR) {
 		job->error = I2C_JOB_ERROR_BUS;
+		//say("ic2_er: bus");
 	} else {
 		job->error = I2C_JOB_ERROR_GENERIC;
+		//say("ic2_er: gen");
 	}
 
 	// If AF, BERR or ARLO, abandon the current job and commence new if there are jobs
 	if ( I2C_SR1(i2c) & ( I2C_SR1_BERR | I2C_SR1_ARLO | I2C_SR1_AF ) ) {
-		(void)I2C_SR2(i2c);											 // read second status register to clear ADDR if it is set (note that BTF will not be set after a NACK)
-		//I2C_ITConfig(I2Cx, I2C_IT_BUF, DISABLE);						// disable the RXNE/TXE interrupt - prevent the ISR tailchaining onto the ER (hopefully)
-		if (!(I2C_SR1(i2c) & I2C_SR1_ARLO) && !(I2C_CR1(i2c) & I2C_CR1_STOP)) {		 // if we dont have an ARLO error, ensure sending of a stop
-			if (I2C_CR1(i2c) & I2C_CR1_START) {								   // We are currently trying to send a start, this is very bad as start, stop will hang the peripheral
-				while (I2C_CR1(i2c) & I2C_CR1_START)
-					__asm__("nop");	// wait for any start to finish sending
+		__asm__("dmb");
+		// read second status register to clear ADDR if it is set
+		//(note that BTF will not be set after a NACK)
+		(void)I2C_SR2(i2c);
 
-				i2c_send_stop(i2c);						 // send stop to finalise bus transaction
+		// Prepare a hardware reset if needed
+		// This will "un-stick" the lines as well
+		bool do_reset = false;
 
-				while (I2C_CR1(i2c) & I2C_CR1_STOP)
-					__asm__("nop");	// wait for stop to finish sending
+		// if we dont have an ARLO error, try a start-stop recovery
+		if ( !(I2C_SR1(i2c) & I2C_SR1_ARLO) ) {
+			// Ensure sending of a stop
+			if( !(I2C_CR1(i2c) & I2C_CR1_STOP) ) {
+				// We are currently trying to send a start
+				// This is very bad as start, stop will hang the peripheral
+				if (I2C_CR1(i2c) & I2C_CR1_START) {
+					while (I2C_CR1(i2c) & I2C_CR1_START)
+						__asm__("nop");	// wait for any start to finish sending
 
-				drv_i2c_init(i2c);									// reset and configure the hardware
-			} else {
-				i2c_send_stop(i2c);						 // stop to free up the bus
-				port_running = false;								   // Disable EVT and ERR interrupts while bus inactive
+					// send stop to finalise bus transaction
+					i2c_send_stop(i2c);
+
+					while (I2C_CR1(i2c) & I2C_CR1_STOP)
+						__asm__("nop");	// wait for stop to finish sending
+
+					do_reset = true;
+				} else {
+					// Just send stop to finalise bus transaction
+					i2c_send_stop(i2c);
+				}
 			}
+
+			// Disable EVT and ERR interrupts while bus inactive
+			// Should help with recovery
+			port_running = false;
+		} else {
+			//Otherwise we have an ARLO
+			//We might be able to recover if it was a bad clock signal
+			do_reset = true;
 		}
+
+		//Reset if needed
+		if(do_reset)
+			drv_i2c_init(i2c);
 	}
 
 	I2C_SR1(i2c) &= ~0x0F00;											   // reset all the error bits to clear the interrupt
@@ -382,26 +412,32 @@ static void i2c_ev_handler(uint32_t i2c) {
 	} else if (I2C_SR1(i2c) & I2C_SR1_ADDR) {
 		// Address send has just completed - EV6 in ref manual
 		// Read SR1,2 to clear ADDR
-		__asm__("dmb");														// memory fence to control hardware
+		__asm__("dmb");	// memory fence to control hardware
 
-		if (job->length == 1 && (job->type == I2C_JOB_TYPE_READ) && subaddress_sent) {				 // we are receiving 1 byte - EV6_3
-			i2c_disable_ack(i2c);					   // turn off ACK
+		if (job->length == 1 && (job->type == I2C_JOB_TYPE_READ) && subaddress_sent) {
+			// we are receiving 1 byte - EV6_3
+			i2c_disable_ack(i2c);	// turn off ACK
 			__asm__("dmb");
-			(void)I2C_SR2(i2c);											// clear ADDR after ACK is turned off
-			i2c_send_stop(i2c);							 // program the stop
+			(void)I2C_SR2(i2c);		// clear ADDR after ACK is turned off
+			i2c_send_stop(i2c);		// program the stop
 
 			final_stop = 1;
-			i2c_enable_interrupt(i2c, I2C_CR2_ITBUFEN);					 // allow us to have an EV7
-		} else {														// EV6 and EV6_1
-			(void)I2C_SR2(i2c);											// clear the ADDR here
+			i2c_enable_interrupt(i2c, I2C_CR2_ITBUFEN);	// allow us to have an EV7
+		} else {
+			// EV6 and EV6_1
+			(void)I2C_SR2(i2c);	// clear the ADDR here
 			__asm__("dmb");
 
-			if (job->length == 2 && (job->type == I2C_JOB_TYPE_READ) && subaddress_sent) {			 // rx 2 bytes - EV6_1
-				i2c_disable_ack(i2c);				   // turn off ACK
-				i2c_disable_interrupt(i2c, I2C_CR2_ITBUFEN);				// disable TXE to allow the buffer to fill
-			} else if (job->length == 3 && (job->type == I2C_JOB_TYPE_READ) && subaddress_sent) {		// rx 3 bytes
-				i2c_disable_interrupt(i2c, I2C_CR2_ITBUFEN);				// make sure RXNE disabled so we get a BTF in two bytes time
-			} else {														// receiving greater than three bytes, sending subaddress, or transmitting
+			if (job->length == 2 && (job->type == I2C_JOB_TYPE_READ) && subaddress_sent) {
+				 // rx 2 bytes - EV6_1
+				i2c_disable_ack(i2c);							// turn off ACK
+				i2c_disable_interrupt(i2c, I2C_CR2_ITBUFEN);	//disable TXE to allow the buffer to fill
+			} else if (job->length == 3 && (job->type == I2C_JOB_TYPE_READ) && subaddress_sent) {
+				// rx 3 bytes
+				// make sure RXNE disabled so we get a BTF in two bytes time
+				i2c_disable_interrupt(i2c, I2C_CR2_ITBUFEN);
+			} else {
+				// receiving greater than three bytes, sending subaddress, or transmitting
 				i2c_enable_interrupt(i2c, I2C_CR2_ITBUFEN);
 			}
 		}
@@ -418,7 +454,7 @@ static void i2c_ev_handler(uint32_t i2c) {
 				i2c_enable_interrupt(i2c, I2C_CR2_ITBUFEN);				 // enable TXE to allow the final EV7
 			} else {													// EV7_3
 				if (final_stop){
-					i2c_disable_ack(i2c);					 // program the Stop
+					i2c_send_stop(i2c);					 // program the Stop
 				} else {
 					i2c_send_start(i2c);					// program a rep start
 				}

@@ -149,7 +149,6 @@ static void drv_sensors_i2c_poll( uint32_t time_us ) {
 			( gyro_status == I2C_JOB_DEFAULT ) &&
 			( temp_status == I2C_JOB_DEFAULT ) ) {
 
-			mavlink_queue_broadcast_notice("Update IMU");
 			mpu_request_async_accel_read( NAZE32_I2C_SENSOR_CHANNEL, read_accel_raw, &accel_status );
 			mpu_request_async_gyro_read( NAZE32_I2C_SENSOR_CHANNEL, read_gyro_raw, &gyro_status );
 			mpu_request_async_temp_read( NAZE32_I2C_SENSOR_CHANNEL, &read_temp_raw, &temp_status );
