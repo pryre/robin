@@ -20,7 +20,7 @@ OPTIONS		?=
 
 # Debugger optons, must be empty or GDB
 DEBUG		?=
-
+	
 posix_udp: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
@@ -57,11 +57,11 @@ opencm3_naze32_rev5_flash: opencm3_naze32_rev5
 
 opencm3_naze32_rev5_reflash: opencm3_naze32_rev5 mavlink_bootloader sleep opencm3_naze32_rev5_flash
 
-sleep:
-	@sleep 1
-
 param_gen:
 	@python3 lib/param_generator/gen_params.py ./lib/param_generator/definitions/ ./build/ >&2
+
+sleep:
+	@sleep 1
 
 lint:
 	@find ./include -name '*.h' -exec clang-format -i '{}' \;

@@ -5,7 +5,7 @@ DEVICE_BUILD_OBJCOPY = arm-none-eabi-objcopy
 
 ###############################################################################
 
-# Naze32 libopencm3 specific drivers
+# libopencm3 specific drivers
 OPENCM3_DIR	:= $(ROOT)/lib/libopencm3
 LDLIBS		+= -l$(LIBNAME)
 

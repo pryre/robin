@@ -21,7 +21,7 @@ ifndef OPENCM3_DIR
 $(TARGET_ELF): $(TARGET_OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 else
-$(TARGET_ELF): $(TARGET_OBJS) $(OBJECT_DIR)/lib/libopencm3/lib$(LIBNAME).a
+$(TARGET_ELF): $(OBJECT_DIR)/lib/libopencm3/lib$(LIBNAME).a $(TARGET_OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 endif
 
