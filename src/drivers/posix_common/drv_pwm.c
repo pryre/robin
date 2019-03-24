@@ -2,15 +2,13 @@
 #include <stdint.h>
 
 #include "drivers/drv_pwm.h"
-#include "io_type.h"
 
-void pwmInit( io_def_t* io_map, bool usePwmFilter, uint32_t motorPwmRate,
-			  uint32_t servoPwmRate, uint16_t idlePulseUsec ) {
+void drv_pwm_init(void) {
 }
 
-void pwmWriteMotor( uint8_t index, uint16_t value ) {
+void drv_pwm_write( uint8_t index, uint16_t value ) {
 }
 
-uint16_t pwmRead( uint8_t channel ) {
+uint16_t drv_pwm_read( uint8_t index ) {
 	return 0;
 }

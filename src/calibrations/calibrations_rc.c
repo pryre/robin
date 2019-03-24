@@ -94,7 +94,7 @@ bool calibrate_rc( void ) {
 		}
 		case CAL_RC_RANGE_EXTREMES: {
 			for ( int i = 0; i < 8; i++ ) {
-				uint16_t pwmr = pwmRead( i );
+				uint16_t pwmr = drv_pwm_read( i );
 				_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] = ( pwmr < _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] ) ? pwmr : _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN];
 				_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX] = ( pwmr > _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX] ) ? pwmr : _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX];
 			}

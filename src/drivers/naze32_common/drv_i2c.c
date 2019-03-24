@@ -55,8 +55,7 @@ bool drv_sensors_i2c_job_queued( void ) {
 }
 
 void drv_sensors_i2c_clear( void ) {
-	while ( drv_sensors_i2c_job_queued() )
-		__asm__("nop"_;
+	while ( drv_sensors_i2c_job_queued() );
 }
 
 static void drv_sensors_i2c_poll( uint32_t time_us ) {
@@ -69,7 +68,7 @@ static void drv_sensors_i2c_poll( uint32_t time_us ) {
 			mpu_request_async_gyro_read( read_gyro_raw, &gyro_status );
 			mpu_request_async_temp_read( &( read_temp_raw ), &temp_status );
 
-			_sensors.clock.imu_time_read = _imu_time_ready;
+			_sensors.clock.imu_time_ready = _imu_time_ready;
 		}
 	}
 

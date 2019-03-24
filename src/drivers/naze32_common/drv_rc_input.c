@@ -10,6 +10,6 @@ bool drv_sensors_rc_input_init( void ) {
 
 void drv_sensors_rc_input_read( uint16_t* readings ) {
 	for ( int i = 0; i < MAX_INPUTS; i++ ) {
-		readings[i] = pwmRead( i );
+		readings[i] = drv_pwm_read( i );
 	}
 }

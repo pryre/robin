@@ -44,13 +44,13 @@ void setup( void ) {
 	safety_request_state( MAV_STATE_BOOT );
 
 	// Initialize the rest of the systems
-	mixer_init(); // XXX: Must be called before pwm_init()
-
-	pwm_init(); // XXX: This locks boot for a while if ESC cal is active, so do it
+	// XXX: This locks boot for a while if ESC cal is active, so do it
 	// before i2c devices
+	mixer_init();
 
-	sensors_init(); // XXX: Overrides settings made by pwm backend, so must be
-	// after pwm_init()
+	// XXX: May overrides settings made by pwm backend, so must be
+	// after mixer_init()
+	sensors_init();
 
 	calibration_init();
 

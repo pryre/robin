@@ -44,8 +44,10 @@
 #include "gpio.h"
 #include "timer.h"
 
-#include "drivers/drv_pwm.h"
 #include "io_type.h"
+#include "params.h"
+#include "mixer.h"
+#include "drivers/drv_pwm.h"
 
 typedef struct {
 	volatile uint16_t* ccr;
@@ -274,7 +276,7 @@ static void pwmWriteStandard( uint8_t index, uint16_t value ) {
 	*motors[index]->ccr = value;
 }
 
-void pwmInit( io_def_t* io_map, bool usePwmFilter, uint32_t motorPwmRate,
+static void pwmInit( io_def_t* io_map, bool usePwmFilter, uint32_t motorPwmRate,
 			  uint32_t servoPwmRate, uint16_t idlePulseUsec ) {
 	// pwm filtering on input
 	pwmFilter = usePwmFilter ? 1 : 0;
@@ -327,15 +329,53 @@ pwmWritePtr = pwmWriteBrushed;
 */
 }
 
-void pwmWriteMotor( uint8_t index, uint16_t value ) {
-	/*
-if (index < numMotors)
-pwmWritePtr(index, value);
-*/
+//=======================================================================
+// Driver IO as seen by Robin
+//=======================================================================
+
+// XXX: Pinout Mapping for Naze32!
+static const uint8_t io_map_naze32_ppm = 0;
+static const uint8_t io_map_naze32_pwm[MIXER_NUM_MOTORS] = {8, 9, 10, 11,
+															12, 13, 4, 5};
+
+io_type_t _actuator_type_map[MIXER_NUM_MOTORS];
+
+void drv_pwm_init( void ) {
+	// XXX: Loop backwards through the IO map to set the number of motor/servo
+	// ports
+	uint8_t io_c = 0;
+	io_def_t io_map;
+	io_map.port[io_c] = io_map_naze32_ppm; // IO set for PPM input
+	io_map.type[io_c] = IO_TYPE_IP;		   // IO set for PPM input
+	io_c++;
+
+	for ( int i = 0; i < MIXER_NUM_MOTORS; i++ ) {
+		io_map.port[io_c] = io_map_naze32_pwm[i]; // IO map set for PWM input
+		// io_map.type[io_c] = (_mixer_to_use->output_type[i] == IO_TYPE_OM ) ?
+		// IO_TYPE_OM : IO_TYPE_OS;	//IO map set for PWM input
+		io_map.type[io_c] = _actuator_type_map[i];
+		io_c++;
+	}
+
+	// Fill out the rest of the ports to not be initialized
+	while ( io_c < PWM_MAX_PORTS ) {
+		io_map.port[io_c] = 0;
+		io_map.type[io_c] = IO_TYPE_N;
+		io_c++;
+	}
+
+	pwmInit( &io_map, false, get_param_uint( PARAM_MOTOR_PWM_SEND_RATE ),
+			 get_param_uint( PARAM_SERVO_PWM_SEND_RATE ),
+			 get_param_uint( PARAM_MOTOR_PWM_MIN ) );
+}
+
+
+void drv_pwm_write( uint8_t index, uint16_t value ) {
 	if ( index < numMotors )
 		pwmWriteStandard( index, value );
 }
 
-uint16_t pwmRead( uint8_t channel ) {
-	return captures[channel];
+uint16_t drv_pwm_read( uint8_t index ) {
+	return ( index < MAX_INPUTS ) ? captures[index] : 0;
 }
+

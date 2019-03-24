@@ -20,7 +20,7 @@ bool calibrate_esc( void ) {
 
 		for ( uint8_t i = 0; i < MIXER_NUM_MOTORS; i++ )
 			if ( _mixer_to_use->output_type[i] == IO_TYPE_OM )
-				pwmWriteMotor( i, get_param_uint( PARAM_MOTOR_PWM_MAX ) );
+				drv_pwm_write( i, get_param_uint( PARAM_MOTOR_PWM_MAX ) );
 
 		status_led_heart_set( false );
 		bool led_toggle = false;
@@ -31,7 +31,7 @@ bool calibrate_esc( void ) {
 
 		for ( uint8_t i = 0; i < MIXER_NUM_MOTORS; i++ )
 			if ( _mixer_to_use->output_type[i] == IO_TYPE_OM )
-				pwmWriteMotor( i, get_param_uint( PARAM_MOTOR_PWM_MIN ) );
+				drv_pwm_write( i, get_param_uint( PARAM_MOTOR_PWM_MIN ) );
 
 		status_led_arm_set( false );
 		status_led_heart_set( false );

@@ -48,7 +48,8 @@ typedef struct {
 
 // extern int32_t _pwm_control[MIXER_NUM_MOTORS];
 
-extern int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
+//extern int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
+extern io_type_t _actuator_type_map[MIXER_NUM_MOTORS];
 extern fix16_t _actuator_control_g0[MIXER_NUM_MOTORS]; // Motors Controls
 extern fix16_t _actuator_control_g1[MIXER_NUM_MOTORS]; // Motor Additions
 extern fix16_t _actuator_control_g2[MIXER_NUM_MOTORS]; // RC PWM
@@ -63,7 +64,6 @@ extern const mixer_t* _mixer_to_use;
 
 void mixer_clear_outputs( void );
 
-void pwm_init( void );
 void mixer_init( void );
 
 // void write_output_pwm(uint8_t index, uint32_t value, uint32_t value_disarm);

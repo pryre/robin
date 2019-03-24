@@ -30,15 +30,7 @@ extern "C" {
 control_output_t _control_output;
 system_status_t _system_status;
 
-bool _actuator_apply_g0_map[MIXER_NUM_MOTORS];
-// XXX: Same as g0: bool _actuator_apply_g1_map[MIXER_NUM_MOTORS];
-static bool _actuator_apply_g2_map[MIXER_NUM_MOTORS];
-static bool _actuator_apply_g3_map[MIXER_NUM_MOTORS];
-static bool _actuator_apply_g4_map[MIXER_NUM_MOTORS];
-static bool _actuator_apply_g5_map[MIXER_NUM_MOTORS];
-
-static fix16_t
-	_actuator_control_g0m[MIXER_NUM_MOTORS]; // Mixer calculated g0 controls
+io_type_t _actuator_type_map[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g2[MIXER_NUM_MOTORS];
@@ -49,13 +41,16 @@ fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];
 int32_t _pwm_output[MIXER_NUM_MOTORS];
 mixer_motor_test_t _motor_test;
 
-const mixer_t* _mixer_to_use;
-static io_type_t _actuator_type_map[MIXER_NUM_MOTORS];
+static bool actuator_apply_g0_map_[MIXER_NUM_MOTORS];
+// XXX: Same as g0: bool _actuator_apply_g1_map[MIXER_NUM_MOTORS];
+static bool actuator_apply_g2_map_[MIXER_NUM_MOTORS];
+static bool actuator_apply_g3_map_[MIXER_NUM_MOTORS];
+static bool actuator_apply_g4_map_[MIXER_NUM_MOTORS];
+static bool actuator_apply_g5_map_[MIXER_NUM_MOTORS];
 
-// XXX: Pinout Mapping for Naze32!
-static const uint8_t io_map_naze32_ppm = 0;
-static const uint8_t io_map_naze32_pwm[MIXER_NUM_MOTORS] = {8, 9, 10, 11,
-															12, 13, 4, 5};
+static fix16_t actuator_control_g0m_[MIXER_NUM_MOTORS]; // Mixer calculated g0 controls
+
+const mixer_t* _mixer_to_use;
 
 static int32_t int32_constrain( int32_t i, const int32_t min,
 								const int32_t max ) {
@@ -144,24 +139,24 @@ void mixer_init(void) {
 		// First handle output mixers, then auxiliaries
 		if ( _mixer_to_use->output_type[i] != IO_TYPE_N ) {
 			_actuator_type_map[i] = _mixer_to_use->output_type[i];
-			_actuator_apply_g0_map[i] = true;
+			actuator_apply_g0_map_[i] = true;
 			//_actuator_apply_g1_map[i] = true;
 		} else if ( ( get_param_uint( PARAM_ACTUATORS_RC_PWM_MAP ) >> i ) & 0x01 ) {
 			_actuator_type_map[i] = IO_TYPE_OS;
-			_actuator_apply_g2_map[i] = true;
+			actuator_apply_g2_map_[i] = true;
 		} else if ( ( get_param_uint( PARAM_ACTUATORS_RC_DIGITAL_MAP ) >> i ) & 0x01 ) {
 			_actuator_type_map[i] = IO_TYPE_OD;
-			_actuator_apply_g3_map[i] = true;
+			actuator_apply_g3_map_[i] = true;
 		} else if ( ( get_param_uint( PARAM_ACTUATORS_OB_PWM_MAP ) >> i ) & 0x01 ) {
 			_actuator_type_map[i] = IO_TYPE_OS;
-			_actuator_apply_g4_map[i] = true;
+			actuator_apply_g4_map_[i] = true;
 		} else if ( ( get_param_uint( PARAM_ACTUATORS_OB_DIGITAL_MAP ) >> i ) & 0x01 ) {
 			_actuator_type_map[i] = IO_TYPE_OD;
-			_actuator_apply_g5_map[i] = true;
+			actuator_apply_g5_map_[i] = true;
 		}
 
 		// Set initial actuator outputs
-		_actuator_control_g0m[i] = 0;
+		actuator_control_g0m_[i] = 0;
 		_actuator_control_g0[i] = 0;
 		_actuator_control_g1[i] = 0;
 
@@ -198,40 +193,14 @@ void mixer_init(void) {
 	}
 
 	mavlink_queue_broadcast_notice( text_map );
-}
-
-void pwm_init(void) {
-	// XXX: Loop backwards through the IO map to set the number of motor/servo
-	// ports
-	uint8_t io_c = 0;
-	io_def_t io_map;
-	io_map.port[io_c] = io_map_naze32_ppm; // IO set for PPM input
-	io_map.type[io_c] = IO_TYPE_IP;		   // IO set for PPM input
-	io_c++;
-
-	for ( int i = 0; i < MIXER_NUM_MOTORS; i++ ) {
-		io_map.port[io_c] = io_map_naze32_pwm[i]; // IO map set for PWM input
-		// io_map.type[io_c] = (_mixer_to_use->output_type[i] == IO_TYPE_OM ) ?
-		// IO_TYPE_OM : IO_TYPE_OS;	//IO map set for PWM input
-		io_map.type[io_c] = _actuator_type_map[i];
-		io_c++;
-	}
-
-	// Fill out the rest of the ports to not be initialized
-	while ( io_c < PWM_MAX_PORTS ) {
-		io_map.port[io_c] = 0;
-		io_map.type[io_c] = IO_TYPE_N;
-		io_c++;
-	}
-
-	pwmInit( &io_map, false, get_param_uint( PARAM_MOTOR_PWM_SEND_RATE ),
-			 get_param_uint( PARAM_SERVO_PWM_SEND_RATE ),
-			 get_param_uint( PARAM_MOTOR_PWM_MIN ) );
+	
+	drv_pwm_init();
 
 	mixer_clear_outputs();
 
 	//==-- Perform remaining PWM setup tasks
 	calibrate_esc();
+
 }
 
 // Direct write to the motor with failsafe checks
@@ -245,7 +214,7 @@ static void write_output_pwm( const uint8_t index, const uint32_t value,
 		_pwm_output[index] = value_disarm;
 	}
 
-	pwmWriteMotor( index, _pwm_output[index] );
+	drv_pwm_write( index, _pwm_output[index] );
 }
 
 // Write a pwm value to the motor channel, value should be between 0 and 1
@@ -348,12 +317,12 @@ static bool motor_test_in_progress( const uint32_t time_now ) {
 
 				// Override mixer inputs for all motors to set to 0
 				for ( uint8_t i = 0; i < MIXER_NUM_MOTORS; i++ ) {
-					if ( _actuator_apply_g0_map[i] )
-						_actuator_control_g0m[i] = 0;
+					if ( actuator_apply_g0_map_[i] )
+						actuator_control_g0m_[i] = 0;
 				}
 
 				// Apply the test to the one we care about
-				_actuator_control_g0m[_motor_test.motor_step] = _motor_test.throttle;
+				actuator_control_g0m_[_motor_test.motor_step] = _motor_test.throttle;
 			} else {
 			}
 		} else {
@@ -374,11 +343,11 @@ void pwm_output( uint32_t time_now ) {
 
 	if ( _mixer_to_use->mixer_ok ) {
 		for ( int8_t i = 0; i < MIXER_NUM_MOTORS; i++ ) {
-			if ( _actuator_apply_g0_map[i] ) {
+			if ( actuator_apply_g0_map_[i] ) {
 				// Handle mixer output
 				io_type_t output_type = _mixer_to_use->output_type[i];
 
-				fix16_t val = _actuator_control_g0m[i];
+				fix16_t val = actuator_control_g0m_[i];
 
 				if ( !test_running ) {
 					if ( _system_status.sensors.offboard_mixer_g0_control.health == SYSTEM_HEALTH_OK ) {
@@ -398,30 +367,30 @@ void pwm_output( uint32_t time_now ) {
 					uint16_t test_pwm = 0;
 
 					if ( output_type == IO_TYPE_OM ) {
-						test_pwm = map_fix16_to_pwm( _actuator_control_g0m[i] );
+						test_pwm = map_fix16_to_pwm( actuator_control_g0m_[i] );
 					} else {
-						test_pwm = map_fix16_to_pwm_dual( _actuator_control_g0m[i] );
+						test_pwm = map_fix16_to_pwm_dual( actuator_control_g0m_[i] );
 					}
 
 					write_output_pwm( i, test_pwm, test_pwm );
 				}
-			} else if ( _actuator_apply_g2_map[i] ) {
+			} else if ( actuator_apply_g2_map_[i] ) {
 				// Handle Aux RC PWM
 				write_aux_pwm( i, _actuator_control_g2[i],
 							   get_param_uint( PARAM_ACTUATORS_RC_RESPECT_ARM ),
 							   get_param_fix16( PARAM_ACTUATORS_RC_PWM_DISARM_VALUE ) );
-			} else if ( _actuator_apply_g3_map[i] ) {
+			} else if ( actuator_apply_g3_map_[i] ) {
 				// Handle Aux OB Digital
 				bool val = ( _actuator_control_g3[i] > 0 );
 				write_aux_digital(
 					i, val, get_param_uint( PARAM_ACTUATORS_RC_RESPECT_ARM ),
 					get_param_uint( PARAM_ACTUATORS_RC_DIGITAL_DISARM_VALUE ) );
-			} else if ( _actuator_apply_g4_map[i] ) {
+			} else if ( actuator_apply_g4_map_[i] ) {
 				// Handle Aux OB PWM
 				write_aux_pwm( i, _actuator_control_g4[i],
 							   get_param_uint( PARAM_ACTUATORS_OB_RESPECT_ARM ),
 							   get_param_fix16( PARAM_ACTUATORS_OB_PWM_DISARM_VALUE ) );
-			} else if ( _actuator_apply_g5_map[i] ) {
+			} else if ( actuator_apply_g5_map_[i] ) {
 				// Handle Aux OB Digital
 				bool val = ( _actuator_control_g5[i] > 0 );
 				write_aux_digital(
@@ -474,9 +443,9 @@ void calc_mixer_output( void ) {
 
 	for ( uint8_t i = 0; i < MIXER_NUM_MOTORS; i++ ) {
 		if ( _mixer_to_use->output_type[i] == IO_TYPE_OM ) {
-			_actuator_control_g0m[i] = fix16_mul( prescaled_outputs[i], scale_factor );
+			actuator_control_g0m_[i] = fix16_mul( prescaled_outputs[i], scale_factor );
 		} else {
-			_actuator_control_g0m[i] = prescaled_outputs[i];
+			actuator_control_g0m_[i] = prescaled_outputs[i];
 		}
 	}
 }
