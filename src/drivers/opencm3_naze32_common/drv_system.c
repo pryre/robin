@@ -30,6 +30,7 @@ void sys_tick_handler(void) {
 static void rcc_setup(void) {
 	// Set STM32 to 72 MHz.
 	rcc_clock_setup_in_hse_8mhz_out_72mhz();
+	//XXX: rcc_clock_setup_in_hse_16mhz_out_72mhz();
 
 	// Enable GPIO clocks.
 	rcc_periph_clock_enable(RCC_GPIOA);

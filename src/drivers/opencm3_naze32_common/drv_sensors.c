@@ -137,7 +137,7 @@ bool drv_sensors_i2c_job_queued( void ) {
 
 void drv_sensors_i2c_clear( void ) {
 	while ( drv_sensors_i2c_job_queued() )
-		__asm__("nop"_);
+		__asm__("nop");
 }
 
 static void drv_sensors_i2c_poll( uint32_t time_us ) {

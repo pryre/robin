@@ -225,9 +225,13 @@ static void pwmWriteStandard( uint8_t index, uint16_t value ) {
 }
 */
 
+void drv_pwm_init(void) {
+
+}
+/*
 void pwmInit( io_def_t* io_map, bool usePwmFilter, uint32_t motorPwmRate,
 			  uint32_t servoPwmRate, uint16_t idlePulseUsec ) {
-/*
+
 	// pwm filtering on input
 	pwmFilter = usePwmFilter ? 1 : 0;
 
@@ -276,10 +280,10 @@ pwmWritePtr = pwmWriteStandard;
 if (motorPwmRate > 500) {
 pwmWritePtr = pwmWriteBrushed;
 }
-*/
 }
+*/
 
-void pwmWriteMotor( uint8_t index, uint16_t value ) {
+void drv_pwm_write( uint8_t index, uint16_t value ) {
 	/*
 if (index < numMotors)
 pwmWritePtr(index, value);
@@ -288,7 +292,7 @@ pwmWritePtr(index, value);
 		//pwmWriteStandard( index, value );
 }
 
-uint16_t pwmRead( uint8_t channel ) {
+uint16_t drv_pwm_read( uint8_t index ) {
 	//return captures[channel];
 	return 0;
 }
