@@ -27,11 +27,31 @@ void sys_tick_handler(void) {
 	uptime_ms_++;
 }
 
-static void rcc_setup(void) {
-	// Set STM32 to 72 MHz.
-	rcc_clock_setup_in_hse_8mhz_out_72mhz();
-	//XXX: rcc_clock_setup_in_hse_16mhz_out_72mhz();
+static void hs_clock_select(void) {
+	//Clock should start in 8MHz HSI mode
 
+	//GPIOC14/15 used for HSE interrupts (15 is clock-in)
+	//Naze32 boards come in two variants, 8MHz and 12MHz clock
+	//To check our clock speed, do some hacky business
+	//(I think this is the process):
+	//	- [GPIOC15 configured to input by libopencm3 for HSE]
+	//	- Set GPIOC15 to high to make sure
+	//	- If running at 12MHz, should go HIGH-LOW-HIGH
+	//	- If running at 8MHz, should go HIGH-LOW
+	gpio_set(GPIOC,GPIO15);
+
+	if( gpio_get(GPIOC,GPIO15) ) {
+		//_hse_freq = 12000000;
+		rcc_clock_setup_in_hse_12mhz_out_72mhz();
+	} else {
+		//_hse_freq = 8000000;
+		rcc_clock_setup_in_hse_8mhz_out_72mhz();
+	}
+
+	//Could handle the point where HSE isn't available here with a timeout check
+}
+
+static void rcc_setup(void) {
 	// Enable GPIO clocks.
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOB);
@@ -41,6 +61,8 @@ static void rcc_setup(void) {
 	// Diable JTAG IO, used for status LEDs on Naze32
 	//AFIO_MAPR |= AFIO_MAPR_SWJ_CFG_JTAG_OFF_SW_OFF;
 	gpio_primary_remap(AFIO_MAPR_SWJ_CFG_JTAG_OFF_SW_OFF, 0);
+
+	hs_clock_select();
 }
 
 static void clock_setup(void) {
