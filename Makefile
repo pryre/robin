@@ -20,7 +20,7 @@ OPTIONS		?=
 
 # Debugger optons, must be empty or GDB
 DEBUG		?=
-	
+
 posix_udp: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
@@ -52,16 +52,24 @@ naze32_rev5_reflash: naze32_rev5 mavlink_bootloader sleep naze32_rev5_flash
 opencm3_naze32_rev5: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
+opencm3_naze32_rev5_mini: param_gen
+	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+
 opencm3_naze32_rev6: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
 opencm3_naze32_rev5_flash: opencm3_naze32_rev5
 	stm32flash -w build/robin_opencm3_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
+opencm3_naze32_rev5_mini_flash: opencm3_naze32_rev5_mini
+	stm32flash -w build/robin_opencm3_naze32_rev5_mini.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+
 opencm3_naze32_rev6_flash: opencm3_naze32_rev6
 	stm32flash -w build/robin_opencm3_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
 opencm3_naze32_rev5_reflash: opencm3_naze32_rev5 mavlink_bootloader sleep opencm3_naze32_rev5_flash
+
+opencm3_naze32_rev5_mini_reflash: opencm3_naze32_rev5_mini mavlink_bootloader sleep opencm3_naze32_rev5_mini_flash
 
 opencm3_naze32_rev6_reflash: opencm3_naze32_rev6 mavlink_bootloader sleep opencm3_naze32_rev6_flash
 

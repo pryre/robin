@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "drivers/drv_system.h"
+#include "drivers/opencm3_naze32_common/drv_clock_select.h"
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>	//Needed for AFIO_MAPR
@@ -26,7 +27,7 @@ void sys_tick_handler(void) {
 	//Called every 1ms, 49 day rollover
 	uptime_ms_++;
 }
-
+/*
 static void hs_clock_select(void) {
 	//Clock should start in 8MHz HSI mode
 
@@ -38,7 +39,11 @@ static void hs_clock_select(void) {
 	//	- Set GPIOC15 to high to make sure
 	//	- If running at 12MHz, should go HIGH-LOW-HIGH
 	//	- If running at 8MHz, should go HIGH-LOW
-	gpio_set(GPIOC,GPIO15);
+	//gpio_set(GPIOC,GPIO15);
+
+	//Lock here for a moment
+	if( gpio_get(GPIOC,GPIO15) )
+		__asm__("nop");
 
 	if( gpio_get(GPIOC,GPIO15) ) {
 		//_hse_freq = 12000000;
@@ -50,7 +55,7 @@ static void hs_clock_select(void) {
 
 	//Could handle the point where HSE isn't available here with a timeout check
 }
-
+*/
 static void rcc_setup(void) {
 	// Enable GPIO clocks.
 	rcc_periph_clock_enable(RCC_GPIOA);
