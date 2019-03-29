@@ -5,291 +5,177 @@
 #include "drivers/drv_pwm.h"
 #include "io_type.h"
 
-/*
-#include "breezystm32.h"
-#include "stm32f10x_conf.h"
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/f1/gpio.h>
+#include <libopencm3/stm32/timer.h>
 
-#include "gpio.h"
-#include "timer.h"
-*/
+#include <stdint.h>
 
-/*
-Configuration maps:
-
-1) multirotor PPM input
-PWM1 used for PPM
-PWM5..8 used for motors
-PWM9..10 used for motors
-PWM11..14 used for motors
-
-2) multirotor PWM input
-PWM1..8 used for input
-PWM9..10 used for motors
-PWM11..14 used for motors
-*/
-
-/*
 typedef struct {
-	volatile uint16_t* ccr;
-	volatile uint16_t* cr1;
-	volatile uint16_t* cnt;
-	uint16_t period;
+	uint32_t timer_peripheral;
+	enum tim_oc_id oc_id;
+	uint32_t gpio;
+	uint32_t pin;
+} drv_pwm_map_t;
 
-	// for input only
-	uint8_t channel;
-	uint8_t state;
-	uint16_t rise;
-	uint16_t fall;
-	uint16_t capture;
-} pwmPortData_t;
+static void drv_pwm_init_timer(uint32_t rcc_tim,
+							   uint32_t tim,
+							   uint32_t reset,
+							   uint32_t prescaler,
+							   uint32_t period) {
 
-// typedef void (*pwmWriteFuncPtr)(uint8_t index, uint16_t value);  // function
-// pointer used to write motors
+	/* Enable TIM2 clock. */
+	rcc_periph_clock_enable(rcc_tim);
 
-static pwmPortData_t pwmPorts[PWM_MAX_PORTS];
-static uint16_t captures[MAX_INPUTS];
-// static pwmWriteFuncPtr pwmWritePtr = NULL;
-static uint8_t pwmFilter = 0;
+	/* Enable TIM2 interrupt. */
+	//XXX: nvic_enable_irq(NVIC_TIM2_IRQ);
 
-#define PWM_TIMER_MHZ 1
-#define PWM_TIMER_8_MHZ 8
+	/* Reset TIM2 peripheral to defaults. */
+	rcc_periph_reset_pulse(reset);
 
-static void pwmOCConfig( TIM_TypeDef* tim, uint8_t channel, uint16_t value ) {
-	uint16_t tim_oc_preload;
-	TIM_OCInitTypeDef TIM_OCInitStructure;
+	/* Timer global mode:
+	 * - No divider
+	 * - Alignment edge
+	 * - Direction up
+	 * (These are actually default values after reset above, so this call
+	 * is strictly unnecessary, but demos the api for alternative settings)
+	 */
+	timer_set_mode(tim, TIM_CR1_CKD_CK_INT,
+		TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
 
-	TIM_OCStructInit( &TIM_OCInitStructure );
-	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;
-	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;
-	TIM_OCInitStructure.TIM_Pulse = value;
-	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
-	TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
-
-	tim_oc_preload = TIM_OCPreload_Enable;
-
-	switch ( channel ) {
-	case TIM_Channel_1:
-		TIM_OC1Init( tim, &TIM_OCInitStructure );
-		TIM_OC1PreloadConfig( tim, tim_oc_preload );
-		break;
-	case TIM_Channel_2:
-		TIM_OC2Init( tim, &TIM_OCInitStructure );
-		TIM_OC2PreloadConfig( tim, tim_oc_preload );
-		break;
-	case TIM_Channel_3:
-		TIM_OC3Init( tim, &TIM_OCInitStructure );
-		TIM_OC3PreloadConfig( tim, tim_oc_preload );
-		break;
-	case TIM_Channel_4:
-		TIM_OC4Init( tim, &TIM_OCInitStructure );
-		TIM_OC4PreloadConfig( tim, tim_oc_preload );
-		break;
-	}
-}
-
-static void pwmICConfig( TIM_TypeDef* tim, uint8_t channel, uint16_t polarity ) {
-	TIM_ICInitTypeDef TIM_ICInitStructure;
-
-	TIM_ICStructInit( &TIM_ICInitStructure );
-	TIM_ICInitStructure.TIM_Channel = channel;
-	TIM_ICInitStructure.TIM_ICPolarity = polarity;
-	TIM_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
-	TIM_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-	TIM_ICInitStructure.TIM_ICFilter = pwmFilter;
-
-	TIM_ICInit( tim, &TIM_ICInitStructure );
-}
-
-static void pwmGPIOConfig( GPIO_TypeDef* gpio, uint32_t pin, GPIO_Mode mode ) {
-	gpio_config_t cfg;
-
-	cfg.pin = pin;
-	cfg.mode = mode;
-	cfg.speed = Speed_2MHz;
-	gpioInit( gpio, &cfg );
-}
-
-static pwmPortData_t* pwmOutConfig( uint8_t port, uint8_t mhz, uint16_t period,
-									uint16_t value ) {
-	pwmPortData_t* p = &pwmPorts[port];
-	configTimeBase( timerHardware[port].tim, period, mhz );
-	pwmGPIOConfig( timerHardware[port].gpio, timerHardware[port].pin, Mode_AF_PP );
-	pwmOCConfig( timerHardware[port].tim, timerHardware[port].channel, value );
-	// Needed only on TIM1
-	if ( timerHardware[port].outputEnable )
-		TIM_CtrlPWMOutputs( timerHardware[port].tim, ENABLE );
-	TIM_Cmd( timerHardware[port].tim, ENABLE );
-
-	p->cr1 = &timerHardware[port].tim->CR1;
-	p->cnt = &timerHardware[port].tim->CNT;
-
-	switch ( timerHardware[port].channel ) {
-	case TIM_Channel_1:
-		p->ccr = &timerHardware[port].tim->CCR1;
-		break;
-	case TIM_Channel_2:
-		p->ccr = &timerHardware[port].tim->CCR2;
-		break;
-	case TIM_Channel_3:
-		p->ccr = &timerHardware[port].tim->CCR3;
-		break;
-	case TIM_Channel_4:
-		p->ccr = &timerHardware[port].tim->CCR4;
-		break;
-	}
-	p->period = period;
-	return p;
-}
-
-static pwmPortData_t* pwmInConfig( uint8_t port, timerCCCallbackPtr callback,
-								   uint8_t channel ) {
-	pwmPortData_t* p = &pwmPorts[port];
-	const timerHardware_t* timerHardwarePtr = &( timerHardware[port] );
-
-	p->channel = channel;
-
-	pwmGPIOConfig( timerHardwarePtr->gpio, timerHardwarePtr->pin, Mode_IPD );
-	pwmICConfig( timerHardwarePtr->tim, timerHardwarePtr->channel,
-				 TIM_ICPolarity_Rising );
-
-	timerConfigure( timerHardwarePtr, 0xFFFF, PWM_TIMER_MHZ );
-	configureTimerCaptureCompareInterrupt( timerHardwarePtr, port, callback );
-
-	return p;
-}
-
-static void ppmCallback( uint8_t port, uint16_t capture ) {
-	(void)port;
-	uint16_t diff;
-	static uint16_t now;
-	static uint16_t last = 0;
-	static uint8_t chan = 0;
-
-	last = now;
-	now = capture;
-	diff = now - last;
-
-	if ( diff > 2700 ) { // Per
-		// http://www.rcgroups.com/forums/showpost.php?p=21996147&postcount=3960
-		// "So, if you use 2.5ms or higher as being the reset for the PPM
-		// stream start, you will be fine. I use 2.7ms just to be safe."
-		chan = 0;
-	} else {
-		if ( diff > PULSE_MIN && diff < PULSE_MAX && chan < MAX_INPUTS ) { // 750 to 2250 ms is our 'valid' channel range
-			captures[chan] = diff;
-		}
-		chan++;
-	}
-}
-
-static void pwmCallback( uint8_t port, uint16_t capture ) {
-	if ( pwmPorts[port].state == 0 ) {
-		pwmPorts[port].rise = capture;
-		pwmPorts[port].state = 1;
-		pwmICConfig( timerHardware[port].tim, timerHardware[port].channel,
-					 TIM_ICPolarity_Falling );
-	} else {
-		pwmPorts[port].fall = capture;
-		// compute capture
-		pwmPorts[port].capture = pwmPorts[port].fall - pwmPorts[port].rise;
-		if ( pwmPorts[port].capture > PULSE_MIN && pwmPorts[port].capture < PULSE_MAX ) { // valid pulse width
-			captures[pwmPorts[port].channel] = pwmPorts[port].capture;
-		}
-		// switch state
-		pwmPorts[port].state = 0;
-		pwmICConfig( timerHardware[port].tim, timerHardware[port].channel,
-					 TIM_ICPolarity_Rising );
-	}
-}
-*/
-// ===========================================================================
-/*
-static pwmPortData_t* motors[PWM_MAX_PORTS];
-static uint8_t numMotors = 0;
-static uint8_t numInputs = 0;
-*/
-
-/*
-XXX: Unused
-static void pwmWriteBrushed(uint8_t index, uint16_t value)
-{
-    *motors[index]->ccr = (value<1000) ? 0 : (value - 1000) *
-motors[index]->period / 1000;
-}
-*/
-
-/*
-static void pwmWriteStandard( uint8_t index, uint16_t value ) {
-	*motors[index]->ccr = value;
-}
-*/
-
-void drv_pwm_init(void) {
-
-}
-/*
-void pwmInit( io_def_t* io_map, bool usePwmFilter, uint32_t motorPwmRate,
-			  uint32_t servoPwmRate, uint16_t idlePulseUsec ) {
-
-	// pwm filtering on input
-	pwmFilter = usePwmFilter ? 1 : 0;
-
-	int i;
-	for ( i = 0; i < PWM_MAX_PORTS; i++ ) {
-		// uint8_t port = setup[i] & 0x0F;
-		// uint8_t mask = setup[i] & 0xF0;
-		uint8_t port = io_map->port[i];
-		uint8_t mask = io_map->type[i];
-
-		if ( mask == IO_TYPE_IP ) {
-			pwmInConfig( port, ppmCallback, 0 );
-			numInputs = 8;
-		} else if ( mask == IO_TYPE_IW ) {
-			pwmInConfig( port, pwmCallback, numInputs );
-			numInputs++;
-		} else if ( mask == IO_TYPE_OD ) {
-			// TODO: Digital is to behave just as a PWM, but should be fixed later
-			uint32_t mhz = PWM_TIMER_MHZ;
-			uint32_t hz = mhz * 1000000;
-			uint16_t period = hz / servoPwmRate;
-
-			motors[numMotors++] = pwmOutConfig( port, mhz, period, idlePulseUsec );
-		} else if ( mask == IO_TYPE_OM ) {
-			// uint32_t mhz = (motorPwmRate > 500 || fastPWM) ? PWM_TIMER_8_MHZ :
-			// PWM_TIMER_MHZ;
-			uint32_t mhz = PWM_TIMER_MHZ;
-			uint32_t hz = mhz * 1000000;
-			uint16_t period = hz / motorPwmRate;
-
-			motors[numMotors++] = pwmOutConfig( port, mhz, period, idlePulseUsec );
-		} else if ( mask == IO_TYPE_OS ) {
-			// uint32_t mhz = (motorPwmRate > 500 || fastPWM) ? PWM_TIMER_8_MHZ :
-			// PWM_TIMER_MHZ;
-			uint32_t mhz = PWM_TIMER_MHZ;
-			uint32_t hz = mhz * 1000000;
-			uint16_t period = hz / servoPwmRate;
-
-			motors[numMotors++] = pwmOutConfig( port, mhz, period, idlePulseUsec );
-		}
-	}
-*/
 	/*
-// determine motor writer function
-pwmWritePtr = pwmWriteStandard;
-if (motorPwmRate > 500) {
-pwmWritePtr = pwmWriteBrushed;
+	 * Please take note that the clock source for STM32 timers
+	 * might not be the raw APB1/APB2 clocks.  In various conditions they
+	 * are doubled.  See the Reference Manual for full details!
+	 * In our case, TIM2 on APB1 is running at double frequency, so this
+	 * sets the prescaler to have the timer run at 5kHz
+	 */
+	timer_set_prescaler(tim, prescaler);
+
+	/* Disable preload. */
+	timer_disable_preload(tim);
+	timer_continuous_mode(tim);
+
+	/* count full range, as we'll update compare value continuously */
+	timer_set_period(tim, period);
+
+	/* Set the initual output compare value for OC1. */
+	//timer_set_oc_value(tim, TIM_OC1, frequency_sequence[frequency_sel++]);
+
+	/* Counter enable. */
+	timer_enable_counter(tim);
+
+	/* Enable Channel 1 compare interrupt to recalculate compare values */
+	//timer_enable_irq(TIM2, TIM_DIER_CC1IE);
 }
+
+static void drv_pwm_init_output_channel(uint32_t timer_peripheral,
+										enum tim_oc_id oc_id,
+										uint32_t gpio_port,
+										uint16_t gpio_pin) {
+     /* Set timer channel to output */
+     gpio_set_mode(gpio_port, GPIO_MODE_OUTPUT_50_MHZ,
+                   GPIO_CNF_OUTPUT_ALTFN_PUSHPULL,
+                   gpio_pin);
+
+     timer_disable_oc_output(timer_peripheral, oc_id);
+     timer_set_oc_mode(timer_peripheral, oc_id, TIM_OCM_PWM1);
+     timer_set_oc_value(timer_peripheral, oc_id, 0);
+     timer_enable_oc_output(timer_peripheral, oc_id);
 }
+
+static void drv_pwm_set_pulse_width(uint32_t timer_peripheral,
+									enum tim_oc_id oc_id,
+									uint32_t pulse_width) {
+
+     timer_set_oc_value(timer_peripheral, oc_id, pulse_width);
+}
+
+static void pwm_start_timer(uint32_t timer_peripheral) {
+     timer_enable_counter(timer_peripheral);
+}
+
+//=======================================================================
+
+/* FreeFlight/Naze32 timer layout
+    Primary IO
+	Name	Timer		Pin		Function1	Function2
+    PWM1	TIM1_CH1	PA8		PWM1
+    PWM2	TIM1_CH4	PA11	PWM2
+    PWM3	TIM4_CH1	PB6		PWM3		I2C1_SCL
+    PWM4	TIM4_CH2	PB7		PWM4		I2C1_SDA
+    PWM5	TIM4_CH3	PB8		PWM5
+    PWM6	TIM4_CH4	PB9		PWM6
+
+	Secondary IO
+	Name	Timer		Pin		Function1	Function2
+    RX1		TIM2_CH1	PA0		PPM
+    RX2		TIM2_CH2	PA1
+    RX3		TIM2_CH3	PA2		UART2_TX
+    RX4		TIM2_CH4	PA3		UART2_RX
+    RX5		TIM3_CH1	PA6		SAFETY		ADC_IN6
+    RX6		TIM3_CH2	PA7					ADC_IN7
+    RX7		TIM3_CH3	PB0		PWM7		ADC_IN8
+    RX8		TIM3_CH4	PB1		PWM8		ADC_IN9
+
+    Groups that allow running different period (ex 50Hz servos + 400Hz throttle + etc):
+    TIM1 2 channels
+    TIM2 4 channels
+    TIM3 4 channels
+    TIM4 4 channels
 */
 
-void drv_pwm_write( uint8_t index, uint16_t value ) {
-	/*
-if (index < numMotors)
-pwmWritePtr(index, value);
-*/
-	//if ( index < numMotors )
-		//pwmWriteStandard( index, value );
+static const drv_pwm_map_t drv_pwm_map[MAX_SERVOS] = {
+	{TIM1,	TIM_OC1,	GPIOA,	GPIO8},
+	{TIM1,	TIM_OC4,	GPIOA,	GPIO11},
+	{TIM4,	TIM_OC1,	GPIOB,	GPIO6},
+	{TIM4,	TIM_OC2,	GPIOB,	GPIO7},
+	{TIM4,	TIM_OC3,	GPIOB,	GPIO8},
+	{TIM4,	TIM_OC4,	GPIOB,	GPIO9},
+	{TIM3,	TIM_OC3,	GPIOB,	GPIO0},
+	{TIM3,	TIM_OC4,	GPIOB,	GPIO1},
+};
+
+void drv_pwm_init( void ) {
+	// Init all our timers to run at 1us intervals, overflow at PWM_PERIOD
+	drv_pwm_init_timer(RCC_TIM1, TIM1, RST_TIM1, (rcc_apb1_frequency / 1000000), DRV_PWM_PERIOD_50HZ);
+	drv_pwm_init_timer(RCC_TIM2, TIM2, RST_TIM2, (rcc_apb2_frequency / 1000000), DRV_PWM_PERIOD_50HZ);
+	drv_pwm_init_timer(RCC_TIM3, TIM3, RST_TIM3, (rcc_apb2_frequency / 1000000), DRV_PWM_PERIOD_50HZ);
+	drv_pwm_init_timer(RCC_TIM4, TIM4, RST_TIM4, (rcc_apb2_frequency / 1000000), DRV_PWM_PERIOD_50HZ);
+
+	/* init output of channel2 of timer2 */
+	//drv_pwm_init_output_channel(TIM2, SERVO_CH1, &RCC_APB2ENR, RCC_APB2ENR_IOPAEN, GPIOA, GPIO_TIM2_CH2);
+
+	/* init output of channel3 of timer2 */
+	//pwm_init_output_channel(TIM2, SERVO_CH2, &RCC_APB2ENR, RCC_APB2ENR_IOPAEN, GPIOA, GPIO_TIM2_CH3);
+
+	//pwm_set_pulse_width(TIM2, SERVO_CH1, SERVO_NULL);
+	//pwm_set_pulse_width(TIM2, SERVO_CH2, SERVO_NULL);
+
+	for(uint32_t i=0; i< MAX_SERVOS; i++) {
+		drv_pwm_init_output_channel(drv_pwm_map[i].timer_peripheral,
+									drv_pwm_map[i].oc_id,
+									drv_pwm_map[i].gpio,
+									drv_pwm_map[i].pin);
+
+		drv_pwm_write(i, PULSE_MID);
+	}
+
+	//TODO: PPM
+
+	/* start timer1 */
+	pwm_start_timer(TIM1);
+	pwm_start_timer(TIM2);
+	pwm_start_timer(TIM3);
+	pwm_start_timer(TIM4);
+}
+
+void drv_pwm_write( uint8_t port, uint16_t pwm ) {
+	if(port < MAX_SERVOS) {
+		drv_pwm_set_pulse_width(drv_pwm_map[port].timer_peripheral,
+								drv_pwm_map[port].oc_id,
+								pwm);
+	}
 }
 
 uint16_t drv_pwm_read( uint8_t index ) {
