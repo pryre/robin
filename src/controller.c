@@ -356,9 +356,12 @@ void control_run( uint32_t now ) {
 	if ( ( now - _control_timing.time_last ) > _control_timing.period_update ) {
 		if ( ( safety_is_armed() ) && ( _system_status.state != MAV_STATE_EMERGENCY ) ) {
 			//==-- Update Controller
-			controller_run( sensors_clock_imu_int_get() ); // Apply the current commands
-														   // and update the PID
-														   // controllers
+			// Apply the current commands and update the PID controllers
+			//
+			//TODO: Might be a good idea to make sure "_state_estimator.time_updated"
+			//		is a reasonable level. Perhaps should limit control until estimate
+			//		is past its "time_init_" steps?
+			controller_run( _state_estimator.time_updated );
 		} else {
 			//==-- Reset Controller
 			controller_reset(); // Reset the PIDs and output flat 0s for control

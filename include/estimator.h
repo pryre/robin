@@ -19,6 +19,8 @@ typedef struct {
 	fix16_t q;	 // Pitch Rate
 	fix16_t r;	 // Yaw Rate
 	qf16 attitude; // Attitude Quaternion
+
+	uint32_t time_updated;
 } state_t;
 
 extern state_t _state_estimator; // Current state estimation

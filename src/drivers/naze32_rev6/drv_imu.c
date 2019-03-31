@@ -13,7 +13,7 @@ static void drv_sensors_imu_poll( void ) {
 	_imu_time_ready = system_micros();
 }
 
-bool drv_sensors_imu_init( fix16_t* scale_accel, fix16_t* scale_gyro ) {
+bool drv_sensors_imu_init( uint32_t i2c, fix16_t* scale_accel, fix16_t* scale_gyro ) {
 	// Get the 1g gravity scale (raw->g's)
 	mpu_register_interrupt_cb( &drv_sensors_imu_poll, 6 ); // Naze32 Rev.6
 	uint16_t acc1G = mpu6500_init( INV_FSR_8G, INV_FSR_2000DPS );

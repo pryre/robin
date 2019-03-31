@@ -21,6 +21,7 @@ extern "C" {
 #include "params.h"
 #include "safety.h"
 #include "sensors.h"
+#include "profiler.h"
 
 #include <stdlib.h>
 
@@ -500,10 +501,15 @@ void mavlink_stream_status_io( mavlink_channel_t chan ) {
 
 void mavlink_stream_sys_status( mavlink_channel_t chan ) {
 	if ( mavlink_stream_ready( chan ) ) {
+		uint32_t loop_min = 0;
+		uint32_t loop_mean = 0;
+		uint32_t loop_max = 0;
+		profiler_read(PROFILER_ID_LOOP, &loop_min,  &loop_mean,  &loop_max);
+
 		uint32_t onboard_control_sensors_present = 0;
 		uint32_t onboard_control_sensors_enabled = 0;
 		uint32_t onboard_control_sensors_health = 0;
-		uint16_t load = _sensors.clock.average_time / _sensors.clock.counter;
+		uint16_t load = (100 * loop_mean) / PROFILER_IDEAL_LOOP_RATE;
 		uint16_t voltage_battery = fix16_to_int(
 			fix16_mul( _fc_1000, _sensors.voltage_monitor.state_filtered ) );
 		uint16_t current_battery = -1;
@@ -520,13 +526,8 @@ void mavlink_stream_sys_status( mavlink_channel_t chan ) {
 
 		uint16_t errors_count1 = _lpq.length;
 		uint16_t errors_count2 = fix16_to_int( _control_timing.average_update );
-		uint16_t errors_count3 = _sensors.clock.min;
-		uint16_t errors_count4 = _sensors.clock.max;
-
-		_sensors.clock.counter = 0;
-		_sensors.clock.average_time = 0;
-		_sensors.clock.max = 0;
-		_sensors.clock.min = 1000;
+		uint16_t errors_count3 = loop_min;
+		uint16_t errors_count4 = loop_max;
 
 		//==-- Sensors Present
 		if ( _sensors.imu.status.present ) {
@@ -686,7 +687,7 @@ void mavlink_stream_attitude_target( mavlink_channel_t chan ) {
 		// The timestamp used is the one that is used to generate the commands
 		mavlink_msg_attitude_target_pack(
 			mavlink_system.sysid, mavlink_system.compid, get_channel_buf( chan ),
-			sensors_clock_ls_get(), _control_input.input_mask, &q[0],
+			profiler_get_loop_start(), _control_input.input_mask, &q[0],
 			fix16_to_float( _control_input.r ), fix16_to_float( _control_input.p ),
 			fix16_to_float( _control_input.y ), fix16_to_float( _control_input.T ) );
 		comms_send_msg( chan );
@@ -697,7 +698,7 @@ void mavlink_stream_rc_channels_raw( mavlink_channel_t chan ) {
 	if ( mavlink_stream_ready( chan ) ) {
 		mavlink_msg_rc_channels_raw_pack(
 			mavlink_system.sysid, mavlink_system.compid, get_channel_buf( chan ),
-			sensors_clock_ls_get(),
+			profiler_get_loop_start(),
 			0, // Port 0
 			_sensors.rc_input.raw[0], _sensors.rc_input.raw[1],
 			_sensors.rc_input.raw[2], _sensors.rc_input.raw[3],
@@ -711,7 +712,7 @@ void mavlink_stream_servo_output_raw( mavlink_channel_t chan ) {
 	if ( mavlink_stream_ready( chan ) ) {
 		mavlink_msg_servo_output_raw_pack(
 			mavlink_system.sysid, mavlink_system.compid, get_channel_buf( chan ),
-			sensors_clock_ls_get(),
+			profiler_get_loop_start(),
 			0, // Port 0
 			drv_pwm_get_current(0),
 			drv_pwm_get_current(1),

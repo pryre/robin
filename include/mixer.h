@@ -71,7 +71,7 @@ void mixer_init( void );
 // void write_servo(uint8_t index, int32_t value);
 
 void calc_mixer_output(void);
-void pwm_output( uint32_t time_now );
+void mixer_output( uint32_t time_now );
 
 #ifdef __cplusplus
 }

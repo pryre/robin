@@ -26,7 +26,6 @@ static v3d w_bias_; //Integrator for adaptive bias
 static qf16 q_hat_; //Attitude estimate
 //static v3d g_; //Gravity vector
 
-static uint32_t time_last_;
 static uint32_t init_time_;
 
 static v3d accel_lpf_;
@@ -43,6 +42,7 @@ void estimator_init( void ) {
 	_state_estimator.attitude.b = 0;
 	_state_estimator.attitude.c = 0;
 	_state_estimator.attitude.d = 0;
+	_state_estimator.time_updated = 0;
 
 	q_hat_.a = _fc_1;
 	q_hat_.b = 0;
@@ -64,8 +64,6 @@ void estimator_init( void ) {
 	gyro_lpf_.z = 0;
 
 	init_time_ = get_param_uint( PARAM_EST_INIT_TIME ) * 1000; //nano->microseconds
-
-	time_last_ = 0;
 }
 
 void reset_adaptive_gyro_bias(void) {
@@ -122,14 +120,14 @@ static void corr_heading_estimate( v3d* corr, const qf16* q, const v3d* mag, con
 //Mag, heading, and accel fusion techniques based on PX4/Baseflight methods
 static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gyro, const v3d* mag, const bool mag_present, const bool mag_use_data ) {
 	//XXX: This will exit on the first loop, not a nice way of doing it though
-	if ( time_last_ == 0 ) {
-		time_last_ = time_now;
+	if ( _state_estimator.time_updated == 0 ) {
+		_state_estimator.time_updated = time_now;
 		return;
 	}
 
 	//Converts dt from micros to secs
-	fix16_t dt = fix16_from_float( 1e-6 * (float)( time_now - time_last_ ) );
-	time_last_ = time_now;
+	fix16_t dt = fix16_from_float( 1e-6 * (float)( time_now - _state_estimator.time_updated ) );
+	_state_estimator.time_updated = time_now;
 
 	//Gains for integrated corrections terms
 	fix16_t w_m_kp = get_param_fix16( PARAM_EST_HDG_P_MAG ); //Magnetometer

@@ -38,25 +38,6 @@ system_status_t _system_status;
 command_input_t _cmd_rc_input;
 
 //==-- Functions
-static void clock_init( void ) {
-	_sensors.clock.present = true;
-
-	_sensors.clock.start = 0;
-	_sensors.clock.end = 0;
-	_sensors.clock.dt = 0;
-
-	_sensors.clock.counter = 0;
-	_sensors.clock.max = 0;
-	_sensors.clock.min = 1000;
-
-	_sensors.clock.imu_time_ready = 0;
-
-	_sensors.clock.rt_offset_ns = 0;
-	_sensors.clock.rt_drift = 1.0;
-	_sensors.clock.rt_ts_last = 0;
-	_sensors.clock.rt_tc_last = 0;
-	_sensors.clock.rt_sync_last = 0;
-}
 
 void sensor_status_init( sensor_status_t* status, bool sensor_present ) {
 	status->present = sensor_present;
@@ -108,9 +89,6 @@ void sensors_init( void ) {
 
 		mavlink_queue_broadcast_notice( "[SENSOR] Using HIL, some sensors disabled" );
 	}
-
-	//==-- Timer
-	clock_init();
 
 	_sensors.mag.period_update = 1000 * fix16_to_int( fix16_div(
 											_fc_1000, get_param_fix16( PARAM_SENSOR_MAG_UPDATE_RATE ) ) );
@@ -195,28 +173,12 @@ void sensors_init( void ) {
 	_sensors.voltage_monitor.state_filtered = 0;
 }
 
-uint32_t sensors_clock_ls_get( void ) {
-	return _sensors.clock.start;
-}
-
-void sensors_clock_ls_set( uint32_t time_us ) {
-	_sensors.clock.start = time_us;
-}
-
-void sensors_clock_update( uint32_t time_us ) {
-	_sensors.clock.end = time_us;
-	_sensors.clock.dt = _sensors.clock.end - _sensors.clock.start;
-	_sensors.clock.average_time += _sensors.clock.dt;
-	_sensors.clock.counter++;
-	_sensors.clock.max = ( _sensors.clock.dt > _sensors.clock.max ) ? _sensors.clock.dt : _sensors.clock.max;
-	_sensors.clock.min = ( _sensors.clock.dt < _sensors.clock.min ) ? _sensors.clock.dt : _sensors.clock.min;
-}
-
+/*
 //==-- Low Pass Filter for time offsets
 int64_t sensors_clock_smooth_time_skew( int64_t tc, int64_t tn ) {
-	/* The closer alpha is to 1.0, the faster the moving
-* average updates in response to new offset samples.
-*/
+	// The closer alpha is to 1.0, the faster the moving
+	// average updates in response to new offset samples.
+
 	// Do this in floating point as fix16_t does not have an easy interface for
 	// uint64_t
 	float alpha = fix16_to_float( get_param_fix16( PARAM_TIMESYNC_ALPHA ) );
@@ -224,9 +186,9 @@ int64_t sensors_clock_smooth_time_skew( int64_t tc, int64_t tn ) {
 }
 
 float sensors_clock_smooth_time_drift( float tc, float tn ) {
-	/* The closer alpha is to 1.0, the faster the moving
-* average updates in response to new offset samples.
-*/
+	// The closer alpha is to 1.0, the faster the moving
+	// average updates in response to new offset samples.
+
 	// Do this in floating point as fix16_t does not have an easy interface for
 	// uint64_t
 	float alpha = fix16_to_float( get_param_fix16( PARAM_TIMESYNC_ALPHA ) );
@@ -240,6 +202,7 @@ uint64_t sensors_clock_rt_get( void ) {
 uint32_t sensors_clock_imu_int_get( void ) {
 	return _sensors.clock.imu_time_ready;
 }
+*/
 
 static fix16_t dual_normalized_input( uint16_t pwm, uint16_t min, uint16_t mid,
 									  uint16_t max ) {

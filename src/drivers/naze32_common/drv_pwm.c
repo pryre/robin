@@ -48,6 +48,7 @@
 #include "params.h"
 #include "mixer.h"
 #include "drivers/drv_pwm.h"
+#include "drivers/drv_ppm.h"
 
 typedef struct {
 	volatile uint16_t* ccr;
@@ -66,8 +67,9 @@ typedef struct {
 // typedef void (*pwmWriteFuncPtr)(uint8_t index, uint16_t value);  // function
 // pointer used to write motors
 
-static pwmPortData_t pwmPorts[PWM_MAX_PORTS];
-static uint16_t captures[MAX_INPUTS];
+static pwmPortData_t pwmPorts[DRV_PWM_MAX_OUTPUTS];
+static uint16_t captures[DRV_PPM_MAX_INPUTS];
+static uint16_t pwmwrites[DRV_PPM_MAX_INPUTS];
 // static pwmWriteFuncPtr pwmWritePtr = NULL;
 static uint8_t pwmFilter = 0;
 
@@ -196,7 +198,7 @@ static void ppmCallback( uint8_t port, uint16_t capture ) {
 		// stream start, you will be fine. I use 2.7ms just to be safe."
 		chan = 0;
 	} else {
-		if ( diff > PULSE_MIN && diff < PULSE_MAX && chan < MAX_INPUTS ) { // 750 to 2250 ms is our 'valid' channel range
+		if ( diff > DRV_PPM_MIN && diff < DRV_PPM_MAX && chan < DRV_PPM_MAX_INPUTS ) { // 750 to 2250 ms is our 'valid' channel range
 			captures[chan] = diff;
 		}
 		chan++;
@@ -213,7 +215,7 @@ static void pwmCallback( uint8_t port, uint16_t capture ) {
 		pwmPorts[port].fall = capture;
 		// compute capture
 		pwmPorts[port].capture = pwmPorts[port].fall - pwmPorts[port].rise;
-		if ( pwmPorts[port].capture > PULSE_MIN && pwmPorts[port].capture < PULSE_MAX ) { // valid pulse width
+		if ( pwmPorts[port].capture > DRV_PPM_MIN && pwmPorts[port].capture < DRV_PPM_MAX ) { // valid pulse width
 			captures[pwmPorts[port].channel] = pwmPorts[port].capture;
 		}
 		// switch state
@@ -340,7 +342,7 @@ static const uint8_t io_map_naze32_pwm[MIXER_NUM_MOTORS] = {8, 9, 10, 11,
 
 io_type_t _actuator_type_map[MIXER_NUM_MOTORS];
 
-void drv_pwm_init( void ) {
+bool drv_pwm_init( void ) {
 	// XXX: Loop backwards through the IO map to set the number of motor/servo
 	// ports
 	uint8_t io_c = 0;
@@ -367,15 +369,31 @@ void drv_pwm_init( void ) {
 	pwmInit( &io_map, false, get_param_uint( PARAM_MOTOR_PWM_SEND_RATE ),
 			 get_param_uint( PARAM_SERVO_PWM_SEND_RATE ),
 			 get_param_uint( PARAM_MOTOR_PWM_MIN ) );
+
+	return true;
 }
 
 
 void drv_pwm_write( uint8_t index, uint16_t value ) {
-	if ( index < numMotors )
+	if ( index < numMotors ) {
 		pwmWriteStandard( index, value );
+		pwmwrites[index] = value;
+	}
 }
 
-uint16_t drv_pwm_read( uint8_t index ) {
-	return ( index < MAX_INPUTS ) ? captures[index] : 0;
+uint16_t drv_pwm_get_current( uint8_t index ) {
+	return ( (index < DRV_PPM_MAX_INPUTS) ? pwmwrites[index] : 0 );
+}
+
+bool drv_ppm_ready(void) {
+	return true;
+}
+
+bool drv_ppm_read_frame( uint16_t * readings ) {
+	for(int i=0; i< DRV_PPM_MAX_INPUTS; i++) {
+		readings[i] = captures[i];
+	}
+
+	return true;
 }
 

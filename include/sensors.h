@@ -16,35 +16,14 @@ extern "C" {
 #include "safety.h"
 
 #define SENSOR_RC_MIDSTICK 1500
-#define SENSOR_VMON_DIVIDER_NAZE32 \
-	_fc_11 // XXX: Naze32's use 10K:1k which gives a value of 11.0
+// XXX: Naze32's use 10K:1k which gives a value of 11.0
+#define SENSOR_VMON_DIVIDER_NAZE32 _fc_11
 
 typedef struct {
 	bool present;		// If the sensor is plugged in or not
 	bool new_data;		// If there is new data ready
 	uint32_t time_read; // Time measured
 } sensor_status_t;
-
-typedef struct {
-	bool present;
-
-	uint32_t start; // Loop start time
-	uint32_t end;   // Loop end time
-	uint32_t dt;	// Time sepent this loop
-
-	uint32_t counter;	  // Times the data from this sensor has been collated
-	uint32_t average_time; // Sum of dt
-	uint32_t max;		   // Maximum dt so far
-	uint32_t min;		   // Minimum dt so far
-
-	uint32_t imu_time_ready;
-
-	int64_t rt_offset_ns;
-	float rt_drift;
-	uint64_t rt_ts_last;
-	uint64_t rt_tc_last;
-	uint32_t rt_sync_last;
-} sensor_readings_clock_t;
 
 typedef struct {
 	int16_t x;
@@ -161,7 +140,7 @@ typedef struct {
 } sensor_readings_voltage_monitor_t;
 
 typedef struct {
-	sensor_readings_clock_t clock;
+	//sensor_readings_clock_t clock;
 	sensor_readings_hil_t hil;
 	sensor_readings_imu_t imu;
 	sensor_readings_magnometer_t mag;

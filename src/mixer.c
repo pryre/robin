@@ -329,7 +329,7 @@ static bool motor_test_in_progress( const uint32_t time_now ) {
 }
 
 // Used to send a PWM while
-void pwm_output( uint32_t time_now ) {
+void mixer_output( uint32_t time_now ) {
 	bool test_running = motor_test_in_progress( time_now );
 
 	if ( _mixer_to_use->mixer_ok ) {

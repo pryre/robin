@@ -11,6 +11,7 @@ extern "C" {
 #include "params.h"
 #include "safety.h"
 #include "sensors.h"
+#include "profiler.h"
 
 #include "drivers/drv_status_io.h"
 #include "drivers/drv_system.h"
@@ -68,7 +69,9 @@ void loop( void ) {
 	// cause some issues
 
 	// Take note of when this loop starts
-	sensors_clock_ls_set( system_micros() );
+	profiler_set_start( PROFILER_ID_LOOP, system_micros() );
+
+	//TODO: HERE!: Do sensor profiling
 
 	// Sensor Read
 	// Check to see if any of the i2c sensors have been updated (mainly the imu)
@@ -82,13 +85,15 @@ void loop( void ) {
 				calibration_run();
 			}
 
-			estimator_update_sensors( sensors_clock_imu_int_get() );
+			profiler_run( PROFILER_ID_ESTIMATOR, &estimator_update_sensors );
 		}
 	} else {
 		if ( _sensors.hil.status.new_data )
-			estimator_update_hil( system_micros() );
+			profiler_run( PROFILER_ID_ESTIMATOR, &estimator_update_hil );
 	}
 
+	//==-- Communications
+	profiler_set_start( PROFILER_ID_COMMS, system_micros() );
 	//==-- Check Serial
 	communication_receive(); // XXX: Could be moved to a UART callback, but may
 	// cause issues with async I2C
@@ -99,20 +104,25 @@ void loop( void ) {
 	// Only allow this once per loop due to buffer risks (see serial define above)
 	communication_transmit( system_micros() );
 
-	//==-- Timeout Checks
-	safety_run( system_micros() );
+	profiler_set_end( PROFILER_ID_COMMS, system_micros() );
 
-	status_devices_run( system_micros() );
+	//==-- Timeout Checks
+	profiler_run( PROFILER_ID_SAFETY, &safety_run );
+
+	profiler_run( PROFILER_ID_STATUS, &status_devices_run );
 
 	//==-- Control Process
-	control_run( system_micros() );
+	profiler_run( PROFILER_ID_CONTROL, &control_run );
 
 	//==-- Send Motor Commands
 	// Convert outputs to correct layout and send PWM (and considers failsafes)
-	pwm_output( system_micros() );
+	profiler_run( PROFILER_ID_MIXER, &mixer_output );
 
 	//==-- loop time calculation
-	sensors_clock_update( system_micros() );
+	profiler_set_end( PROFILER_ID_LOOP, system_micros() );
+
+	//TODO: HERE!: Add parameter for profiler data collection (turn on/off)
+	//TODO: HERE!: periodically dump profiler data to comms
 
 	//==-- Loop rate limiting (if required)
 	system_rate_limit();
