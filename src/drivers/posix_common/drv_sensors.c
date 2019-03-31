@@ -1,7 +1,7 @@
 #include <fix16.h>
 #include <stdbool.h>
 
-#include "drivers/drv_pwm.h"
+#include "drivers/drv_ppm.h"
 
 bool drv_sensors_i2c_init( void ) {
 	return false;
@@ -46,10 +46,11 @@ bool drv_sensors_i2c_read( uint32_t time_us ) {
 	return false;
 }
 
-void drv_sensors_rc_input_read( uint16_t* readings ) {
-	for ( int i = 0; i < MAX_INPUTS; i++ ) {
-		readings[i] = drv_pwm_read( i );
-	}
+bool drv_sensors_rc_input_read( uint16_t* readings ) {
+	//for ( int i = 0; i < DRV_PPM_MAX_INPUTS; i++ )
+	//	readings[i] = 0;
+
+	return false;
 }
 
 bool drv_sensors_safety_button_read( void ) {

@@ -109,7 +109,7 @@
 #define HMC_POS_BIAS 1
 #define HMC_NEG_BIAS 2
 
-static float magGain[3] = {1.0f, 1.0f, 1.0f};
+//static float magGain[3] = {1.0f, 1.0f, 1.0f};
 
 /*bool hmc5883lDetect()
 {

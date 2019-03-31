@@ -9,6 +9,7 @@ extern "C" {
 #include "calibration.h"
 #include "drivers/drv_sensors.h"
 #include "drivers/drv_system.h"
+#include "drivers/drv_ppm.h"
 #include "estimator.h"
 #include "mavlink_system.h"
 #include "mixer.h"
@@ -16,20 +17,15 @@ extern "C" {
 #include "safety.h"
 #include "sensors.h"
 
-//#include "breezystm32.h"
-//#include "pwm.h"
-//#include "adc.h"
-//#include "gpio.h"
-
 #include "fix16.h"
 #include "fixextra.h"
 #include "fixquat.h"
 #include "fixvector3d.h"
 
 //==-- Local Variables
-static uint16_t rc_cal[8][3];
-static bool rc_rev[8];
-static fix16_t rc_dz[8];
+static uint16_t rc_cal[DRV_PPM_MAX_INPUTS][3];
+static bool rc_rev[DRV_PPM_MAX_INPUTS];
+static fix16_t rc_dz[DRV_PPM_MAX_INPUTS];
 
 //==-- Global Variables
 int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
@@ -355,15 +351,27 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 	}
 
 	//==-- RC Input & Saftety Toggle
-	// Check that all channels have been set
-	if ( get_param_uint( PARAM_RC_MAP_ROLL ) && get_param_uint( PARAM_RC_MAP_PITCH ) && get_param_uint( PARAM_RC_MAP_YAW ) && get_param_uint( PARAM_RC_MAP_THROTTLE ) ) {
+	if ( drv_sensors_rc_input_read( _sensors.rc_input.raw ) ) {
+		_sensors.rc_input.status.time_read = time_us;
+		_sensors.rc_input.status.new_data = true;
+		safety_update_sensor( &_system_status.sensors.rc_input );
+	}
+
+	// Check that the following is OK before doing any other RC checks:
+	//  RC input is healthy
+	//	There is actually new data
+	//  all channels have been set
+	if( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) &&
+		( _sensors.rc_input.status.new_data ) &&
+		get_param_uint( PARAM_RC_MAP_ROLL ) &&
+		get_param_uint( PARAM_RC_MAP_PITCH ) &&
+		get_param_uint( PARAM_RC_MAP_YAW ) &&
+		get_param_uint( PARAM_RC_MAP_THROTTLE ) ) {
 
 		uint8_t chan_roll = get_param_uint( PARAM_RC_MAP_ROLL ) - 1;
 		uint8_t chan_pitch = get_param_uint( PARAM_RC_MAP_PITCH ) - 1;
 		uint8_t chan_yaw = get_param_uint( PARAM_RC_MAP_YAW ) - 1;
 		uint8_t chan_throttle = get_param_uint( PARAM_RC_MAP_THROTTLE ) - 1;
-
-		drv_sensors_rc_input_read( _sensors.rc_input.raw );
 
 		_sensors.rc_input.p_r = _sensors.rc_input.raw[chan_roll];
 		_sensors.rc_input.p_p = _sensors.rc_input.raw[chan_pitch];
@@ -372,9 +380,6 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 
 		if ( ( _sensors.rc_input.p_r > 800 ) && ( _sensors.rc_input.p_r < 2200 ) && ( _sensors.rc_input.p_p > 800 ) && ( _sensors.rc_input.p_p < 2200 ) && ( _sensors.rc_input.p_y > 800 ) && ( _sensors.rc_input.p_y < 2200 ) && ( _sensors.rc_input.p_T > 800 ) && ( _sensors.rc_input.p_T < 2200 ) ) {
 			// We have a valid reading
-			_sensors.rc_input.status.time_read = time_us;
-			_sensors.rc_input.status.new_data = true;
-			safety_update_sensor( &_system_status.sensors.rc_input );
 
 			// Normailize readings
 			fix16_t cmd_roll = dual_normalized_input(

@@ -10,9 +10,9 @@ extern "C" {
 #include "fix16.h"
 #include "fixquat.h"
 #include "fixvector3d.h"
-//#include "breezystm32.h"
 
 #include "drivers/drv_pwm.h"
+#include "drivers/drv_ppm.h"
 #include "safety.h"
 
 #define SENSOR_RC_MIDSTICK 1500
@@ -116,7 +116,7 @@ typedef struct {
 typedef struct {
 	sensor_status_t status;
 
-	uint16_t raw[MAX_INPUTS];
+	uint16_t raw[DRV_PPM_MAX_INPUTS];
 
 	uint16_t p_r;
 	uint16_t p_p;

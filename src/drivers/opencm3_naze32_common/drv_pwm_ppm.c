@@ -1,4 +1,5 @@
 #include "drivers/drv_pwm.h"
+#include "drivers/drv_ppm.h"
 #include "drivers/drv_system.h"
 
 #include <libopencm3/cm3/cortex.h>
@@ -27,10 +28,12 @@ typedef struct {
 	uint32_t pin;
 } drv_pwm_map_t;
 
+//Record of the current PWM output
+static uint16_t pwm_frame_[DRV_PWM_MAX_OUTPUTS];
 
 //State machine for decoding ppm frames
-static volatile uint16_t ppm_pulses_[DRV_PWM_MAX_INPUTS];	//Measurement storage
-static volatile uint16_t ppm_frame_[DRV_PWM_MAX_INPUTS];	//Read OK storage
+static volatile uint16_t ppm_pulses_[DRV_PPM_MAX_INPUTS];	//Measurement storage
+static volatile uint16_t ppm_frame_[DRV_PPM_MAX_INPUTS];	//Read OK storage
 static volatile bool ppm_frame_available_;
 static volatile uint32_t timer_rollover_cnt_;
 
@@ -252,17 +255,136 @@ static void drv_pwm_set_pulse_width(uint32_t timer_peripheral,
      timer_set_oc_value(timer_peripheral, oc_id, pulse_width);
 }
 
-static void drv_pwm_ppm_clear( void ) {
-	ppm_frame_available_ = false;
+static void drv_ppm_set_ready( bool ready ) {
+	ppm_frame_available_ = ready;
 }
 
-static void drv_pwm_ppm_init(void) {
+static void drv_ppm_decode_frame_width(uint32_t ppm_width) {
+	//say("ppm_decode_frame_width()");
+
+	if (ppm_cur_pulse_ == DRV_PPM_MAX_INPUTS) {
+		if( ( ppm_width > DRV_PPM_SYNC_MIN ) &&
+			( ppm_width < DRV_PPM_SYNC_MAX ) ) {
+
+			if (ppm_data_valid_) {
+				//Store the data in a clean buffer and make it available
+				for(int i=0; i<DRV_PPM_MAX_INPUTS; i++)
+					ppm_frame_[i] = ppm_pulses_[i];
+
+				drv_ppm_set_ready( true );
+
+				//Prepare for next data read
+				ppm_data_valid_ = false;
+			}
+
+			ppm_cur_pulse_ = 0;
+		} else {
+			ppm_data_valid_ = false;
+		}
+
+		//say("sync");
+	} else {
+		if( ( ppm_width > DRV_PPM_MIN ) &&
+			( ppm_width < DRV_PPM_MAX ) ) {
+
+			ppm_pulses_[ppm_cur_pulse_] = ppm_width;
+			ppm_cur_pulse_++;
+
+			if (ppm_cur_pulse_ == DRV_PPM_MAX_INPUTS) {
+				ppm_data_valid_ = true;
+			}
+		} else {
+			ppm_cur_pulse_ = DRV_PPM_MAX_INPUTS;
+			ppm_data_valid_ = false;
+		}
+	}
+}
+
+static void drv_ppm_decode_frame(uint32_t ppm_time) {
+	uint32_t length = ppm_time - ppm_last_pulse_time_;
+	ppm_last_pulse_time_ = ppm_time;
+
+	drv_ppm_decode_frame_width(length);
+}
+
+void tim2_isr(void) {
+	if( TIM2_SR & TIM_SR_CC1IF ) {
+		timer_clear_flag(TIM2, TIM_SR_CC1IF);
+		uint32_t now = timer_get_counter(TIM2) + timer_rollover_cnt_;
+		drv_ppm_decode_frame(now);
+	} else if( TIM2_SR & TIM_SR_UIF ) {
+		timer_clear_flag(TIM2, TIM_SR_UIF);
+		timer_rollover_cnt_ += DRV_PWM_BASE_PERIOD;//(1 << 16);
+	}
+}
+
+//=======================================================================
+//	PWM Driver
+//=======================================================================
+
+bool drv_pwm_init( void ) {
+	// Init all our timers to run at 1us intervals, overflow at PWM_PERIOD
+	//say("Setup: TIM1");
+	drv_pwm_init_timer(TIM1);
+	//say("Setup: TIM3");
+	drv_pwm_init_timer(TIM3);
+	//say("Setup: TIM4");
+	drv_pwm_init_timer(TIM4);
+
+	// init output of channel2 of timer2
+	//drv_pwm_init_output_channel(TIM2, SERVO_CH1, &RCC_APB2ENR, RCC_APB2ENR_IOPAEN, GPIOA, GPIO_TIM2_CH2);
+
+	// init output of channel3 of timer2
+	//pwm_init_output_channel(TIM2, SERVO_CH2, &RCC_APB2ENR, RCC_APB2ENR_IOPAEN, GPIOA, GPIO_TIM2_CH3);
+
+	//pwm_set_pulse_width(TIM2, SERVO_CH1, SERVO_NULL);
+	//pwm_set_pulse_width(TIM2, SERVO_CH2, SERVO_NULL);
+
+	//say("Setup: PWM");
+	for(uint32_t i=0; i< DRV_PWM_MAX_OUTPUTS; i++) {
+		drv_pwm_init_output_channel(drv_pwm_map_[i].timer_peripheral,
+									drv_pwm_map_[i].timer_channel,
+									drv_pwm_map_[i].port,
+									drv_pwm_map_[i].pin);
+
+		//Initialize to "digital low" to start with
+		//Also inits our pwm_frame_ storage variable
+		drv_pwm_write(i, 0);
+	}
+
+	//Start timers
+	timer_enable_counter(TIM1);
+	timer_enable_counter(TIM3);
+	timer_enable_counter(TIM4);
+
+	return true;
+}
+
+void drv_pwm_write( uint8_t index, uint16_t value ) {
+	if(index < DRV_PWM_MAX_OUTPUTS) {
+		drv_pwm_set_pulse_width(drv_pwm_map_[index].timer_peripheral,
+								drv_pwm_map_[index].timer_channel,
+								value);
+
+		pwm_frame_[index] = value;
+	}
+}
+
+uint16_t drv_pwm_get_current( uint8_t index ) {
+	return ( (index < DRV_PWM_MAX_OUTPUTS) ? pwm_frame_[index] : 0 );
+}
+
+//=======================================================================
+//	PPM Driver
+//=======================================================================
+
+bool drv_ppm_init(void) {
 	timer_rollover_cnt_ = 0;
 	ppm_cur_pulse_ = 0;
 	ppm_last_pulse_time_ = 0;
 	ppm_data_valid_ = false;
-	drv_pwm_ppm_clear();
-	
+	drv_ppm_set_ready(false);
+
 	//Timer clock enable
 	//XXX: Handled in drv_pwm_init()
 	//rcc_periph_clock_enable(timer_get_rcc_peripheral(drv_ppm_map_.timer_peripheral));
@@ -282,13 +404,14 @@ static void drv_pwm_ppm_init(void) {
 
 	// TIM channel configuration: Input Capture mode
 	// The first rising/falling edge is used as active edge
-	
+
 	// GPIO configuration as input capture for timer
 	gpio_set_mode(drv_ppm_map_.port, GPIO_MODE_INPUT,
 			  GPIO_CNF_INPUT_PULL_UPDOWN,//GPIO_CNF_OUTPUT_ALTFN_OPENDRAIN,
 			  drv_ppm_map_.pin);
 	//gpio_setup_pin_af(PPM_GPIO_PORT, PPM_GPIO_PIN, PPM_GPIO_AF, FALSE);
-	
+
+	//TODO: PPM pulse type could be a variable?
 	#if defined PPM_PULSE_TYPE && PPM_PULSE_TYPE == PPM_PULSE_TYPE_POSITIVE
 	timer_ic_set_polarity(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, TIM_IC_RISING);
 	gpio_clear(drv_ppm_map_.port, drv_ppm_map_.pin); //Enable pull-down
@@ -314,130 +437,26 @@ static void drv_pwm_ppm_init(void) {
 	// TIM enable counter
 	//timer_enable_counter(drv_ppm_map_.timer_peripheral);
 	timer_enable_counter(drv_ppm_map_.timer_peripheral);
+
+	return true;
 }
 
-static void ppm_decode_frame_width(uint32_t ppm_width) {
-	//say("ppm_decode_frame_width()");
-	
-	if (ppm_cur_pulse_ == DRV_PWM_MAX_INPUTS) {
-		if( ( ppm_width > DRV_PWM_PPM_SYNC_MIN ) &&
-			( ppm_width < DRV_PWM_PPM_SYNC_MAX ) ) {
-
-			if (ppm_data_valid_) {
-				//Store the data in a clean buffer and make it available
-				for(int i=0; i<DRV_PWM_MAX_INPUTS; i++)
-					ppm_frame_[i] = ppm_pulses_[i];
-					
-				ppm_frame_available_ = true;
-				
-				//Prepare for next data read
-				ppm_data_valid_ = false;
-			}
-
-			ppm_cur_pulse_ = 0;
-		} else {
-			ppm_data_valid_ = false;
-		}
-		
-		//say("sync");
-	} else {
-		if( ( ppm_width > DRV_PWM_PPM_MIN ) &&
-			( ppm_width < DRV_PWM_PPM_MAX ) ) {
-
-			ppm_pulses_[ppm_cur_pulse_] = ppm_width;
-			ppm_cur_pulse_++;
-
-			if (ppm_cur_pulse_ == DRV_PWM_MAX_INPUTS) {
-				ppm_data_valid_ = true;
-			}
-		} else {
-			ppm_cur_pulse_ = DRV_PWM_MAX_INPUTS;
-			ppm_data_valid_ = false;
-		}
-	}
-}
-
-static void ppm_decode_frame(uint32_t ppm_time) {
-	uint32_t length = ppm_time - ppm_last_pulse_time_;
-	ppm_last_pulse_time_ = ppm_time;
-
-	ppm_decode_frame_width(length);
-}
-
-void tim2_isr(void) {
-	if( TIM2_SR & TIM_SR_CC1IF ) {
-		timer_clear_flag(TIM2, TIM_SR_CC1IF);
-		uint32_t now = timer_get_counter(TIM2) + timer_rollover_cnt_;
-		ppm_decode_frame(now);
-	} else if( TIM2_SR & TIM_SR_UIF ) {
-		timer_clear_flag(TIM2, TIM_SR_UIF);
-		timer_rollover_cnt_ += DRV_PWM_BASE_PERIOD;//(1 << 16);
-	}
-}
-
-//=======================================================================
-
-void drv_pwm_init( void ) {
-	// Init all our timers to run at 1us intervals, overflow at PWM_PERIOD
-	//say("Setup: TIM1");
-	drv_pwm_init_timer(TIM1);
-	//say("Setup: TIM3");
-	drv_pwm_init_timer(TIM3);
-	//say("Setup: TIM4");
-	drv_pwm_init_timer(TIM4);
-
-	// init output of channel2 of timer2
-	//drv_pwm_init_output_channel(TIM2, SERVO_CH1, &RCC_APB2ENR, RCC_APB2ENR_IOPAEN, GPIOA, GPIO_TIM2_CH2);
-
-	// init output of channel3 of timer2
-	//pwm_init_output_channel(TIM2, SERVO_CH2, &RCC_APB2ENR, RCC_APB2ENR_IOPAEN, GPIOA, GPIO_TIM2_CH3);
-
-	//pwm_set_pulse_width(TIM2, SERVO_CH1, SERVO_NULL);
-	//pwm_set_pulse_width(TIM2, SERVO_CH2, SERVO_NULL);
-
-	//say("Setup: PWM");
-	for(uint32_t i=0; i< DRV_PWM_MAX_OUTPUTS; i++) {
-		drv_pwm_init_output_channel(drv_pwm_map_[i].timer_peripheral,
-									drv_pwm_map_[i].timer_channel,
-									drv_pwm_map_[i].port,
-									drv_pwm_map_[i].pin);
-
-		drv_pwm_write(i, DRV_PWM_MID);
-	}
-
-	//Start timers
-	timer_enable_counter(TIM1);
-	timer_enable_counter(TIM3);
-	timer_enable_counter(TIM4);
-
-	//say("Setup: PPM");
-	drv_pwm_ppm_init();
-}
-
-void drv_pwm_write( uint32_t index, uint16_t value ) {
-	if(index < DRV_PWM_MAX_OUTPUTS) {
-		drv_pwm_set_pulse_width(drv_pwm_map_[index].timer_peripheral,
-								drv_pwm_map_[index].timer_channel,
-								value);
-	}
-}
-
-bool drv_pwm_ppm_ready( void ) {
+bool drv_ppm_ready( void ) {
 	return ppm_frame_available_;
 }
 
-bool drv_pwm_ppm_read_frame( uint16_t *frame ) {
+bool drv_ppm_read_frame( uint16_t *frame ) {
 	bool success = false;
 
-	if( drv_pwm_ppm_ready() ) {
+	if( drv_ppm_ready() ) {
 		CM_ATOMIC_BLOCK() {
-		for(int i=0; i<DRV_PWM_MAX_INPUTS; i++)
+		for(int i=0; i<DRV_PPM_MAX_INPUTS; i++)
 			frame[i] = ppm_frame_[i];
 
-		drv_pwm_ppm_clear();
+		drv_ppm_set_ready(false);
 		}
 		success = true;
 	}
-	
+
 	return success;
 }

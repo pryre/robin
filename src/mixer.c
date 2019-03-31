@@ -38,7 +38,6 @@ fix16_t _actuator_control_g3[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g4[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];
 
-int32_t _pwm_output[MIXER_NUM_MOTORS];
 mixer_motor_test_t _motor_test;
 
 static bool actuator_apply_g0_map_[MIXER_NUM_MOTORS];
@@ -133,8 +132,6 @@ void mixer_init(void) {
 	char text_map[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Layout: [";
 
 	for ( uint8_t i = 0; i < MIXER_NUM_MOTORS; i++ ) {
-		_pwm_output[i] = 0;
-
 		// Calculate final actuator mapping
 		// First handle output mixers, then auxiliaries
 		if ( _mixer_to_use->output_type[i] != IO_TYPE_N ) {
@@ -193,14 +190,13 @@ void mixer_init(void) {
 	}
 
 	mavlink_queue_broadcast_notice( text_map );
-	
+
 	drv_pwm_init();
 
 	mixer_clear_outputs();
 
 	//==-- Perform remaining PWM setup tasks
 	calibrate_esc();
-
 }
 
 // Direct write to the motor with failsafe checks
@@ -208,13 +204,8 @@ void mixer_init(void) {
 // value_disarm (for motors) should be 1000
 static void write_output_pwm( const uint8_t index, const uint32_t value,
 							  const uint32_t value_disarm ) {
-	if ( safety_is_armed() ) {
-		_pwm_output[index] = value;
-	} else {
-		_pwm_output[index] = value_disarm;
-	}
 
-	drv_pwm_write( index, _pwm_output[index] );
+	drv_pwm_write( index, ( safety_is_armed() ? value : value_disarm ) );
 }
 
 // Write a pwm value to the motor channel, value should be between 0 and 1

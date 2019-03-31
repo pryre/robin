@@ -12,6 +12,7 @@ extern "C" {
 
 #include "controller.h"
 #include "drivers/drv_status_io.h"
+#include "drivers/drv_pwm.h"
 #include "estimator.h"
 #include "fix16.h"
 #include "fixextra.h"
@@ -51,7 +52,6 @@ state_t _state_estimator;
 fix16_t _io_pin_states[8];
 
 command_input_t _control_input;
-int32_t _pwm_output[8];
 
 static mavlink_message_t mavlink_msg_buf_port0_;
 static mavlink_message_t mavlink_msg_buf_port1_;
@@ -713,9 +713,15 @@ void mavlink_stream_servo_output_raw( mavlink_channel_t chan ) {
 			mavlink_system.sysid, mavlink_system.compid, get_channel_buf( chan ),
 			sensors_clock_ls_get(),
 			0, // Port 0
-			_pwm_output[0], _pwm_output[1], _pwm_output[2], _pwm_output[3],
-			_pwm_output[4], _pwm_output[5], _pwm_output[6], _pwm_output[7], 0, 0, 0,
-			0, 0, 0, 0, 0 ); // XXX: We don't even have enough ports
+			drv_pwm_get_current(0),
+			drv_pwm_get_current(1),
+			drv_pwm_get_current(2),
+			drv_pwm_get_current(3),
+			drv_pwm_get_current(4),
+			drv_pwm_get_current(5),
+			drv_pwm_get_current(6),
+			drv_pwm_get_current(7),
+			0, 0, 0, 0, 0, 0, 0, 0 ); //TODO: Expand max ports?
 		comms_send_msg( chan );
 	}
 }

@@ -4,6 +4,7 @@ extern "C" {
 
 #include "calibration.h"
 #include "drivers/drv_status_io.h"
+#include "drivers/drv_ppm.h"
 #include "mavlink_system.h"
 #include "sensors.h"
 
@@ -31,7 +32,7 @@ bool calibrate_rc( void ) {
 			break;
 		}
 		case CAL_RC_RANGE_MIDDOWN: {
-			for ( int i = 0; i < 8; i++ ) {
+			for ( int i = 0; i < DRV_PPM_MAX_INPUTS; i++ ) {
 				_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MID] = _sensors.rc_input.raw[i];
 
 				if ( ( _sensors.rc_input.raw[i] < 1300 ) || ( _sensors.rc_input.raw[i] > 1700 ) ) {
@@ -93,8 +94,8 @@ bool calibrate_rc( void ) {
 			break;
 		}
 		case CAL_RC_RANGE_EXTREMES: {
-			for ( int i = 0; i < 8; i++ ) {
-				uint16_t pwmr = drv_pwm_read( i );
+			for ( int i = 0; i < DRV_PPM_MAX_INPUTS; i++ ) {
+				uint16_t pwmr = _sensors.rc_input.raw[i];
 				_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] = ( pwmr < _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] ) ? pwmr : _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN];
 				_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX] = ( pwmr > _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX] ) ? pwmr : _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX];
 			}
@@ -102,7 +103,7 @@ bool calibrate_rc( void ) {
 			break;
 		}
 		case CAL_RC_RANGE_DONE: {
-			for ( int i = 0; i < 8; i++ ) {
+			for ( int i = 0; i < DRV_PPM_MAX_INPUTS; i++ ) {
 				if ( ( _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] > 1300 ) || ( _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX] < 1700 ) ) {
 
 					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
