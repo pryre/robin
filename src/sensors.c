@@ -513,6 +513,7 @@ bool sensors_read( uint32_t time_us ) {
 	bool new_data_read = false;
 
 	// Return the results
+	//TODO: Does this really need to be structured like this?
 	if ( drv_sensors_i2c_read( time_us ) ) {
 		new_data_read = sensors_update( time_us );
 	}

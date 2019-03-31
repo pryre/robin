@@ -24,14 +24,14 @@ typedef struct {
 	uint32_t end;
 } ring_data_t;
 
-static ring_data_t usart_1_ring_in;
-static ring_data_t usart_1_ring_out;
+static volatile ring_data_t usart_1_ring_in;
+static volatile ring_data_t usart_1_ring_out;
 
 #define RING_SIZE(RING)  ((RING)->size - 1)
 #define RING_DATA(RING)  (RING)->data
 #define RING_EMPTY(RING) ((RING)->begin == (RING)->end)
 
-static void ring_init(ring_data_t *ring) {
+static void ring_init(volatile ring_data_t *ring) {
 	ring->size = BUFFER_SIZE;
 	ring->begin = 0;
 	ring->end = 0;
@@ -42,7 +42,7 @@ static void ring_init(ring_data_t *ring) {
 	}
 }
 
-static int32_t ring_write_ch(ring_data_t *ring, uint8_t ch) {
+static int32_t ring_write_ch(volatile ring_data_t *ring, uint8_t ch) {
 	if (((ring->end + 1) % ring->size) != ring->begin) {
 		ring->data[ring->end++] = ch;
 		ring->end %= ring->size;
@@ -52,7 +52,7 @@ static int32_t ring_write_ch(ring_data_t *ring, uint8_t ch) {
 	return -1;
 }
 
-static int32_t ring_write(ring_data_t *ring, uint8_t *data, ring_size_t size) {
+static int32_t ring_write(volatile ring_data_t *ring, uint8_t *data, ring_size_t size) {
 	int32_t i;
 
 	for (i = 0; i < size; i++) {
@@ -63,12 +63,12 @@ static int32_t ring_write(ring_data_t *ring, uint8_t *data, ring_size_t size) {
 	return i;
 }
 
-static bool ring_data_available(ring_data_t *ring) {
+static bool ring_data_available(volatile ring_data_t *ring) {
 	//TODO: Actually make this give a read out
 	return ring->begin != ring->end;
 }
 
-static int32_t ring_read_ch(ring_data_t *ring, uint8_t *ch) {
+static int32_t ring_read_ch(volatile ring_data_t *ring, uint8_t *ch) {
 	int32_t ret = -1;
 
 	if ( ring_data_available(ring) ) {

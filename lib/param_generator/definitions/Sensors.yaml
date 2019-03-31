@@ -109,7 +109,7 @@ PARAM_SENSOR_RC_INPUT_STRM_COUNT:
   reboot: false
   value:
     option: "scalar"
-    default: 2000
+    default: 100
 ---
 PARAM_SENSOR_EXT_POSE_STRM_COUNT:
   type: "uint"

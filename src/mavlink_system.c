@@ -501,19 +501,30 @@ void mavlink_stream_status_io( mavlink_channel_t chan ) {
 
 void mavlink_stream_sys_status( mavlink_channel_t chan ) {
 	if ( mavlink_stream_ready( chan ) ) {
+
 		uint32_t loop_min = 0;
 		uint32_t loop_mean = 0;
 		uint32_t loop_max = 0;
-		profiler_read(PROFILER_ID_LOOP, &loop_min,  &loop_mean,  &loop_max);
+
+		uint32_t loop_min_t = 0;
+		uint32_t loop_mean_t = 0;
+		uint32_t loop_max_t = 0;
+
+		if( profiler_read(PROFILER_ID_LOOP, &loop_min_t,  &loop_mean_t,  &loop_max_t) ) {
+			loop_min = loop_min_t;
+			loop_mean = loop_mean_t;
+			loop_max = loop_max_t;
+		}
 
 		uint32_t onboard_control_sensors_present = 0;
 		uint32_t onboard_control_sensors_enabled = 0;
 		uint32_t onboard_control_sensors_health = 0;
-		uint16_t load = (100 * loop_mean) / PROFILER_IDEAL_LOOP_RATE;
+
+		uint16_t load = (100 * loop_mean) / PROFILER_IDEAL_MAX_LOOP;
 		uint16_t voltage_battery = fix16_to_int(
 			fix16_mul( _fc_1000, _sensors.voltage_monitor.state_filtered ) );
-		uint16_t current_battery = -1;
-		uint8_t battery_remaining = fix16_to_int( fix16_mul( _fc_100, _sensors.voltage_monitor.precentage ) );
+		int16_t current_battery = -1;
+		int8_t battery_remaining = fix16_to_int( fix16_mul( _fc_100, _sensors.voltage_monitor.precentage ) );
 
 		uint32_t num_packets_drop = mavlink_get_channel_status( MAVLINK_COMM_0 )->packet_rx_drop_count + mavlink_get_channel_status( MAVLINK_COMM_1 )->packet_rx_drop_count;
 		uint32_t num_packets_success = mavlink_get_channel_status( MAVLINK_COMM_0 )->packet_rx_success_count + mavlink_get_channel_status( MAVLINK_COMM_1 )->packet_rx_success_count;

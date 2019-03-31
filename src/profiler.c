@@ -15,7 +15,8 @@ static const char profile_names_[PROFILER_ID_NUM][10] = {
 	"SETUP",
 	"SENSORS",
 	"ESTIMATOR",
-	"COMMS",
+	"COMMS_RX",
+	"COMMS_TX",
 	"SAFETY",
 	"STATUS",
 	"CONTROL",
@@ -25,7 +26,6 @@ static const char profile_names_[PROFILER_ID_NUM][10] = {
 static void profiler_reset( profiler_ids_t id ) {
 	if(id < PROFILER_ID_NUM) {
 		profiles_[id].start = 0;
-		profiles_[id].end = 0;
 
 		profiles_[id].dt_int = 0;
 		profiles_[id].counter = 0;
@@ -75,6 +75,24 @@ void profiler_set_start( profiler_ids_t id, uint32_t time_us ) {
 	}
 }
 
+bool profiler_read( profiler_ids_t id, uint32_t *min, uint32_t *mean, uint32_t *max ) {
+	bool success = false;
+
+	if( id < PROFILER_ID_NUM ) {
+		if( profiles_[id].counter ) {
+			*min = profiles_[id].min;
+			*max = profiles_[id].max;
+			*mean = profiles_[id].dt_int / profiles_[id].counter;
+
+			//Clear the profile and give an OK
+			profiler_reset(id);
+			success = true;
+		}
+	}
+
+	return success;
+}
+
 static void profiler_send_debug( profiler_ids_t id ) {
 	if( id < PROFILER_ID_NUM ) {
 		uint32_t min = 0;
@@ -97,10 +115,12 @@ static void profiler_send_debug( profiler_ids_t id ) {
 
 void profiler_set_end( profiler_ids_t id, uint32_t time_us ) {
 	if( id < PROFILER_ID_NUM ) {
-		profiles_[id].end = time_us;
+		//profiles_[id].end = time_us;
 
-		if( profiles_[id].end > profiles_[id].start ) {
-			uint32_t dt = profiles_[id].end - profiles_[id].start;
+		//if( profiles_[id].end > profiles_[id].start ) {
+		if( ( profiles_[id].start ) && ( time_us > profiles_[id].start ) ) {
+			//uint32_t dt = profiles_[id].end - profiles_[id].start;
+			uint32_t dt = time_us - profiles_[id].start;
 
 			profiles_[id].dt_int += dt;
 			profiles_[id].counter++;
@@ -111,6 +131,8 @@ void profiler_set_end( profiler_ids_t id, uint32_t time_us ) {
 			if( dt < profiles_[id].min )
 				profiles_[id].min = dt;
 		}
+
+		profiles_[id].start = 0;
 
 		//On loop end, we handle the debug profiling readout if needed
 		if ( debug_period_ && ( id == PROFILER_ID_LOOP ) ) {
@@ -127,23 +149,5 @@ void profiler_set_end( profiler_ids_t id, uint32_t time_us ) {
 				profiler_send_debug(id);
 		}
 	}
-}
-
-bool profiler_read( profiler_ids_t id, uint32_t *min, uint32_t *mean, uint32_t *max ) {
-	bool success = false;
-
-	if( id < PROFILER_ID_NUM ) {
-		if( profiles_[id].counter ) {
-			*min = profiles_[id].min;
-			*max = profiles_[id].max;
-			*mean = profiles_[id].dt_int / profiles_[id].counter;
-
-			//Clear the profile and give an OK
-			profiler_reset(id);
-			success = true;
-		}
-	}
-
-	return success;
 }
 

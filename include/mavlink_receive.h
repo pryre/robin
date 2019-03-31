@@ -10,7 +10,7 @@ extern "C" {
 // This will contain functions to receive and parse mavlink messages
 // and should also hanlde any unsupported commands
 
-void communication_receive( void );
+void communication_receive( uint32_t now );
 
 void mavlink_handle_att_pos_mocap( mavlink_channel_t chan,
 								   mavlink_message_t* msg,

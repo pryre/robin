@@ -98,18 +98,14 @@ void loop( void ) {
 	}
 
 	//==-- Communications
-	profiler_set_start( PROFILER_ID_COMMS, system_micros() );
 	//==-- Check Serial
-	communication_receive(); // XXX: Could be moved to a UART callback, but may
-	// cause issues with async I2C
+	profiler_run( PROFILER_ID_COMMS_RX, &communication_receive );
 
 	//==-- Transmit Serial
 	// Check to see if a message has been sent this loop, then see if a message
 	// should be sent
 	// Only allow this once per loop due to buffer risks (see serial define above)
-	communication_transmit( system_micros() );
-
-	profiler_set_end( PROFILER_ID_COMMS, system_micros() );
+	profiler_run( PROFILER_ID_COMMS_TX, &communication_transmit );
 
 	//==-- Timeout Checks
 	profiler_run( PROFILER_ID_SAFETY, &safety_run );

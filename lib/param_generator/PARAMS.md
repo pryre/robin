@@ -212,7 +212,7 @@ STRM_NUM_HIL | uint | Number of HIL readings that must be recieved before a stre
 STRM_NUM_IMU | uint | Number of IMU readings that must be recieved before a stream is established | 1000 |  | scalar | False
 STRM_NUM_BARO | uint | Number of barometer readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_SONAR | uint | Number of sonar readings that must be recieved before a stream is established | 50 |  | scalar | False
-STRM_NUM_RC_IN | uint | Number of valid RC input readings that must be recieved before a stream is established | 2000 |  | scalar | False
+STRM_NUM_RC_IN | uint | Number of valid RC input readings that must be recieved before a stream is established | 100 |  | scalar | False
 STRM_NUM_EXT_P | uint | Number of external pose readings that must be recieved before a stream is established | 10 |  | scalar | False
 STRM_NUM_MAG | uint | Number of magnetometer readings that must be recieved before a stream is established | 50 |  | scalar | False
 STRM_NUM_OB_H | uint | Number of offboard heartbeat messages that must be recieved before a stream is established | 2 |  | scalar | False

@@ -122,11 +122,11 @@ break;
 	return msg_parsed;
 }
 
-void communication_receive( void ) {
+void communication_receive( uint32_t now ) {
 	// XXX: Make sure the read step doesn't last more that 250us
 	//	   (means we might drop packets, but it won't lock the system)
 	const uint32_t time_read_max = 250;
-	uint32_t time_start_read = system_micros();
+	uint32_t time_start_read = now;
 
 	// Read in as many byts as we can until either
 	// both ports are empty, have both read messages,

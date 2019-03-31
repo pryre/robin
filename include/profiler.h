@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define PROFILER_IDEAL_LOOP_RATE 1000	//Ideal loop rate in us
+#define PROFILER_IDEAL_MAX_LOOP 1000	//Ideal loop rate in us
 
 //XXX: Hardcode the first 3 Enum values so we know where to start for debug feedback
 #define PROFILER_ID_LOOP_ENUM 0
@@ -15,7 +15,8 @@ typedef enum {
 	PROFILER_ID_SETUP = PROFILER_ID_SETUP_ENUM,
 	PROFILER_ID_SENSORS = PROFILER_ID_FIRST_ENUM,
 	PROFILER_ID_ESTIMATOR,
-	PROFILER_ID_COMMS,
+	PROFILER_ID_COMMS_RX,
+	PROFILER_ID_COMMS_TX,
 	PROFILER_ID_SAFETY,
 	PROFILER_ID_STATUS,
 	PROFILER_ID_CONTROL,
@@ -25,7 +26,7 @@ typedef enum {
 
 typedef struct {
 	uint32_t start; // Loop start time
-	uint32_t end;   // Loop end time
+	//uint32_t end;   // Loop end time
 
 	uint32_t counter;	// Times the data from this sensor has been collated
 	uint32_t dt_int;	// Sum of dt
@@ -37,6 +38,7 @@ void profiler_init( void );
 void profiler_run( profiler_ids_t id, void (*fun_ptr)(uint32_t) );
 
 uint32_t profiler_get_loop_start( void );
+//uint32_t profiler_get_loop_stats( uint32_t *min, uint32_t *mean, uint32_t *max );	//Get the stats of the last loop reading
 
 void profiler_set_start( profiler_ids_t id, uint32_t time_us );
 void profiler_set_end( profiler_ids_t id, uint32_t time_us );
