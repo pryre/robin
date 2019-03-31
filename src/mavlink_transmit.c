@@ -181,12 +181,10 @@ static uint32_t calc_period( fix16_t rate ) {
 	uint32_t period = 0;
 
 	// If we were passed a valid rate
-	if ( rate > 0 )
-		period = 1000 * fix16_to_int( fix16_div( _fc_1000, rate ) ); // XXX: Split the
-	// multiply/divs of
-	// 1000 to make
-	// sure we keep
-	// precision
+	if ( rate > 0 ) {
+		// XXX: Split the multiply/divs of 1000 to make sure we keep precision
+		period = 1000 * fix16_to_int( fix16_div( _fc_1000, rate ) );
+	}
 
 	return period;
 }

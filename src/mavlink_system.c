@@ -820,6 +820,16 @@ void mavlink_queue_broadcast_error( char* text ) {
 	lpq_queue_broadcast_msg( &msg );
 }
 
+// Broadcasts an debug message to all open comm channels
+void mavlink_queue_broadcast_debug( char* text ) {
+	mavlink_debug_cli_message( MAV_SEVERITY_DEBUG, text );
+
+	mavlink_message_t msg;
+	mavlink_prepare_statustext( &msg, MAV_SEVERITY_DEBUG, text );
+
+	lpq_queue_broadcast_msg( &msg );
+}
+
 // Sends a debug parameter
 void mavlink_prepare_debug( mavlink_message_t* msg, uint32_t stamp,
 							uint8_t index, uint32_t value ) {

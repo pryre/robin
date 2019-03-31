@@ -346,6 +346,7 @@ def gen_c(params, filepath):
 		str_c += "#include \"mavlink_transmit.h\"\n"
 		str_c += "#include \"controller.h\"\n"
 		str_c += "#include \"sensors.h\"\n"
+		str_c += "#include \"profiler.h\"\n"
 		str_c += "#include \"pid_controller.h\"\n"
 		str_c += "#include \"fix16.h\"\n\n"
 		str_c += "void set_param_defaults(void) {\n"

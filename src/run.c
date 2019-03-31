@@ -28,6 +28,9 @@ void setup( void ) {
 	_system_status.state = MAV_STATE_UNINIT;
 	_system_status.mode = MAV_MODE_PREFLIGHT;
 
+	profiler_init();
+	profiler_set_start( PROFILER_ID_SETUP, system_micros() );
+
 	// System-specific abstraction initializers
 	system_init();
 
@@ -61,6 +64,8 @@ void setup( void ) {
 
 	// Initialization complete, fall into STANDBY state
 	safety_request_state( MAV_STATE_STANDBY );
+
+	profiler_set_end( PROFILER_ID_SETUP, system_micros() );
 }
 
 // XXX: Measured CPU load when armed and running: 51.4%

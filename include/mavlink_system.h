@@ -105,6 +105,7 @@ void mavlink_stream_broadcast_param_value( uint32_t index );
 void mavlink_queue_broadcast_info( char* text );
 void mavlink_queue_broadcast_notice( char* text );
 void mavlink_queue_broadcast_error( char* text );
+void mavlink_queue_broadcast_debug( char* text );
 
 void mavlink_prepare_protocol_version( mavlink_message_t* msg );
 void mavlink_prepare_autopilot_version( mavlink_message_t* msg );
