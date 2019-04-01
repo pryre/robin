@@ -66,7 +66,6 @@ void profiler_set_start( profiler_ids_t id, uint32_t time_us ) {
 			fix16_t rate = get_param_fix16(PARAM_DEBUG_PROFILING);
 
 			if(rate) {
-
 				debug_period_ = 1000 * fix16_to_int( fix16_div( _fc_1000, rate ) );
 			} else {
 				debug_period_ = 0;
