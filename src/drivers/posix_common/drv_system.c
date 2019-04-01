@@ -21,8 +21,13 @@ static uint16_t vid;
 static uint16_t pid;
 static uint64_t uid;
 
+static struct timeval start_time_;
+
 void system_init( void ) {
 	system_debug_print( "--== robin ==--" );
+	
+	//Capture a start point for system clock
+	gettimeofday( &start_time_, NULL );
 
 	// Generate a Vendor ID and Product ID based off of the ethernet MAC address
 	int sock = socket( AF_INET, SOCK_DGRAM, IPPROTO_IP );
@@ -72,7 +77,7 @@ void system_init( void ) {
 uint32_t system_micros( void ) {
 	struct timeval currentTime;
 	gettimeofday( &currentTime, NULL );
-	return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
+	return ( ( currentTime.tv_sec - start_time_.tv_sec) * (uint32_t)1e6 ) + ( currentTime.tv_usec - start_time_.tv_usec );
 }
 
 void system_pause_us( uint32_t us ) {
