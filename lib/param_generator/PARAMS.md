@@ -141,7 +141,7 @@ MC_YAW_W | float | Weighting gain for yaw angle error dynamics. Values closer to
 
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
-EST_INIT_TIME | uint | Time from boot where the estimator will use quick convergence | 10000 | ms | scalar | True
+EST_INIT_TIME | uint | Time from boot where the estimator will use quick convergence | 1000000 | us | scalar | True
 EST_FUSE_HDG | uint | Toggle to enable heading fusion, technique will use data in this weighting: ext_pose > vision > mag (0:false,1:true) | 1 |  | scalar | False
 EST_LVL_HORZ | uint | Toggle to enable level horizon calibration for the attitude estimation (0:false,1:true) | 1 |  | scalar | False
 EST_LVL_HORZ_W | float | Level horizon offset quaternion calibration data (W) | 1.0 |  | scalar | False

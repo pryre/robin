@@ -351,22 +351,25 @@ void control_init( void ) {
 }
 
 void control_run( uint32_t now ) {
-	// Run the control loop at a slower frequency so it is more resilient against
-	// noise
-	if ( ( now - _control_timing.time_last ) > _control_timing.period_update ) {
-		if ( ( safety_is_armed() ) && ( _system_status.state != MAV_STATE_EMERGENCY ) ) {
+	// Run the control loop at a slower frequency so it is more resilient against noise
+	if( ( now - _control_timing.time_last ) > _control_timing.period_update ) {
+		//Before we run control, the following requirements should be met:
+		//	- The system is armed
+		//	- We are running in an non-emergency state
+		//	- The estimator has finished its initialization
+		if( ( safety_is_armed() ) && 
+			( _system_status.state != MAV_STATE_EMERGENCY ) &&
+			( _state_estimator.time_updated > get_param_uint( PARAM_EST_INIT_TIME ) ) ) {
 			//==-- Update Controller
 			// Apply the current commands and update the PID controllers
-			//
-			//TODO: Might be a good idea to make sure "_state_estimator.time_updated"
-			//		is a reasonable level. Perhaps should limit control until estimate
-			//		is past its "time_init_" steps?
 			controller_run( _state_estimator.time_updated );
 		} else {
 			//==-- Reset Controller
 			controller_reset(); // Reset the PIDs and output flat 0s for control
 		}
 
+		//XXX:	Calculate mixer output here, as we only need to update the
+		//		output when we update the control values.
 		calc_mixer_output();
 
 		// Calculate timings for feedback

@@ -5,8 +5,8 @@ PARAM_EST_INIT_TIME:
   reboot: true
   value:
     option: "scalar"
-    default: 10000
-    unit: "ms"
+    default: 1000000
+    unit: "us"
 ---
 PARAM_EST_USE_HDG_FUSION:
   type: "uint"

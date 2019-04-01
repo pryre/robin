@@ -26,8 +26,6 @@ static v3d w_bias_; //Integrator for adaptive bias
 static qf16 q_hat_; //Attitude estimate
 //static v3d g_; //Gravity vector
 
-static uint32_t init_time_;
-
 static v3d accel_lpf_;
 static v3d gyro_lpf_;
 
@@ -62,8 +60,6 @@ void estimator_init( void ) {
 	gyro_lpf_.x = 0;
 	gyro_lpf_.y = 0;
 	gyro_lpf_.z = 0;
-
-	init_time_ = get_param_uint( PARAM_EST_INIT_TIME ) * 1000; //nano->microseconds
 }
 
 void reset_adaptive_gyro_bias(void) {
@@ -134,7 +130,7 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 	fix16_t w_a_kp = get_param_fix16( PARAM_EST_ACC_KP );	//Accelerometer
 	fix16_t w_b_ki = get_param_fix16( PARAM_EST_BIAS_KI );   //Bias
 	//Crank up the gains for the first few seconds for quick convergence
-	if ( time_now < init_time_ ) {
+	if ( time_now < get_param_uint( PARAM_EST_INIT_TIME ) ) {
 		w_m_kp = fix16_smul( w_a_kp, _fc_10 );
 		w_a_kp = fix16_smul( w_a_kp, _fc_10 );
 		w_b_ki = fix16_smul( w_b_ki, _fc_10 );
