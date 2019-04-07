@@ -23,11 +23,11 @@ Depending on your version of `stm32flash`, you may have to call the flash comman
 - Connect the USB-Serial Tx/Rx to the autopilot
 - Power on the autopilot directly into bootloader mode
 
-Use the following commands to flash the firmware to your flight controller. You will need to replace the filename (`robin_naze32_rX.hex`) and device name (`/dev/ttyUSBX` or `COMX`) with the correct options for your setup.
+Use the following commands to flash the firmware to your flight controller. You will need to replace the filename (`robin_naze32_revX.hex`) and device name (`/dev/ttyUSBX` or `COMX`) with the correct options for your setup.
 
 #### Flashing (Linux)
 ```sh
-stm32flash -w robin_naze32_rX.hex -v -g 0x0 -b 921600 /dev/ttyUSBX
+stm32flash -w robin_naze32_revX.hex -v -g 0x0 -b 921600 /dev/ttyUSBX
 ```
 
 #### Flashing (Windows)
@@ -35,7 +35,7 @@ Copy the firmware to the same folder as the one where you extracted `stm32flash.
 
 In the command prompt, run the following:
 ```sh
-./stm32flash.exe -w robin_naze32_rX.hex -v -g 0x0 -b 921600 COMX
+./stm32flash.exe -w robin_naze32_revX.hex -v -g 0x0 -b 921600 COMX
 ```
 
 ## Working with the Source Code
