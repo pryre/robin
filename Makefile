@@ -21,6 +21,11 @@ OPTIONS		?=
 # Debugger optons, must be empty or GDB
 DEBUG		?=
 
+list_targets:
+	@echo "Available build targets:"
+	@ls makefiles | grep -v common | sed -e "s/^/\t/"
+	@echo ""
+
 posix_udp: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
