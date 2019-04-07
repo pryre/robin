@@ -2,7 +2,7 @@
 [Back to index](README.md).
 
 ## QGroundControl
-Currently, QGCS support is patchy at best. Most of the calibration and management functionallity is available using the [custom widget](https://github.com/qutas/robin/blob/master/lib/qgroundcontrol_plugins/RobinCommandPanel.qml), which can be loaded in QGCS by clicking "Widgets > Custom Command > Load Custom QML file".
+Currently, QGCS support is patchy at best. Most of the calibration and management functionallity is available using the [custom widget](https://raw.githubusercontent.com/qutas/robin/master/lib/qgroundcontrol_plugins/RobinCommandPanel.qml), which can be loaded in QGCS by clicking "Widgets > Custom Command > Load Custom QML file".
 
 It is currently compatible to do the following:
 - Allow you to select and change parameters
