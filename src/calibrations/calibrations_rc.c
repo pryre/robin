@@ -13,7 +13,7 @@ extern "C" {
 #include "safety.h"
 #include "sensors.h"
 
-#include <stdlib.h>
+#include "robin_itoa.h"
 
 calibration_data_t _calibrations;
 sensor_readings_t _sensors;
@@ -36,9 +36,10 @@ bool calibrate_rc( void ) {
 				_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MID] = _sensors.rc_input.raw[i];
 
 				if ( ( _sensors.rc_input.raw[i] < 1300 ) || ( _sensors.rc_input.raw[i] > 1700 ) ) {
-					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-					snprintf( text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
-							  "[SENSOR] Possible bad trim on channel: %d", i + 1 );
+					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Possible bad trim on channel: ";
+					char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+					robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1, i + 1 , 10);
+					strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 					mavlink_queue_broadcast_error( text );
 				}
 			}
@@ -105,10 +106,10 @@ bool calibrate_rc( void ) {
 		case CAL_RC_RANGE_DONE: {
 			for ( int i = 0; i < DRV_PPM_MAX_INPUTS; i++ ) {
 				if ( ( _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] > 1300 ) || ( _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX] < 1700 ) ) {
-
-					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-					snprintf( text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
-							  "[SENSOR] Possible bad min/max on channel: %d", i + 1 );
+					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Possible bad min/max on channel: ";
+					char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+					robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1, i + 1 , 10);
+					strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 					mavlink_queue_broadcast_error( text );
 				}
 			}

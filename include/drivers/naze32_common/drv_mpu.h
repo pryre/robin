@@ -113,6 +113,8 @@ typedef enum accel_fsr_e {
 } accel_fsr_e;
 
 extern uint8_t mpuLowPassFilter;
+extern uint32_t _imu_time_ready;
+
 
 uint16_t mpu6050_init( accel_fsr_e accelFSR, gyro_fsr_e gyroFSR );
 uint16_t mpu6500_init( accel_fsr_e accelFSR, gyro_fsr_e gyroFSR );

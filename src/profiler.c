@@ -7,6 +7,9 @@
 #include "fix16.h"
 #include "fixextra.h"
 
+#include "robin_itoa.h"
+#include <string.h>
+
 static uint32_t debug_period_;
 static uint32_t debug_time_last_;
 static profiler_profile_t profiles_[PROFILER_ID_NUM];
@@ -99,14 +102,19 @@ static void profiler_send_debug( profiler_ids_t id ) {
 		uint32_t max = 0;
 
 		if( profiler_read( id, &min, &mean, &max ) ) {
-			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-			snprintf( text,
-					  MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
-					  "[PRO] %s: [%lu;%lu,%lu]",
-					  profile_names_[id],
-					  (unsigned long)mean,
-					  (unsigned long)min,
-					  (unsigned long)max);
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PRO] ";
+			strncat(text, profile_names_[id], MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			strncat(text, ": [", MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, mean, 10);
+			strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			strncat(text,"; ",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, min, 10);
+			strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			strncat(text,"; ",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, max, 10);
+			strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			strncat(text,"]",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 			mavlink_queue_broadcast_debug( text );
 		}
 	}

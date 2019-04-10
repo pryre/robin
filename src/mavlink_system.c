@@ -23,7 +23,8 @@ extern "C" {
 #include "sensors.h"
 #include "profiler.h"
 
-#include <stdlib.h>
+//#include <stdlib.h>
+#include "robin_itoa.h"
 
 /* Struct that stores the communication settings of this system.
    you can also define / alter these settings elsewhere, as long
@@ -932,9 +933,10 @@ void mavlink_prepare_param_value( mavlink_message_t* msg, uint32_t index ) {
 									  PARAMS_COUNT,			   // Total number of parameters
 									  index );
 	} else {
-		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-		snprintf( text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
-				  "[PARAM] Unknown paramater type found: %lu", (unsigned long)index );
+		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[PARAM] Unknown paramater type found: ";
+		char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+		robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1, index , 10);
+		strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 		mavlink_queue_broadcast_error( text );
 	}
 }

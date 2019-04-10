@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#include <stdlib.h>
+//#include <stdlib.h>
 
 #include "mavlink_receive.h"
 #include "mavlink_system.h"
@@ -14,6 +14,8 @@ extern "C" {
 #include "fixextra.h"
 
 #include "drivers/drv_system.h"
+
+#include "robin_itoa.h"
 
 const mixer_t* _mixer_to_use;
 mixer_motor_test_t _motor_test;
@@ -61,9 +63,10 @@ MAV_RESULT mavlink_handle_command_long_do_motor_test( mavlink_channel_t chan,
 			// get_param_uint(_system_status.sensors.pwm_control.param_stream_count);
 			// safety_update_sensor(&_system_status.sensors.pwm_control);
 
-			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-			snprintf( text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
-					  "[MIXER] Testing motor: %d", _motor_test.motor_step );
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
+			char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1, _motor_test.motor_step, 10);
+			strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 			mavlink_queue_broadcast_notice( text );
 
 			command_result = MAV_RESULT_ACCEPTED;

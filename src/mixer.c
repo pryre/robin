@@ -4,7 +4,7 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 
 #include "fix16.h"
 #include "fixextra.h"
@@ -17,8 +17,9 @@ extern "C" {
 #include "mixer.h"
 #include "params.h"
 #include "safety.h"
-
 #include "io_type.h"
+
+#include "robin_itoa.h"
 
 #include "mixers/mixer_free.h"
 #include "mixers/mixer_fw_std.h"
@@ -290,9 +291,10 @@ static bool motor_test_in_progress( const uint32_t time_now ) {
 					_motor_test.start = time_now;
 					_motor_test.motor_step++;
 
-					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-					snprintf( text, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
-							  "[MIXER] Testing motor: %d", _motor_test.motor_step + 1 );
+					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] Testing motor: ";
+					char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+					robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1, _motor_test.motor_step + 1 , 10);
+					strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 					mavlink_queue_broadcast_notice( text );
 				} else {
 					// Test is done, reset

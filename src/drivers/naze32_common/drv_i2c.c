@@ -18,6 +18,8 @@ uint32_t _imu_time_ready;
 sensor_readings_t _sensors;
 calibration_data_t _calibrations;
 
+static uint32_t _imu_time_last;
+
 static volatile uint8_t accel_status = 0;
 static volatile uint8_t gyro_status = 0;
 static volatile uint8_t temp_status = 0;
@@ -35,6 +37,7 @@ static volatile uint8_t sonar_status = 0;
 
 bool drv_sensors_i2c_init( void ) {
 	_imu_time_ready = 0;
+	_imu_time_last = 0;
 
 	system_pause_ms( 500 ); // Wait for i2c devices to boot properly
 
@@ -62,13 +65,13 @@ static void drv_sensors_i2c_poll( uint32_t time_us ) {
 	//==-- Update IMU
 	if ( _sensors.imu.status.present ) {
 		// Update the imu sensor if we've recieved a new interrupt
-		if ( ( _imu_time_ready > sensors_clock_imu_int_get() ) && ( accel_status == I2C_JOB_DEFAULT ) && ( gyro_status == I2C_JOB_DEFAULT ) && ( temp_status == I2C_JOB_DEFAULT ) ) {
+		if ( ( _imu_time_ready > _imu_time_last ) && ( accel_status == I2C_JOB_DEFAULT ) && ( gyro_status == I2C_JOB_DEFAULT ) && ( temp_status == I2C_JOB_DEFAULT ) ) {
 
 			mpu_request_async_accel_read( read_accel_raw, &accel_status );
 			mpu_request_async_gyro_read( read_gyro_raw, &gyro_status );
 			mpu_request_async_temp_read( &( read_temp_raw ), &temp_status );
 
-			_sensors.clock.imu_time_ready = _imu_time_ready;
+			_imu_time_last = _imu_time_ready;
 		}
 	}
 
@@ -164,7 +167,7 @@ bool drv_sensors_i2c_read( uint32_t time_us ) {
 										 _sensors.imu.gyro_scale );
 
 		// Other IMU updates
-		_sensors.imu.status.time_read = sensors_clock_imu_int_get();
+		_sensors.imu.status.time_read = _imu_time_last;
 		_sensors.imu.status.new_data = true;
 		safety_update_sensor( &_system_status.sensors.imu );
 	}

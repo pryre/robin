@@ -8,7 +8,7 @@ extern "C" {
 
 // XXX: LPQ was 12
 #define LOW_PRIORITY_QUEUE_SIZE 8
-#define LOW_PRIORITY_QUEUE_PARAMS_SIZE 32
+#define LOW_PRIORITY_QUEUE_PARAMS_SIZE 16
 
 //#include "breezystm32.h"
 //#include "serial.h"
