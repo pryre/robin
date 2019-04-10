@@ -7,7 +7,7 @@ extern "C" {
 #include <fix16.h>
 #include <stdbool.h>
 
-extern uint32_t _imu_time_ready;
+//extern volatile uint32_t _imu_time_ready;
 
 bool drv_sensors_i2c_init( void );
 bool drv_sensors_imu_init( uint32_t i2c, fix16_t* scale_accel, fix16_t* scale_gyro );

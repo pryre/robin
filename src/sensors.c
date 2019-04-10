@@ -70,6 +70,8 @@ static void sensors_init_hil( void ) {
 }
 
 void sensors_init( void ) {
+	_sensors.fresh_sensor_data = false;
+
 	//==-- Hardware In The Loop
 	sensors_init_hil();
 
@@ -509,16 +511,14 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 	return true;
 }
 
-bool sensors_read( uint32_t time_us ) {
-	bool new_data_read = false;
-
+void sensors_read( uint32_t time_us ) {
 	// Return the results
 	//TODO: Does this really need to be structured like this?
+	//		Consider relying on just the internal sensor data
+	//		ready vars elsewhere in the system
 	if ( drv_sensors_i2c_read( time_us ) ) {
-		new_data_read = sensors_update( time_us );
+		_sensors.fresh_sensor_data = sensors_update( time_us );
 	}
-
-	return new_data_read;
 }
 
 #ifdef __cplusplus

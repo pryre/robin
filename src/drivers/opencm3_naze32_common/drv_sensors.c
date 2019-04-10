@@ -16,6 +16,7 @@
 
 #include "fix16.h"
 #include "fixextra.h"
+#include "robin_itoa.h"
 
 
 #define NAZE32_I2C_SENSOR_CHANNEL I2C2
@@ -51,11 +52,10 @@ static void drv_sensors_i2c_scan(void) {
 		system_pause_ms(50);
 
 		if (drv_i2c_write_register(NAZE32_I2C_SENSOR_CHANNEL, addr, 0x00, 0x00)) {
-			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-			snprintf(text,
-					 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN,
-					 "[PARAM] i2c_scan() found: 0x%x",
-					 addr);
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] i2c_scan() found: 0x";
+			char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1, addr , 16);
+			strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 			mavlink_queue_broadcast_notice(text);
 		}
 	}

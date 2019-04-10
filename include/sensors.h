@@ -151,6 +151,8 @@ typedef struct {
 	sensor_readings_rc_arm_toggle_t rc_arm_toggle;
 	sensor_readings_safety_button_t safety_button;
 	sensor_readings_voltage_monitor_t voltage_monitor;
+
+	bool fresh_sensor_data;
 } sensor_readings_t;
 
 extern sensor_readings_t _sensors;
@@ -158,7 +160,7 @@ extern sensor_readings_t _sensors;
 // function declarations
 void sensors_init( void );
 void sensor_status_init( sensor_status_t* status, bool sensor_present );
-bool sensors_read( uint32_t time_us );
+void sensors_read( uint32_t time_us );
 
 // void sensors_poll(void);
 uint32_t sensors_clock_ls_get( void );		   // Get time at loop start

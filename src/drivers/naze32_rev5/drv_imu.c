@@ -6,7 +6,7 @@
 #include "fix16.h"
 #include "fixextra.h"
 
-uint32_t _imu_time_ready;
+volatile uint32_t _imu_time_ready;
 
 static void drv_sensors_imu_poll( void ) {
 	//==-- Timing setup get loop time

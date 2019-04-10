@@ -76,14 +76,15 @@ void loop( void ) {
 	// Take note of when this loop starts
 	profiler_set_start( PROFILER_ID_LOOP, system_micros() );
 
-	//TODO: HERE!: Do sensor profiling
-
 	// Sensor Read
 	// Check to see if any of the i2c sensors have been updated (mainly the imu)
 	// and if so, update the sensor states and estimator
 	// If we're not in HIL mode
 	if ( !_sensors.hil.status.present ) {
-		if ( sensors_read( system_micros() ) ) {
+		profiler_run( PROFILER_ID_SENSORS, &sensors_read );
+
+		if ( _sensors.fresh_sensor_data ) {
+
 			// Handle any calibration is in progress
 			if ( _system_status.state == MAV_STATE_CALIBRATING ) {
 				// Run the rest of the calibration logic
@@ -91,6 +92,8 @@ void loop( void ) {
 			}
 
 			profiler_run( PROFILER_ID_ESTIMATOR, &estimator_update_sensors );
+
+			_sensors.fresh_sensor_data = false;	//Turn off flag after data use
 		}
 	} else {
 		if ( _sensors.hil.status.new_data )
