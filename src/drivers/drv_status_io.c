@@ -11,7 +11,7 @@ extern "C" {
 #include "fix16.h"
 #include "fixextra.h"
 
-fix16_t _io_pin_states[8];
+fix16_t _io_pin_states[IO_PIN_STATE_NUM];
 
 static status_led_t led_arm;
 static status_led_t led_heart;
@@ -36,7 +36,7 @@ void status_devices_init( void ) {
 	buzzer.period = 0;	// 200ms beep length
 	buzzer.last_beep = 0; // Time last beep started
 
-	for ( int i = 0; i < 8; i++ )
+	for ( int i = 0; i < IO_PIN_STATE_NUM; i++ )
 		_io_pin_states[i] = 0;
 }
 

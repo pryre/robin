@@ -51,7 +51,7 @@ const char _param_names[PARAMS_COUNT]
 system_status_t _system_status;
 sensor_readings_t _sensors;
 state_t _state_estimator;
-fix16_t _io_pin_states[8];
+fix16_t _io_pin_states[IO_PIN_STATE_NUM];
 
 command_input_t _control_input;
 

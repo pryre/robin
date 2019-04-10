@@ -32,11 +32,15 @@ typedef struct {
 } status_buzzer_t;
 
 #define IO_PIN_STATE_GROUP_MIX 255
-#define IO_PIN_STATE_ID_HEART 0
-#define IO_PIN_STATE_ID_ARM 1
-#define IO_PIN_STATE_ID_BUZZER 7
 
-extern fix16_t _io_pin_states[8];
+typedef enum {
+	IO_PIN_STATE_ID_HEART = 0,
+	IO_PIN_STATE_ID_ARM,
+	IO_PIN_STATE_ID_BUZZER,
+	IO_PIN_STATE_NUM
+} status_io_pin_states_t;
+
+extern fix16_t _io_pin_states[IO_PIN_STATE_NUM];
 
 // XXX: status_devices_init() calls the other init() to do hardware specific
 // setup

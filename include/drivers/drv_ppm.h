@@ -11,7 +11,7 @@ extern "C" {
 
 #define DRV_PPM_MIN 900
 #define DRV_PPM_MAX 2100
-#define DRV_PPM_SYNC_MIN 5000
+#define DRV_PPM_SYNC_MIN 2700
 #define DRV_PPM_SYNC_MAX 15000
 
 bool drv_ppm_init( void );
