@@ -65,7 +65,7 @@ MAV_RESULT mavlink_handle_command_long_do_motor_test( mavlink_channel_t chan,
 
 			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[MIXER] Testing motor: ";
 			char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1, _motor_test.motor_step, 10);
+			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1, _motor_test.motor_step + 1, 10);
 			strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 			mavlink_queue_broadcast_notice( text );
 
