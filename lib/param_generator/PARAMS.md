@@ -245,5 +245,5 @@ TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed
 TIMEOUT_THRTL_V | float | Throttle amount that must be reached to cancel the throttle timeout | 0.05 | us | scalar | False
 TIMEOUT_CRIT_EM | uint | Critical state timeout, system is put into emergency state after this time if not resolved | 5000000 | us | scalar | False
 SYS_AUTOCONFIG | uint | Tells the system to reset all parameters to default on next boot | 0 |  | scalar | True
-DEBUG_PROFILING | float | Enables subsystem profiling and feedback (in Hz) | 1.0 |  | scalar | False
+DEBUG_PROFILING | uint | Enables subsystem profiling and feedback (in Hz) | 0 |  | scalar | False
 
