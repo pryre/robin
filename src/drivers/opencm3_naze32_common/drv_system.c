@@ -3,6 +3,7 @@
 
 #include "drivers/drv_system.h"
 #include "drivers/opencm3_naze32_common/drv_clock_select.h"
+#include "drivers/drv_status_io.h"
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>	//Needed for AFIO_MAPR
@@ -11,11 +12,13 @@
 #include <libopencm3/cm3/nvic.h>	//Needed for sys_tick_handler()
 
 
-#define BOOT_SYSCHK_VAL 0xDEADBEEF
-#define BOOT_JUMP_ADDR 0x1FFFC400UL
-
 #ifdef STM32F1
-#define BOOT_SYSCHK_ADDR 0x20004FF0 // 20KB STM32F103
+#define BOOT_SYSCHK_ADDR 0x20004E1C	// 20KB STM32F103, pick an address near the end
+#define BOOT_SYSCHK_VAL 0xDEADBEEF
+
+#define BOOT_ADDR_P 0x1FFFF000
+#define BOOT_ADDR 0x1FFFF004
+
 #define SYSTICK_ROLLOVER 9000
 #endif
 
@@ -27,35 +30,7 @@ void sys_tick_handler(void) {
 	//Called every 1ms, 49 day rollover
 	uptime_ms_++;
 }
-/*
-static void hs_clock_select(void) {
-	//Clock should start in 8MHz HSI mode
 
-	//GPIOC14/15 used for HSE interrupts (15 is clock-in)
-	//Naze32 boards come in two variants, 8MHz and 12MHz clock
-	//To check our clock speed, do some hacky business
-	//(I think this is the process):
-	//	- [GPIOC15 configured to input by libopencm3 for HSE]
-	//	- Set GPIOC15 to high to make sure
-	//	- If running at 12MHz, should go HIGH-LOW-HIGH
-	//	- If running at 8MHz, should go HIGH-LOW
-	//gpio_set(GPIOC,GPIO15);
-
-	//Lock here for a moment
-	if( gpio_get(GPIOC,GPIO15) )
-		__asm__("nop");
-
-	if( gpio_get(GPIOC,GPIO15) ) {
-		//_hse_freq = 12000000;
-		rcc_clock_setup_in_hse_12mhz_out_72mhz();
-	} else {
-		//_hse_freq = 8000000;
-		rcc_clock_setup_in_hse_8mhz_out_72mhz();
-	}
-
-	//Could handle the point where HSE isn't available here with a timeout check
-}
-*/
 static void rcc_setup(void) {
 	// Enable GPIO clocks.
 	rcc_periph_clock_enable(RCC_GPIOA);
@@ -70,6 +45,14 @@ static void rcc_setup(void) {
 	hs_clock_select();
 }
 
+static void rcc_shutdown(void) {
+	// Disable GPIO clocks.
+	rcc_periph_clock_disable(RCC_GPIOA);
+	rcc_periph_clock_disable(RCC_GPIOB);
+	rcc_periph_clock_disable(RCC_GPIOC);
+	rcc_periph_clock_disable(RCC_AFIO);
+}
+
 static void clock_setup(void) {
 	// Do SysTick setup
 	uptime_ms_ = 0;
@@ -81,52 +64,55 @@ static void clock_setup(void) {
 	//XXX: This means that systick will be counting at 9MHz
 	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
 	us_ticks_ = 9;	//systick will count 9 ticks per us (9000000 / 1000000)
-	systick_set_reload(SYSTICK_ROLLOVER-1);	//overflows at 1ms	//TODO: Need to see if this can be dropped to 1us
+	systick_set_reload(SYSTICK_ROLLOVER-1);	//overflows at 1ms
 	systick_clear();
 	systick_interrupt_enable();
 	systick_counter_enable();	// Start counting.
 }
-/*
-//===========================================================
-// Taken from devanlai from project dap42
-//===========================================================
 
 static inline void __set_MSP(uint32_t topOfMainStack) {
-    asm("msr msp, %0" : : "r" (topOfMainStack));
+	//  Set the stack pointer.
+	__asm__("msr msp, %0" : : "r" (topOfMainStack));
 }
 
-static void jump_to_bootloader(void) __attribute__ ((noreturn));
+static void system_check_bootjump(void) {
+    void(*bootJump)(void);
 
-// Sets up and jumps to the bootloader
-static void jump_to_bootloader(void) {
-	uint32_t boot_stack_ptr = *(uint32_t*)(BOOT_JUMP_ADDR);
-	uint32_t dfu_reset_addr = *(uint32_t*)(BOOT_JUMP_ADDR+4);
+	if (*((uint32_t *)BOOT_SYSCHK_ADDR) == BOOT_SYSCHK_VAL) {
+		//Quickly put LEDs on so we can signify bootloader mode
+		status_led_arm_init();
+		status_led_heart_init();
+		status_led_arm_set(true);
+		status_led_heart_set(true);
 
-	//Do some trickery to allow function pointer to "object" pointer
-	void (*dfu_bootloader)(void);
-	*(void **) (&dfu_bootloader) = (void (*))(dfu_reset_addr);
+		//Shutdown RCC peripherals
+		rcc_shutdown();
 
+		//Clear the boot check address
+        *((uint32_t *)BOOT_SYSCHK_ADDR) = 0x0;
 
-	// Reset the stack pointer
-	__set_MSP(boot_stack_ptr);
+        //__enable_irq();
 
-	dfu_bootloader();
-	while (1);
+		//Jump time!
+	    // 1FFFF000 -> 20000200 -> SP
+	    // 1FFFF004 -> 1FFFF021 -> PC
+        __set_MSP(*((uint32_t *)BOOT_ADDR_P));
+        bootJump = (void(*)(void))(*((uint32_t *) BOOT_ADDR));
+        bootJump();
+		
+		//Catch here in case the bootloader jumps back for some reason
+        while (1);
+    }
 }
-//===========================================================
-
-static void check_reboot_bootloader(void) {
-#ifdef BOOT_SYSCHK_ADDR
-	if( (*((uint32_t *)BOOT_SYSCHK_ADDR)) == BOOT_SYSCHK_VAL )
-		jump_to_bootloader();
-#endif
-}
-*/
 
 void system_init( void ) {
-	system_debug_print( "--== robin ==--" );
-
 	rcc_setup();
+
+	//Bootloader jump Should be done as quickly as possible after main / rcc_setup
+	system_check_bootjump();	
+
+	system_debug_print( "--== robin ==--" );
+	
 	clock_setup();
 }
 
@@ -159,18 +145,9 @@ void system_reset( void ) {
 	scb_reset_system();
 }
 
-void system_bootloader( void ) {
-/*
-    // 1FFFF000 -> 20000200 -> SP
-    // 1FFFF004 -> 1FFFF021 -> PC
-
-#ifdef BOOT_SYSCHK_ADDR
+void system_bootloader(void) {
     *((uint32_t *)BOOT_SYSCHK_ADDR) = BOOT_SYSCHK_VAL;
-	system_reset();
-#else
-	mavlink_queue_broadcast_error( "[SYS] Unable to enter bootloader, undefined address" );
-#endif
-*/
+    system_reset();
 }
 
 uint16_t system_vendor_id( void ) {
