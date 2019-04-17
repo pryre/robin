@@ -19,17 +19,17 @@ args = parser.parse_args()
 
 os.environ['MAVLINK20'] = 'True'
 mavutil.set_dialect("common")
-autopilot = mavutil.mavlink_connection(args.device, baud=args.baudrate, source_system=args.sysid, source_component=args.compid)
+comm_link = mavutil.mavlink_connection(args.device, baud=args.baudrate, source_system=args.sysid, source_component=args.compid)
 
 # wait for autopilot connection
 msg = None
 while msg is None:
-        msg = autopilot.recv_msg()
+        msg = comm_link.recv_msg()
 
 # The values of these heartbeat fields is not really important here
 # I just used the same numbers that QGC uses
 # It is standard practice for any system communicating via mavlink emit the HEARTBEAT message at 1Hz! Your autopilot may not behave the way you want otherwise!
-autopilot.mav.heartbeat_send(
+comm_link.mav.heartbeat_send(
 6, # type
 8, # autopilot
 192, # base_mode
@@ -39,7 +39,7 @@ autopilot.mav.heartbeat_send(
 )
 
 #Send the reboot to bootloader command
-autopilot.mav.command_long_send(
+comm_link.mav.command_long_send(
 1, # autopilot system id
 1, # autopilot component id
 246, # MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN
@@ -47,3 +47,5 @@ autopilot.mav.command_long_send(
 3, # reboot to bootloader
 0,0,0,0,0,0 # unused parameters for this command
 )
+
+comm_link.close()

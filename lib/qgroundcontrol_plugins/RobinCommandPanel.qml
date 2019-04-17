@@ -152,6 +152,16 @@ Rectangle {
 				//   param 1-7
 				onClicked: controller.sendCommand(246, 1, 1, 1, 0, 0, 0, 0, 0, 0)
 			}
+			
+			QGCButton {
+				text: "Reboot to Bootloader"
+				// Arguments to CustomCommandWidgetController::sendCommand (MAVLink COMMAND_LONG)
+				//   command id
+				//   component id
+				//   confirmation
+				//   param 1-7
+				onClicked: controller.sendCommand(246, 1, 1, 3, 0, 0, 0, 0, 0, 0)
+			}
 		}
 	}
 }
