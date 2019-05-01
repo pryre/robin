@@ -22,10 +22,6 @@ extern "C" {
 #include "fixquat.h"
 #include "fixvector3d.h"
 
-//==-- Local Variables
-static uint16_t rc_cal[DRV_PPM_MAX_INPUTS][3];
-static bool rc_rev[DRV_PPM_MAX_INPUTS];
-static fix16_t rc_dz[DRV_PPM_MAX_INPUTS];
 
 //==-- Global Variables
 int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
@@ -37,8 +33,14 @@ calibration_data_t _calibrations;
 system_status_t _system_status;
 command_input_t _cmd_rc_input;
 
-//==-- Functions
 
+//==-- Local Variables
+static uint16_t rc_cal_[DRV_PPM_MAX_INPUTS][3];
+static bool rc_rev_[DRV_PPM_MAX_INPUTS];
+static fix16_t rc_dz_[DRV_PPM_MAX_INPUTS];
+static bool attempted_rc_default_mode_change_;
+
+//==-- Functions
 void sensor_status_init( sensor_status_t* status, bool sensor_present ) {
 	status->present = sensor_present;
 	status->new_data = false;
@@ -143,6 +145,8 @@ void sensors_init( void ) {
 	_sensors.rc_input.c_T = 0;
 	_sensors.rc_input.c_m = 0;
 	sensors_update_rc_cal();
+	
+	attempted_rc_default_mode_change_ = false;
 
 	// RC Safety toggle
 	sensor_status_init( &_sensors.rc_arm_toggle.status,
@@ -241,48 +245,48 @@ static fix16_t normalized_input( uint16_t pwm, uint16_t min, uint16_t mid,
 }
 
 void sensors_update_rc_cal( void ) {
-	rc_cal[0][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC1_MIN );
-	rc_cal[0][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC1_MID );
-	rc_cal[0][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC1_MAX );
-	rc_cal[1][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC2_MIN );
-	rc_cal[1][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC2_MID );
-	rc_cal[1][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC2_MAX );
-	rc_cal[2][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC3_MIN );
-	rc_cal[2][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC3_MID );
-	rc_cal[2][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC3_MAX );
-	rc_cal[3][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC4_MIN );
-	rc_cal[3][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC4_MID );
-	rc_cal[3][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC4_MAX );
-	rc_cal[4][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC5_MIN );
-	rc_cal[4][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC5_MID );
-	rc_cal[4][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC5_MAX );
-	rc_cal[5][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC6_MIN );
-	rc_cal[5][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC6_MID );
-	rc_cal[5][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC6_MAX );
-	rc_cal[6][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC7_MIN );
-	rc_cal[6][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC7_MID );
-	rc_cal[6][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC7_MAX );
-	rc_cal[7][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC8_MIN );
-	rc_cal[7][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC8_MID );
-	rc_cal[7][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC8_MAX );
+	rc_cal_[0][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC1_MIN );
+	rc_cal_[0][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC1_MID );
+	rc_cal_[0][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC1_MAX );
+	rc_cal_[1][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC2_MIN );
+	rc_cal_[1][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC2_MID );
+	rc_cal_[1][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC2_MAX );
+	rc_cal_[2][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC3_MIN );
+	rc_cal_[2][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC3_MID );
+	rc_cal_[2][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC3_MAX );
+	rc_cal_[3][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC4_MIN );
+	rc_cal_[3][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC4_MID );
+	rc_cal_[3][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC4_MAX );
+	rc_cal_[4][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC5_MIN );
+	rc_cal_[4][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC5_MID );
+	rc_cal_[4][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC5_MAX );
+	rc_cal_[5][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC6_MIN );
+	rc_cal_[5][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC6_MID );
+	rc_cal_[5][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC6_MAX );
+	rc_cal_[6][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC7_MIN );
+	rc_cal_[6][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC7_MID );
+	rc_cal_[6][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC7_MAX );
+	rc_cal_[7][SENSOR_RC_CAL_MIN] = get_param_uint( PARAM_RC8_MIN );
+	rc_cal_[7][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC8_MID );
+	rc_cal_[7][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC8_MAX );
 
-	rc_rev[0] = get_param_uint( PARAM_RC1_REV );
-	rc_rev[1] = get_param_uint( PARAM_RC2_REV );
-	rc_rev[2] = get_param_uint( PARAM_RC3_REV );
-	rc_rev[3] = get_param_uint( PARAM_RC4_REV );
-	rc_rev[4] = get_param_uint( PARAM_RC5_REV );
-	rc_rev[5] = get_param_uint( PARAM_RC6_REV );
-	rc_rev[6] = get_param_uint( PARAM_RC7_REV );
-	rc_rev[7] = get_param_uint( PARAM_RC8_REV );
+	rc_rev_[0] = get_param_uint( PARAM_RC1_REV );
+	rc_rev_[1] = get_param_uint( PARAM_RC2_REV );
+	rc_rev_[2] = get_param_uint( PARAM_RC3_REV );
+	rc_rev_[3] = get_param_uint( PARAM_RC4_REV );
+	rc_rev_[4] = get_param_uint( PARAM_RC5_REV );
+	rc_rev_[5] = get_param_uint( PARAM_RC6_REV );
+	rc_rev_[6] = get_param_uint( PARAM_RC7_REV );
+	rc_rev_[7] = get_param_uint( PARAM_RC8_REV );
 
-	rc_dz[0] = get_param_fix16( PARAM_RC1_DZ );
-	rc_dz[1] = get_param_fix16( PARAM_RC2_DZ );
-	rc_dz[2] = get_param_fix16( PARAM_RC3_DZ );
-	rc_dz[3] = get_param_fix16( PARAM_RC4_DZ );
-	rc_dz[4] = get_param_fix16( PARAM_RC5_DZ );
-	rc_dz[5] = get_param_fix16( PARAM_RC6_DZ );
-	rc_dz[6] = get_param_fix16( PARAM_RC7_DZ );
-	rc_dz[7] = get_param_fix16( PARAM_RC8_DZ );
+	rc_dz_[0] = get_param_fix16( PARAM_RC1_DZ );
+	rc_dz_[1] = get_param_fix16( PARAM_RC2_DZ );
+	rc_dz_[2] = get_param_fix16( PARAM_RC3_DZ );
+	rc_dz_[3] = get_param_fix16( PARAM_RC4_DZ );
+	rc_dz_[4] = get_param_fix16( PARAM_RC5_DZ );
+	rc_dz_[5] = get_param_fix16( PARAM_RC6_DZ );
+	rc_dz_[6] = get_param_fix16( PARAM_RC7_DZ );
+	rc_dz_[7] = get_param_fix16( PARAM_RC8_DZ );
 }
 
 static bool sensors_update( uint32_t time_us ) {
@@ -348,35 +352,35 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 
 			// Normailize readings
 			fix16_t cmd_roll = dual_normalized_input(
-				_sensors.rc_input.p_r, rc_cal[chan_roll][SENSOR_RC_CAL_MIN],
-				rc_cal[chan_roll][SENSOR_RC_CAL_MID],
-				rc_cal[chan_roll][SENSOR_RC_CAL_MAX] );
+				_sensors.rc_input.p_r, rc_cal_[chan_roll][SENSOR_RC_CAL_MIN],
+				rc_cal_[chan_roll][SENSOR_RC_CAL_MID],
+				rc_cal_[chan_roll][SENSOR_RC_CAL_MAX] );
 			fix16_t cmd_pitch = dual_normalized_input(
-				_sensors.rc_input.p_p, rc_cal[chan_pitch][SENSOR_RC_CAL_MIN],
-				rc_cal[chan_pitch][SENSOR_RC_CAL_MID],
-				rc_cal[chan_pitch][SENSOR_RC_CAL_MAX] );
+				_sensors.rc_input.p_p, rc_cal_[chan_pitch][SENSOR_RC_CAL_MIN],
+				rc_cal_[chan_pitch][SENSOR_RC_CAL_MID],
+				rc_cal_[chan_pitch][SENSOR_RC_CAL_MAX] );
 			fix16_t cmd_yaw = dual_normalized_input(
-				_sensors.rc_input.p_y, rc_cal[chan_yaw][SENSOR_RC_CAL_MIN],
-				rc_cal[chan_yaw][SENSOR_RC_CAL_MID],
-				rc_cal[chan_yaw][SENSOR_RC_CAL_MAX] );
+				_sensors.rc_input.p_y, rc_cal_[chan_yaw][SENSOR_RC_CAL_MIN],
+				rc_cal_[chan_yaw][SENSOR_RC_CAL_MID],
+				rc_cal_[chan_yaw][SENSOR_RC_CAL_MAX] );
 			fix16_t cmd_throttle = normalized_input(
-				_sensors.rc_input.p_T, rc_cal[chan_throttle][SENSOR_RC_CAL_MIN],
-				rc_cal[chan_throttle][SENSOR_RC_CAL_MID],
-				rc_cal[chan_throttle][SENSOR_RC_CAL_MAX] );
+				_sensors.rc_input.p_T, rc_cal_[chan_throttle][SENSOR_RC_CAL_MIN],
+				rc_cal_[chan_throttle][SENSOR_RC_CAL_MID],
+				rc_cal_[chan_throttle][SENSOR_RC_CAL_MAX] );
 
 			// Correct for axis reverse
-			fix16_t cmd_roll_corrected = ( rc_rev[chan_roll] ) ? fix16_mul( -_fc_1, cmd_roll ) : cmd_roll;
-			fix16_t cmd_pitch_corrected = ( rc_rev[chan_pitch] ) ? fix16_mul( -_fc_1, cmd_pitch ) : cmd_pitch;
-			fix16_t cmd_yaw_corrected = ( rc_rev[chan_yaw] ) ? fix16_mul( -_fc_1, cmd_yaw ) : cmd_yaw;
+			fix16_t cmd_roll_corrected = ( rc_rev_[chan_roll] ) ? fix16_mul( -_fc_1, cmd_roll ) : cmd_roll;
+			fix16_t cmd_pitch_corrected = ( rc_rev_[chan_pitch] ) ? fix16_mul( -_fc_1, cmd_pitch ) : cmd_pitch;
+			fix16_t cmd_yaw_corrected = ( rc_rev_[chan_yaw] ) ? fix16_mul( -_fc_1, cmd_yaw ) : cmd_yaw;
 			// XXX:For throttle, we need to multiply then shift it to ensure it is
 			// still 0->1
-			fix16_t cmd_throttle_corrected = ( rc_rev[chan_throttle] ) ? fix16_add( _fc_1, fix16_mul( -_fc_1, cmd_throttle ) ) : cmd_throttle;
+			fix16_t cmd_throttle_corrected = ( rc_rev_[chan_throttle] ) ? fix16_add( _fc_1, fix16_mul( -_fc_1, cmd_throttle ) ) : cmd_throttle;
 
 			// Calculate deadzones and save outputs
-			_sensors.rc_input.c_r = ( fix16_abs( cmd_roll_corrected ) < rc_dz[chan_roll] ) ? 0 : cmd_roll_corrected;
-			_sensors.rc_input.c_p = ( fix16_abs( cmd_pitch_corrected ) < rc_dz[chan_pitch] ) ? 0 : cmd_pitch_corrected;
-			_sensors.rc_input.c_y = ( fix16_abs( cmd_yaw_corrected ) < rc_dz[chan_yaw] ) ? 0 : cmd_yaw_corrected;
-			_sensors.rc_input.c_T = ( fix16_abs( cmd_throttle_corrected ) < rc_dz[chan_throttle] ) ? 0 : cmd_throttle_corrected;
+			_sensors.rc_input.c_r = ( fix16_abs( cmd_roll_corrected ) < rc_dz_[chan_roll] ) ? 0 : cmd_roll_corrected;
+			_sensors.rc_input.c_p = ( fix16_abs( cmd_pitch_corrected ) < rc_dz_[chan_pitch] ) ? 0 : cmd_pitch_corrected;
+			_sensors.rc_input.c_y = ( fix16_abs( cmd_yaw_corrected ) < rc_dz_[chan_yaw] ) ? 0 : cmd_yaw_corrected;
+			_sensors.rc_input.c_T = ( fix16_abs( cmd_throttle_corrected ) < rc_dz_[chan_throttle] ) ? 0 : cmd_throttle_corrected;
 		}
 
 		// Only do this is the RC is healthy
@@ -385,8 +389,8 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 			// Handle actuator control mapping
 			for ( int i = 0; i < MIXER_NUM_MOTORS; i++ ) {
 				_actuator_control_g2[i] = dual_normalized_input(
-					_sensors.rc_input.raw[i], rc_cal[i][SENSOR_RC_CAL_MIN],
-					rc_cal[i][SENSOR_RC_CAL_MID], rc_cal[i][SENSOR_RC_CAL_MAX] );
+					_sensors.rc_input.raw[i], rc_cal_[i][SENSOR_RC_CAL_MIN],
+					rc_cal_[i][SENSOR_RC_CAL_MID], rc_cal_[i][SENSOR_RC_CAL_MAX] );
 				_actuator_control_g3[i] = _actuator_control_g2[i];
 			}
 
@@ -412,14 +416,22 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 						}
 					}
 				}
-			} else if ( get_param_uint( PARAM_RC_MODE_DEFAULT ) ) { // Else if RC should
-				// trigger a default
-				// mode
+			} else if ( !attempted_rc_default_mode_change_ &&
+						( _system_status.control_mode == MAIN_MODE_UNSET ) &&
+						( get_param_uint( PARAM_RC_MODE_DEFAULT ) != MAIN_MODE_UNSET ) ) {
+				// RC connection should trigger a default mode change
+				// We only allow this to occur once after boot
+				// in case RC drops and reconnects mid-flight
+				// This also only occurs if the mode is unset, 
+				// and the default is valid, for the same reason
+				
 				if ( !safety_request_control_mode(
 						 get_param_uint( PARAM_RC_MODE_DEFAULT ) ) ) {
 					mavlink_queue_broadcast_error(
 						"[SENSOR] Error setting RC default mode" );
 				}
+				
+				attempted_rc_default_mode_change_ = true;
 			}
 
 			// Handle the logic for saftey toggling
