@@ -173,6 +173,8 @@ set(ROBIN_SRC_MAINS
 	src/mixer.c
 	src/params.c
 	src/pid_controller.c
+	src/profiler.c
+	src/robin_itoa.c
 	src/run.c
 	src/safety.c
 	src/sensors.c
@@ -197,7 +199,7 @@ set(ROBIN_SRC_DRIVERS
 	src/drivers/posix_udp/drv_comms.c
 	src/drivers/posix_common/drv_cmd_args.c
 	src/drivers/posix_common/drv_flash.c
-	src/drivers/posix_common/drv_pwm.c
+	src/drivers/posix_common/drv_pwm_ppm.c
 	src/drivers/posix_common/drv_sensors.c
 	src/drivers/posix_common/drv_status_io.c
 )
