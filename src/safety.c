@@ -19,8 +19,29 @@ sensor_readings_t _sensors;
 command_input_t _cmd_ob_input;
 command_input_t _control_input;
 control_output_t _control_output;
-char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
-char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
+
+static const char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN] = {
+	"UNINIT",
+	"BOOT",
+	"CALIBRATE",
+	"STANDBY",
+	"ACTIVE",
+	"CRITICAL",
+	"EMERGENCY",
+	"POWEROFF",
+	"TERMINATE"
+};
+
+static const char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN] = {
+	"UNSET",
+	"MANUAL",
+	"ALTCTL",
+	"POSCTL",
+	"AUTO",
+	"ACRO",
+	"OFFBOARD",
+	"RATTITUDE",
+};
 
 static uint32_t _time_safety_arm_throttle_timeout;	//Used to auto-disarm if no input detected after arm
 static uint32_t _time_safety_critical_timeout;	//Used to "upgrade" to emergency status if in critical state is not recovered from
@@ -75,30 +96,6 @@ void safety_init() {
 
 	_new_safety_button_press = false;
 	_time_safety_button_pressed = 0;
-
-	strncpy( mav_state_names[MAV_STATE_UNINIT], "UNINIT", MAV_STATE_NAME_LEN );
-	strncpy( mav_state_names[MAV_STATE_BOOT], "BOOT", MAV_STATE_NAME_LEN );
-	strncpy( mav_state_names[MAV_STATE_CALIBRATING], "CALIBRATE",
-			 MAV_STATE_NAME_LEN );
-	strncpy( mav_state_names[MAV_STATE_STANDBY], "STANDBY", MAV_STATE_NAME_LEN );
-	strncpy( mav_state_names[MAV_STATE_ACTIVE], "ACTIVE", MAV_STATE_NAME_LEN );
-	strncpy( mav_state_names[MAV_STATE_CRITICAL], "CRITICAL", MAV_STATE_NAME_LEN );
-	strncpy( mav_state_names[MAV_STATE_EMERGENCY], "EMERGENCY",
-			 MAV_STATE_NAME_LEN );
-	strncpy( mav_state_names[MAV_STATE_POWEROFF], "POWEROFF", MAV_STATE_NAME_LEN );
-	strncpy( mav_state_names[MAV_STATE_FLIGHT_TERMINATION], "TERMINATE",
-			 MAV_STATE_NAME_LEN );
-
-	strncpy( mav_mode_names[MAIN_MODE_UNSET], "UNSET", MAV_MODE_NAME_LEN );
-	strncpy( mav_mode_names[MAIN_MODE_MANUAL], "MANUAL", MAV_MODE_NAME_LEN );
-	strncpy( mav_mode_names[MAIN_MODE_ALTCTL], "ALTCTL", MAV_MODE_NAME_LEN );
-	strncpy( mav_mode_names[MAIN_MODE_POSCTL], "POSCTL", MAV_MODE_NAME_LEN );
-	strncpy( mav_mode_names[MAIN_MODE_AUTO], "AUTO", MAV_MODE_NAME_LEN );
-	strncpy( mav_mode_names[MAIN_MODE_ACRO], "ACRO", MAV_MODE_NAME_LEN );
-	strncpy( mav_mode_names[MAIN_MODE_OFFBOARD], "OFFBOARD", MAV_MODE_NAME_LEN );
-	strncpy( mav_mode_names[MAIN_MODE_STABILIZED], "STABILIZED",
-			 MAV_MODE_NAME_LEN );
-	strncpy( mav_mode_names[MAIN_MODE_RATTITUDE], "RATTITUDE", MAV_MODE_NAME_LEN );
 }
 
 bool safety_is_armed( void ) {
@@ -158,9 +155,7 @@ bool safety_request_state( uint8_t req_state ) {
 			break;
 		}
 		case MAV_STATE_EMERGENCY: { // Allow any request to put the mav into
-			// emergency mode
-			// if( ( _system_status.state == MAV_STATE_ACTIVE ) ||
-			//  ( _system_status.state == MAV_STATE_CRITICAL ) )
+
 			change_state = true;
 
 			break;

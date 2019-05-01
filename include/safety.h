@@ -96,9 +96,6 @@ typedef struct {
 	safety_sensor_status_t sensors;
 } system_status_t;
 
-extern char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN];
-extern char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN];
-
 extern system_status_t _system_status;
 
 void safety_init( void );
