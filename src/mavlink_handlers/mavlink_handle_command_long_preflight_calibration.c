@@ -15,19 +15,19 @@ MAV_RESULT mavlink_handle_command_long_preflight_calibration(
 	mavlink_channel_t chan, float* params, uint8_t sysid, uint8_t compid ) {
 	MAV_RESULT command_result = MAV_RESULT_ENUM_END;
 
-	if ( _system_status.state == MAV_STATE_CALIBRATING ) { // XXX: Only allow one
-		// calibration request at
-		// a time
+	//XXX: Only allow one calibration request at a time
+	if ( _system_status.state == MAV_STATE_CALIBRATING ) {
 		if ( ( (int)params[4] == CAL_CMD_ACCEL ) && ( _calibrations.type == CAL_ACCEL ) ) {
 			_calibrations.data.accel.waiting = false;
 			command_result = MAV_RESULT_ACCEPTED;
 		} else if ( ( (int)params[3] == CAL_CMD_RC ) && ( _calibrations.type == CAL_RC ) ) {
 			if ( _calibrations.data.rc.waiting ) {
 				_calibrations.data.rc.waiting = false;
-			} else if ( _calibrations.data.rc.step == CAL_RC_RANGE_EXTREMES ) {
+			}
+			/* else if ( _calibrations.data.rc.step == CAL_RC_RANGE_EXTREMES ) {
 				_calibrations.data.rc.step = CAL_RC_RANGE_DONE;
 			}
-
+			*/
 			command_result = MAV_RESULT_ACCEPTED;
 		} else {
 			mavlink_queue_broadcast_error(

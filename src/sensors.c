@@ -145,7 +145,7 @@ void sensors_init( void ) {
 	_sensors.rc_input.c_T = 0;
 	_sensors.rc_input.c_m = 0;
 	sensors_update_rc_cal();
-	
+
 	attempted_rc_default_mode_change_ = false;
 
 	// RC Safety toggle
@@ -384,13 +384,15 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 		}
 
 		// Only do this is the RC is healthy
-		if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) && ( _system_status.state != MAV_STATE_CALIBRATING ) ) {
+		if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) &&
+			 ( _system_status.state != MAV_STATE_CALIBRATING ) ) {
 
 			// Handle actuator control mapping
 			for ( int i = 0; i < MIXER_NUM_MOTORS; i++ ) {
-				_actuator_control_g2[i] = dual_normalized_input(
-					_sensors.rc_input.raw[i], rc_cal_[i][SENSOR_RC_CAL_MIN],
-					rc_cal_[i][SENSOR_RC_CAL_MID], rc_cal_[i][SENSOR_RC_CAL_MAX] );
+				_actuator_control_g2[i] = dual_normalized_input(_sensors.rc_input.raw[i],
+																rc_cal_[i][SENSOR_RC_CAL_MIN],
+																rc_cal_[i][SENSOR_RC_CAL_MID],
+																rc_cal_[i][SENSOR_RC_CAL_MAX]);
 				_actuator_control_g3[i] = _actuator_control_g2[i];
 			}
 
@@ -422,15 +424,15 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 				// RC connection should trigger a default mode change
 				// We only allow this to occur once after boot
 				// in case RC drops and reconnects mid-flight
-				// This also only occurs if the mode is unset, 
+				// This also only occurs if the mode is unset,
 				// and the default is valid, for the same reason
-				
+
 				if ( !safety_request_control_mode(
 						 get_param_uint( PARAM_RC_MODE_DEFAULT ) ) ) {
 					mavlink_queue_broadcast_error(
 						"[SENSOR] Error setting RC default mode" );
 				}
-				
+
 				attempted_rc_default_mode_change_ = true;
 			}
 

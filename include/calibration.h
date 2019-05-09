@@ -10,7 +10,7 @@ extern "C" {
 #include "fix16.h"
 #include "fixquat.h"
 #include "fixvector3d.h"
-//#include "breezystm32.h"
+#include "drivers/drv_ppm.h"
 
 // RC CAL DEFINES
 #define SENSOR_RC_CAL_MIN 0
@@ -57,17 +57,21 @@ typedef enum {
 
 typedef enum {
 	CAL_RC_RANGE_INIT = 0,
-	CAL_RC_RANGE_MIDDOWN,
-	CAL_RC_RANGE_CORNERS,
-	CAL_RC_RANGE_EXTREMES,
+	CAL_RC_RANGE_REVERSE,
+	CAL_RC_RANGE_EXTREMES_STICK,
+	CAL_RC_RANGE_EXTREMES_SWITCH,
+	CAL_RC_RANGE_MID,
 	CAL_RC_RANGE_DONE
 } calibration_rc_range_t;
 
 typedef struct {
 	bool waiting;
 	calibration_rc_range_t step;
-	uint16_t ranges[8][4];
-	bool rev[8];
+
+	uint16_t ranges[DRV_PPM_MAX_INPUTS][4];
+	bool rev[DRV_PPM_MAX_INPUTS];
+	uint32_t is_stick;	//Bitfield data
+	uint32_t is_switch;	//Bitfield data
 } calibration_rc_range_data_t;
 
 typedef struct {
