@@ -40,7 +40,8 @@ static const char mav_mode_names[MAV_MODE_NUM_MODES][MAV_MODE_NAME_LEN] = {
 	"AUTO",
 	"ACRO",
 	"OFFBOARD",
-	"RATTITUDE",
+	"STABILIZED",
+	"RATTITUDE"
 };
 
 static uint32_t _time_safety_arm_throttle_timeout;	//Used to auto-disarm if no input detected after arm
