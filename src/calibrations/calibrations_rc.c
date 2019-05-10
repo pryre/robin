@@ -271,7 +271,7 @@ bool calibrate_rc( void ) {
 			mavlink_prepare_command_ack(
 				&msg, MAV_CMD_PREFLIGHT_CALIBRATION, MAV_RESULT_IN_PROGRESS,
 				_calibrations.req_sysid, _calibrations.req_compid,
-				_calibrations.data.rc.step / CAL_RC_RANGE_DONE );
+				100 * _calibrations.data.rc.step / CAL_RC_RANGE_DONE );
 			lpq_queue_broadcast_msg( &msg );
 
 			status_buzzer_success();
