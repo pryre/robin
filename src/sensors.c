@@ -349,47 +349,44 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 		uint8_t chan_yaw = get_param_uint( PARAM_RC_MAP_YAW ) - 1;
 		uint8_t chan_throttle = get_param_uint( PARAM_RC_MAP_THROTTLE ) - 1;
 
+		//Store the reading for debug, should be already sanitized by this point
 		_sensors.rc_input.p_r = _sensors.rc_input.raw[chan_roll];
 		_sensors.rc_input.p_p = _sensors.rc_input.raw[chan_pitch];
 		_sensors.rc_input.p_y = _sensors.rc_input.raw[chan_yaw];
 		_sensors.rc_input.p_T = _sensors.rc_input.raw[chan_throttle];
 
-		if ( ( _sensors.rc_input.p_r > 800 ) && ( _sensors.rc_input.p_r < 2200 ) && ( _sensors.rc_input.p_p > 800 ) && ( _sensors.rc_input.p_p < 2200 ) && ( _sensors.rc_input.p_y > 800 ) && ( _sensors.rc_input.p_y < 2200 ) && ( _sensors.rc_input.p_T > 800 ) && ( _sensors.rc_input.p_T < 2200 ) ) {
-			// We have a valid reading
+		// Normailize readings
+		fix16_t cmd_roll = dual_normalized_input(
+			_sensors.rc_input.p_r, rc_cal_[chan_roll][SENSOR_RC_CAL_MIN],
+			rc_cal_[chan_roll][SENSOR_RC_CAL_MID],
+			rc_cal_[chan_roll][SENSOR_RC_CAL_MAX] );
+		fix16_t cmd_pitch = dual_normalized_input(
+			_sensors.rc_input.p_p, rc_cal_[chan_pitch][SENSOR_RC_CAL_MIN],
+			rc_cal_[chan_pitch][SENSOR_RC_CAL_MID],
+			rc_cal_[chan_pitch][SENSOR_RC_CAL_MAX] );
+		fix16_t cmd_yaw = dual_normalized_input(
+			_sensors.rc_input.p_y, rc_cal_[chan_yaw][SENSOR_RC_CAL_MIN],
+			rc_cal_[chan_yaw][SENSOR_RC_CAL_MID],
+			rc_cal_[chan_yaw][SENSOR_RC_CAL_MAX] );
+		fix16_t cmd_throttle = normalized_input(
+			_sensors.rc_input.p_T, rc_cal_[chan_throttle][SENSOR_RC_CAL_MIN],
+			rc_cal_[chan_throttle][SENSOR_RC_CAL_MID],
+			rc_cal_[chan_throttle][SENSOR_RC_CAL_MAX] );
 
-			// Normailize readings
-			fix16_t cmd_roll = dual_normalized_input(
-				_sensors.rc_input.p_r, rc_cal_[chan_roll][SENSOR_RC_CAL_MIN],
-				rc_cal_[chan_roll][SENSOR_RC_CAL_MID],
-				rc_cal_[chan_roll][SENSOR_RC_CAL_MAX] );
-			fix16_t cmd_pitch = dual_normalized_input(
-				_sensors.rc_input.p_p, rc_cal_[chan_pitch][SENSOR_RC_CAL_MIN],
-				rc_cal_[chan_pitch][SENSOR_RC_CAL_MID],
-				rc_cal_[chan_pitch][SENSOR_RC_CAL_MAX] );
-			fix16_t cmd_yaw = dual_normalized_input(
-				_sensors.rc_input.p_y, rc_cal_[chan_yaw][SENSOR_RC_CAL_MIN],
-				rc_cal_[chan_yaw][SENSOR_RC_CAL_MID],
-				rc_cal_[chan_yaw][SENSOR_RC_CAL_MAX] );
-			fix16_t cmd_throttle = normalized_input(
-				_sensors.rc_input.p_T, rc_cal_[chan_throttle][SENSOR_RC_CAL_MIN],
-				rc_cal_[chan_throttle][SENSOR_RC_CAL_MID],
-				rc_cal_[chan_throttle][SENSOR_RC_CAL_MAX] );
+		// Correct for axis reverse, just multiple all
+		fix16_t cmd_roll_corrected = fix16_mul( rc_rev_[chan_roll], cmd_roll );
+		fix16_t cmd_pitch_corrected = fix16_mul( rc_rev_[chan_pitch], cmd_pitch );
+		fix16_t cmd_yaw_corrected = fix16_mul( rc_rev_[chan_yaw], cmd_yaw );
+		// XXX:For throttle, we need to multiply then shift it to ensure it is still 0->1
+		fix16_t cmd_throttle_corrected = ( rc_rev_[chan_throttle] < 0 ) ? fix16_add( _fc_1, fix16_mul( -_fc_1, cmd_throttle ) ) : cmd_throttle;
 
-			// Correct for axis reverse, just multiple all
-			fix16_t cmd_roll_corrected = fix16_mul( rc_rev_[chan_roll], cmd_roll );
-			fix16_t cmd_pitch_corrected = fix16_mul( rc_rev_[chan_pitch], cmd_pitch );
-			fix16_t cmd_yaw_corrected = fix16_mul( rc_rev_[chan_yaw], cmd_yaw );
-			// XXX:For throttle, we need to multiply then shift it to ensure it is still 0->1
-			fix16_t cmd_throttle_corrected = ( rc_rev_[chan_throttle] < 0 ) ? fix16_add( _fc_1, fix16_mul( -_fc_1, cmd_throttle ) ) : cmd_throttle;
+		// Calculate deadzones and save outputs
+		_sensors.rc_input.c_r = ( fix16_abs( cmd_roll_corrected ) < rc_dz_[chan_roll] ) ? 0 : cmd_roll_corrected;
+		_sensors.rc_input.c_p = ( fix16_abs( cmd_pitch_corrected ) < rc_dz_[chan_pitch] ) ? 0 : cmd_pitch_corrected;
+		_sensors.rc_input.c_y = ( fix16_abs( cmd_yaw_corrected ) < rc_dz_[chan_yaw] ) ? 0 : cmd_yaw_corrected;
+		_sensors.rc_input.c_T = ( fix16_abs( cmd_throttle_corrected ) < rc_dz_[chan_throttle] ) ? 0 : cmd_throttle_corrected;
 
-			// Calculate deadzones and save outputs
-			_sensors.rc_input.c_r = ( fix16_abs( cmd_roll_corrected ) < rc_dz_[chan_roll] ) ? 0 : cmd_roll_corrected;
-			_sensors.rc_input.c_p = ( fix16_abs( cmd_pitch_corrected ) < rc_dz_[chan_pitch] ) ? 0 : cmd_pitch_corrected;
-			_sensors.rc_input.c_y = ( fix16_abs( cmd_yaw_corrected ) < rc_dz_[chan_yaw] ) ? 0 : cmd_yaw_corrected;
-			_sensors.rc_input.c_T = ( fix16_abs( cmd_throttle_corrected ) < rc_dz_[chan_throttle] ) ? 0 : cmd_throttle_corrected;
-		}
-
-		// Only do this is the RC is healthy
+		// Only do this is the RC is healthy and not being set up
 		if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) &&
 			 ( _system_status.state != MAV_STATE_CALIBRATING ) ) {
 

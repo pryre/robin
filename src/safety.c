@@ -227,7 +227,7 @@ bool safety_request_control_mode( uint8_t req_ctrl_mode ) {
 		strncat( text_success, mav_mode_names[_system_status.control_mode],
 				 MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN - 1 ); // XXX: Stops string overflow warnings
 
-		mavlink_queue_broadcast_notice( text_success );
+		mavlink_queue_broadcast_info( text_success );
 
 		status_buzzer_success();
 	} else {
@@ -246,7 +246,7 @@ bool safety_request_control_mode( uint8_t req_ctrl_mode ) {
 
 static void do_safety_arm( void ) {
 	_system_status.arm_status = true; // ARM!
-	mavlink_queue_broadcast_notice( "[SAFETY] Mav armed!" );
+	mavlink_queue_broadcast_info( "[SAFETY] Mav armed!" );
 
 	status_buzzer_success();
 }
