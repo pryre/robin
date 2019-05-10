@@ -66,7 +66,7 @@ bool calibrate_accel( void ) {
 				set_param_fix16( PARAM_ACC_Y_SCALE_NEG, accel_y_scale_n );
 				set_param_fix16( PARAM_ACC_Z_SCALE_NEG, accel_z_scale_n );
 
-				mavlink_queue_broadcast_notice( "[SENSOR] Accel calibration complete!" );
+				mavlink_queue_broadcast_info( "[SENSOR] Accel calibration complete!" );
 			} else {
 				failed = true;
 

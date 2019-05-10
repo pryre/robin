@@ -41,7 +41,7 @@ bool calibrate_gyro( void ) {
 		reset_adaptive_gyro_bias();
 
 		calibration_done();
-		mavlink_queue_broadcast_notice( "[SENSOR] Gyro calibration complete!" );
+		mavlink_queue_broadcast_info( "[SENSOR] Gyro calibration complete!" );
 	}
 
 	return !failed;

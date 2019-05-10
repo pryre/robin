@@ -119,7 +119,7 @@ static void calibrate_rc_capture_range_midpoints(void) {
 			}
 		} else if ( _calibrations.data.rc.is_switch & (1 << i) ) {
 			//Use half-way of range for sticks
-			midr = ( _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX] - _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN]) / 2;
+			midr = ( _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MAX] + _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] ) / 2;
 		} else {
 			//Set to mid-stick as fallback
 			midr = SENSOR_RC_MIDSTICK;
@@ -202,7 +202,7 @@ bool calibrate_rc( void ) {
 
 			_calibrations.data.rc.waiting = true;
 			_calibrations.data.rc.step = CAL_RC_RANGE_EXTREMES_STICK;
-			mavlink_queue_broadcast_notice( "[SENSOR] Move all sticks to extremes" );
+			mavlink_queue_broadcast_notice( "[SENSOR] Move all sticks and dials to extremes" );
 
 			break;
 		}
@@ -221,7 +221,7 @@ bool calibrate_rc( void ) {
 
 			_calibrations.data.rc.waiting = true;
 			_calibrations.data.rc.step = CAL_RC_RANGE_MID;
-			mavlink_queue_broadcast_notice( "[SENSOR] Move all sticks to movement center" );
+			mavlink_queue_broadcast_notice( "[SENSOR] Move all sticks and dials to midpoints" );
 
 			break;
 		}
@@ -237,20 +237,28 @@ bool calibrate_rc( void ) {
 			break;
 		}
 		case CAL_RC_RANGE_DONE: {
-			//One last check to signal to user if any channels were missed
+			//Signal to user detected calibration layout
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] RC layout: [";
+
 			for ( int i = 0; i < DRV_PPM_MAX_INPUTS; i++ ) {
-				if( !( _calibrations.data.rc.is_stick & (1 << i) ) && !( _calibrations.data.rc.is_switch & (1 << i) ) ) {
-					char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[SENSOR] No input detected on channel: ";
-					char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-					robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1, i + 1 , 10);
-					strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
-					mavlink_queue_broadcast_error( text );
+				if ( _calibrations.data.rc.is_stick & (1 << i) ) {
+					strncat(text,"S",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+				} else if ( _calibrations.data.rc.is_switch & (1 << i) ) {
+					strncat(text,"P",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+				} else {
+					strncat(text,"-",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 				}
+
+				if( i < (DRV_PPM_MAX_INPUTS-1) )
+					strncat(text,",",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 			}
+
+			strncat(text,"]",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			mavlink_queue_broadcast_info( text );
 
 			calibration_done();
 			sensors_update_rc_cal();
-			mavlink_queue_broadcast_notice( "[SENSOR] RC calibration complete!" );
+			mavlink_queue_broadcast_info( "[SENSOR] RC calibration complete!" );
 
 			break;
 		}
