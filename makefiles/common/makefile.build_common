@@ -47,6 +47,7 @@ CFLAGS	 = $(ARCH_FLAGS) \
 		   $(addprefix -I,$(INCLUDE_DIRS)) \
 		   -Wall -pedantic -Wextra -Wshadow -Wunsafe-loop-optimizations \
 		   -Wno-char-subscripts -Wno-sign-compare -Wno-unused-parameter -Wno-unused-result \
+		   -Wno-address-of-packed-member \
 		   -ffunction-sections \
 		   -fdata-sections \
 		   -D$(TARGET) \

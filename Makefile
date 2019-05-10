@@ -46,7 +46,10 @@ lint:
 	@find ./src -name '*.c' -exec clang-format -i '{}' \;
 
 clean:
+	@echo "Cleaning build files"
 	@rm -rf ./build
+	@cd lib/libopencm3 && $(MAKE) clean -j
+	@echo "Preparing build directory"
 	@mkdir ./build
 
 mavlink_bootloader:
