@@ -9,8 +9,8 @@ extern "C" {
 
 #define DRV_PPM_MAX_INPUTS 8
 
-#define DRV_PPM_MIN 900
-#define DRV_PPM_MAX 2100
+#define DRV_PPM_MIN 800
+#define DRV_PPM_MAX 2200
 #define DRV_PPM_SYNC_MIN 2700
 #define DRV_PPM_SYNC_MAX 15000
 
