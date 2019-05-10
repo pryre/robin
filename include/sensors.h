@@ -96,6 +96,7 @@ typedef struct {
 	sensor_status_t status;
 
 	uint16_t raw[DRV_PPM_MAX_INPUTS];
+	bool mapping_set;
 
 	uint16_t p_r;
 	uint16_t p_p;

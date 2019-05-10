@@ -33,15 +33,23 @@ static void calibrate_rc_capture_range_reverse(void) {
 	uint8_t chan_throttle = get_param_uint( PARAM_RC_MAP_THROTTLE ) - 1;
 
 	//Handle stick inputs
-	_calibrations.data.rc.rev[chan_roll] = ( _sensors.rc_input.raw[chan_roll] > SENSOR_RC_MIDSTICK );
-	_calibrations.data.rc.rev[chan_pitch] = ( _sensors.rc_input.raw[chan_pitch] < SENSOR_RC_MIDSTICK );
-	_calibrations.data.rc.rev[chan_yaw] = ( _sensors.rc_input.raw[chan_yaw] < SENSOR_RC_MIDSTICK );
-	_calibrations.data.rc.rev[chan_throttle] = ( _sensors.rc_input.raw[chan_throttle] > SENSOR_RC_MIDSTICK );
+	_calibrations.data.rc.rev[chan_roll] = ( _sensors.rc_input.raw[chan_roll] > SENSOR_RC_MIDSTICK ) ? -_fc_1 : _fc_1;
+	_calibrations.data.rc.rev[chan_pitch] = ( _sensors.rc_input.raw[chan_pitch] < SENSOR_RC_MIDSTICK ) ? -_fc_1 : _fc_1;
+	_calibrations.data.rc.rev[chan_yaw] = ( _sensors.rc_input.raw[chan_yaw] < SENSOR_RC_MIDSTICK ) ? -_fc_1 : _fc_1;
+	_calibrations.data.rc.rev[chan_throttle] = ( _sensors.rc_input.raw[chan_throttle] > SENSOR_RC_MIDSTICK ) ? -_fc_1 : _fc_1;
 
 	//Handle remaining inputs
 	for ( int i = 0; i < DRV_PPM_MAX_INPUTS; i++ ) {
-		if( (i != chan_roll) && (i != chan_pitch) && (i != chan_yaw) && (i != chan_throttle) )
-			_calibrations.data.rc.rev[i] = ( _sensors.rc_input.raw[i] > SENSOR_RC_MIDSTICK );
+		if( (i != chan_roll) && (i != chan_pitch) && (i != chan_yaw) && (i != chan_throttle) ) {
+			const uint32_t revr = _sensors.rc_input.raw[i];
+
+			//We can make a decent guess, otherwise leave it to the user to deal with later
+			if ( ( revr < 1300 ) || ( revr > 1700 ) ) {
+				_calibrations.data.rc.rev[i] = ( revr > SENSOR_RC_MIDSTICK ) ? -_fc_1 : _fc_1;
+			} else {
+				_calibrations.data.rc.rev[i] = _fc_1;
+			}
+		}
 	}
 
 	set_param_uint( PARAM_RC1_REV, _calibrations.data.rc.rev[0] );
@@ -150,7 +158,7 @@ static void calibrate_rc_collect_range_extremes_sticks(void) {
 	for ( int i = 0; i < DRV_PPM_MAX_INPUTS; i++ ) {
 		//XXX: Don't recheck/override inputs determined as switch
 		if( !( _calibrations.data.rc.is_switch & (1 << i) ) ) {
-			uint16_t pwmr = _sensors.rc_input.raw[i];
+			const uint16_t pwmr = _sensors.rc_input.raw[i];
 			//If the input is outside normal value, update ranges
 			if ( ( pwmr < 1300 ) || ( pwmr > 1700 ) ) {
 				_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] = uint32_min(pwmr, _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN]);
@@ -169,7 +177,7 @@ static void calibrate_rc_collect_range_extremes_switches(void) {
 	for ( int i = 0; i < DRV_PPM_MAX_INPUTS; i++ ) {
 		//XXX: Don't recheck/override inputs determined as stick
 		if( !( _calibrations.data.rc.is_stick & (1 << i) ) ) {
-			uint16_t pwmr = _sensors.rc_input.raw[i];
+			const uint16_t pwmr = _sensors.rc_input.raw[i];
 			//If the input is outside normal value, update ranges
 			if ( ( pwmr < 1300 ) || ( pwmr > 1700 ) ) {
 				_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] = uint32_min(pwmr, _calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN]);

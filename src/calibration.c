@@ -110,12 +110,13 @@ bool calibration_request( calibration_request_t req ) {
 		break;
 	}
 	case CAL_RC: {
-		if ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) {
+		if( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) &&
+			( _sensors.rc_input.mapping_set ) ) {
+
 			success = calibration_request_state();
 		} else {
 
-			if ( !get_param_uint( PARAM_RC_MAP_ROLL ) || !get_param_uint( PARAM_RC_MAP_PITCH ) || !get_param_uint( PARAM_RC_MAP_YAW ) || !get_param_uint( PARAM_RC_MAP_THROTTLE ) ) {
-
+			if ( !_sensors.rc_input.mapping_set ) {
 				mavlink_queue_broadcast_error( "[SENSOR] RC mapping params no set" );
 			}
 

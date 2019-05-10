@@ -36,7 +36,7 @@ command_input_t _cmd_rc_input;
 
 //==-- Local Variables
 static uint16_t rc_cal_[DRV_PPM_MAX_INPUTS][3];
-static bool rc_rev_[DRV_PPM_MAX_INPUTS];
+static fix16_t rc_rev_[DRV_PPM_MAX_INPUTS];
 static fix16_t rc_dz_[DRV_PPM_MAX_INPUTS];
 static bool attempted_rc_default_mode_change_;
 
@@ -134,6 +134,7 @@ void sensors_init( void ) {
 		_sensors.rc_input.raw[i] = 0;
 	}
 
+	_sensors.rc_input.mapping_set = false;
 	_sensors.rc_input.p_r = 0;
 	_sensors.rc_input.p_p = 0;
 	_sensors.rc_input.p_y = 0;
@@ -270,14 +271,14 @@ void sensors_update_rc_cal( void ) {
 	rc_cal_[7][SENSOR_RC_CAL_MID] = get_param_uint( PARAM_RC8_MID );
 	rc_cal_[7][SENSOR_RC_CAL_MAX] = get_param_uint( PARAM_RC8_MAX );
 
-	rc_rev_[0] = get_param_uint( PARAM_RC1_REV );
-	rc_rev_[1] = get_param_uint( PARAM_RC2_REV );
-	rc_rev_[2] = get_param_uint( PARAM_RC3_REV );
-	rc_rev_[3] = get_param_uint( PARAM_RC4_REV );
-	rc_rev_[4] = get_param_uint( PARAM_RC5_REV );
-	rc_rev_[5] = get_param_uint( PARAM_RC6_REV );
-	rc_rev_[6] = get_param_uint( PARAM_RC7_REV );
-	rc_rev_[7] = get_param_uint( PARAM_RC8_REV );
+	rc_rev_[0] = get_param_fix16( PARAM_RC1_REV );
+	rc_rev_[1] = get_param_fix16( PARAM_RC2_REV );
+	rc_rev_[2] = get_param_fix16( PARAM_RC3_REV );
+	rc_rev_[3] = get_param_fix16( PARAM_RC4_REV );
+	rc_rev_[4] = get_param_fix16( PARAM_RC5_REV );
+	rc_rev_[5] = get_param_fix16( PARAM_RC6_REV );
+	rc_rev_[6] = get_param_fix16( PARAM_RC7_REV );
+	rc_rev_[7] = get_param_fix16( PARAM_RC8_REV );
 
 	rc_dz_[0] = get_param_fix16( PARAM_RC1_DZ );
 	rc_dz_[1] = get_param_fix16( PARAM_RC2_DZ );
@@ -319,11 +320,20 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 		// Anything?
 	}
 
-	//==-- RC Input & Saftety Toggle
+	//==-- RC Input, RC Mapping, & Saftety Toggle
 	if ( drv_sensors_rc_input_read( _sensors.rc_input.raw ) ) {
 		_sensors.rc_input.status.time_read = time_us;
 		_sensors.rc_input.status.new_data = true;
 		safety_update_sensor( &_system_status.sensors.rc_input );
+
+		//XXX:	This is limiting in the sense that you need a 4Ch. controller
+		//		for the RC input to be accepted. Probably won't be much of a
+		//		problem with modern equipment though.
+		//		Only perform this check when we actually recieve new data.
+		_sensors.rc_input.mapping_set = get_param_uint( PARAM_RC_MAP_ROLL ) &&
+										get_param_uint( PARAM_RC_MAP_PITCH ) &&
+										get_param_uint( PARAM_RC_MAP_YAW ) &&
+										get_param_uint( PARAM_RC_MAP_THROTTLE );
 	}
 
 	// Check that the following is OK before doing any other RC checks:
@@ -332,10 +342,7 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 	//  all channels have been set
 	if( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) &&
 		( _sensors.rc_input.status.new_data ) &&
-		get_param_uint( PARAM_RC_MAP_ROLL ) &&
-		get_param_uint( PARAM_RC_MAP_PITCH ) &&
-		get_param_uint( PARAM_RC_MAP_YAW ) &&
-		get_param_uint( PARAM_RC_MAP_THROTTLE ) ) {
+		( _sensors.rc_input.mapping_set ) ) {
 
 		uint8_t chan_roll = get_param_uint( PARAM_RC_MAP_ROLL ) - 1;
 		uint8_t chan_pitch = get_param_uint( PARAM_RC_MAP_PITCH ) - 1;
@@ -368,13 +375,12 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 				rc_cal_[chan_throttle][SENSOR_RC_CAL_MID],
 				rc_cal_[chan_throttle][SENSOR_RC_CAL_MAX] );
 
-			// Correct for axis reverse
-			fix16_t cmd_roll_corrected = ( rc_rev_[chan_roll] ) ? fix16_mul( -_fc_1, cmd_roll ) : cmd_roll;
-			fix16_t cmd_pitch_corrected = ( rc_rev_[chan_pitch] ) ? fix16_mul( -_fc_1, cmd_pitch ) : cmd_pitch;
-			fix16_t cmd_yaw_corrected = ( rc_rev_[chan_yaw] ) ? fix16_mul( -_fc_1, cmd_yaw ) : cmd_yaw;
-			// XXX:For throttle, we need to multiply then shift it to ensure it is
-			// still 0->1
-			fix16_t cmd_throttle_corrected = ( rc_rev_[chan_throttle] ) ? fix16_add( _fc_1, fix16_mul( -_fc_1, cmd_throttle ) ) : cmd_throttle;
+			// Correct for axis reverse, just multiple all
+			fix16_t cmd_roll_corrected = fix16_mul( rc_rev_[chan_roll], cmd_roll );
+			fix16_t cmd_pitch_corrected = fix16_mul( rc_rev_[chan_pitch], cmd_pitch );
+			fix16_t cmd_yaw_corrected = fix16_mul( rc_rev_[chan_yaw], cmd_yaw );
+			// XXX:For throttle, we need to multiply then shift it to ensure it is still 0->1
+			fix16_t cmd_throttle_corrected = ( rc_rev_[chan_throttle] < 0 ) ? fix16_add( _fc_1, fix16_mul( -_fc_1, cmd_throttle ) ) : cmd_throttle;
 
 			// Calculate deadzones and save outputs
 			_sensors.rc_input.c_r = ( fix16_abs( cmd_roll_corrected ) < rc_dz_[chan_roll] ) ? 0 : cmd_roll_corrected;

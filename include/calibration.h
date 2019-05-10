@@ -69,7 +69,7 @@ typedef struct {
 	calibration_rc_range_t step;
 
 	uint16_t ranges[DRV_PPM_MAX_INPUTS][4];
-	bool rev[DRV_PPM_MAX_INPUTS];
+	fix16_t rev[DRV_PPM_MAX_INPUTS];
 	uint32_t is_stick;	//Bitfield data
 	uint32_t is_switch;	//Bitfield data
 } calibration_rc_range_data_t;

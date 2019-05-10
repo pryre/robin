@@ -176,13 +176,13 @@ PARAM_RC1_MAX:
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC1_REV:
-  type: "uint"
+  type: "float"
   name: "RC1_REV"
   description: "RC reverse reading channel 1 calibration"
   reboot: false
   value:
-    option: "bool"
-    default: 0
+    option: "scalar"
+    default: 1.0
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC1_DZ:
@@ -228,13 +228,13 @@ PARAM_RC2_MAX:
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC2_REV:
-  type: "uint"
+  type: "float"
   name: "RC2_REV"
   description: "RC reverse reading channel 2 calibration"
   reboot: false
   value:
-    option: "bool"
-    default: 0
+    option: "scalar"
+    default: 1.0
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC2_DZ:
@@ -280,13 +280,13 @@ PARAM_RC3_MAX:
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC3_REV:
-  type: "uint"
+  type: "float"
   name: "RC3_REV"
   description: "RC reverse reading channel 3 calibration"
   reboot: false
   value:
-    option: "bool"
-    default: 0
+    option: "scalar"
+    default: 1.0
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC3_DZ:
@@ -332,13 +332,13 @@ PARAM_RC4_MAX:
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC4_REV:
-  type: "uint"
+  type: "float"
   name: "RC4_REV"
   description: "RC reverse reading channel 4 calibration"
   reboot: false
   value:
-    option: "bool"
-    default: 0
+    option: "scalar"
+    default: 1.0
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC4_DZ:
@@ -384,13 +384,13 @@ PARAM_RC5_MAX:
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC5_REV:
-  type: "uint"
+  type: "float"
   name: "RC5_REV"
   description: "RC reverse reading channel 5 calibration"
   reboot: false
   value:
-    option: "bool"
-    default: 0
+    option: "scalar"
+    default: 1.0
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC5_DZ:
@@ -436,13 +436,13 @@ PARAM_RC6_MAX:
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC6_REV:
-  type: "uint"
+  type: "float"
   name: "RC6_REV"
   description: "RC reverse reading channel 6 calibration"
   reboot: false
   value:
-    option: "bool"
-    default: 0
+    option: "scalar"
+    default: 1.0
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC6_DZ:
@@ -488,13 +488,13 @@ PARAM_RC7_MAX:
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC7_REV:
-  type: "uint"
+  type: "float"
   name: "RC7_REV"
   description: "RC reverse reading channel 7 calibration"
   reboot: false
   value:
-    option: "bool"
-    default: 0
+    option: "scalar"
+    default: 1.0
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC7_DZ:
@@ -540,13 +540,13 @@ PARAM_RC8_MAX:
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC8_REV:
-  type: "uint"
+  type: "float"
   name: "RC8_REV"
   description: "RC reverse reading channel 8 calibration"
   reboot: false
   value:
-    option: "bool"
-    default: 0
+    option: "scalar"
+    default: 1.0
     function: "sensors_update_rc_cal();"
 ---
 PARAM_RC8_DZ:

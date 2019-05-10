@@ -38,42 +38,42 @@ ACC_Z_TEMP_COMP | float | Temperature correction for accelerometer measurements 
 RC1_MIN | uint | RC minimum value for channel 1 calibration | 1000 | channel | scalar | False
 RC1_TRIM | uint | RC median value for channel 1 calibration | 1500 | channel | scalar | False
 RC1_MAX | uint | RC max value for channel 1 calibration | 2000 | channel | scalar | False
-RC1_REV | uint | RC reverse reading channel 1 calibration | 0 | 0 / 1 | boolean | False
+RC1_REV | float | RC reverse reading channel 1 calibration | 1.0 |  | scalar | False
 RC1_DZ | float | RC deadzone for channel 1 | 0.02 |  | scalar | False
 RC2_MIN | uint | RC minimum value for channel 2 calibration | 1000 | channel | scalar | False
 RC2_TRIM | uint | RC median value for channel 2 calibration | 1500 | channel | scalar | False
 RC2_MAX | uint | RC max value for channel 2 calibration | 2000 | channel | scalar | False
-RC2_REV | uint | RC reverse reading channel 2 calibration | 0 | 0 / 1 | boolean | False
+RC2_REV | float | RC reverse reading channel 2 calibration | 1.0 |  | scalar | False
 RC2_DZ | float | RC deadzone for channel 2 | 0.02 |  | scalar | False
 RC3_MIN | uint | RC minimum value for channel 3 calibration | 1000 | channel | scalar | False
 RC3_TRIM | uint | RC median value for channel 3 calibration | 1500 | channel | scalar | False
 RC3_MAX | uint | RC max value for channel 3 calibration | 2000 | channel | scalar | False
-RC3_REV | uint | RC reverse reading channel 3 calibration | 0 | 0 / 1 | boolean | False
+RC3_REV | float | RC reverse reading channel 3 calibration | 1.0 |  | scalar | False
 RC3_DZ | float | RC deadzone for channel 3 | 0.02 |  | scalar | False
 RC4_MIN | uint | RC minimum value for channel 4 calibration | 1000 | channel | scalar | False
 RC4_TRIM | uint | RC median value for channel 4 calibration | 1500 | channel | scalar | False
 RC4_MAX | uint | RC max value for channel 4 calibration | 2000 | channel | scalar | False
-RC4_REV | uint | RC reverse reading channel 4 calibration | 0 | 0 / 1 | boolean | False
+RC4_REV | float | RC reverse reading channel 4 calibration | 1.0 |  | scalar | False
 RC4_DZ | float | RC deadzone for channel 4 | 0.02 |  | scalar | False
 RC5_MIN | uint | RC minimum value for channel 5 calibration | 1000 | channel | scalar | False
 RC5_TRIM | uint | RC median value for channel 5 calibration | 1500 | channel | scalar | False
 RC5_MAX | uint | RC max value for channel 5 calibration | 2000 | channel | scalar | False
-RC5_REV | uint | RC reverse reading channel 5 calibration | 0 | 0 / 1 | boolean | False
+RC5_REV | float | RC reverse reading channel 5 calibration | 1.0 |  | scalar | False
 RC5_DZ | float | RC deadzone for channel 5 | 0.02 |  | scalar | False
 RC6_MIN | uint | RC minimum value for channel 6 calibration | 1000 | channel | scalar | False
 RC6_TRIM | uint | RC median value for channel 6 calibration | 1500 | channel | scalar | False
 RC6_MAX | uint | RC max value for channel 6 calibration | 2000 | channel | scalar | False
-RC6_REV | uint | RC reverse reading channel 6 calibration | 0 | 0 / 1 | boolean | False
+RC6_REV | float | RC reverse reading channel 6 calibration | 1.0 |  | scalar | False
 RC6_DZ | float | RC deadzone for channel 6 | 0.02 |  | scalar | False
 RC7_MIN | uint | RC minimum value for channel 7 calibration | 1000 | channel | scalar | False
 RC7_TRIM | uint | RC median value for channel 7 calibration | 1500 | channel | scalar | False
 RC7_MAX | uint | RC max value for channel 7 calibration | 2000 | channel | scalar | False
-RC7_REV | uint | RC reverse reading channel 7 calibration | 0 | 0 / 1 | boolean | False
+RC7_REV | float | RC reverse reading channel 7 calibration | 1.0 |  | scalar | False
 RC7_DZ | float | RC deadzone for channel 7 | 0.02 |  | scalar | False
 RC8_MIN | uint | RC minimum value for channel 8 calibration | 1000 | channel | scalar | False
 RC8_TRIM | uint | RC median value for channel 8 calibration | 1500 | channel | scalar | False
 RC8_MAX | uint | RC max value for channel 8 calibration | 2000 | channel | scalar | False
-RC8_REV | uint | RC reverse reading channel 8 calibration | 0 | 0 / 1 | boolean | False
+RC8_REV | float | RC reverse reading channel 8 calibration | 1.0 |  | scalar | False
 RC8_DZ | float | RC deadzone for channel 8 | 0.02 |  | scalar | False
 DO_ESC_CAL | uint | When set to true, a motor calibration will be performed on the next boot (False:0,True:1) | 0 | 0 / 1 | boolean | True
 
