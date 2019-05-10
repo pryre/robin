@@ -52,6 +52,8 @@ void calibration_init( void ) {
 
 	_calibrations.data.rc.waiting = false;
 	_calibrations.data.rc.step = CAL_RC_RANGE_INIT;
+	_calibrations.data.rc.is_stick = 0;
+	_calibrations.data.rc.is_switch = 0;
 	for ( int i = 0; i < 8; i++ ) {
 		// XXX: Init all to "true stick centre"
 		_calibrations.data.rc.ranges[i][SENSOR_RC_CAL_MIN] = 1500;
