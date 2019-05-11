@@ -108,8 +108,9 @@ typedef struct {
 	fix16_t c_p;
 	fix16_t c_y;
 	fix16_t c_T;
+	fix16_t c_m;
 
-	compat_px4_main_mode_t c_m;
+	compat_px4_main_mode_t r_m;
 } sensor_readings_rc_input_t;
 
 typedef struct {

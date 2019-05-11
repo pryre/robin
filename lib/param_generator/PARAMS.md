@@ -191,11 +191,12 @@ RC_MAP_YAW | uint | Channel to use for RC yaw inputs | 0 | channel | scalar | Fa
 RC_MAP_THROTTLE | uint | Channel to use for RC throttle inputs | 0 | channel | scalar | False
 RC_MAP_MODE_SW | uint | Channel to use for RC mode select | 0 | channel | scalar | False
 RC_MODE_DEFAULT | uint | Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable) | 0 | channel | scalar | False
-RC_MODE_PWM_RNG | uint | Sets the range (+ or -) that counts as a selection for any PWM mode selection | 100 | channel | scalar | False
-RC_MODE_PWM_STAB | uint | The PWM value to use to select manual stabilized mode (set to 0 to disable) | 1100 | channel | scalar | False
-RC_MODE_PWM_ACRO | uint | The PWM value to use to select manual acro mode (set to 0 to disable) | 0 | channel | scalar | False
-RC_MODE_PWM_OFFB | uint | The PWM value to use to select offboard mode (set to 0 to disable) | 1900 | channel | scalar | False
+RC_MODE_RANGE | float | Sets the range (+ or -) that counts as a selection for all mode selections | 0.1 |  | scalar | False
+RC_MODE_STAB | float | The normalized value to use to select manual stabilized mode (set to 0 to disable) | 0.1 |  | scalar | False
+RC_MODE_ACRO | float | The normalized value to use to select manual acro mode (set to 0 to disable) | 0.0 |  | scalar | False
+RC_MODE_OFFB | float | The normalized value to use to select offboard mode (set to 0 to disable) | 0.9 |  | scalar | False
 COM_RC_ARM_HYST | uint | Time threshold to activate RC arming | 1000000 | us | scalar | False
+RC_FR_THRUST | uint | Enables full range thrust (-1->1), allowing a negative thrust value to be given. Useful for vehicles with reverse (e.g. a rover) | 0 | 0 / 1 | boolean | False
 
 ## Sensors
 

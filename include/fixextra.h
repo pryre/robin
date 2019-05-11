@@ -47,6 +47,17 @@ typedef enum {
 static const qf16 NED_ENU_Q = {0, _fc_sqrt_0_5, -_fc_sqrt_0_5, 0};
 //static const qf16 NED_IMU_Q = {0, _fc_1, 0, 0};
 
+static inline fix16_t fix16_normalize( const fix16_t i, const fix16_t min, const fix16_t max ) {
+	return fix16_div( fix16_ssub(i, min), fix16_ssub(max, min) );
+}
+
+static inline fix16_t fix16_normalize_clamp( const fix16_t i, const fix16_t min, const fix16_t max ) {
+	//Limit the output to the min/max
+	fix16_t ic = ( i < min ) ? min : ( i > max ) ? max : i;
+
+	return fix16_normalize(ic, min, max);
+}
+
 static inline fix16_t fix16_constrain( const fix16_t i, const fix16_t min, const fix16_t max ) {
 	return ( i < min ) ? min : ( i > max ) ? max : i;
 }

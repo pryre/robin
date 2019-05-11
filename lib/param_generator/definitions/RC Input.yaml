@@ -58,45 +58,41 @@ PARAM_RC_MODE_DEFAULT:
     default: 0
     unit: "channel"
 ---
-PARAM_RC_MODE_PWM_RANGE:
-  type: "uint"
-  name: "RC_MODE_PWM_RNG"
-  description: "Sets the range (+ or -) that counts as a selection for any PWM mode selection"
+PARAM_RC_MODE_RANGE:
+  type: "float"
+  name: "RC_MODE_RANGE"
+  description: "Sets the range (+ or -) that counts as a selection for all mode selections"
   reboot: false
   value:
     option: "scalar"
-    default: 100
-    unit: "channel"
+    default: 0.1
 ---
-PARAM_RC_MODE_PWM_STAB:
-  type: "uint"
-  name: "RC_MODE_PWM_STAB"
-  description: "The PWM value to use to select manual stabilized mode (set to 0 to disable)"
+PARAM_RC_MODE_STAB:
+  type: "float"
+  name: "RC_MODE_STAB"
+  description: "The normalized value to use to select manual stabilized mode (set to 0 to disable)"
   reboot: false
   value:
     option: "scalar"
-    default: 1100
-    unit: "channel"
+    default: 0.1
 ---
-PARAM_RC_MODE_PWM_ACRO:
-  type: "uint"
-  name: "RC_MODE_PWM_ACRO"
-  description: "The PWM value to use to select manual acro mode (set to 0 to disable)"
+PARAM_RC_MODE_ACRO:
+  type: "float"
+  name: "RC_MODE_ACRO"
+  description: "The normalized value to use to select manual acro mode (set to 0 to disable)"
   reboot: false
   value:
     option: "scalar"
-    default: 0
-    unit: "channel"
+    default: 0.0
 ---
-PARAM_RC_MODE_PWM_OFFBOARD:
-  type: "uint"
-  name: "RC_MODE_PWM_OFFB"
-  description: "The PWM value to use to select offboard mode (set to 0 to disable)"
+PARAM_RC_MODE_OFFBOARD:
+  type: "float"
+  name: "RC_MODE_OFFB"
+  description: "The normalized value to use to select offboard mode (set to 0 to disable)"
   reboot: false
   value:
     option: "scalar"
-    default: 1900
-    unit: "channel"
+    default: 0.9
 ---
 PARAM_RC_ARM_TIMER:
   type: "uint"
@@ -107,3 +103,12 @@ PARAM_RC_ARM_TIMER:
     option: "scalar"
     default: 1000000
     unit: "us"
+---
+PARAM_RC_FULL_RANGE_THRUST:
+  type: "uint"
+  name: "RC_FR_THRUST"
+  description: "Enables full range thrust (-1->1), allowing a negative thrust value to be given. Useful for vehicles with reverse (e.g. a rover)"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0

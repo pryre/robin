@@ -145,6 +145,7 @@ void sensors_init( void ) {
 	_sensors.rc_input.c_y = 0;
 	_sensors.rc_input.c_T = 0;
 	_sensors.rc_input.c_m = 0;
+	_sensors.rc_input.r_m = MAIN_MODE_UNSET;
 	sensors_update_rc_cal();
 
 	attempted_rc_default_mode_change_ = false;
@@ -211,38 +212,21 @@ uint32_t sensors_clock_imu_int_get( void ) {
 }
 */
 
-static fix16_t dual_normalized_input( uint16_t pwm, uint16_t min, uint16_t mid,
-									  uint16_t max ) {
-	// Constrain from min to max
-	int16_t pwmc = ( pwm < min ) ? min : ( pwm > max ) ? max : pwm;
+static fix16_t dual_normalized_input( uint16_t pwm, uint16_t min, uint16_t mid, uint16_t max ) {
 	fix16_t pwmn = 0;
 
-	//
-	if ( pwmc > mid ) {
-		pwmn = fix16_div( fix16_from_int( pwmc - mid ), fix16_from_int( max - mid ) );
-	} else if ( pwmc < mid ) {
-		pwmn = -fix16_div( fix16_from_int( mid - pwmc ), fix16_from_int( mid - min ) );
+	if ( pwm > mid ) {
+		pwmn = fix16_div( fix16_from_int( pwm - mid ), fix16_from_int( max - mid ) );
+	} else if ( pwm < mid ) {
+		pwmn = -fix16_div( fix16_from_int( mid - pwm ), fix16_from_int( mid - min ) );
 	} else {
 		// Stick is perfectly centered
 		pwmn = 0;
 	}
 
 	// Sanity check our dual normalize incase we have bad min/max params
-	pwmn = ( ( pwmn < -_fc_1 ) || ( pwmn > _fc_1 ) ) ? 0 : pwmn;
-
-	// XXX: Could do deadzone here, but it would mean throttle has a deadzone at
-	// 50% instead of 0
-	// XXX: Could also do another deadzone in normalized_input()
-
-	// dual normalized (-1 -> 1), 0 if error
-	return pwmn;
-}
-
-static fix16_t normalized_input( uint16_t pwm, uint16_t min, uint16_t mid,
-								 uint16_t max ) {
-	fix16_t dni = dual_normalized_input( pwm, min, mid, max );
-	// scale (-1 -> 1) to (0 -> 1), just renormalize with a range of 2
-	return fix16_div( fix16_add( dni, _fc_1 ), _fc_2 );
+	// Dual normalized (-1 -> 1)
+	return fix16_constrain(pwmn, -_fc_1, _fc_1);
 }
 
 void sensors_update_rc_cal( void ) {
@@ -339,111 +323,63 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 	// Check that the following is OK before doing any other RC checks:
 	//  RC input is healthy
 	//	There is actually new data
-	//  all channels have been set
+	//  Not currently calibrating
 	if( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) &&
 		( _sensors.rc_input.status.new_data ) &&
-		( _sensors.rc_input.mapping_set ) ) {
+		( _system_status.state != MAV_STATE_CALIBRATING ) ) {
 
-		uint8_t chan_roll = get_param_uint( PARAM_RC_MAP_ROLL ) - 1;
-		uint8_t chan_pitch = get_param_uint( PARAM_RC_MAP_PITCH ) - 1;
-		uint8_t chan_yaw = get_param_uint( PARAM_RC_MAP_YAW ) - 1;
-		uint8_t chan_throttle = get_param_uint( PARAM_RC_MAP_THROTTLE ) - 1;
+		// Handle the normalization steps
+		fix16_t rc_ncd[DRV_PPM_MAX_INPUTS];
 
-		//Store the reading for debug, should be already sanitized by this point
-		_sensors.rc_input.p_r = _sensors.rc_input.raw[chan_roll];
-		_sensors.rc_input.p_p = _sensors.rc_input.raw[chan_pitch];
-		_sensors.rc_input.p_y = _sensors.rc_input.raw[chan_yaw];
-		_sensors.rc_input.p_T = _sensors.rc_input.raw[chan_throttle];
+		for(int i=0; i<DRV_PPM_MAX_INPUTS; i++) {
+			// Raw normalized
+			fix16_t rn = dual_normalized_input( _sensors.rc_input.raw[i],
+												rc_cal_[i][SENSOR_RC_CAL_MIN],
+												rc_cal_[i][SENSOR_RC_CAL_MID],
+												rc_cal_[i][SENSOR_RC_CAL_MAX] );
 
-		// Normailize readings
-		fix16_t cmd_roll = dual_normalized_input(
-			_sensors.rc_input.p_r, rc_cal_[chan_roll][SENSOR_RC_CAL_MIN],
-			rc_cal_[chan_roll][SENSOR_RC_CAL_MID],
-			rc_cal_[chan_roll][SENSOR_RC_CAL_MAX] );
-		fix16_t cmd_pitch = dual_normalized_input(
-			_sensors.rc_input.p_p, rc_cal_[chan_pitch][SENSOR_RC_CAL_MIN],
-			rc_cal_[chan_pitch][SENSOR_RC_CAL_MID],
-			rc_cal_[chan_pitch][SENSOR_RC_CAL_MAX] );
-		fix16_t cmd_yaw = dual_normalized_input(
-			_sensors.rc_input.p_y, rc_cal_[chan_yaw][SENSOR_RC_CAL_MIN],
-			rc_cal_[chan_yaw][SENSOR_RC_CAL_MID],
-			rc_cal_[chan_yaw][SENSOR_RC_CAL_MAX] );
-		fix16_t cmd_throttle = normalized_input(
-			_sensors.rc_input.p_T, rc_cal_[chan_throttle][SENSOR_RC_CAL_MIN],
-			rc_cal_[chan_throttle][SENSOR_RC_CAL_MID],
-			rc_cal_[chan_throttle][SENSOR_RC_CAL_MAX] );
+			// Normalized, corrected, and deadzoned
+			rc_ncd[i] = fix16_mul( rc_rev_[i],
+								   ( ( fix16_abs( rn ) < rc_dz_[i] ) ? 0 : rn ) );
+		}
 
-		// Correct for axis reverse, just multiple all
-		fix16_t cmd_roll_corrected = fix16_mul( rc_rev_[chan_roll], cmd_roll );
-		fix16_t cmd_pitch_corrected = fix16_mul( rc_rev_[chan_pitch], cmd_pitch );
-		fix16_t cmd_yaw_corrected = fix16_mul( rc_rev_[chan_yaw], cmd_yaw );
-		// XXX:For throttle, we need to multiply then shift it to ensure it is still 0->1
-		fix16_t cmd_throttle_corrected = ( rc_rev_[chan_throttle] < 0 ) ? fix16_add( _fc_1, fix16_mul( -_fc_1, cmd_throttle ) ) : cmd_throttle;
+		// Group mixers
+		for ( int i = 0; i < MIXER_NUM_MOTORS; i++ ) {
+			_actuator_control_g2[i] = rc_ncd[i];
+			_actuator_control_g3[i] = rc_ncd[i];
+		}
 
-		// Calculate deadzones and save outputs
-		_sensors.rc_input.c_r = ( fix16_abs( cmd_roll_corrected ) < rc_dz_[chan_roll] ) ? 0 : cmd_roll_corrected;
-		_sensors.rc_input.c_p = ( fix16_abs( cmd_pitch_corrected ) < rc_dz_[chan_pitch] ) ? 0 : cmd_pitch_corrected;
-		_sensors.rc_input.c_y = ( fix16_abs( cmd_yaw_corrected ) < rc_dz_[chan_yaw] ) ? 0 : cmd_yaw_corrected;
-		_sensors.rc_input.c_T = ( fix16_abs( cmd_throttle_corrected ) < rc_dz_[chan_throttle] ) ? 0 : cmd_throttle_corrected;
+		// RC input control mapping and RC arming
+		if ( _sensors.rc_input.mapping_set ) {
+			uint8_t chan_roll = get_param_uint( PARAM_RC_MAP_ROLL ) - 1;
+			uint8_t chan_pitch = get_param_uint( PARAM_RC_MAP_PITCH ) - 1;
+			uint8_t chan_yaw = get_param_uint( PARAM_RC_MAP_YAW ) - 1;
+			uint8_t chan_throttle = get_param_uint( PARAM_RC_MAP_THROTTLE ) - 1;
 
-		// Only do this is the RC is healthy and not being set up
-		if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) &&
-			 ( _system_status.state != MAV_STATE_CALIBRATING ) ) {
+			//Store the reading for debug, should be already sanitized by this point
+			_sensors.rc_input.p_r = _sensors.rc_input.raw[chan_roll];
+			_sensors.rc_input.p_p = _sensors.rc_input.raw[chan_pitch];
+			_sensors.rc_input.p_y = _sensors.rc_input.raw[chan_yaw];
+			_sensors.rc_input.p_T = _sensors.rc_input.raw[chan_throttle];
 
-			// Handle actuator control mapping
-			for ( int i = 0; i < MIXER_NUM_MOTORS; i++ ) {
-				_actuator_control_g2[i] = dual_normalized_input(_sensors.rc_input.raw[i],
-																rc_cal_[i][SENSOR_RC_CAL_MIN],
-																rc_cal_[i][SENSOR_RC_CAL_MID],
-																rc_cal_[i][SENSOR_RC_CAL_MAX]);
-				_actuator_control_g3[i] = _actuator_control_g2[i];
+			// Calculate deadzones and save outputs
+			_sensors.rc_input.c_r = rc_ncd[chan_roll];
+			_sensors.rc_input.c_p = rc_ncd[chan_pitch];
+			_sensors.rc_input.c_y = rc_ncd[chan_yaw];
+			// See if we should allow full range thrust
+			if( get_param_uint(PARAM_RC_FULL_RANGE_THRUST) ) {
+				//If so, simply use the dual range calculation
+				_sensors.rc_input.c_T = rc_ncd[chan_throttle];
+			} else {
+				//Otherwise, we have to re-normalize to 0->1
+				_sensors.rc_input.c_T = fix16_normalize_clamp( rc_ncd[chan_throttle], -_fc_1, _fc_1);
 			}
 
-			// If we're using a mode switch
-			if ( get_param_uint( PARAM_RC_MAP_MODE_SW ) ) {
-				_sensors.rc_input.p_m = _sensors.rc_input.raw[get_param_uint( PARAM_RC_MAP_MODE_SW ) - 1];
-
-				if ( ( _sensors.rc_input.p_m > 800 ) && ( _sensors.rc_input.p_m < 2200 ) ) {
-					compat_px4_main_mode_t c_m_last = _sensors.rc_input.c_m;
-
-					if ( abs( (int16_t)get_param_uint( PARAM_RC_MODE_PWM_STAB ) - _sensors.rc_input.p_m ) < get_param_uint( PARAM_RC_MODE_PWM_RANGE ) ) {
-						_sensors.rc_input.c_m = MAIN_MODE_STABILIZED;
-					} else if ( abs( (int16_t)get_param_uint( PARAM_RC_MODE_PWM_ACRO ) - _sensors.rc_input.p_m ) < get_param_uint( PARAM_RC_MODE_PWM_RANGE ) ) {
-						_sensors.rc_input.c_m = MAIN_MODE_ACRO;
-					} else if ( abs( (int16_t)get_param_uint( PARAM_RC_MODE_PWM_OFFBOARD ) - _sensors.rc_input.p_m ) < get_param_uint( PARAM_RC_MODE_PWM_RANGE ) ) {
-						_sensors.rc_input.c_m = MAIN_MODE_OFFBOARD;
-					} // Else no mode select match, don't change mode
-
-					// If a new mode is requested
-					if ( _sensors.rc_input.c_m != c_m_last ) {
-						if ( !safety_request_control_mode( _sensors.rc_input.c_m ) ) {
-							mavlink_queue_broadcast_error( "[SENSOR] RC mode switch rejected" );
-						}
-					}
-				}
-			} else if ( !attempted_rc_default_mode_change_ &&
-						( _system_status.control_mode == MAIN_MODE_UNSET ) &&
-						( get_param_uint( PARAM_RC_MODE_DEFAULT ) != MAIN_MODE_UNSET ) ) {
-				// RC connection should trigger a default mode change
-				// We only allow this to occur once after boot
-				// in case RC drops and reconnects mid-flight
-				// This also only occurs if the mode is unset,
-				// and the default is valid, for the same reason
-
-				if ( !safety_request_control_mode(
-						 get_param_uint( PARAM_RC_MODE_DEFAULT ) ) ) {
-					mavlink_queue_broadcast_error(
-						"[SENSOR] Error setting RC default mode" );
-				}
-
-				attempted_rc_default_mode_change_ = true;
-			}
-
-			// Handle the logic for saftey toggling
+			// Handle the logic for arming toggle
 			_sensors.rc_arm_toggle.status.time_read = time_us;
 			_sensors.rc_arm_toggle.status.new_data = true;
 
-			if ( ( _sensors.rc_input.c_T < _fc_0_05 ) && ( fix16_abs( _sensors.rc_input.c_y ) > _fc_0_95 ) ) {
+			if ( ( fix16_abs(_sensors.rc_input.c_T) < _fc_0_05 ) && ( fix16_abs( _sensors.rc_input.c_y ) > _fc_0_95 ) ) {
 
 				if ( _sensors.rc_arm_toggle.timer_start_us == 0 )
 					_sensors.rc_arm_toggle.timer_start_us = time_us;
@@ -463,6 +399,50 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 				_sensors.rc_arm_toggle.arm_req_made = false;
 				_sensors.rc_arm_toggle.timer_start_us = 0;
 			}
+		}
+
+		// RC mode switch functions
+		if ( get_param_uint( PARAM_RC_MAP_MODE_SW ) ) {
+			uint32_t chan_mode = get_param_uint( PARAM_RC_MAP_MODE_SW ) - 1;
+			_sensors.rc_input.p_m = _sensors.rc_input.raw[chan_mode];
+
+			//Get the normalized value (0->1)
+			_sensors.rc_input.c_m = fix16_normalize_clamp( rc_ncd[chan_mode], -_fc_1, _fc_1);;
+			compat_px4_main_mode_t r_m_last = _sensors.rc_input.r_m;
+
+			if ( ( get_param_fix16( PARAM_RC_MODE_STAB ) > 0 ) &&
+				 ( fix16_abs( fix16_sub( get_param_fix16( PARAM_RC_MODE_STAB ), _sensors.rc_input.c_m ) ) < get_param_fix16( PARAM_RC_MODE_RANGE ) ) ) {
+				_sensors.rc_input.r_m = MAIN_MODE_STABILIZED;
+			} else if ( ( get_param_fix16( PARAM_RC_MODE_ACRO ) > 0 ) &&
+						( fix16_abs( fix16_sub( get_param_fix16( PARAM_RC_MODE_ACRO ), _sensors.rc_input.c_m ) ) < get_param_fix16( PARAM_RC_MODE_RANGE ) ) ) {
+				_sensors.rc_input.r_m = MAIN_MODE_ACRO;
+			} else if ( ( get_param_fix16( PARAM_RC_MODE_OFFBOARD ) > 0 ) &&
+						( fix16_abs( fix16_sub( get_param_fix16( PARAM_RC_MODE_OFFBOARD ), _sensors.rc_input.c_m ) ) < get_param_fix16( PARAM_RC_MODE_RANGE ) ) ) {
+				_sensors.rc_input.r_m = MAIN_MODE_OFFBOARD;
+			} // Else no mode select match, don't change mode
+
+			// If a new mode is requested
+			if ( _sensors.rc_input.r_m != r_m_last ) {
+				if ( !safety_request_control_mode( _sensors.rc_input.r_m ) ) {
+					mavlink_queue_broadcast_error( "[SENSOR] RC mode switch rejected" );
+				}
+			}
+		} else if ( !attempted_rc_default_mode_change_ &&
+					( _system_status.control_mode == MAIN_MODE_UNSET ) &&
+					( get_param_uint( PARAM_RC_MODE_DEFAULT ) != MAIN_MODE_UNSET ) ) {
+			// RC connection should trigger a default mode change
+			// We only allow this to occur once after boot
+			// in case RC drops and reconnects mid-flight
+			// This also only occurs if the mode is unset,
+			// and the default is valid, for the same reason
+
+			if ( !safety_request_control_mode(
+					 get_param_uint( PARAM_RC_MODE_DEFAULT ) ) ) {
+				mavlink_queue_broadcast_error(
+					"[SENSOR] Error setting RC default mode" );
+			}
+
+			attempted_rc_default_mode_change_ = true;
 		}
 	}
 
