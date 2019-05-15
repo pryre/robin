@@ -24,7 +24,7 @@ bool drv_pwm_init(void) {
 
 void drv_pwm_write( uint8_t index, uint16_t value ) {
 	if(index < DRV_PWM_MAX_OUTPUTS)
-		pwm_frame_[DRV_PWM_MAX_OUTPUTS] = value;
+		pwm_frame_[index] = value;
 }
 
 uint16_t drv_pwm_get_current( uint8_t index ) {

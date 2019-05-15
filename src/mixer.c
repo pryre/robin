@@ -4,7 +4,6 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
-//#include <stdlib.h>
 
 #include "fix16.h"
 #include "fixextra.h"
