@@ -120,16 +120,16 @@ Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
 RATE_CONTROL | float | Update rate of the controller | 250.0 |  | scalar | True
 MC_FUSE_YAWRATE | uint | If set to true (1), the control scheme will utilise the full attitude reference by fusing the body_rate_z value with the references calculated by the attitude controller. This parameter bypasses the IGNORE_YAWRATE flag in the attitude reference message | 0 |  | scalar | False
-MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 5.0 |  | scalar | False
+MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 7.5 |  | scalar | False
 MC_ROLLRATE_I | float | Integral gain for roll rate PID | 1.0 |  | scalar | False
-MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.1 |  | scalar | False
+MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.5 |  | scalar | False
 MC_ROLLRATE_MAX | float | Maximum allowed command for roll rate | 3.14159 | rad/s | scalar | False
-MC_PITCHRATE_P | float | Proportional gain for pitch rate PID | 5.0 |  | scalar | False
+MC_PITCHRATE_P | float | Proportional gain for pitch rate PID | 7.5 |  | scalar | False
 MC_PITCHRATE_I | float | Integral gain for pitch rate PID | 1.0 |  | scalar | False
-MC_PITCHRATE_D | float | Derivative gain for pitch rate PID | 0.1 |  | scalar | False
+MC_PITCHRATE_D | float | Derivative gain for pitch rate PID | 0.5 |  | scalar | False
 MC_PITCHRATE_MAX | float | Maximum allowed command for pitch rate | 3.14159 | rad/s | scalar | False
-MC_YAWRATE_P | float | Proportional gain for yaw rate PID | 5.0 |  | scalar | False
-MC_YAWRATE_I | float | Integral gain for yaw rate PID | 1.0 |  | scalar | False
+MC_YAWRATE_P | float | Proportional gain for yaw rate PID | 10.0 |  | scalar | False
+MC_YAWRATE_I | float | Integral gain for yaw rate PID | 5.0 |  | scalar | False
 MC_YAWRATE_D | float | Derivative gain for yaw rate PID | 0.0 |  | scalar | False
 MC_YAWRATE_MAX | float | Maximum allowed command for yaw rate | 1.57079 | rad/s | scalar | False
 MC_ANGLE_P | float | Feed-forward gain for attitude anglular error | 4.5 |  | scalar | False
@@ -246,5 +246,5 @@ TIMEOUT_THRTL | uint | Throttle timeout in to prevent accidentally leaving armed
 TIMEOUT_THRTL_V | float | Throttle amount that must be reached to cancel the throttle timeout | 0.05 | us | scalar | False
 TIMEOUT_CRIT_EM | uint | Critical state timeout, system is put into emergency state after this time if not resolved | 5000000 | us | scalar | False
 SYS_AUTOCONFIG | uint | Tells the system to reset all parameters to default on next boot | 0 |  | scalar | True
-DEBUG_PROFILING | uint | Enables subsystem profiling and feedback (in Hz) | 0 |  | scalar | False
+DEBUG_PROFILING | float | Enables subsystem profiling and feedback (in Hz) | 0.0 |  | scalar | False
 

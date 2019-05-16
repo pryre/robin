@@ -83,11 +83,11 @@ PARAM_RESET_PARAMS:
     default: 0
 ---
 PARAM_DEBUG_PROFILING:
-  type: "uint"
+  type: "float"
   name: "DEBUG_PROFILING"
   description: "Enables subsystem profiling and feedback (in Hz)"
   reboot: false
   value:
     option: "scalar"
-    default: 0
+    default: 0.0
     function: "profiler_init();"
