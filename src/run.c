@@ -35,7 +35,7 @@ void setup( void ) {
 	system_init();
 
 	status_devices_init();
-	
+
 	// Initialize parameters
 	params_init();
 
@@ -75,7 +75,7 @@ void loop( void ) {
 
 	// Take note of when this loop starts
 	profiler_set_start( PROFILER_ID_LOOP, system_micros() );
-	
+
 	// Sensor Read
 	// Check to see if any of the i2c sensors have been updated (mainly the imu)
 	// and if so, update the sensor states and estimator
@@ -99,7 +99,7 @@ void loop( void ) {
 		if ( _sensors.hil.status.new_data )
 			profiler_run( PROFILER_ID_ESTIMATOR, &estimator_update_hil );
 	}
-	
+
 	//==-- Communications
 	//==-- Check Serial
 	profiler_run( PROFILER_ID_COMMS_RX, &communication_receive );
@@ -119,9 +119,9 @@ void loop( void ) {
 	//==-- Send Motor Commands
 	// Convert outputs to correct layout and send PWM (and considers failsafes)
 	profiler_run( PROFILER_ID_MIXER, &mixer_output );
-	
+
 	profiler_run( PROFILER_ID_STATUS, &status_devices_run );
-	
+
 	//==-- loop time calculation
 	profiler_set_end( PROFILER_ID_LOOP, system_micros() );
 

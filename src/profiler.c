@@ -64,11 +64,12 @@ void profiler_set_start( profiler_ids_t id, uint32_t time_us ) {
 	if( id < PROFILER_ID_NUM ) {
 		profiles_[id].start = time_us;
 
-		//On loop start, we load in our debug profiler setting
+		// On loop start, we load in our debug profiler setting
+		// Can't do this in the initilzation as params will not be init yet
 		if ( id == PROFILER_ID_LOOP ) {
 			fix16_t rate = get_param_fix16(PARAM_DEBUG_PROFILING);
 
-			if(rate) {
+			if(rate > 0) {
 				debug_period_ = 1000 * fix16_to_int( fix16_div( _fc_1000, rate ) );
 			} else {
 				debug_period_ = 0;
