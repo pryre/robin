@@ -74,11 +74,11 @@ static void controller_set_input_failsafe( command_input_t* input ) {
 static void rates_from_attitude( v3d* rates, const qf16* q_sp, const qf16* q,
 								 const fix16_t yaw_w ) {
 	/*
-XXX: Shorthand method that doesn't allow for separate yaw tuning
-v3d e_R;
-qf16_basis_error(&e_R, q, q_sp);
-v3d_mul_s( rates, &e_R, get_param_fix16(PARAM_MC_ANGLE_P) );
-*/
+	//XXX: Shorthand method that doesn't allow for separate yaw tuning
+	v3d e_R;
+	qf16_basis_error(&e_R, q, q_sp);
+	v3d_mul_s( rates, &e_R, get_param_fix16(PARAM_MC_ANGLE_P) );
+	*/
 
 	v3d e_z;
 	v3d e_z_d;
@@ -181,7 +181,7 @@ static void controller_run( uint32_t time_now ) {
 			input.input_mask = 0;
 			input.input_mask |= CMD_IN_IGNORE_ATTITUDE;
 
-			input.q.a = 1.0;
+			input.q.a = _fc_1;
 			input.q.b = 0;
 			input.q.c = 0;
 			input.q.d = 0;
@@ -203,8 +203,7 @@ static void controller_run( uint32_t time_now ) {
 		}
 	}
 
-	fix16_t dt = fix16_from_float(
-		1e-6 * (float)( time_now - _control_timing.time_last ) ); // Delta time in seconds
+	fix16_t dt = fix16_from_float( 1e-6 * (float)( time_now - _control_timing.time_last ) ); // Delta time in seconds
 
 	if ( ( dt == 0 ) || ( time_now - _control_timing.time_last > _control_timing.period_stale ) ) {
 		dt = 0;
@@ -246,8 +245,10 @@ static void controller_run( uint32_t time_now ) {
 		}
 
 		v3d rates_sp;
-		rates_from_attitude( &rates_sp, &_control_input.q,
-							 &_state_estimator.attitude, yaw_w );
+		rates_from_attitude( &rates_sp,
+							 &_control_input.q,
+							 &_state_estimator.attitude,
+							 yaw_w );
 
 		// Set goal rates
 		goal_r = rates_sp.x;
@@ -281,11 +282,11 @@ static void controller_run( uint32_t time_now ) {
 	if ( !( _control_input.input_mask & CMD_IN_IGNORE_YAW_RATE ) ) {
 		// Use the commanded yaw rate goal
 		goal_y = input.y;
-	} else
+	}
 
-		// Constrain rates to set params
-		goal_r = fix16_constrain( goal_r, -get_param_fix16( PARAM_MAX_ROLL_RATE ),
-								  get_param_fix16( PARAM_MAX_ROLL_RATE ) );
+	// Constrain rates to set params
+	goal_r = fix16_constrain( goal_r, -get_param_fix16( PARAM_MAX_ROLL_RATE ),
+							  get_param_fix16( PARAM_MAX_ROLL_RATE ) );
 	goal_p = fix16_constrain( goal_p, -get_param_fix16( PARAM_MAX_PITCH_RATE ),
 							  get_param_fix16( PARAM_MAX_PITCH_RATE ) );
 	goal_y = fix16_constrain( goal_y, -get_param_fix16( PARAM_MAX_YAW_RATE ),
@@ -348,16 +349,19 @@ void control_init( void ) {
 	_cmd_ob_input.input_mask = 0;
 
 	controller_reset();
+	calc_mixer_output();	//XXX: Calculate a clean output to start with
 }
 
 void control_run( uint32_t now ) {
 	// Run the control loop at a slower frequency so it is more resilient against noise
-	if( ( now - _control_timing.time_last ) > _control_timing.period_update ) {
+	// Ideally this will be locked to some update rate that is both slower and in-sync
+	// with the estimator
+	if( ( _state_estimator.time_updated - _control_timing.time_last ) > _control_timing.period_update ) {
 		//Before we run control, the following requirements should be met:
 		//	- The system is armed
 		//	- We are running in an non-emergency state
 		//	- The estimator has finished its initialization
-		if( ( safety_is_armed() ) && 
+		if( ( safety_is_armed() ) &&
 			( _system_status.state != MAV_STATE_EMERGENCY ) &&
 			( _state_estimator.time_updated > get_param_uint( PARAM_EST_INIT_TIME ) ) ) {
 			//==-- Update Controller
