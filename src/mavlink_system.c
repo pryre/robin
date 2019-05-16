@@ -542,16 +542,24 @@ void mavlink_stream_sys_status( mavlink_channel_t chan ) {
 		uint16_t errors_count4 = loop_max;
 
 		//==-- Sensors Present
-		if ( _sensors.imu.status.present ) {
-			onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
-			onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
+		if ( !_sensors.hil.status.present ) {
+			if ( _sensors.imu.status.present ) {
+				onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
+				onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
+			}
+
+			if ( _sensors.mag.status.present )
+				onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_MAG;
+
+			if ( _sensors.baro.status.present )
+				onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
+		} else {
+			onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_ACCEL |
+											   MAV_SYS_STATUS_SENSOR_3D_GYRO |
+											   MAV_SYS_STATUS_SENSOR_3D_MAG |
+											   MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE |
+											   MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
 		}
-
-		if ( _sensors.mag.status.present )
-			onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_MAG;
-
-		if ( _sensors.baro.status.present )
-			onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
 
 		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS;
 		onboard_control_sensors_present |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL;
@@ -561,16 +569,25 @@ void mavlink_stream_sys_status( mavlink_channel_t chan ) {
 		onboard_control_sensors_enabled = MAV_SYS_STATUS_SENSOR_3D_GYRO | MAV_SYS_STATUS_SENSOR_3D_ACCEL | MAV_SYS_STATUS_SENSOR_3D_MAG | MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE | MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS | MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL | MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
 
 		//==-- Sensor Health
-		if ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
-			onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
-			onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
+
+		if ( !_sensors.hil.status.present ) {
+			if ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
+				onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
+				onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
+			}
+
+			if ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK )
+				onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_MAG;
+
+			if ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK )
+				onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
+		} else {
+			onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_ACCEL |
+											  MAV_SYS_STATUS_SENSOR_3D_GYRO |
+											  MAV_SYS_STATUS_SENSOR_3D_MAG |
+											  MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE |
+											  MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
 		}
-
-		if ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK )
-			onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_3D_MAG;
-
-		if ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK )
-			onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
 
 		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS;
 		onboard_control_sensors_health |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL;
@@ -578,14 +595,24 @@ void mavlink_stream_sys_status( mavlink_channel_t chan ) {
 
 		// TODO: Other sensors?
 		// MAV_SYS_STATUS_SENSOR_BATTERY, MAV_SYS_STATUS_SENSOR_OPTICAL_FLOW,
-		// MAV_SYS_STATUS_SENSOR_VISION_POSITION ...?
+		// MAV_SYS_STATUS_SENSOR_VISION_POSITION, MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE...?
 
-		mavlink_msg_sys_status_pack(
-			mavlink_system.sysid, mavlink_system.compid, get_channel_buf( chan ),
-			onboard_control_sensors_present, onboard_control_sensors_enabled,
-			onboard_control_sensors_health, load, voltage_battery, current_battery,
-			battery_remaining, drop_rate_comm, errors_comm, errors_count1,
-			errors_count2, errors_count3, errors_count4 );
+		mavlink_msg_sys_status_pack( mavlink_system.sysid,
+									 mavlink_system.compid,
+									 get_channel_buf( chan ),
+									 onboard_control_sensors_present,
+									 onboard_control_sensors_enabled,
+									 onboard_control_sensors_health,
+									 load,
+									 voltage_battery,
+									 current_battery,
+									 battery_remaining,
+									 drop_rate_comm,
+									 errors_comm,
+									 errors_count1,
+									 errors_count2,
+									 errors_count3,
+									 errors_count4 );
 		comms_send_msg( chan );
 	}
 }
@@ -610,14 +637,6 @@ void mavlink_stream_highres_imu( mavlink_channel_t chan ) {
 		uint16_t fields_updated = 0;
 
 		if ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
-			/*
-xacc = fix16_to_float(_sensors.imu.accel.x);
-yacc = fix16_to_float(_sensors.imu.accel.y);
-zacc = fix16_to_float(_sensors.imu.accel.z);
-xgyro = fix16_to_float(_sensors.imu.gyro.x);
-ygyro = fix16_to_float(_sensors.imu.gyro.y);
-zgyro = fix16_to_float(_sensors.imu.gyro.z);
-*/
 			// Output our estimated values here
 			xacc = fix16_to_float( _state_estimator.ax );
 			yacc = fix16_to_float( _state_estimator.ay );
