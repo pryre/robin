@@ -71,7 +71,7 @@ static void controller_set_input_failsafe( command_input_t* input ) {
 }
 
 // Technique adapted from the Pixhawk multirotor control scheme (~December 2018)
-static void rates_from_attitude( v3d* rates, const qf16* q_sp, const qf16* q,
+static void rot_error_from_attitude( v3d* Re, const qf16* q_sp, const qf16* q,
 								 const fix16_t yaw_w ) {
 	/*
 	//XXX: Shorthand method that doesn't allow for separate yaw tuning
@@ -128,9 +128,7 @@ static void rates_from_attitude( v3d* rates, const qf16* q_sp, const qf16* q,
 	qf16_mul( &qd, &qd_red, &q_mix );
 	qf16_normalize_to_unit( &qd, &qd );
 
-	v3d e_R;
-	qf16_basis_error( &e_R, q, &qd );
-	v3d_mul_s( rates, &e_R, get_param_fix16( PARAM_MC_ANGLE_P ) );
+	qf16_basis_error( e_R, q, &qd );
 }
 
 static void controller_run( uint32_t time_now ) {
@@ -244,11 +242,14 @@ static void controller_run( uint32_t time_now ) {
 			yaw_w = 0;
 		}
 
+		v3d e_R;
+		rot_error_from_attitude( &e_R,
+								 &_control_input.q,
+								 &_state_estimator.attitude,
+								 yaw_w );
+
 		v3d rates_sp;
-		rates_from_attitude( &rates_sp,
-							 &_control_input.q,
-							 &_state_estimator.attitude,
-							 yaw_w );
+		v3d_mul_s( &rates_sp, &e_R, get_param_fix16( PARAM_MC_ANGLE_P ) );
 
 		// Set goal rates
 		goal_r = rates_sp.x;
