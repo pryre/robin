@@ -422,6 +422,7 @@ void calc_mixer_output( void ) {
 				if ( prescaled_outputs[i] > max_output )
 					max_output = prescaled_outputs[i];
 			}
+
 		} else {
 			// zero motor outputs as we don't want any output at all for safety
 			prescaled_outputs[i] = 0;
@@ -431,7 +432,7 @@ void calc_mixer_output( void ) {
 	// saturate outputs to maintain controllability even during aggressive
 	// maneuvers
 	if ( max_output > _fc_1 )
-		scale_factor = _fc_1 / max_output;
+		scale_factor = fix16_div(_fc_1, max_output);
 
 	for ( uint8_t i = 0; i < MIXER_NUM_MOTORS; i++ ) {
 		if ( _mixer_to_use->output_type[i] == IO_TYPE_OM ) {
@@ -439,6 +440,7 @@ void calc_mixer_output( void ) {
 		} else {
 			actuator_control_g0m_[i] = prescaled_outputs[i];
 		}
+
 	}
 }
 
