@@ -10,9 +10,9 @@
 
 - [Estimator](/lib/param_generator/PARAMS.md#Estimator)
 
-- [Motor Mixer](/lib/param_generator/PARAMS.md#Motor Mixer)
+- [Motor Mixer](/lib/param_generator/PARAMS.md#Motor-Mixer)
 
-- [RC Input](/lib/param_generator/PARAMS.md#RC Input)
+- [RC Input](/lib/param_generator/PARAMS.md#RC-Input)
 
 - [Sensors](/lib/param_generator/PARAMS.md#Sensors)
 
