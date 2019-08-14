@@ -399,17 +399,17 @@ static inline void qf16_align_to_axis( qf16* dest, const qf16* input, const qf16
 //to rotate q1 to q2, in the frame of q1
 //This could be used to calculate angular control error, with q1 being the
 //state, and q2 being the reference
-static inline void qf16_basis_error( v3d* dest, const qf16* q1, const qf16* q2 ) {
-	qf16 qe;
-	qf16_inverse( &qe, q1 );
-	qf16_normalize_to_unit( &qe, &qe );
-	qf16_mul( &qe, &qe, q2 );
-	qf16_normalize_to_unit( &qe, &qe );
+static inline void qf16_basis_error( v3d* we, qf16* qe, const qf16* q1, const qf16* q2 ) {
+	//qf16 qe;
+	qf16_inverse( qe, q1 );
+	qf16_normalize_to_unit( qe, qe );
+	qf16_mul( qe, qe, q2 );
+	qf16_normalize_to_unit( qe, qe );
 
 	// using sin(alpha/2) scaled rotation axis as attitude error (see quaternion definition by axis angle)
 	// also taking care of the antipodal unit quaternion ambiguity
-	qf16_to_v3d( dest, &qe );
-	v3d_mul_s( dest, dest, fix16_mul( _fc_2, fix16_sign_no_zero( qe.a ) ) );
+	qf16_to_v3d( we, qe );
+	v3d_mul_s( we, we, fix16_mul( _fc_2, fix16_sign_no_zero( qe->a ) ) );
 }
 
 static inline void qf16_i_rotate( v3d* dest, const qf16* q, const v3d* v ) {
