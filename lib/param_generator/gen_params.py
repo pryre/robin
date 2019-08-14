@@ -205,6 +205,9 @@ def gen_md(params, param_groups, filepath):
 		str_md = "# Parameter File Reference\n\n"
 		param_gen_md.write(str_md)
 
+		for i in range(len(param_groups)):
+			param_gen_md.write("- [%s](/lib/param_generator/PARAMS.md#%s)\n\n" % (param_groups[i],param_groups[i]))
+
 		str_md_tab = "Name | Type | Description | Default | Unit | Options | Reboot\n--- | --- | --- | ---:| --- | --- | ---\n"
 
 		for i in range(len(param_groups)):

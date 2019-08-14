@@ -1,5 +1,23 @@
 # Parameter File Reference
 
+- [Battery](/lib/param_generator/PARAMS.md#Battery)
+
+- [Calibration](/lib/param_generator/PARAMS.md#Calibration)
+
+- [Communication](/lib/param_generator/PARAMS.md#Communication)
+
+- [Control](/lib/param_generator/PARAMS.md#Control)
+
+- [Estimator](/lib/param_generator/PARAMS.md#Estimator)
+
+- [Motor Mixer](/lib/param_generator/PARAMS.md#Motor Mixer)
+
+- [RC Input](/lib/param_generator/PARAMS.md#RC Input)
+
+- [Sensors](/lib/param_generator/PARAMS.md#Sensors)
+
+- [System](/lib/param_generator/PARAMS.md#System)
+
 ## Battery
 
 Name | Type | Description | Default | Unit | Options | Reboot
