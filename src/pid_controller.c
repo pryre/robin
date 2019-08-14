@@ -9,7 +9,6 @@ extern "C" {
 // By default, pass prev_x as 0, unless you know the first measurement
 void pid_reset( pid_controller_t* pid, fix16_t prev_x ) {
 	pid->integrator = 0;
-	pid->prev_e = 0;
 	pid->prev_x = prev_x;
 }
 
@@ -84,9 +83,10 @@ fix16_t pid_step( pid_controller_t* pid, fix16_t dt, fix16_t sp, fix16_t x ) {
 	if ( dt > 0 ) {
 		//==-- Derivative
 		if ( pid->kd > 0 ) {
-			fix16_t de = fix16_div( fix16_sub( error, pid->prev_e ), dt );
+			//Use dx instead of de to improve stability (removes noise due to changing reference)
+			fix16_t dx = fix16_div( fix16_sub( x, pid->prev_x ), dt );
 
-			d_term = fix16_mul( pid->kd, de );
+			d_term = -fix16_mul( pid->kd, dx );
 		}
 
 		//==-- Integrator
@@ -99,8 +99,7 @@ fix16_t pid_step( pid_controller_t* pid, fix16_t dt, fix16_t sp, fix16_t x ) {
 		}
 	}
 
-	// Sum three terms: u = p_term + i_term - d_term
-	// Sum three terms: u = p_term + i_term + de_term
+	// Sum three terms: u = p_term + i_term + d_term
 	fix16_t u = fix16_add( p_term, d_term );
 	fix16_t ui = fix16_add( u, i_term );
 
@@ -119,7 +118,6 @@ fix16_t pid_step( pid_controller_t* pid, fix16_t dt, fix16_t sp, fix16_t x ) {
 
 	// Save running values
 	pid->prev_x = pid->x;
-	pid->prev_e = error;
 
 	return pid->output;
 }
