@@ -77,22 +77,22 @@ posix_serial_run: posix_serial
 	@exec ./lib/scripts/sitl_serial_run.sh $(SERIAL_DEVICE) $(SERIAL_DEVICE_2)
 
 # Naze32 Rev.5 (Breezy)
-naze32_rev5: param_gen
+breezy_naze32_rev5: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
-naze32_rev5_flash: naze32_rev5
-	stm32flash -w build/robin_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+breezy_naze32_rev5_flash: breezy_naze32_rev5
+	stm32flash -w build/robin_breezy_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
-naze32_rev5_reflash: naze32_rev5 mavlink_bootloader sleep naze32_rev5_flash
+breezy_naze32_rev5_reflash: breezy_naze32_rev5 mavlink_bootloader sleep breezy_naze32_rev5_flash
 
 # Naze32 Rev.6 (Breezy)
-naze32_rev6: param_gen
+breezy_naze32_rev6: param_gen
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
-naze32_rev6_flash: naze32_rev6
-	stm32flash -w build/robin_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
+breezy_naze32_rev6_flash: breezy_naze32_rev6
+	stm32flash -w build/robin_breezy_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
 
-naze32_rev6_reflash: naze32_rev6 mavlink_bootloader sleep naze32_rev6_flash
+breezy_naze32_rev6_reflash: breezy_naze32_rev6 mavlink_bootloader sleep breezy_naze32_rev6_flash
 
 # Naze32 Rev.5 (LibOpenCM3)
 opencm3_naze32_rev5: param_gen

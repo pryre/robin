@@ -5,7 +5,7 @@
 */
 
 #include <breezystm32.h>
-#include <drivers/naze32_common/drv_bmp280.h>
+#include <drivers/breezy_naze32_common/drv_bmp280.h>
 
 #include <math.h>
 

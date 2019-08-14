@@ -19,7 +19,7 @@
    along with BreezySTM32.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "drivers/naze32_common/drv_mpu.h"
+#include "drivers/breezy_naze32_common/drv_mpu.h"
 #include "breezystm32.h"
 
 #include <math.h>
@@ -27,7 +27,7 @@
 // ======================================================================
 uint8_t mpuLowPassFilter;
 
-uint16_t mpu6500_init( accel_fsr_e accelFSR, gyro_fsr_e gyroFSR ) {
+uint16_t mpu6050_init( accel_fsr_e accelFSR, gyro_fsr_e gyroFSR ) {
 	// Default acc1G. Modified once by for old (hopefully nonexistent outside of
 	// clones) parts
 	uint16_t acc1G = 4096;
@@ -37,10 +37,23 @@ uint16_t mpu6500_init( accel_fsr_e accelFSR, gyro_fsr_e gyroFSR ) {
 	uint8_t tmp[6];
 	mpuReadRegisterI2C( MPU_RA_XA_OFFS_H, tmp, 6 );
 	uint8_t rev = ( ( tmp[5] & 0x01 ) << 2 ) | ( ( tmp[3] & 0x01 ) << 1 ) | ( tmp[1] & 0x01 );
-
-	// No difference in accel revisions
-	if ( !rev )
-		failureMode( 5 );
+	if ( rev ) {
+		// Congrats, these parts are better
+		if ( rev == 1 ) {
+			acc1G >>= 1;
+		} else if ( rev == 2 ) {
+		} else {
+			failureMode( 5 );
+		}
+	} else {
+		mpuReadRegisterI2C( MPU_RA_PRODUCT_ID, &rev, 1 );
+		rev &= 0x0F;
+		if ( !rev ) {
+			failureMode( 5 );
+		} else if ( rev == 4 ) {
+			acc1G >>= 1;
+		}
+	}
 
 	// Device reset
 	mpuWriteRegisterI2C( MPU_RA_PWR_MGMT_1, 0x80 ); // Device reset

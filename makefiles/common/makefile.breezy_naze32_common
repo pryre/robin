@@ -6,7 +6,7 @@ DEVICE_BUILD_OBJCOPY = arm-none-eabi-objcopy
 ###############################################################################
 
 # Naze32 specific drivers
-PROJECT_SRC_FILES += $(wildcard $(ROOT)/src/drivers/naze32_common/*.c)
+PROJECT_SRC_FILES += $(wildcard $(ROOT)/src/drivers/breezy_naze32_common/*.c)
 
 # Change this to wherever you put BreezySTM32
 BREEZY_DIR	:= $(ROOT)/lib/BreezySTM32

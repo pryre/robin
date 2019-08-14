@@ -1,13 +1,13 @@
 ###############################################################################
 
-PROJECT_BUILD_TYPE = naze32_rev6
+PROJECT_BUILD_TYPE = breezy_naze32_rev5
 
 ###############################################################################
 
 include ../common/makefile.project_common
 
 # Naze32 rev5 specific drivers
-include ../common/makefile.naze32_common
+include ../common/makefile.breezy_naze32_common
 PROJECT_SRC_FILES += $(wildcard $(ROOT)/src/drivers/$(PROJECT_BUILD_TYPE)/*.c)
 
 include ../common/makefile.build_common

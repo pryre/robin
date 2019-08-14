@@ -2,9 +2,9 @@
 
 #include "drivers/drv_sensors.h"
 #include "drivers/drv_system.h"
-#include "drivers/naze32_common/drv_bmp280.h"
-#include "drivers/naze32_common/drv_hmc5883l.h"
-#include "drivers/naze32_common/drv_mpu.h"
+#include "drivers/breezy_naze32_common/drv_bmp280.h"
+#include "drivers/breezy_naze32_common/drv_hmc5883l.h"
+#include "drivers/breezy_naze32_common/drv_mpu.h"
 
 #include "calibration.h"
 #include "params.h"
