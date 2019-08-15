@@ -99,7 +99,7 @@ static void system_check_bootjump(void) {
         __set_MSP(*((uint32_t *)BOOT_ADDR_P));
         bootJump = (void(*)(void))(*((uint32_t *) BOOT_ADDR));
         bootJump();
-		
+
 		//Catch here in case the bootloader jumps back for some reason
         while (1);
     }
@@ -109,10 +109,10 @@ void system_init( void ) {
 	rcc_setup();
 
 	//Bootloader jump Should be done as quickly as possible after main / rcc_setup
-	system_check_bootjump();	
+	system_check_bootjump();
 
 	system_debug_print( "--== robin ==--" );
-	
+
 	clock_setup();
 }
 
