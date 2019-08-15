@@ -921,7 +921,7 @@ void mavlink_prepare_param_value( mavlink_message_t* msg, uint32_t index ) {
 	} u; // The bytes are translated to the right unit on receiving, but need to
 	// be sent as a "float"
 
-	switch ( _params.types[index] ) {
+	switch ( get_param_type(index) ) {
 	case MAVLINK_TYPE_UINT32_T: {
 		u.u = get_param_uint( index );
 		param_ok = true;
@@ -948,7 +948,7 @@ void mavlink_prepare_param_value( mavlink_message_t* msg, uint32_t index ) {
 									  msg,
 									  &_param_names[index][0], // String of name
 									  u.f,					   // Value (always as float)
-									  _params.types[index],	// From MAV_PARAM_TYPE
+									  get_param_type(index),	// From MAV_PARAM_TYPE
 									  PARAMS_COUNT,			   // Total number of parameters
 									  index );
 	} else {

@@ -24,12 +24,13 @@ extern "C" {
 params_t _params;
 const char _param_names[PARAMS_COUNT]
 					   [MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
+const MAV_PARAM_TYPE _param_types[PARAMS_COUNT];
 
 // local function definitions
 void init_param_uint( param_id_t id, const uint32_t value ) {
 	// memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
 	_params.values[id] = value;
-	_params.types[id] = MAVLINK_TYPE_UINT32_T;
+	//_params.types[id] = MAVLINK_TYPE_UINT32_T;
 }
 
 void init_param_int( param_id_t id, const int32_t value ) {
@@ -42,7 +43,7 @@ void init_param_int( param_id_t id, const int32_t value ) {
 
 	// memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
 	_params.values[id] = u.u;
-	_params.types[id] = MAVLINK_TYPE_INT32_T;
+	//_params.types[id] = MAVLINK_TYPE_INT32_T;
 }
 
 void init_param_fix16( param_id_t id, const fix16_t value ) {
@@ -55,7 +56,7 @@ void init_param_fix16( param_id_t id, const fix16_t value ) {
 
 	// memcpy(_params.names[id], name, PARAMS_NAME_LENGTH);
 	_params.values[id] = u.u;
-	_params.types[id] = MAVLINK_TYPE_FLOAT;
+	//_params.types[id] = MAVLINK_TYPE_FLOAT;
 }
 
 // function definitions
@@ -186,7 +187,7 @@ void get_param_name( param_id_t id, char name[PARAMS_NAME_LENGTH] ) {
 }
 
 MAV_PARAM_TYPE get_param_type( param_id_t id ) {
-	return _params.types[id];
+	return _param_types[id];
 }
 
 bool set_param_uint( param_id_t id, uint32_t value ) {

@@ -22,7 +22,6 @@ typedef struct {
 	uint8_t magic_be; // magic number, should be 0xBE
 
 	uint32_t values[PARAMS_COUNT];
-	MAV_PARAM_TYPE types[PARAMS_COUNT];
 
 	uint8_t magic_ef; // magic number, should be 0xEF
 	uint8_t chk;	  // XOR checksum

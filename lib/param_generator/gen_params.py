@@ -315,6 +315,7 @@ typedef enum {
 } param_id_t;
 
 extern const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
+extern const MAV_PARAM_TYPE _param_types[PARAMS_COUNT];
 
 void params_init(void);
 void param_change_callback(param_id_t id);
@@ -401,13 +402,33 @@ def gen_c(params, filepath):
 		str_c = "}\n\n"
 		param_gen_c.write(str_c)
 
-
 		str_c = "const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN] = {\n"
 		param_gen_c.write(str_c)
 
 		for p in params:
 			for param_id, details in p.items():
 				str_c = "\t\"" + details["name"] + "\",\n"
+				param_gen_c.write(str_c)
+
+		str_c = "};\n\n"
+		param_gen_c.write(str_c)
+
+		str_c = "const MAV_PARAM_TYPE _param_types[PARAMS_COUNT] = {\n"
+		param_gen_c.write(str_c)
+
+		for p in params:
+			for param_id, details in p.items():
+				mavlink_type = ''
+				if details["type"] == "uint":
+					mavlink_type = "MAVLINK_TYPE_UINT32_T"
+				elif details["type"] == "int":
+					mavlink_type = "MAVLINK_TYPE_INT32_T"
+				elif details["type"] == "float":
+					mavlink_type = "MAVLINK_TYPE_FLOAT"
+				else:
+					raise ValueError("%s: Unsupported type option (%s)" % (param_id, details["type"]))
+
+				str_c = "\t" + mavlink_type + ",\n"
 				param_gen_c.write(str_c)
 
 		str_c = "};\n\n"
