@@ -6,6 +6,17 @@
 #include <libopencm3/stm32/flash.h>
 
 
+#include "mavlink_system.h"
+#include "params.h"
+
+#include "drivers/drv_system.h"
+#include "fix16.h"
+#include "fixextra.h"
+
+#include "robin_itoa.h"
+#include <string.h>
+
+
 #define ASSERT_CONCAT_( a, b ) a##b
 #define ASSERT_CONCAT( a, b ) ASSERT_CONCAT_( a, b )
 #define ct_assert( e ) \
@@ -109,26 +120,65 @@ bool drv_flash_write( void ) {
 
 	// XXX: Could try multiple times for the rest
 
+	flash_wait_for_last_operation();
+	flash_clear_status_flags();
+
 	flash_erase_page(FLASH_OPERATION_ADDRESS);
 	flash_status = flash_get_status_flags();
+	bool keep_going = true;
 
-	//XXX: Could return full status here for better handling
-	if(flash_status != FLASH_SR_EOP)
-		return false;	//flash_status
+	//Flash is either busy or in error state
+	if(flash_status != FLASH_SR_EOP) {
+		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[FLASH] Invalid write-start status: 0x";
+		char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+		robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, flash_status, 16);
+		strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+		mavlink_queue_broadcast_debug( text );
 
-	// programming flash memory
-	for(uint16_t i=0; i<sizeof( params_t ); i += 4) 	{
-		/*programming word data*/
-		flash_program_word( FLASH_OPERATION_ADDRESS+i, *(uint32_t*)( (char*)&_params + i ) );
-		flash_status = flash_get_status_flags();
+		keep_going = false;
+	}
 
-		//Check to see if there was an issue
-		if(flash_status != FLASH_SR_EOP)
-			return false; //flash_status
+	if(keep_going) {
+		// programming flash memory
+		uint16_t i = 0;
+		for(i=0; i<sizeof( params_t ); i += 4) 	{
+			// Programming word data
+			flash_program_word( FLASH_OPERATION_ADDRESS+i, *(uint32_t*)( (char*)&_params + i ) );
+			flash_status = flash_get_status_flags();
 
-		// Verify programmed data is correct
-		if( *((uint32_t*)(FLASH_OPERATION_ADDRESS+i)) != *(uint32_t*)( (char*)&_params + i ) )
-			return false;	//FLASH_WRONG_DATA_WRITTEN;
+			// Check to see if there was an issue
+			if(flash_status != FLASH_SR_EOP) {
+				keep_going = false;
+				break;
+			}
+		}
+
+		if(!keep_going) {
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[FLASH] Write error: 0x";
+			char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, flash_status, 16);
+			strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			strncat(text," (0x",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, FLASH_OPERATION_ADDRESS+i, 16);
+			strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			strncat(text,")",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			mavlink_queue_broadcast_debug( text );
+		}
+	}
+
+	if(keep_going) {
+		// programming flash memory
+		for(uint16_t i=0; i<sizeof( params_t ); i += 4) 	{
+			// Verify programmed data is correct
+			if( *((uint32_t*)(FLASH_OPERATION_ADDRESS+i)) != *(uint32_t*)( (char*)&_params + i ) ) {
+				keep_going = false;
+				break;
+			}
+		}
+
+		if(!keep_going) {
+			mavlink_queue_broadcast_debug( "[FLASH] Verify write error" );
+		}
 	}
 
 	flash_lock();
@@ -159,5 +209,5 @@ bool drv_flash_write( void ) {
 	}
 	*/
 
-	return true;
+	return keep_going;
 }
