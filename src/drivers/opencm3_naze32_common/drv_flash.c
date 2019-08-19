@@ -29,9 +29,11 @@
 #endif
 
 #define FLASH_PAGE_SIZE ( (uint16_t)0x400 )
-// if sizeof(_params) is over this number, compile-time error will occur. so,
-// need to add another page to config data.
-#define FLASH_CONFIG_SIZE ( FLASH_PAGE_SIZE * 3 )
+
+// if sizeof(_params) is over FLASH_CONFIG_SIZE number, compile-time error will occur.
+// So need to add another page to the number of pages to use (FLASH_NUM_PAGES_TO_USE).
+#define FLASH_NUM_PAGES_TO_USE 1
+#define FLASH_CONFIG_SIZE ( FLASH_PAGE_SIZE * FLASH_NUM_PAGES_TO_USE )
 
 #define FLASH_MAGIC_BE 0xBE
 #define FLASH_MAGIC_EF 0xEF
@@ -39,10 +41,10 @@
 
 params_t _params;
 
-
+// Calculate the address (from the back of memory) to place the flash parameters (i.e. flash_end - sizeof( params_t ), but in pages)
+// This also means that the data will be aligned with the page start
 static const uint32_t FLASH_OPERATION_ADDRESS = 0x08000000 + ( FLASH_PAGE_SIZE * ( FLASH_PAGE_COUNT - ( FLASH_CONFIG_SIZE / 1024 ) ) );
 static uint64_t _eeprom_version;
-
 
 static bool drv_flash_valid( void ) {
 	const params_t* pm_ptr = (const params_t*)FLASH_OPERATION_ADDRESS;
@@ -123,19 +125,27 @@ bool drv_flash_write( void ) {
 	flash_wait_for_last_operation();
 	flash_clear_status_flags();
 
-	flash_erase_page(FLASH_OPERATION_ADDRESS);
-	flash_status = flash_get_status_flags();
 	bool keep_going = true;
 
-	//Flash is either busy or in error state
-	if(flash_status != FLASH_SR_EOP) {
-		char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[FLASH] Invalid write-start status: 0x";
-		char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
-		robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, flash_status, 16);
-		strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
-		mavlink_queue_broadcast_debug( text );
+	//Clear out the pages we need
+	for(uint8_t i=0;i<FLASH_NUM_PAGES_TO_USE;i++) {
+		//Address of page to erase
+		uint32_t epage = FLASH_OPERATION_ADDRESS + (i*FLASH_PAGE_SIZE);
 
-		keep_going = false;
+		flash_erase_page(epage);
+		flash_status = flash_get_status_flags();
+
+		//Flash is either busy or in error state
+		if(flash_status != FLASH_SR_EOP) {
+			char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] = "[FLASH] Invalid write-start status: 0x";
+			char numtext[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN];
+			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, flash_status, 16);
+			strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
+			mavlink_queue_broadcast_debug( text );
+
+			keep_going = false;
+			break;
+		}
 	}
 
 	if(keep_going) {
