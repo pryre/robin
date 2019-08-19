@@ -140,11 +140,11 @@ RATE_CONTROL | float | Update rate of the controller | 250.0 |  | scalar | True
 MC_FUSE_YAWRATE | uint | If set to true (1), the control scheme will utilise the full attitude reference by fusing the body_rate_z value with the references calculated by the attitude controller. This parameter bypasses the IGNORE_YAWRATE flag in the attitude reference message | 0 |  | scalar | False
 MC_ROLLRATE_P | float | Proportional gain for roll rate PID | 7.5 |  | scalar | False
 MC_ROLLRATE_I | float | Integral gain for roll rate PID | 1.0 |  | scalar | False
-MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.5 |  | scalar | False
+MC_ROLLRATE_D | float | Derivative gain for roll rate PID | 0.15 |  | scalar | False
 MC_ROLLRATE_MAX | float | Maximum allowed command for roll rate | 3.14159 | rad/s | scalar | False
 MC_PITCHRATE_P | float | Proportional gain for pitch rate PID | 7.5 |  | scalar | False
 MC_PITCHRATE_I | float | Integral gain for pitch rate PID | 1.0 |  | scalar | False
-MC_PITCHRATE_D | float | Derivative gain for pitch rate PID | 0.5 |  | scalar | False
+MC_PITCHRATE_D | float | Derivative gain for pitch rate PID | 0.15 |  | scalar | False
 MC_PITCHRATE_MAX | float | Maximum allowed command for pitch rate | 3.14159 | rad/s | scalar | False
 MC_YAWRATE_P | float | Proportional gain for yaw rate PID | 10.0 |  | scalar | False
 MC_YAWRATE_I | float | Integral gain for yaw rate PID | 5.0 |  | scalar | False

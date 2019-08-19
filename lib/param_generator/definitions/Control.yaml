@@ -43,7 +43,7 @@ PARAM_PID_ROLL_RATE_D:
   reboot: false
   value:
     option: "scalar"
-    default: 0.5
+    default: 0.15
     function: "pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));"
 ---
 PARAM_MAX_ROLL_RATE:
@@ -84,7 +84,7 @@ PARAM_PID_PITCH_RATE_D:
   reboot: false
   value:
     option: "scalar"
-    default: 0.5
+    default: 0.15
     function: "pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));"
 ---
 PARAM_MAX_PITCH_RATE:
