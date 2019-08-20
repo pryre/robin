@@ -5,14 +5,9 @@
 
 #include <libopencm3/stm32/flash.h>
 
-
-#include "mavlink_system.h"
 #include "params.h"
 
-#include "drivers/drv_system.h"
-#include "fix16.h"
-#include "fixextra.h"
-
+#include "mavlink_system.h"
 #include "robin_itoa.h"
 #include <string.h>
 
