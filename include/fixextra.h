@@ -119,6 +119,20 @@ static inline void v3d_abs( v3d* dest, const v3d* v ) {
 	dest->z = fix16_abs( v->z );
 }
 
+/*
+static inline void qf16_dcm_x( v3d* b_x, const qf16* q ) {
+	b_x->x = fix16_add( fix16_sq( q->a ), fix16_add( fix16_sq( q->b ), fix16_add( -fix16_sq( q->c ), fix16_sq( -q->d ) ) ) );
+	b_x->y = fix16_mul( _fc_2, fix16_add( fix16_mul( q->b, q->c ), fix16_mul( q->a, q->d ) ) );
+	b_x->z = fix16_mul( _fc_2, fix16_sub( fix16_mul( q->b, q->d ), fix16_mul( q->a, q->c ) ) );
+}
+
+static inline void qf16_dcm_y( v3d* b_y, const qf16* q ) {
+	b_y->x = fix16_mul( _fc_2, fix16_sub( fix16_mul( q->b, q->c ), fix16_mul( q->a, q->d ) ) );
+	b_y->y = fix16_add( fix16_sq( q->a ), fix16_add( -fix16_sq( q->b ), fix16_add( fix16_sq( q->c ), fix16_sq( -q->d ) ) ) );
+	b_y->z = fix16_mul( _fc_2, fix16_add( fix16_mul( q->a, q->b ), fix16_mul( q->c, q->d ) ) );
+}
+*/
+
 static inline void qf16_dcm_z( v3d* b_z, const qf16* q ) {
 	b_z->x = fix16_mul( _fc_2, fix16_add( fix16_mul( q->a, q->c ), fix16_mul( q->b, q->d ) ) );
 	b_z->y = fix16_mul( _fc_2, fix16_sub( fix16_mul( q->c, q->d ), fix16_mul( q->a, q->b ) ) );
@@ -173,14 +187,19 @@ static inline void qf16_from_shortest_path( qf16* dest, const v3d* v1, const v3d
 }
 
 //TODO: Should use the mavlink conversions as a base if we move to float
+static inline fix16_t heading_from_quat( qf16* q ) {
+	return fix16_atan2( fix16_mul( _fc_2, fix16_add( fix16_mul( q->a, q->d ), fix16_mul( q->b, q->c ) ) ),
+						fix16_sub( _fc_1, fix16_mul( _fc_2, fix16_add( fix16_mul( q->c, q->c ), fix16_mul( q->d, q->d ) ) ) ) );
+
+}
+
 static inline void euler_from_quat( qf16* q, fix16_t* phi, fix16_t* theta, fix16_t* psi ) {
 	*phi = fix16_atan2( fix16_mul( _fc_2, fix16_add( fix16_mul( q->a, q->b ), fix16_mul( q->c, q->d ) ) ),
 						fix16_sub( _fc_1, fix16_mul( _fc_2, fix16_add( fix16_mul( q->b, q->b ), fix16_mul( q->c, q->c ) ) ) ) );
 
 	*theta = fix16_asin( fix16_mul( _fc_2, fix16_sub( fix16_mul( q->a, q->c ), fix16_mul( q->d, q->b ) ) ) );
 
-	*psi = fix16_atan2( fix16_mul( _fc_2, fix16_add( fix16_mul( q->a, q->d ), fix16_mul( q->b, q->c ) ) ),
-						fix16_sub( _fc_1, fix16_mul( _fc_2, fix16_add( fix16_mul( q->c, q->c ), fix16_mul( q->d, q->d ) ) ) ) );
+	*psi = heading_from_quat(q);
 }
 
 static inline void quat_from_euler( qf16* q, fix16_t phi, fix16_t theta, fix16_t psi ) {
