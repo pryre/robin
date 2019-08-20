@@ -12,14 +12,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
 #define DRV_PWM_BASE_FREQ 1000000
 #define DRV_PWM_BASE_PERIOD 20000
 
 #define PPM_PULSE_TYPE_POSITIVE 1
 #define PPM_PULSE_TYPE_NEGATIVE 2
 #define PPM_PULSE_TYPE PPM_PULSE_TYPE_POSITIVE
-
 
 typedef struct {
 	uint32_t timer_peripheral;
@@ -278,9 +276,15 @@ static void drv_ppm_decode_frame_width(uint32_t ppm_width) {
 			}
 
 			ppm_cur_pulse_ = 0;
-		} else {
+		}
+		//XXX:	The else statement below limits us to exactly DRV_PPM_MAX_INPUTS channels.
+		//		If this is left out, we are simply ignoring the additional channels until
+		//		We reach a sync. Then we do the copy and reset.
+		/*
+		else {
 			ppm_data_valid_ = false;
 		}
+		*/
 
 		//say("sync");
 	} else {
