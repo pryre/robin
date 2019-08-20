@@ -81,6 +81,8 @@ static void controller_set_input_failsafe( command_input_t* input ) {
 // Technique adapted from the Pixhawk multirotor control scheme (~December 2018)
 static void rot_error_from_attitude( v3d* e_R, qf16* qe, const qf16* q_sp, const qf16* q,
 								 const fix16_t yaw_w ) {
+
+
 	/*
 	//XXX: Shorthand method that doesn't allow for separate yaw tuning
 	v3d e_R;
@@ -111,6 +113,9 @@ static void rot_error_from_attitude( v3d* e_R, qf16* qe, const qf16* q_sp, const
 		qf16_mul( &qd_red, &qd_red, q );
 	}
 
+	//XXX: Could take a shortcut if yaw_w == 0 (for manual control)
+	//qf16 qd;
+	//if( yaw_w > 0 ) {
 	qf16_normalize_to_unit( &qd_red, &qd_red );
 
 	// mix full and reduced desired attitude
@@ -135,6 +140,10 @@ static void rot_error_from_attitude( v3d* e_R, qf16* qe, const qf16* q_sp, const
 	qf16 qd;
 	qf16_mul( &qd, &qd_red, &q_mix );
 	qf16_normalize_to_unit( &qd, &qd );
+	//} else {
+	//	//XXX: If yaw_w is 0.0 (e.g. no z-axis rot), then shortcut straight to qd
+	//	qf16_normalize_to_unit( &qd, &qd_red );
+	//}
 
 	qf16_basis_error( e_R, qe, q, &qd );
 }
@@ -166,17 +175,35 @@ static void controller_run( uint32_t time_now ) {
 		}
 		case MAIN_MODE_STABILIZED: {
 			// Manual stabilize mode
+			//XXX: Currently this method (just this section) takes ~300ms
+
 			// Roll/pitch angle and yaw rate
 			input.input_mask = 0;
 			input.input_mask |= CMD_IN_IGNORE_ROLL_RATE;
 			input.input_mask |= CMD_IN_IGNORE_PITCH_RATE;
 
-			fix16_t man_roll = fix16_mul( _sensors.rc_input.c_r,
-										  get_param_fix16( PARAM_MAX_ROLL_ANGLE ) );
-			fix16_t man_pitch = fix16_mul( _sensors.rc_input.c_p,
-										   get_param_fix16( PARAM_MAX_PITCH_ANGLE ) );
+			// Generate the desired thrust vector
+			v3d stab_z;
+			stab_z.x = fix16_sin( fix16_mul( _sensors.rc_input.c_p, get_param_fix16( PARAM_MAX_PITCH_ANGLE ) ) );
+			stab_z.y = -fix16_sin( fix16_mul( _sensors.rc_input.c_r, get_param_fix16( PARAM_MAX_ROLL_ANGLE ) ) );
+			stab_z.z = fix16_sqrt( fix16_sub(_fc_1, fix16_add( fix16_sq(stab_z.x), fix16_sq(stab_z.y) ) ) );
 
-			quat_from_euler( &input.q, man_roll, man_pitch, 0 );
+			//Quaternion from vertical
+			v3d unit_z;
+			unit_z.x = 0;
+			unit_z.y = 0;
+			unit_z.z = _fc_1;
+			qf16 q_stab_b;
+			qf16_from_shortest_path(&q_stab_b, &unit_z, &stab_z);
+
+			//Heading rotation for body->inertial
+			qf16 q_rot_base;
+			qf16_from_axis_angle( &q_rot_base, &unit_z, heading_from_quat( &_state_estimator.attitude ) );
+
+			qf16_mul( &input.q, &q_rot_base, &q_stab_b );
+			//XXX: Should already be close to normalised, but will be redone later before use
+
+			input.q.a = _fc_1;
 
 			input.r = 0;
 			input.p = 0;
@@ -250,6 +277,7 @@ static void controller_run( uint32_t time_now ) {
 	v3d rates_ref = {0,0,0};
 
 	// If we should listen to attitude input
+	//XXX: Currently this method takes ~700ms just for the atittude controller
 	if ( !( _control_input.input_mask & CMD_IN_IGNORE_ATTITUDE ) ) {
 		fix16_t yaw_w = get_param_fix16( PARAM_MC_ANGLE_YAW_W );
 
