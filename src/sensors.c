@@ -444,6 +444,12 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 
 			attempted_rc_default_mode_change_ = true;
 		}
+	} else if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_TIMEOUT ) &&
+				( _sensors.rc_input.raw[0] > 0 ) ) {
+		// Else if we have a timeout and there is some stray data,
+		// clear out the data (so mavlink, etc., also shows timeout)
+		for(int i=0; i<DRV_PPM_MAX_INPUTS; i++)
+			_sensors.rc_input.raw[i] = 0;
 	}
 
 	//==-- Safety Button
