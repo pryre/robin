@@ -435,13 +435,20 @@ static void safety_switch_update( uint32_t time_now ) {
 		_sensors.safety_button.status.new_data = false;
 	}
 
-	if ( _new_safety_button_press && ( time_now - _time_safety_button_pressed ) > 1000000 ) {
+	if ( _new_safety_button_press && ( time_now - _time_safety_button_pressed ) > get_param_uint(PARAM_SAFETY_BUTTON_HYST) ) {
 		_system_status.safety_button_status = !_system_status.safety_button_status; // Toggle arming safety
 		_new_safety_button_press = false;
 
-		// If the mav was armed and safety was switched off, disarm it
-		if ( !_system_status.safety_button_status && safety_is_armed() ) {
-			safety_request_disarm();
+		if ( safety_switch_engaged() ) {
+			//If the safety was enabled
+			mavlink_queue_broadcast_info( "[SAFETY] Safety engaged" );
+
+			// If the mav was armed, disarm it
+			if( safety_is_armed() )
+				safety_request_disarm();
+		} else {
+			// If the safety was disabled
+			mavlink_queue_broadcast_notice( "[SAFETY] Safety disengaged!" );
 		}
 
 		status_buzzer_success();

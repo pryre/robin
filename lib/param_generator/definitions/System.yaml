@@ -34,6 +34,16 @@ PARAM_RELAXED_PARAM_SET:
     option: "bool"
     default: 1
 ---
+PARAM_SAFETY_BUTTON_HYST:
+  type: "uint"
+  name: "SAFETY_HYST"
+  description: "Duration that the safety button must be pressed for to toggle"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1000000
+    unit: "us"
+---
 PARAM_FAILSAFE_THROTTLE:
   type: "float"
   name: "FAILSAFE_THRTL"
@@ -41,7 +51,7 @@ PARAM_FAILSAFE_THROTTLE:
   reboot: false
   value:
     option: "scalar"
-    default: 0.25
+    default: 0.20
 ---
 PARAM_THROTTLE_TIMEOUT:
   type: "uint"
@@ -61,7 +71,7 @@ PARAM_THROTTLE_TIMEOUT_VALUE:
   value:
     option: "scalar"
     default: 0.05
-    unit: "us"
+    unit: "%"
 ---
 PARAM_CRITICAL_TIMEOUT:
   type: "uint"

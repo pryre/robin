@@ -8,6 +8,7 @@ SERIAL_DEVICE	?= /dev/ttyUSB0
 SERIAL_BAUD		?= 921600
 MAVLINK_BAUD	?= 115200
 SERIAL_DEVICE_2 ?=
+REFLASH_SLEEP	?= 1
 
 TARGET_HEX =
 TARGET_FOLDERS = $(shell ls makefiles | grep -v common)
@@ -39,7 +40,7 @@ param_gen:
 	@python3 lib/param_generator/gen_params.py ./lib/param_generator/definitions/ ./build/ >&2
 
 sleep:
-	@sleep 1
+	@sleep $(REFLASH_SLEEP)
 
 lint:
 	@find ./include -name '*.h' -exec clang-format -i '{}' \;
