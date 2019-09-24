@@ -472,7 +472,10 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 	_sensors.safety_button.state_db = safety_button_reading;
 
 	//==-- Voltage Monitor
-	if ( get_param_uint( PARAM_BATTERY_CELL_NUM ) > 0 ) {
+	// Continue as long as the number of cells has been set,
+	// and we are ready for a new sample
+	if( ( get_param_uint( PARAM_BATTERY_CELL_NUM ) > 0 )  &&
+		( (time_us - _sensors.voltage_monitor.status.time_read) > get_param_uint(PARAM_BATTERY_PERIOD) ) ) {
 		//_sensors.voltage_monitor.state_raw =
 		// digitalIn(_sensors.voltage_monitor.gpio_p, _sensors.voltage_monitor.pin);
 		_sensors.voltage_monitor.state_raw = drv_sensors_battery_monitor_read();

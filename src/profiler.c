@@ -116,7 +116,7 @@ static void profiler_send_debug( profiler_ids_t id ) {
 			robin_itoa(numtext, MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN, max, 10);
 			strncat(text,numtext,MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
 			strncat(text,"]",MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN-1);
-			mavlink_queue_broadcast_debug( text );
+			mavlink_queue_broadcast_info( text );
 		}
 	}
 }

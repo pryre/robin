@@ -23,10 +23,11 @@
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
 BAT_TYPE | uint | See the MAV_BATTERY_TYPE enum | 0 |  | scalar | False
+BAT_PERIOD_US | uint | Time period for the battery voltage to be checked at | 10000 | us | scalar | False
 BAT_FUNC | uint | See the MAV_BATTERY_FUNCTION enum | 0 |  | scalar | False
 BAT_N_CELLS | uint | Number of cells in the battery | 0 |  | scalar | False
-BAT_V_EMPTY | float | Low cell voltage | 3.7 |  | scalar | False
-BAT_V_CHARGED | float | High cell voltage | 4.2 |  | scalar | False
+BAT_V_EMPTY | float | Low cell voltage | 3.7 | V | scalar | False
+BAT_V_CHARGED | float | High cell voltage | 4.2 | V | scalar | False
 BAT_FILTER | float | A smoothing filter for the voltage reading (0->1) | 0.8 |  | scalar | False
 BAT_V_DIV | float | Resistor voltage divider for battery sensing (-1 to use board default) | -1.0 |  | scalar | False
 BAT_LOW_THR | float | Charge state cutoff for low battery remaining (as a percentage) | 0.2 |  | scalar | False

@@ -1,7 +1,7 @@
 #include <stdbool.h>
 
-#include "adc.h"
 #include "breezystm32.h"
+#include "adc.h"
 #include "drivers/drv_sensors.h"
 
 bool drv_sensors_battery_monitor_init( void ) {

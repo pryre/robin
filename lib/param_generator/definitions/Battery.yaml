@@ -7,6 +7,16 @@ PARAM_BATTERY_TYPE:
     option: "scalar"
     default: 0
 ---
+PARAM_BATTERY_PERIOD:
+  type: "uint"
+  name: "BAT_PERIOD_US"
+  description: "Time period for the battery voltage to be checked at"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10000
+    unit: "us"
+---
 PARAM_BATTERY_FUNCTION:
   type: "uint"
   name: "BAT_FUNC"
@@ -33,6 +43,7 @@ PARAM_BATTERY_CELL_MIN:
   value:
     option: "scalar"
     default: 3.7
+    unit: "V"
 ---
 PARAM_BATTERY_CELL_MAX:
   type: "float"
@@ -42,6 +53,7 @@ PARAM_BATTERY_CELL_MAX:
   value:
     option: "scalar"
     default: 4.2
+    unit: "V"
 ---
 PARAM_BATTERY_READING_FILTER:
   type: "float"
