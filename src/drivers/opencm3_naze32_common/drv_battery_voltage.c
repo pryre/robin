@@ -10,6 +10,7 @@
 
 #include "drivers/drv_status_io.h"
 #include "drivers/drv_system.h"
+#include "mavlink_system.h"
 
 
 static bool adc_is_calibrated_ = false;
