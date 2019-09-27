@@ -29,7 +29,7 @@ To perform a accelerometer calibration:
 4. The calibration should only take a few seconds per axis, but it will need to be done for each axis, in both directions
 
 ## Radio Control
-Before performing a radio control calibration, you must first connect a PPM compatible RC reciever. For the complete calibtation, you should also set the parameters `PARAM_RC_MAP_ROLL`, `PARAM_RC_MAP_PITCH`, `PARAM_RC_MAP_YAW`, and `PARAM_RC_MAP_THROTTLE` before proceding.
+Before performing a radio control calibration, you must first connect a PPM compatible RC reciever. For the complete calibtation, you should also set the parameters `RC_MAP_ROLL`, `RC_MAP_PITCH`, `RC_MAP_YAW`, and `RC_MAP_THROTTLE` before proceding.
 
 To perform an RC calibration:
 1. Ensure RC transmitter and reciever are bound and ready. Send the initial RC calibration command:
@@ -49,3 +49,15 @@ To perform an RC calibration:
 4. Move all sticks and switches to extremes, then reissue the calibration command when done.
 
 5. Calibration should now be complete.
+
+## Battery Monitoring
+Battery monitoring can be performed in two steps.
+1. Enable monitoring by setting the number of cells of your battery with the `BATT_N_CELLS` parameter (currently only supports LIPO batteries).
+2. Attached the battery voltage to the `VBATT` pins on the flight controller
+
+---
+**Note:** The flight controllers are not protected from reverse polarity across the `VBATT` port (as it is much higher than the operating voltage). Connecting this port backwards **will destroy your flight controller**. It is highly recommended that you makke this connection in a manner that cannot be accidentally reversed (i.e. solder wires directly from your PDB to the appropriate pints on the flight controller.
+
+---
+
+Once configured and connected, you can adjust your battery readout, and the various feedback warnings via the other `BATT_*` parameters (see the parameter reference for more details.
