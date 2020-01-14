@@ -32,6 +32,8 @@ void mavlink_handle_param_request_read( mavlink_channel_t chan,
 										mavlink_status_t* status );
 void mavlink_handle_param_set( mavlink_channel_t chan, mavlink_message_t* msg,
 							   mavlink_status_t* status );
+void mavlink_handle_ping( mavlink_channel_t chan, mavlink_message_t* msg,
+							   mavlink_status_t* status );
 void mavlink_handle_set_actuator_control_target( mavlink_channel_t chan,
 												 mavlink_message_t* msg,
 												 mavlink_status_t* status );

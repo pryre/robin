@@ -35,6 +35,10 @@ static bool communication_decode( mavlink_channel_t chan, uint8_t c ) {
 				mavlink_handle_heartbeat( chan, &msg, &status );
 				break;
 			}
+			case MAVLINK_MSG_ID_PING: {
+				mavlink_handle_ping( chan, &msg, &status );
+				break;
+			}
 			case MAVLINK_MSG_ID_PARAM_REQUEST_LIST: {
 				mavlink_handle_param_request_list( chan, &msg, &status );
 				break;
