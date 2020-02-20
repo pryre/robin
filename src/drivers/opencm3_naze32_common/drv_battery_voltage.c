@@ -5,6 +5,7 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/adc.h>
+#include <libopencm3/stm32/f1/adc.h>
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/cm3/nvic.h>
 
@@ -50,8 +51,8 @@ bool drv_sensors_battery_monitor_init( void ) {
 
 	// Select the channel we want to convert. 16=temperature_sensor.
 	// Only use one channel for now (ADC_Channel_4 = Voltage)
-	uint8_t channel_array[16];
-	channel_array[0] = 4;
+	uint8_t channel_array[ADC_SQR_MAX_CHANNELS_REGULAR];
+	channel_array[0] = ADC_CHANNEL4;
 	adc_set_regular_sequence(ADC1, 1, channel_array);
 
 	return true;

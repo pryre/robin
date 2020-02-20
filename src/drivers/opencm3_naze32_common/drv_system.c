@@ -54,6 +54,9 @@ static void rcc_shutdown(void) {
 }
 
 static void clock_setup(void) {
+	systick_interrupt_disable();
+	systick_counter_disable();
+
 	// Do SysTick setup
 	uptime_ms_ = 0;
 	// 72MHz / 8 => 9000000 counts per second
@@ -66,6 +69,7 @@ static void clock_setup(void) {
 	us_ticks_ = 9;	//systick will count 9 ticks per us (9000000 / 1000000)
 	systick_set_reload(SYSTICK_ROLLOVER-1);	//overflows at 1ms
 	systick_clear();
+
 	systick_interrupt_enable();
 	systick_counter_enable();	// Start counting.
 }
