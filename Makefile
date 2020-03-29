@@ -102,8 +102,12 @@ breezy_naze32_rev6_flash: breezy_naze32_rev6
 
 breezy_naze32_rev6_reflash: breezy_naze32_rev6 mavlink_bootloader sleep breezy_naze32_rev6_flash
 
+# LibOpenCM3 (Needed to ensure libs are built before our jobs start)
+opencm3_prereqs: param_gen
+	${MAKE} -C lib/libopencm3
+
 # Naze32 Rev.5 (LibOpenCM3)
-opencm3_naze32_rev5: param_gen
+opencm3_naze32_rev5: param_gen opencm3_prereqs
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
 opencm3_naze32_rev5_flash: opencm3_naze32_rev5
@@ -112,7 +116,7 @@ opencm3_naze32_rev5_flash: opencm3_naze32_rev5
 opencm3_naze32_rev5_reflash: opencm3_naze32_rev5 mavlink_bootloader sleep opencm3_naze32_rev5_flash
 
 # Naze32 Rev.5 Mini (LibOpenCM3)
-opencm3_naze32_rev5_mini: param_gen
+opencm3_naze32_rev5_mini: param_gen opencm3_prereqs
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
 opencm3_naze32_rev5_mini_flash: opencm3_naze32_rev5_mini
@@ -121,7 +125,7 @@ opencm3_naze32_rev5_mini_flash: opencm3_naze32_rev5_mini
 opencm3_naze32_rev5_mini_reflash: opencm3_naze32_rev5_mini mavlink_bootloader sleep opencm3_naze32_rev5_mini_flash
 
 # Naze32 Rev.6 Mini (LibOpenCM3)
-opencm3_naze32_rev6: param_gen
+opencm3_naze32_rev6: param_gen opencm3_prereqs
 	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
 
 opencm3_naze32_rev6_flash: opencm3_naze32_rev6
