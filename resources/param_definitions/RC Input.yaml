@@ -7,7 +7,6 @@ PARAM_RC_MAP_ROLL:
     option: "scalar"
     default: 0
     unit: "channel"
----
 PARAM_RC_MAP_PITCH:
   type: "uint"
   name: "RC_MAP_PITCH"
@@ -17,7 +16,6 @@ PARAM_RC_MAP_PITCH:
     option: "scalar"
     default: 0
     unit: "channel"
----
 PARAM_RC_MAP_YAW:
   type: "uint"
   name: "RC_MAP_YAW"
@@ -27,7 +25,6 @@ PARAM_RC_MAP_YAW:
     option: "scalar"
     default: 0
     unit: "channel"
----
 PARAM_RC_MAP_THROTTLE:
   type: "uint"
   name: "RC_MAP_THROTTLE"
@@ -37,7 +34,6 @@ PARAM_RC_MAP_THROTTLE:
     option: "scalar"
     default: 0
     unit: "channel"
----
 PARAM_RC_MAP_MODE_SW:
   type: "uint"
   name: "RC_MAP_MODE_SW"
@@ -47,7 +43,6 @@ PARAM_RC_MAP_MODE_SW:
     option: "scalar"
     default: 0
     unit: "channel"
----
 PARAM_RC_MODE_DEFAULT:
   type: "uint"
   name: "RC_MODE_DEFAULT"
@@ -57,7 +52,6 @@ PARAM_RC_MODE_DEFAULT:
     option: "scalar"
     default: 0
     unit: "channel"
----
 PARAM_RC_MODE_RANGE:
   type: "float"
   name: "RC_MODE_RANGE"
@@ -66,7 +60,6 @@ PARAM_RC_MODE_RANGE:
   value:
     option: "scalar"
     default: 0.1
----
 PARAM_RC_MODE_STAB:
   type: "float"
   name: "RC_MODE_STAB"
@@ -75,7 +68,6 @@ PARAM_RC_MODE_STAB:
   value:
     option: "scalar"
     default: 0.1
----
 PARAM_RC_MODE_ACRO:
   type: "float"
   name: "RC_MODE_ACRO"
@@ -84,7 +76,6 @@ PARAM_RC_MODE_ACRO:
   value:
     option: "scalar"
     default: 0.0
----
 PARAM_RC_MODE_OFFBOARD:
   type: "float"
   name: "RC_MODE_OFFB"
@@ -93,7 +84,6 @@ PARAM_RC_MODE_OFFBOARD:
   value:
     option: "scalar"
     default: 0.9
----
 PARAM_RC_ARM_TIMER:
   type: "uint"
   name: "COM_RC_ARM_HYST"
@@ -103,7 +93,6 @@ PARAM_RC_ARM_TIMER:
     option: "scalar"
     default: 1000000
     unit: "us"
----
 PARAM_RC_FULL_RANGE_THRUST:
   type: "uint"
   name: "RC_FR_THRUST"

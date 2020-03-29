@@ -6,7 +6,6 @@ PARAM_RATE_CONTROL:
   value:
     option: "scalar"
     default: 250.0
----
 PARAM_CONTROL_OB_FUSE_YAW_RATE:
   type: "uint"
   name: "MC_FUSE_YAWRATE"
@@ -15,7 +14,6 @@ PARAM_CONTROL_OB_FUSE_YAW_RATE:
   value:
     option: "scalar"
     default: 0
----
 PARAM_PID_ROLL_RATE_P:
   type: "float"
   name: "MC_ROLLRATE_P"
@@ -25,7 +23,6 @@ PARAM_PID_ROLL_RATE_P:
     option: "scalar"
     default: 7.5
     function: "pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));"
----
 PARAM_PID_ROLL_RATE_I:
   type: "float"
   name: "MC_ROLLRATE_I"
@@ -35,7 +32,6 @@ PARAM_PID_ROLL_RATE_I:
     option: "scalar"
     default: 1.0
     function: "pid_set_gain_i(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_I));"
----
 PARAM_PID_ROLL_RATE_D:
   type: "float"
   name: "MC_ROLLRATE_D"
@@ -45,7 +41,6 @@ PARAM_PID_ROLL_RATE_D:
     option: "scalar"
     default: 0.15
     function: "pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));"
----
 PARAM_MAX_ROLL_RATE:
   type: "float"
   name: "MC_ROLLRATE_MAX"
@@ -56,7 +51,6 @@ PARAM_MAX_ROLL_RATE:
     default: 3.14159
     unit: "rad/s"
     function: "pid_set_min_max(&_pid_roll_rate, -get_param_fix16(PARAM_MAX_ROLL_RATE), get_param_fix16(PARAM_MAX_ROLL_RATE));"
----
 PARAM_PID_PITCH_RATE_P:
   type: "float"
   name: "MC_PITCHRATE_P"
@@ -66,7 +60,6 @@ PARAM_PID_PITCH_RATE_P:
     option: "scalar"
     default: 7.5
     function: "pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));"
----
 PARAM_PID_PITCH_RATE_I:
   type: "float"
   name: "MC_PITCHRATE_I"
@@ -76,7 +69,6 @@ PARAM_PID_PITCH_RATE_I:
     option: "scalar"
     default: 1.0
     function: "pid_set_gain_i(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_I));"
----
 PARAM_PID_PITCH_RATE_D:
   type: "float"
   name: "MC_PITCHRATE_D"
@@ -86,7 +78,6 @@ PARAM_PID_PITCH_RATE_D:
     option: "scalar"
     default: 0.15
     function: "pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));"
----
 PARAM_MAX_PITCH_RATE:
   type: "float"
   name: "MC_PITCHRATE_MAX"
@@ -97,7 +88,6 @@ PARAM_MAX_PITCH_RATE:
     default: 3.14159
     unit: "rad/s"
     function: "pid_set_min_max(&_pid_pitch_rate, -get_param_fix16(PARAM_MAX_PITCH_RATE), get_param_fix16(PARAM_MAX_PITCH_RATE));"
----
 PARAM_PID_YAW_RATE_P:
   type: "float"
   name: "MC_YAWRATE_P"
@@ -107,7 +97,6 @@ PARAM_PID_YAW_RATE_P:
     option: "scalar"
     default: 10.0
     function: "pid_set_gain_p(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_P));"
----
 PARAM_PID_YAW_RATE_I:
   type: "float"
   name: "MC_YAWRATE_I"
@@ -117,7 +106,6 @@ PARAM_PID_YAW_RATE_I:
     option: "scalar"
     default: 5.0
     function: "pid_set_gain_i(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_I));"
----
 PARAM_PID_YAW_RATE_D:
   type: "float"
   name: "MC_YAWRATE_D"
@@ -127,7 +115,6 @@ PARAM_PID_YAW_RATE_D:
     option: "scalar"
     default: 0.0
     function: "pid_set_gain_d(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_D));"
----
 PARAM_MAX_YAW_RATE:
   type: "float"
   name: "MC_YAWRATE_MAX"
@@ -138,7 +125,6 @@ PARAM_MAX_YAW_RATE:
     default: 1.57079
     unit: "rad/s"
     function: "pid_set_min_max(&_pid_yaw_rate, -get_param_fix16(PARAM_MAX_YAW_RATE), get_param_fix16(PARAM_MAX_YAW_RATE));"
----
 PARAM_MC_ANGLE_P:
   type: "float"
   name: "MC_ANGLE_P"
@@ -147,7 +133,6 @@ PARAM_MC_ANGLE_P:
   value:
     option: "scalar"
     default: 4.5
----
 PARAM_MAX_ROLL_ANGLE:
   type: "float"
   name: "MAX_ROLL_A"
@@ -157,7 +142,6 @@ PARAM_MAX_ROLL_ANGLE:
     option: "scalar"
     default: 0.786
     unit: "rad"
----
 PARAM_MAX_PITCH_ANGLE:
   type: "float"
   name: "MAX_PITCH_A"
@@ -167,7 +151,6 @@ PARAM_MAX_PITCH_ANGLE:
     option: "scalar"
     default: 0.786
     unit: "rad"
----
 PARAM_MC_ANGLE_YAW_W:
   type: "float"
   name: "MC_YAW_W"

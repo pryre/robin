@@ -1,12 +1,3 @@
-#PARAM_BOARD_REVISION:
-#  type: "uint"
-#  name: "BOARD_REV"
-#  description: "A compile-time selector for what version of the board to setup sensors for"
-#  reboot: false
-#  value:
-#    option: "generated"
-#    function: "NAZE32_REV"
-#---
 PARAM_VERSION_FIRMWARE:
   type: "uint"
   name: "VERSION_FW"
@@ -15,7 +6,6 @@ PARAM_VERSION_FIRMWARE:
   value:
     option: "generated"
     function: "strtoll(GIT_VERSION_FLIGHT_STR, NULL, 16)"
----
 PARAM_VERSION_SOFTWARE:
   type: "uint"
   name: "VERSION_SW"
@@ -24,7 +14,6 @@ PARAM_VERSION_SOFTWARE:
   value:
     option: "generated"
     function: "strtoll(GIT_VERSION_OS_STR, NULL, 16)"
----
 PARAM_RELAXED_PARAM_SET:
   type: "uint"
   name: "RELAXED_SET"
@@ -33,7 +22,6 @@ PARAM_RELAXED_PARAM_SET:
   value:
     option: "bool"
     default: 1
----
 PARAM_SAFETY_BUTTON_HYST:
   type: "uint"
   name: "SAFETY_HYST"
@@ -43,7 +31,6 @@ PARAM_SAFETY_BUTTON_HYST:
     option: "scalar"
     default: 1000000
     unit: "us"
----
 PARAM_FAILSAFE_THROTTLE:
   type: "float"
   name: "FAILSAFE_THRTL"
@@ -52,7 +39,6 @@ PARAM_FAILSAFE_THROTTLE:
   value:
     option: "scalar"
     default: 0.20
----
 PARAM_THROTTLE_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_THRTL"
@@ -62,7 +48,6 @@ PARAM_THROTTLE_TIMEOUT:
     option: "scalar"
     default: 10000000
     unit: "us"
----
 PARAM_THROTTLE_TIMEOUT_VALUE:
   type: "float"
   name: "TIMEOUT_THRTL_V"
@@ -72,7 +57,6 @@ PARAM_THROTTLE_TIMEOUT_VALUE:
     option: "scalar"
     default: 0.05
     unit: "%"
----
 PARAM_CRITICAL_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_CRIT_EM"
@@ -82,7 +66,6 @@ PARAM_CRITICAL_TIMEOUT:
     option: "scalar"
     default: 5000000
     unit: "us"
----
 PARAM_RESET_PARAMS:
   type: "uint"
   name: "SYS_AUTOCONFIG"
@@ -91,7 +74,6 @@ PARAM_RESET_PARAMS:
   value:
     option: "scalar"
     default: 0
----
 PARAM_DEBUG_PROFILING:
   type: "float"
   name: "DEBUG_PROFILING"

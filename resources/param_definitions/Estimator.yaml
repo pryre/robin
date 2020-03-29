@@ -7,7 +7,6 @@ PARAM_EST_INIT_TIME:
     option: "scalar"
     default: 1000000
     unit: "us"
----
 PARAM_EST_USE_HDG_FUSION:
   type: "uint"
   name: "EST_FUSE_HDG"
@@ -16,7 +15,6 @@ PARAM_EST_USE_HDG_FUSION:
   value:
     option: "scalar"
     default: 1
----
 PARAM_EST_USE_LEVEL_HORIZON:
   type: "uint"
   name: "EST_LVL_HORZ"
@@ -25,7 +23,6 @@ PARAM_EST_USE_LEVEL_HORIZON:
   value:
     option: "scalar"
     default: 1
----
 PARAM_EST_LEVEL_HORIZON_W:
   type: "float"
   name: "EST_LVL_HORZ_W"
@@ -34,7 +31,6 @@ PARAM_EST_LEVEL_HORIZON_W:
   value:
     option: "scalar"
     default: 1.0
----
 PARAM_EST_LEVEL_HORIZON_X:
   type: "float"
   name: "EST_LVL_HORZ_X"
@@ -43,7 +39,6 @@ PARAM_EST_LEVEL_HORIZON_X:
   value:
     option: "scalar"
     default: 0.0
----
 PARAM_EST_LEVEL_HORIZON_Y:
   type: "float"
   name: "EST_LVL_HORZ_Y"
@@ -52,7 +47,6 @@ PARAM_EST_LEVEL_HORIZON_Y:
   value:
     option: "scalar"
     default: 0.0
----
 PARAM_EST_LEVEL_HORIZON_Z:
   type: "float"
   name: "EST_LVL_HORZ_Z"
@@ -61,7 +55,6 @@ PARAM_EST_LEVEL_HORIZON_Z:
   value:
     option: "scalar"
     default: 0.0
----
 PARAM_EST_ACC_KP:
   type: "float"
   name: "EST_ACC_KP"
@@ -70,7 +63,6 @@ PARAM_EST_ACC_KP:
   value:
     option: "scalar"
     default: 0.2
----
 PARAM_EST_BIAS_KI:
   type: "float"
   name: "EST_W_BIAS_KI"
@@ -79,7 +71,6 @@ PARAM_EST_BIAS_KI:
   value:
     option: "scalar"
     default: 0.1
----
 PARAM_EST_BIAS_MAX:
   type: "float"
   name: "EST_W_BIAS_MAX"
@@ -88,7 +79,6 @@ PARAM_EST_BIAS_MAX:
   value:
     option: "scalar"
     default: 0.05
----
 PARAM_GYRO_ALPHA:
   type: "float"
   name: "EST_LPF_GYRO_A"
@@ -97,7 +87,6 @@ PARAM_GYRO_ALPHA:
   value:
     option: "scalar"
     default: 0.04
----
 PARAM_ACC_ALPHA:
   type: "float"
   name: "EST_LPF_ACC_A"
@@ -106,7 +95,6 @@ PARAM_ACC_ALPHA:
   value:
     option: "scalar"
     default: 0.04
----
 PARAM_EST_MAG_DECL:
   type: "float"
   name: "EST_MAG_DECL"
@@ -115,7 +103,6 @@ PARAM_EST_MAG_DECL:
   value:
     option: "scalar"
     default: 0.0
----
 PARAM_EST_HDG_P_EXT:
   type: "float"
   name: "EST_HDG_P_EXT"
@@ -124,7 +111,6 @@ PARAM_EST_HDG_P_EXT:
   value:
     option: "scalar"
     default: 10.0
----
 PARAM_EST_HDG_P_MAG:
   type: "float"
   name: "EST_HDG_P_MAG"

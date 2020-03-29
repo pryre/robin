@@ -6,7 +6,6 @@ PARAM_ACTUATORS_RC_PWM_MAP:
   value:
     option: "scalar"
     default: 0
----
 PARAM_ACTUATORS_RC_DIGITAL_MAP:
   type: "uint"
   name: "ACTUATOR_RCDMAP"
@@ -15,7 +14,6 @@ PARAM_ACTUATORS_RC_DIGITAL_MAP:
   value:
     option: "scalar"
     default: 0
----
 PARAM_ACTUATORS_OB_PWM_MAP:
   type: "uint"
   name: "ACTUATOR_OBPMAP"
@@ -24,7 +22,6 @@ PARAM_ACTUATORS_OB_PWM_MAP:
   value:
     option: "scalar"
     default: 0
----
 PARAM_ACTUATORS_OB_DIGITAL_MAP:
   type: "uint"
   name: "ACTUATOR_OBDMAP"
@@ -33,7 +30,6 @@ PARAM_ACTUATORS_OB_DIGITAL_MAP:
   value:
     option: "scalar"
     default: 0
----
 PARAM_ACTUATORS_RC_RESPECT_ARM:
   type: "uint"
   name: "ACTUATOR_RC_ARM"
@@ -42,7 +38,6 @@ PARAM_ACTUATORS_RC_RESPECT_ARM:
   value:
     option: "bool"
     default: 1
----
 PARAM_ACTUATORS_RC_PWM_DISARM_VALUE:
   type: "float"
   name: "ACTUATOR_RC_PDV"
@@ -53,7 +48,6 @@ PARAM_ACTUATORS_RC_PWM_DISARM_VALUE:
     default: 0.0
     min: -1.0
     max: 1.0
----
 PARAM_ACTUATORS_RC_DIGITAL_DISARM_VALUE:
   type: "uint"
   name: "ACTUATOR_RC_DDV"
@@ -63,7 +57,6 @@ PARAM_ACTUATORS_RC_DIGITAL_DISARM_VALUE:
     option: "list"
     default: 0
     list: [0, 1]
----
 PARAM_ACTUATORS_OB_RESPECT_ARM:
   type: "uint"
   name: "ACTUATOR_OB_ARM"
@@ -72,7 +65,6 @@ PARAM_ACTUATORS_OB_RESPECT_ARM:
   value:
     option: "bool"
     default: 1
----
 PARAM_ACTUATORS_OB_PWM_DISARM_VALUE:
   type: "float"
   name: "ACTUATOR_OB_PDV"
@@ -83,7 +75,6 @@ PARAM_ACTUATORS_OB_PWM_DISARM_VALUE:
     default: 0.0
     min: -1.0
     max: 1.0
----
 PARAM_ACTUATORS_OB_DIGITAL_DISARM_VALUE:
   type: "uint"
   name: "ACTUATOR_OB_DDV"
@@ -93,7 +84,6 @@ PARAM_ACTUATORS_OB_DIGITAL_DISARM_VALUE:
     option: "list"
     default: 0
     list: [0, 1]
----
 PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT:
   type: "uint"
   name: "ACTUATOR_AUX_ZO"
@@ -102,7 +92,6 @@ PARAM_ACTUATORS_AUX_DISARM_ZERO_OUTPUT:
   value:
     option: "bool"
     default: 1
----
 PARAM_MOTOR_PWM_LINEARIZE:
   type: "uint"
   name: "PWM_NONLINEAR_M"
@@ -111,7 +100,6 @@ PARAM_MOTOR_PWM_LINEARIZE:
   value:
     option: "bool"
     default: 1
----
 PARAM_SERVO_PWM_SEND_RATE:
   type: "uint"
   name: "PWM_RATE_S"
@@ -121,7 +109,6 @@ PARAM_SERVO_PWM_SEND_RATE:
     option: "scalar"
     default: 50
     unit: "?"
----
 PARAM_MOTOR_PWM_SEND_RATE:
   type: "uint"
   name: "PWM_RATE_M"
@@ -131,7 +118,6 @@ PARAM_MOTOR_PWM_SEND_RATE:
     option: "scalar"
     default: 400
     unit: "?"
----
 PARAM_MOTOR_PWM_IDLE:
   type: "uint"
   name: "PWM_IDLE"
@@ -141,7 +127,6 @@ PARAM_MOTOR_PWM_IDLE:
     option: "scalar"
     default: 1150
     unit: "pwm"
----
 PARAM_MOTOR_PWM_MIN:
   type: "uint"
   name: "PWM_MIN"
@@ -151,7 +136,6 @@ PARAM_MOTOR_PWM_MIN:
     option: "scalar"
     default: 1000
     unit: "pwm"
----
 PARAM_MOTOR_PWM_MAX:
   type: "uint"
   name: "PWM_MAX"
@@ -161,7 +145,6 @@ PARAM_MOTOR_PWM_MAX:
     option: "scalar"
     default: 2000
     unit: "pwm"
----
 PARAM_MAV_TYPE:
   type: "uint"
   name: "MAV_TYPE"
@@ -170,7 +153,6 @@ PARAM_MAV_TYPE:
   value:
     option: "scalar"
     default: 0
----
 PARAM_MIXER:
   type: "uint"
   name: "SYS_AUTOSTART"

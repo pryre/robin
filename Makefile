@@ -34,7 +34,7 @@ list_targets:
 ###############################################################################
 # Tool Targets
 
-all: $(TARGET_FOLDERS) documentation
+all: documentation $(TARGET_FOLDERS)
 
 build_env:
 	@mkdir -p ./build ./documents/autogen

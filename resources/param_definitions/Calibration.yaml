@@ -6,7 +6,6 @@ PARAM_CAL_IMU_PASSES:
   value:
     option: "scalar"
     default: 1000
----
 PARAM_GYRO_X_BIAS:
   type: "int"
   name: "GYRO_X_BIAS"
@@ -15,7 +14,6 @@ PARAM_GYRO_X_BIAS:
   value:
     option: "scalar"
     default: 0
----
 PARAM_GYRO_Y_BIAS:
   type: "int"
   name: "GYRO_Y_BIAS"
@@ -24,7 +22,6 @@ PARAM_GYRO_Y_BIAS:
   value:
     option: "scalar"
     default: 0
----
 PARAM_GYRO_Z_BIAS:
   type: "int"
   name: "GYRO_Z_BIAS"
@@ -33,7 +30,6 @@ PARAM_GYRO_Z_BIAS:
   value:
     option: "scalar"
     default: 0
----
 PARAM_ACC_X_BIAS:
   type: "int"
   name: "ACC_X_BIAS"
@@ -42,7 +38,6 @@ PARAM_ACC_X_BIAS:
   value:
     option: "scalar"
     default: 0
----
 PARAM_ACC_Y_BIAS:
   type: "int"
   name: "ACC_Y_BIAS"
@@ -51,7 +46,6 @@ PARAM_ACC_Y_BIAS:
   value:
     option: "scalar"
     default: 0
----
 PARAM_ACC_Z_BIAS:
   type: "int"
   name: "ACC_Z_BIAS"
@@ -60,7 +54,6 @@ PARAM_ACC_Z_BIAS:
   value:
     option: "scalar"
     default: 0
----
 PARAM_ACC_X_SCALE_POS:
   type: "float"
   name: "ACC_X_S_POS"
@@ -69,7 +62,6 @@ PARAM_ACC_X_SCALE_POS:
   value:
     option: "scalar"
     default: 1.0
----
 PARAM_ACC_X_SCALE_NEG:
   type: "float"
   name: "ACC_X_S_NEG"
@@ -78,7 +70,6 @@ PARAM_ACC_X_SCALE_NEG:
   value:
     option: "scalar"
     default: 1.0
----
 PARAM_ACC_Y_SCALE_POS:
   type: "float"
   name: "ACC_Y_S_POS"
@@ -87,7 +78,6 @@ PARAM_ACC_Y_SCALE_POS:
   value:
     option: "scalar"
     default: 1.0
----
 PARAM_ACC_Y_SCALE_NEG:
   type: "float"
   name: "ACC_Y_S_NEG"
@@ -96,7 +86,6 @@ PARAM_ACC_Y_SCALE_NEG:
   value:
     option: "scalar"
     default: 1.0
----
 PARAM_ACC_Z_SCALE_POS:
   type: "float"
   name: "ACC_Z_S_POS"
@@ -105,7 +94,6 @@ PARAM_ACC_Z_SCALE_POS:
   value:
     option: "scalar"
     default: 1.0
----
 PARAM_ACC_Z_SCALE_NEG:
   type: "float"
   name: "ACC_Z_S_NEG"
@@ -114,7 +102,6 @@ PARAM_ACC_Z_SCALE_NEG:
   value:
     option: "scalar"
     default: 1.0
----
 PARAM_ACC_X_TEMP_COMP:
   type: "float"
   name: "ACC_X_TEMP_COMP"
@@ -123,7 +110,6 @@ PARAM_ACC_X_TEMP_COMP:
   value:
     option: "scalar"
     default: 0.0
----
 PARAM_ACC_Y_TEMP_COMP:
   type: "float"
   name: "ACC_Y_TEMP_COMP"
@@ -132,7 +118,6 @@ PARAM_ACC_Y_TEMP_COMP:
   value:
     option: "scalar"
     default: 0.0
----
 PARAM_ACC_Z_TEMP_COMP:
   type: "float"
   name: "ACC_Z_TEMP_COMP"
@@ -141,7 +126,6 @@ PARAM_ACC_Z_TEMP_COMP:
   value:
     option: "scalar"
     default: 0.0
----
 PARAM_RC1_MIN:
   type: "uint"
   name: "RC1_MIN"
@@ -152,7 +136,6 @@ PARAM_RC1_MIN:
     default: 1000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC1_MID:
   type: "uint"
   name: "RC1_TRIM"
@@ -163,7 +146,6 @@ PARAM_RC1_MID:
     default: 1500
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC1_MAX:
   type: "uint"
   name: "RC1_MAX"
@@ -174,7 +156,6 @@ PARAM_RC1_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC1_REV:
   type: "float"
   name: "RC1_REV"
@@ -184,7 +165,6 @@ PARAM_RC1_REV:
     option: "scalar"
     default: 1.0
     function: "sensors_update_rc_cal();"
----
 PARAM_RC1_DZ:
   type: "float"
   name: "RC1_DZ"
@@ -193,7 +173,6 @@ PARAM_RC1_DZ:
   value:
     option: "scalar"
     default: 0.02
----
 PARAM_RC2_MIN:
   type: "uint"
   name: "RC2_MIN"
@@ -204,7 +183,6 @@ PARAM_RC2_MIN:
     default: 1000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC2_MID:
   type: "uint"
   name: "RC2_TRIM"
@@ -215,7 +193,6 @@ PARAM_RC2_MID:
     default: 1500
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC2_MAX:
   type: "uint"
   name: "RC2_MAX"
@@ -226,7 +203,6 @@ PARAM_RC2_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC2_REV:
   type: "float"
   name: "RC2_REV"
@@ -236,7 +212,6 @@ PARAM_RC2_REV:
     option: "scalar"
     default: 1.0
     function: "sensors_update_rc_cal();"
----
 PARAM_RC2_DZ:
   type: "float"
   name: "RC2_DZ"
@@ -245,7 +220,6 @@ PARAM_RC2_DZ:
   value:
     option: "scalar"
     default: 0.02
----
 PARAM_RC3_MIN:
   type: "uint"
   name: "RC3_MIN"
@@ -256,7 +230,6 @@ PARAM_RC3_MIN:
     default: 1000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC3_MID:
   type: "uint"
   name: "RC3_TRIM"
@@ -267,7 +240,6 @@ PARAM_RC3_MID:
     default: 1500
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC3_MAX:
   type: "uint"
   name: "RC3_MAX"
@@ -278,7 +250,6 @@ PARAM_RC3_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC3_REV:
   type: "float"
   name: "RC3_REV"
@@ -288,7 +259,6 @@ PARAM_RC3_REV:
     option: "scalar"
     default: 1.0
     function: "sensors_update_rc_cal();"
----
 PARAM_RC3_DZ:
   type: "float"
   name: "RC3_DZ"
@@ -297,7 +267,6 @@ PARAM_RC3_DZ:
   value:
     option: "scalar"
     default: 0.02
----
 PARAM_RC4_MIN:
   type: "uint"
   name: "RC4_MIN"
@@ -308,7 +277,6 @@ PARAM_RC4_MIN:
     default: 1000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC4_MID:
   type: "uint"
   name: "RC4_TRIM"
@@ -319,7 +287,6 @@ PARAM_RC4_MID:
     default: 1500
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC4_MAX:
   type: "uint"
   name: "RC4_MAX"
@@ -330,7 +297,6 @@ PARAM_RC4_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC4_REV:
   type: "float"
   name: "RC4_REV"
@@ -340,7 +306,6 @@ PARAM_RC4_REV:
     option: "scalar"
     default: 1.0
     function: "sensors_update_rc_cal();"
----
 PARAM_RC4_DZ:
   type: "float"
   name: "RC4_DZ"
@@ -349,7 +314,6 @@ PARAM_RC4_DZ:
   value:
     option: "scalar"
     default: 0.02
----
 PARAM_RC5_MIN:
   type: "uint"
   name: "RC5_MIN"
@@ -360,7 +324,6 @@ PARAM_RC5_MIN:
     default: 1000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC5_MID:
   type: "uint"
   name: "RC5_TRIM"
@@ -371,7 +334,6 @@ PARAM_RC5_MID:
     default: 1500
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC5_MAX:
   type: "uint"
   name: "RC5_MAX"
@@ -382,7 +344,6 @@ PARAM_RC5_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC5_REV:
   type: "float"
   name: "RC5_REV"
@@ -392,7 +353,6 @@ PARAM_RC5_REV:
     option: "scalar"
     default: 1.0
     function: "sensors_update_rc_cal();"
----
 PARAM_RC5_DZ:
   type: "float"
   name: "RC5_DZ"
@@ -401,7 +361,6 @@ PARAM_RC5_DZ:
   value:
     option: "scalar"
     default: 0.02
----
 PARAM_RC6_MIN:
   type: "uint"
   name: "RC6_MIN"
@@ -412,7 +371,6 @@ PARAM_RC6_MIN:
     default: 1000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC6_MID:
   type: "uint"
   name: "RC6_TRIM"
@@ -423,7 +381,6 @@ PARAM_RC6_MID:
     default: 1500
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC6_MAX:
   type: "uint"
   name: "RC6_MAX"
@@ -434,7 +391,6 @@ PARAM_RC6_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC6_REV:
   type: "float"
   name: "RC6_REV"
@@ -444,7 +400,6 @@ PARAM_RC6_REV:
     option: "scalar"
     default: 1.0
     function: "sensors_update_rc_cal();"
----
 PARAM_RC6_DZ:
   type: "float"
   name: "RC6_DZ"
@@ -453,7 +408,6 @@ PARAM_RC6_DZ:
   value:
     option: "scalar"
     default: 0.02
----
 PARAM_RC7_MIN:
   type: "uint"
   name: "RC7_MIN"
@@ -464,7 +418,6 @@ PARAM_RC7_MIN:
     default: 1000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC7_MID:
   type: "uint"
   name: "RC7_TRIM"
@@ -475,7 +428,6 @@ PARAM_RC7_MID:
     default: 1500
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC7_MAX:
   type: "uint"
   name: "RC7_MAX"
@@ -486,7 +438,6 @@ PARAM_RC7_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC7_REV:
   type: "float"
   name: "RC7_REV"
@@ -496,7 +447,6 @@ PARAM_RC7_REV:
     option: "scalar"
     default: 1.0
     function: "sensors_update_rc_cal();"
----
 PARAM_RC7_DZ:
   type: "float"
   name: "RC7_DZ"
@@ -505,7 +455,6 @@ PARAM_RC7_DZ:
   value:
     option: "scalar"
     default: 0.02
----
 PARAM_RC8_MIN:
   type: "uint"
   name: "RC8_MIN"
@@ -516,7 +465,6 @@ PARAM_RC8_MIN:
     default: 1000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC8_MID:
   type: "uint"
   name: "RC8_TRIM"
@@ -527,7 +475,6 @@ PARAM_RC8_MID:
     default: 1500
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC8_MAX:
   type: "uint"
   name: "RC8_MAX"
@@ -538,7 +485,6 @@ PARAM_RC8_MAX:
     default: 2000
     unit: "channel"
     function: "sensors_update_rc_cal();"
----
 PARAM_RC8_REV:
   type: "float"
   name: "RC8_REV"
@@ -548,7 +494,6 @@ PARAM_RC8_REV:
     option: "scalar"
     default: 1.0
     function: "sensors_update_rc_cal();"
----
 PARAM_RC8_DZ:
   type: "float"
   name: "RC8_DZ"
@@ -557,7 +502,6 @@ PARAM_RC8_DZ:
   value:
     option: "scalar"
     default: 0.02
----
 PARAM_DO_ESC_CAL:
   type: "uint"
   name: "DO_ESC_CAL"

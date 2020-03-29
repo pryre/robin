@@ -10,15 +10,14 @@ def read_params(param_file):
 	with open(param_file, 'r') as fstream:
 		# Load parameters
 		try:
-			params = yaml.load_all(fstream)
-			params_ret = list(params)
+			params = yaml.safe_load(fstream)
 
 			#for p in params_ret:
 			#	print(p)
 			#	print("\n")
 
-			print("\t%s: \t%i" % ( os.path.basename(param_file).split('.')[0], len(params_ret) ) )
-			return params_ret
+			print("\t%s: \t%i" % ( os.path.basename(param_file).split('.')[0], len(params) ) )
+			return params
 		except yaml.YAMLError as e:
 			print(e)
 			exit(1)
@@ -70,122 +69,122 @@ def check_params(params):
 		id_list = []
 		name_list = []
 
-		for p in params:
-			for param_id, details in p.items():
-				#print(param_id)
+		for key, value in params.items():
+			param_id = key
+			details = value
 
-				if not param_id in id_list:
-					id_list.append(param_id)
-				else:
-					raise ValueError("%s: Parameter ID duplicate with param #%i" % (param_id, id_list.index(param_id)))
+			# XXX: This is now checked on-load of dictionary
+			# if not param_id in id_list:
+			# 	id_list.append(param_id)
+			# else:
+			# 	raise ValueError("%s: Parameter ID duplicate with param #%i" % (param_id, id_list.index(param_id)))
 
-				#XXX: Length 16 is from MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
-				if len(details["name"]) > 16:
-					raise ValueError("%s: Parameter name too long (%d>16)" % (param_id, len(details["name"])))
+			if not details["name"] in name_list:
+				name_list.append(details["name"])
+			else:
+				raise ValueError("%s: Parameter name duplicate with param %s" % (param_id, id_list[name_list.index(details["name"])]))
 
+			#XXX: Length 16 is from MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN
+			if len(details["name"]) > 16:
+				raise ValueError("%s: Parameter name too long (%d>16)" % (param_id, len(details["name"])))
 
-				if not details["name"] in name_list:
-					name_list.append(details["name"])
-				else:
-					raise ValueError("%s: Parameter name duplicate with param %s" % (param_id, id_list[name_list.index(details["name"])]))
+			if details["value"]["option"] == "bool":
+				param_type = details["type"]
+				param_val = details["value"]["default"]
+				param_val_type = type(param_val)
+				raise_error_type_val = False
+				raise_error_bad_val = False
 
-				if details["value"]["option"] == "bool":
-					param_type = details["type"]
-					param_val = details["value"]["default"]
-					param_val_type = type(param_val)
-					raise_error_type_val = False
-					raise_error_bad_val = False
+				# Default type
+				raise_error_type_val = not val_check_type(param_val, param_type)
 
-					# Default type
-					raise_error_type_val = not val_check_type(param_val, param_type)
+				if not ( (param_val == 0) or (param_val == 1) ):
+					raise_error_bad_val = True
 
-					if not ( (param_val == 0) or (param_val == 1) ):
-						raise_error_bad_val = True
+				if raise_error_type_val:
+					raise ValueError("%s: Type (%s) and default value (%s) mismatch" % (param_id, param_type, str(param_val_type)))
+				if raise_error_bad_val:
+					raise ValueError("%s: Value (%s) must be either 0 or 1 for option 'bool'" % (param_id, str(param_val)))
+			elif details["value"]["option"] == "scalar":
+				param_type = details["type"]
+				param_val = details["value"]["default"]
+				param_val_type = type(param_val)
+				raise_error_type_val = False
 
-					if raise_error_type_val:
-						raise ValueError("%s: Type (%s) and default value (%s) mismatch" % (param_id, param_type, str(param_val_type)))
-					if raise_error_bad_val:
-						raise ValueError("%s: Value (%s) must be either 0 or 1 for option 'bool'" % (param_id, str(param_val)))
-				elif details["value"]["option"] == "scalar":
-					param_type = details["type"]
-					param_val = details["value"]["default"]
-					param_val_type = type(param_val)
-					raise_error_type_val = False
+				# Default type
+				raise_error_type_val = not val_check_type(param_val, param_type)
 
-					# Default type
-					raise_error_type_val = not val_check_type(param_val, param_type)
+				if raise_error_type_val:
+					raise ValueError("%s: Type (%s) and default value (%s) mismatch" % (param_id, param_type, str(param_val_type)))
+			elif details["value"]["option"] == "range":
+				raise_error_type_val = False
+				raise_error_type_range = False
+				raise_error_min_max = False
+				raise_error_out_of_range = False
 
-					if raise_error_type_val:
-						raise ValueError("%s: Type (%s) and default value (%s) mismatch" % (param_id, param_type, str(param_val_type)))
-				elif details["value"]["option"] == "range":
-					raise_error_type_val = False
-					raise_error_type_range = False
-					raise_error_min_max = False
-					raise_error_out_of_range = False
+				param_type = details["type"]
+				param_val = details["value"]["default"]
+				param_min = details["value"]["min"]
+				param_max = details["value"]["max"]
+				param_val_type = type(param_val)
+				param_min_type = type(param_min)
+				param_max_type = type(param_max)
 
-					param_type = details["type"]
-					param_val = details["value"]["default"]
-					param_min = details["value"]["min"]
-					param_max = details["value"]["max"]
-					param_val_type = type(param_val)
-					param_min_type = type(param_min)
-					param_max_type = type(param_max)
+				# Default type
+				raise_error_type_val = not val_check_type(param_val, param_type)
 
-					# Default type
-					raise_error_type_val = not val_check_type(param_val, param_type)
+				# Range is same type as default
+				if (param_val_type != param_min_type) or (param_val_type != param_max_type):
+					raise_error_type_range = True
 
-					# Range is same type as default
-					if (param_val_type != param_min_type) or (param_val_type != param_max_type):
-						raise_error_type_range = True
+				# Min < Max
+				if param_max < param_min:
+					raise_error_min_max = True
 
-					# Min < Max
-					if param_max < param_min:
-						raise_error_min_max = True
+				# Min < Default < Max
+				if (param_val < param_min) or (param_val > param_max):
+					raise_error_out_of_range = True
 
-					# Min < Default < Max
-					if (param_val < param_min) or (param_val > param_max):
-						raise_error_out_of_range = True
+				if raise_error_type_val:
+					raise ValueError("%s: Type (%s) and default value (%s) mismatch" % (param_id, param_type, str(param_val_type)))
+				if raise_error_type_range:
+					raise ValueError("%s: Default value (%s) and range type (%s,%s) mismatch" % (param_id, str(param_val_type), str(param_min_type), str(param_max_type)))
+				if raise_error_min_max:
+					raise ValueError("%s: Invalid range: (%s > %s)" % (param_id, str(param_min), str(param_max)))
+				if raise_error_out_of_range:
+					raise ValueError("%s: Default not in set range: (%s <= %s <= %s)" % (param_id, str(param_min), str(param_val), str(param_max)))
+			elif details["value"]["option"] == "list":
+				raise_error_type_val = False
+				raise_error_type_list = False
+				raise_error_out_of_range = False
 
-					if raise_error_type_val:
-						raise ValueError("%s: Type (%s) and default value (%s) mismatch" % (param_id, param_type, str(param_val_type)))
-					if raise_error_type_range:
-						raise ValueError("%s: Default value (%s) and range type (%s,%s) mismatch" % (param_id, str(param_val_type), str(param_min_type), str(param_max_type)))
-					if raise_error_min_max:
-						raise ValueError("%s: Invalid range: (%s > %s)" % (param_id, str(param_min), str(param_max)))
-					if raise_error_out_of_range:
-						raise ValueError("%s: Default not in set range: (%s <= %s <= %s)" % (param_id, str(param_min), str(param_val), str(param_max)))
-				elif details["value"]["option"] == "list":
-					raise_error_type_val = False
-					raise_error_type_list = False
-					raise_error_out_of_range = False
+				param_type = details["type"]
+				param_val = details["value"]["default"]
+				param_list = details["value"]["list"]
+				param_val_type = type(param_val)
 
-					param_type = details["type"]
-					param_val = details["value"]["default"]
-					param_list = details["value"]["list"]
-					param_val_type = type(param_val)
+				# Default is a uint for index
+				if (type(param_val) != int) or (param_val < 0):
+						raise_error_type_val = True
 
-					# Default is a uint for index
-					if (type(param_val) != int) or (param_val < 0):
-							raise_error_type_val = True
+				# Default is in size of list
+				if param_val >= len(param_list):
+					raise_error_out_of_range = True
 
-					# Default is in size of list
-					if param_val >= len(param_list):
-						raise_error_out_of_range = True
+				# All list options are of param type
+				for l in param_list:
+					raise_error_type_val = not val_check_type(l, param_type)
 
-					# All list options are of param type
-					for l in param_list:
-						raise_error_type_val = not val_check_type(l, param_type)
-
-					if raise_error_type_val:
-						raise ValueError("%s: Default value (%s) must be uint for index" % (param_id, str(param_val)))
-					if raise_error_type_val:
-						raise ValueError("%s: Default value (%s) exceeds number of items (%s)" % (param_id, str(param_val), str(len(param_list))))
-					if raise_error_type_list:
-						raise ValueError("%s: Type (%s) does not match all list values (%s)" % (param_id, str(param_type), str(param_list)))
-				elif details["value"]["option"] == "generated":
-					pass
-				else:
-					raise ValueError("%s: Unsupported value option (%s) for parameter checking" % (param_id, details["value"]["option"]))
+				if raise_error_type_val:
+					raise ValueError("%s: Default value (%s) must be uint for index" % (param_id, str(param_val)))
+				if raise_error_type_val:
+					raise ValueError("%s: Default value (%s) exceeds number of items (%s)" % (param_id, str(param_val), str(len(param_list))))
+				if raise_error_type_list:
+					raise ValueError("%s: Type (%s) does not match all list values (%s)" % (param_id, str(param_type), str(param_list)))
+			elif details["value"]["option"] == "generated":
+				pass
+			else:
+				raise ValueError("%s: Unsupported value option (%s) for parameter checking" % (param_id, details["value"]["option"]))
 
 		print("Paramters parsed OK!")
 		success = True
@@ -194,7 +193,7 @@ def check_params(params):
 
 	return success
 
-def gen_md(params, param_groups, filepath):
+def gen_md(params_g, param_groups, filepath):
 	success = False
 
 	# Open files to insert generated data
@@ -202,7 +201,9 @@ def gen_md(params, param_groups, filepath):
 
 	try:
 		# Prepare file headers
-		str_md = "# Parameter File Reference\n\n"
+		str_md = "# Parameter File Reference\n"
+		param_gen_md.write(str_md)
+		str_md = "[Back to index](/documents/README.md).\n\n"
 		param_gen_md.write(str_md)
 
 		for i in range(len(param_groups)):
@@ -214,59 +215,59 @@ def gen_md(params, param_groups, filepath):
 			str_md = ("## %s\n\n" % param_groups[i]) + str_md_tab
 			param_gen_md.write(str_md)
 
-			pg = params[i]
-
 			# Markdown generation
-			for p in pg:
-				for param_id, details in p.items():
-					str_md = details["name"]
+			for key, value in params_g[i].items():
+				param_id = key
+				details = value
+
+				str_md = details["name"]
+				str_md += " | "
+				str_md += details["type"]
+				str_md += " | "
+				str_md += details["description"]
+				str_md += " | "
+
+				unit_str = ""
+
+				if "unit" in details["value"]:
+					unit_str = details["value"]["unit"]
+
+				if details["value"]["option"] == "bool":
+					str_md += str(details["value"]["default"])
 					str_md += " | "
-					str_md += details["type"]
+					str_md += "0 / 1"
 					str_md += " | "
-					str_md += details["description"]
+					str_md += "boolean"
 					str_md += " | "
+				elif details["value"]["option"] == "scalar":
+					str_md += str(details["value"]["default"])
+					str_md += " | "
+					str_md += unit_str
+					str_md += " | "
+					str_md += "scalar"
+					str_md += " | "
+				elif details["value"]["option"] == "range":
+					str_md += str(details["value"]["default"])
+					str_md += " | "
+					str_md += unit_str
+					str_md += " | "
+					str_md += "[min:%s, max:%s]" % (str(details["value"]["min"]), str(details["value"]["max"]))
+					str_md += " | "
+				elif details["value"]["option"] == "list":
+					str_md += str(details["value"]["list"][details["value"]["default"]])
+					str_md += " | "
+					str_md += unit_str
+					str_md += " | "
+					str_md += "%s" % str(details["value"]["list"])
+					str_md += " | "
+				elif details["value"]["option"] == "generated":
+					str_md += " | | | "
+				else:
+					raise ValueError("%s: Unsupported value option (%s) for Markdown generation" % (param_id, details["value"]["option"]))
 
-					unit_str = ""
-
-					if "unit" in details["value"]:
-						unit_str = details["value"]["unit"]
-
-					if details["value"]["option"] == "bool":
-						str_md += str(details["value"]["default"])
-						str_md += " | "
-						str_md += "0 / 1"
-						str_md += " | "
-						str_md += "boolean"
-						str_md += " | "
-					elif details["value"]["option"] == "scalar":
-						str_md += str(details["value"]["default"])
-						str_md += " | "
-						str_md += unit_str
-						str_md += " | "
-						str_md += "scalar"
-						str_md += " | "
-					elif details["value"]["option"] == "range":
-						str_md += str(details["value"]["default"])
-						str_md += " | "
-						str_md += unit_str
-						str_md += " | "
-						str_md += "[min:%s, max:%s]" % (str(details["value"]["min"]), str(details["value"]["max"]))
-						str_md += " | "
-					elif details["value"]["option"] == "list":
-						str_md += str(details["value"]["list"][details["value"]["default"]])
-						str_md += " | "
-						str_md += unit_str
-						str_md += " | "
-						str_md += "%s" % str(details["value"]["list"])
-						str_md += " | "
-					elif details["value"]["option"] == "generated":
-						str_md += " | | | "
-					else:
-						raise ValueError("%s: Unsupported value option (%s) for Markdown generation" % (param_id, details["value"]["option"]))
-
-					str_md += str(details["reboot"])
-					str_md += "\n"
-					param_gen_md.write(str_md)
+				str_md += str(details["reboot"])
+				str_md += "\n"
+				param_gen_md.write(str_md)
 
 			str_md = "\n"
 			param_gen_md.write(str_md)
@@ -305,10 +306,12 @@ typedef enum {
 		param_gen_h.write(str_h)
 
 		# Header generation
-		for p in params:
-			for param_id, details in p.items():
-				str_h = "\t" + param_id + ",\n"
-				param_gen_h.write(str_h)
+		for key, value in params.items():
+			param_id = key
+			details = value
+
+			str_h = "\t" + param_id + ",\n"
+			param_gen_h.write(str_h)
 
 		# Prepare file footers
 		str_h = """\tPARAMS_COUNT
@@ -357,47 +360,49 @@ def gen_c(params, filepath):
 		param_gen_c.write(str_c)
 
 		# C generation
-		for p in params:
-			for param_id, details in p.items():
-				start_str = "init_param_"
+		for key, value in params.items():
+			param_id = key
+			details = value
 
-				if details["type"] == "uint":
-					start_str += "uint" + "(" + param_id + ", "
-				elif details["type"] == "int":
-					start_str += "int" + "(" + param_id + ", "
-				elif details["type"] == "float":
-					start_str += "fix16" + "(" + param_id + ", "
+			start_str = "init_param_"
+
+			if details["type"] == "uint":
+				start_str += "uint" + "(" + param_id + ", "
+			elif details["type"] == "int":
+				start_str += "int" + "(" + param_id + ", "
+			elif details["type"] == "float":
+				start_str += "fix16" + "(" + param_id + ", "
+			else:
+				raise ValueError("%s: Unsupported type option (%s)" % (param_id, details["type"]))
+
+			val_str = ""
+
+			if details["value"]["option"] == "bool":
+				val_str = str(details["value"]["default"])
+			elif details["value"]["option"] == "scalar":
+				if details["type"] == "float":
+					val_str = "fix16_from_float(" + str(details["value"]["default"]) + "f)"
 				else:
-					raise ValueError("%s: Unsupported type option (%s)" % (param_id, details["type"]))
-
-				val_str = ""
-
-				if details["value"]["option"] == "bool":
 					val_str = str(details["value"]["default"])
-				elif details["value"]["option"] == "scalar":
-					if details["type"] == "float":
-						val_str = "fix16_from_float(" + str(details["value"]["default"]) + "f)"
-					else:
-						val_str = str(details["value"]["default"])
-				elif details["value"]["option"] == "range":
-					if details["type"] == "float":
-						val_str = "fix16_from_float(" + str(details["value"]["default"]) + "f)"
-					else:
-						val_str = str(details["value"]["default"])
-				elif details["value"]["option"] == "generated":
-					val_str = details["value"]["function"]
-				elif details["value"]["option"] == "list":
-					val = details["value"]["list"][details["value"]["default"]]
-
-					if details["type"] == "float":
-						val_str = "fix16_from_float(" + str(val) + "f)"
-					else:
-						val_str = str(val)
+			elif details["value"]["option"] == "range":
+				if details["type"] == "float":
+					val_str = "fix16_from_float(" + str(details["value"]["default"]) + "f)"
 				else:
-					raise ValueError("%s: Unsupported value option (%s) for C generation" % (param_id, details["value"]["option"]))
+					val_str = str(details["value"]["default"])
+			elif details["value"]["option"] == "generated":
+				val_str = details["value"]["function"]
+			elif details["value"]["option"] == "list":
+				val = details["value"]["list"][details["value"]["default"]]
 
-				str_c = "\t" + start_str + val_str + ");\n"
-				param_gen_c.write(str_c)
+				if details["type"] == "float":
+					val_str = "fix16_from_float(" + str(val) + "f)"
+				else:
+					val_str = str(val)
+			else:
+				raise ValueError("%s: Unsupported value option (%s) for C generation" % (param_id, details["value"]["option"]))
+
+			str_c = "\t" + start_str + val_str + ");\n"
+			param_gen_c.write(str_c)
 
 		str_c = "}\n\n"
 		param_gen_c.write(str_c)
@@ -405,10 +410,12 @@ def gen_c(params, filepath):
 		str_c = "const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN] = {\n"
 		param_gen_c.write(str_c)
 
-		for p in params:
-			for param_id, details in p.items():
-				str_c = "\t\"" + details["name"] + "\",\n"
-				param_gen_c.write(str_c)
+		for key, value in params.items():
+			param_id = key
+			details = value
+
+			str_c = "\t\"" + details["name"] + "\",\n"
+			param_gen_c.write(str_c)
 
 		str_c = "};\n\n"
 		param_gen_c.write(str_c)
@@ -416,20 +423,22 @@ def gen_c(params, filepath):
 		str_c = "const MAV_PARAM_TYPE _param_types[PARAMS_COUNT] = {\n"
 		param_gen_c.write(str_c)
 
-		for p in params:
-			for param_id, details in p.items():
-				mavlink_type = ''
-				if details["type"] == "uint":
-					mavlink_type = "MAVLINK_TYPE_UINT32_T"
-				elif details["type"] == "int":
-					mavlink_type = "MAVLINK_TYPE_INT32_T"
-				elif details["type"] == "float":
-					mavlink_type = "MAVLINK_TYPE_FLOAT"
-				else:
-					raise ValueError("%s: Unsupported type option (%s)" % (param_id, details["type"]))
+		for key, value in params.items():
+			param_id = key
+			details = value
 
-				str_c = "\t" + mavlink_type + ",\n"
-				param_gen_c.write(str_c)
+			mavlink_type = ''
+			if details["type"] == "uint":
+				mavlink_type = "MAVLINK_TYPE_UINT32_T"
+			elif details["type"] == "int":
+				mavlink_type = "MAVLINK_TYPE_INT32_T"
+			elif details["type"] == "float":
+				mavlink_type = "MAVLINK_TYPE_FLOAT"
+			else:
+				raise ValueError("%s: Unsupported type option (%s)" % (param_id, details["type"]))
+
+			str_c = "\t" + mavlink_type + ",\n"
+			param_gen_c.write(str_c)
 
 		str_c = "};\n\n"
 		param_gen_c.write(str_c)
@@ -437,14 +446,15 @@ def gen_c(params, filepath):
 		str_c = "void param_change_callback(param_id_t id) {\n\tswitch(id) {\n"
 		param_gen_c.write(str_c)
 
-		for p in params:
-			for param_id, details in p.items():
+		for key, value in params.items():
+			param_id = key
+			details = value
 
-				if ("function" in details["value"]) and not (details["value"]["option"] == "generated"):
-					str_c = "\t\tcase " + param_id + ":\n"
-					str_c += "\t\t\t" + details["value"]["function"] + "\n"
-					str_c += "\t\t\tbreak;\n"
-					param_gen_c.write(str_c)
+			if ("function" in details["value"]) and not (details["value"]["option"] == "generated"):
+				str_c = "\t\tcase " + param_id + ":\n"
+				str_c += "\t\t\t" + details["value"]["function"] + "\n"
+				str_c += "\t\t\tbreak;\n"
+				param_gen_c.write(str_c)
 
 
 		str_c = "\t\tdefault:\n"
@@ -473,7 +483,7 @@ def main():
 	proj_dir_in = str(sys.argv[1])
 	proj_dir_out = str(sys.argv[2])
 
-	print(os.path.dirname(proj_dir_in))
+	print('Loading parameter definitions from: %s' % os.path.dirname(proj_dir_in))
 	path_params_yaml = sorted(glob.glob( os.path.dirname(proj_dir_in) + "/*.yaml"))
 
 	param_groups = []
@@ -513,25 +523,29 @@ def main():
 		do_gen = True
 
 	if do_gen:
-		params = []
-		params_g = []
-		param_count = 0
+		params = {} #Raw parameter list
+		params_g = [] # Grouped parameter list
+		# param_count = 0
 
 		for pf in path_params_yaml:
 			pf_list = read_params(pf)
-			param_count += len(pf_list)
-			params_g.append(pf_list)
+			pf_cross = [key for key in params.keys() & pf_list.keys()]
+
+			if len(pf_cross) > 0:
+				print('Error: The following keys have been redefined (%s):' % pf)
+				print(pf_cross)
+				exit(1)
+			else:
+				# param_count += len(pf_list)
+				params.update(pf_list)
+				params_g.append(pf_list)
 
 		if len(param_groups) == len(params_g):
-			print("Total parameters loaded: %i" % param_count)
+			print("Total parameters loaded: %i" % len(params))
 		else:
 			print("Error: Parameters loaded do not match expected number of groups")
 			exit(1)
 
-		for pg in params_g:
-			params += pg
-
-		#TODO: Still need to check for unique param_ids
 		if not check_params(params):
 			exit(1)
 

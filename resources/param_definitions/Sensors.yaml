@@ -8,7 +8,6 @@ PARAM_TIMESYNC_ALPHA:
     default: 0.8
     min: 0.0
     max: 1.0
----
 PARAM_SENSOR_HIL_CBRK:
   type: "uint"
   name: "CBRK_HIL"
@@ -17,7 +16,6 @@ PARAM_SENSOR_HIL_CBRK:
   value:
     option: "bool"
     default: 0
----
 PARAM_SENSOR_SAFETY_CBRK:
   type: "uint"
   name: "CBRK_SAFETY"
@@ -26,7 +24,6 @@ PARAM_SENSOR_SAFETY_CBRK:
   value:
     option: "bool"
     default: 1
----
 PARAM_SENSOR_RC_SAFETY_CBRK:
   type: "uint"
   name: "CBRK_RC_SAFETY"
@@ -35,7 +32,6 @@ PARAM_SENSOR_RC_SAFETY_CBRK:
   value:
     option: "bool"
     default: 1
----
 PARAM_SENSOR_MAG_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_MAG"
@@ -45,7 +41,6 @@ PARAM_SENSOR_MAG_UPDATE_RATE:
     option: "scalar"
     default: 0.0
     unit: "Hz"
----
 PARAM_SENSOR_BARO_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_BARO"
@@ -55,7 +50,6 @@ PARAM_SENSOR_BARO_UPDATE_RATE:
     option: "scalar"
     default: 0.0
     unit: "Hz"
----
 PARAM_SENSOR_SONAR_UPDATE_RATE:
   type: "float"
   name: "CHK_RATE_SONAR"
@@ -65,7 +59,6 @@ PARAM_SENSOR_SONAR_UPDATE_RATE:
     option: "scalar"
     default: 0.0
     unit: "Hz"
----
 PARAM_SENSOR_HIL_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_HIL"
@@ -74,7 +67,6 @@ PARAM_SENSOR_HIL_STRM_COUNT:
   value:
     option: "scalar"
     default: 100
----
 PARAM_SENSOR_IMU_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_IMU"
@@ -83,7 +75,6 @@ PARAM_SENSOR_IMU_STRM_COUNT:
   value:
     option: "scalar"
     default: 1000
----
 PARAM_SENSOR_BARO_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_BARO"
@@ -92,7 +83,6 @@ PARAM_SENSOR_BARO_STRM_COUNT:
   value:
     option: "scalar"
     default: 50
----
 PARAM_SENSOR_SONAR_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_SONAR"
@@ -101,7 +91,6 @@ PARAM_SENSOR_SONAR_STRM_COUNT:
   value:
     option: "scalar"
     default: 50
----
 PARAM_SENSOR_RC_INPUT_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_RC_IN"
@@ -110,7 +99,6 @@ PARAM_SENSOR_RC_INPUT_STRM_COUNT:
   value:
     option: "scalar"
     default: 100
----
 PARAM_SENSOR_EXT_POSE_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_EXT_P"
@@ -119,7 +107,6 @@ PARAM_SENSOR_EXT_POSE_STRM_COUNT:
   value:
     option: "scalar"
     default: 10
----
 PARAM_SENSOR_MAG_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_MAG"
@@ -128,7 +115,6 @@ PARAM_SENSOR_MAG_STRM_COUNT:
   value:
     option: "scalar"
     default: 50
----
 PARAM_SENSOR_OFFB_HRBT_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_OB_H"
@@ -137,7 +123,6 @@ PARAM_SENSOR_OFFB_HRBT_STRM_COUNT:
   value:
     option: "scalar"
     default: 2
----
 PARAM_SENSOR_OFFB_CTRL_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_OB_C"
@@ -146,7 +131,6 @@ PARAM_SENSOR_OFFB_CTRL_STRM_COUNT:
   value:
     option: "scalar"
     default: 100
----
 PARAM_SENSOR_OFFB_G0_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_OB_G0"
@@ -155,7 +139,6 @@ PARAM_SENSOR_OFFB_G0_STRM_COUNT:
   value:
     option: "scalar"
     default: 100
----
 PARAM_SENSOR_OFFB_G1_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_OB_G1"
@@ -164,7 +147,6 @@ PARAM_SENSOR_OFFB_G1_STRM_COUNT:
   value:
     option: "scalar"
     default: 100
----
 PARAM_SENSOR_PWM_CTRL_STRM_COUNT:
   type: "uint"
   name: "STRM_NUM_RC_C"
@@ -173,7 +155,6 @@ PARAM_SENSOR_PWM_CTRL_STRM_COUNT:
   value:
     option: "scalar"
     default: 100
----
 PARAM_SENSOR_HIL_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_HIL"
@@ -183,7 +164,6 @@ PARAM_SENSOR_HIL_TIMEOUT:
     option: "scalar"
     default: 500000
     unit: "us"
----
 PARAM_SENSOR_IMU_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_IMU"
@@ -193,7 +173,6 @@ PARAM_SENSOR_IMU_TIMEOUT:
     option: "scalar"
     default: 4000
     unit: "us"
----
 PARAM_SENSOR_MAG_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_MAG"
@@ -203,7 +182,6 @@ PARAM_SENSOR_MAG_TIMEOUT:
     option: "scalar"
     default: 100000
     unit: "us"
----
 PARAM_SENSOR_BARO_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_BARO"
@@ -213,7 +191,6 @@ PARAM_SENSOR_BARO_TIMEOUT:
     option: "scalar"
     default: 100000
     unit: "us"
----
 PARAM_SENSOR_SONAR_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_SONAR"
@@ -223,7 +200,6 @@ PARAM_SENSOR_SONAR_TIMEOUT:
     option: "scalar"
     default: 100000
     unit: "us"
----
 PARAM_SENSOR_RC_INPUT_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_RC_IN"
@@ -233,7 +209,6 @@ PARAM_SENSOR_RC_INPUT_TIMEOUT:
     option: "scalar"
     default: 1000000
     unit: "us"
----
 PARAM_SENSOR_EXT_POSE_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_EXT_P"
@@ -243,7 +218,6 @@ PARAM_SENSOR_EXT_POSE_TIMEOUT:
     option: "scalar"
     default: 1000000
     unit: "us"
----
 PARAM_SENSOR_OFFB_HRBT_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_OB_HRBT"
@@ -253,7 +227,6 @@ PARAM_SENSOR_OFFB_HRBT_TIMEOUT:
     option: "scalar"
     default: 5000000
     unit: "us"
----
 PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_OB_CTRL"
@@ -263,7 +236,6 @@ PARAM_SENSOR_OFFB_CTRL_TIMEOUT:
     option: "scalar"
     default: 400000
     unit: "us"
----
 PARAM_SENSOR_OFFB_G0_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_OB_G0"
@@ -273,7 +245,6 @@ PARAM_SENSOR_OFFB_G0_TIMEOUT:
     option: "scalar"
     default: 400000
     unit: "us"
----
 PARAM_SENSOR_OFFB_G1_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_OB_G1"
@@ -283,7 +254,6 @@ PARAM_SENSOR_OFFB_G1_TIMEOUT:
     option: "scalar"
     default: 400000
     unit: "us"
----
 PARAM_SENSOR_PWM_CTRL_TIMEOUT:
   type: "uint"
   name: "TIMEOUT_OB_PWM"
