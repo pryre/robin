@@ -20,7 +20,7 @@ Use the flag `NAZE32_REV5` compile flag while compiling and flashing.
    6. N/C
    7. N/C
    8. N/C
-3. Battery Monitor (N/C)
+3. Battery Voltage Monitor
 4. Buzzer
 5. Secondary Tx(?) output (N/C)
 6. 3.3V output (100mA max)
@@ -48,7 +48,7 @@ Use the flag `NAZE32_REV6` compile flag while compiling and flashing.
    6. N/C
    7. N/C
    8. N/C
-3. Battery Monitor (N/C)
+3. Battery Voltage Monitor
 4. Buzzer
 5. Secondary Tx(?) output (N/C)
 6. 3.3V output (100mA max)
@@ -76,7 +76,7 @@ Use the flag `NAZE32_REV5` compile flag while compiling and flashing.
    - CH6 -> N/C
    - CH7 -> N/C
    - CH8 -> N/C
-3. Battery Monitor (N/C)
+3. Battery Voltage Monitor
 4. Buzzer
 5. N/C
 6. 3.3V output (100mA max)
