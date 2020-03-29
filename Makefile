@@ -34,10 +34,18 @@ list_targets:
 ###############################################################################
 # Tool Targets
 
-all: $(TARGET_FOLDERS)
+all: $(TARGET_FOLDERS) documentation
 
-param_gen:
-	@python3 lib/param_generator/gen_params.py ./lib/param_generator/definitions/ ./build/ >&2
+build_env:
+	@mkdir -p ./build ./documents/autogen
+
+documentation: build_env param_gen
+	@cp ./build/PARAM_LIST.md ./documents/autogen/
+	@./lib/scripts/gen_mavlink_support.sh > ./documents/autogen/MAVLINK_SUPPORT.md
+	@echo Documentation generated
+
+param_gen: build_env
+	@python3 ./lib/scripts/param_generator/gen_params.py ./resources/param_definitions/ ./build/ >&2
 
 sleep:
 	@sleep $(REFLASH_SLEEP)
@@ -48,10 +56,9 @@ lint:
 
 clean:
 	@echo "Cleaning build files"
-	@rm -rf ./build
+	@rm -rf ./build ./documents/autogen
 	@cd lib/libopencm3 && $(MAKE) clean -j
 	@echo "Preparing build directory"
-	@mkdir ./build
 
 mavlink_bootloader:
 	./lib/scripts/reboot_bootloader --device $(SERIAL_DEVICE) --baudrate $(MAVLINK_BAUD)

@@ -483,7 +483,7 @@ def main():
 	if not os.path.exists(proj_dir_out):
 		os.mkdir(proj_dir_out)
 
-	path_params_md = os.path.dirname(proj_dir_in) + "/../PARAMS.md"
+	path_params_md = os.path.dirname(proj_dir_out) + "/PARAM_LIST.md"
 	path_params_h = os.path.dirname(proj_dir_out) + "/param_gen.h"
 	path_params_c = os.path.dirname(proj_dir_out) + "/param_gen.c"
 

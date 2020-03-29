@@ -1,7 +1,7 @@
 # Interfacing
 [Back to index](README.md).
 
-The Robin flight software can be interfaced using MAVLINK, and is compatible to much of the specification. Use of the MAVROS software is highly recommended.
+The Robin flight software can be interfaced using MAVLINK, and is compatible to much of the specification. Use of the MAVROS software is highly recommended. A listing of supported MAVLINK telemetry can be [found here](/documents/autogen/MAVLINK_SUPPORT.md)
 
 ## Attitude/Rates Control
 The primary input for controlling the UAV is through the `SET_ATTITUDE_TARGET` message. If using MAVROS, it is recommended that you use the plugin `setpoint_raw` for sending commands. All `type_mask` options are supported for this message, so it is possible to do full attitude control, full rates control, or anything in between.
