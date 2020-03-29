@@ -57,6 +57,7 @@ command_input_t _control_input;
 
 static mavlink_message_t mavlink_msg_buf_port0_;
 static mavlink_message_t mavlink_msg_buf_port1_;
+static const float blank_quat_unset_[4] = {0, 0, 0, 0};
 static const uint8_t blank_array_[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static const uint8_t blank_array_uid_[18] = {0, 0, 0, 0, 0, 0, 0, 0, 0,
 											 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -167,8 +168,9 @@ static void mavlink_debug_cli_message( uint8_t severity, char* text ) {
 void mavlink_send_statustext( mavlink_channel_t chan, uint8_t severity,
 							  char* text ) {
 	// comm_wait_ready(port);
+	//We only support a single-message status text (the '0, 0' values)
 	mavlink_msg_statustext_pack( mavlink_system.sysid, mavlink_system.compid,
-								 get_channel_buf( chan ), severity, &text[0] );
+								 get_channel_buf( chan ), severity, &text[0], 0, 0);
 	comms_send_msg( chan );
 }
 
@@ -635,6 +637,8 @@ void mavlink_stream_highres_imu( mavlink_channel_t chan ) {
 		float pressure_alt = 0;
 		float temperature = 0;
 		uint16_t fields_updated = 0;
+		uint8_t id = 0; //So far we only support 1 IMU
+		//XXX: Should loop over all available if needed in future
 
 		if ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
 			// Output our estimated values here
@@ -666,7 +670,7 @@ void mavlink_stream_highres_imu( mavlink_channel_t chan ) {
 			mavlink_system.sysid, mavlink_system.compid, get_channel_buf( chan ),
 			_sensors.imu.status.time_read, xacc, yacc, zacc, xgyro, ygyro, zgyro,
 			xmag, ymag, zmag, abs_pressure, diff_pressure, pressure_alt,
-			temperature, fields_updated );
+			temperature, fields_updated, id );
 		comms_send_msg( chan );
 	}
 }
@@ -699,8 +703,10 @@ void mavlink_stream_attitude_quaternion( mavlink_channel_t chan ) {
 			fix16_to_float( _state_estimator.attitude.b ),
 			fix16_to_float( _state_estimator.attitude.c ),
 			fix16_to_float( _state_estimator.attitude.d ),
-			fix16_to_float( _state_estimator.p ), fix16_to_float( _state_estimator.q ),
-			fix16_to_float( _state_estimator.r ) );
+			fix16_to_float( _state_estimator.p ),
+			fix16_to_float( _state_estimator.q ),
+			fix16_to_float( _state_estimator.r ),
+			&blank_quat_unset_[0] );
 		comms_send_msg( chan );
 	}
 }
@@ -817,8 +823,9 @@ void mavlink_stream_battery_status( mavlink_channel_t chan ) {
 // Sends a status text message
 void mavlink_prepare_statustext( mavlink_message_t* msg, uint8_t severity,
 								 char* text ) {
+	//We only support a single-message status text (the '0, 0' values)
 	mavlink_msg_statustext_pack( mavlink_system.sysid, mavlink_system.compid, msg,
-								 severity, text );
+								 severity, text, 0, 0 );
 }
 
 // Broadcasts an notice to all open comm channels
