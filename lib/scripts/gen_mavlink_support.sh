@@ -4,7 +4,7 @@ DIR=$1
 MAVLINK_WEB='https://mavlink.io/en/messages/common.html#'
 
 echo '# Supported MAVLINK Messages'
-echo "[Back to index](README.md)."
+echo "[Back to index](/documents/README.md)."
 echo
 
 print_link() {

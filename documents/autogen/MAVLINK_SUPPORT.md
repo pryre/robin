@@ -1,5 +1,5 @@
 # Supported MAVLINK Messages
-[Back to index](README.md).
+[Back to index](/documents/README.md).
 
 - [ACTUATOR_CONTROL_TARGET](https://mavlink.io/en/messages/common.html#ACTUATOR_CONTROL_TARGET)
 - [ATTITUDE](https://mavlink.io/en/messages/common.html#ATTITUDE)
