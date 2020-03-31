@@ -125,7 +125,7 @@ file(GLOB PARAM_DEFINITIONS ${PROJECT_SOURCE_DIR}/lib/param_generator/definition
 
 add_custom_command(
     OUTPUT  param_gen.h param_gen.c
-    COMMAND python ${PROJECT_SOURCE_DIR}/lib/param_generator/gen_params.py ${PROJECT_SOURCE_DIR}/lib/param_generator/definitions/ ${CMAKE_CURRENT_BINARY_DIR}/
+    COMMAND python ${PROJECT_SOURCE_DIR}/lib/scripts/param_generator/gen_params.py ${PROJECT_SOURCE_DIR}/resources/param_definitions/ ${CMAKE_CURRENT_BINARY_DIR}/
     DEPENDS ${PARAM_DEFINITIONS}
 )
 
