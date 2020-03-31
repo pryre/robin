@@ -222,6 +222,7 @@ set(ROBIN_SRC_MAVLINK_HANDLERS
 	src/mavlink_handlers/mavlink_handle_param_request_list.c
 	src/mavlink_handlers/mavlink_handle_param_request_read.c
 	src/mavlink_handlers/mavlink_handle_param_set.c
+	src/mavlink_handlers/mavlink_handle_ping.c
 	src/mavlink_handlers/mavlink_handle_set_actuator_control_target.c
 	src/mavlink_handlers/mavlink_handle_set_attitude_target.c
 	src/mavlink_handlers/mavlink_handle_set_mode.c
