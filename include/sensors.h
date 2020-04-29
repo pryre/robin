@@ -115,6 +115,12 @@ typedef struct {
 
 typedef struct {
 	sensor_status_t status;
+	uint16_t raw;
+	fix16_t normalized;	//0-100%
+} sensor_readings_rc_rssi_t;
+
+typedef struct {
+	sensor_status_t status;
 
 	bool arm_req_made;		 // Measured state
 	uint32_t timer_start_us; // Measured range
@@ -150,6 +156,7 @@ typedef struct {
 	sensor_readings_sonar_t sonar;
 	sensor_readings_ext_pose_t ext_pose;
 	sensor_readings_rc_input_t rc_input;
+	sensor_readings_rc_rssi_t rc_rssi;
 	sensor_readings_rc_arm_toggle_t rc_arm_toggle;
 	sensor_readings_safety_button_t safety_button;
 	sensor_readings_voltage_monitor_t voltage_monitor;

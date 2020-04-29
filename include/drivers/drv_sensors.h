@@ -24,6 +24,7 @@ void drv_sensors_i2c_clear( void );
 bool drv_sensors_i2c_read( uint32_t time_us );
 
 bool drv_sensors_rc_input_read( uint16_t* readings );
+bool drv_sensors_rc_rssi_read( uint16_t* reading );
 bool drv_sensors_safety_button_read( void );
 uint16_t drv_sensors_battery_monitor_read( void );
 

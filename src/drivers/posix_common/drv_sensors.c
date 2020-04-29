@@ -53,6 +53,10 @@ bool drv_sensors_rc_input_read( uint16_t* readings ) {
 	return false;
 }
 
+bool drv_sensors_rc_rssi_read( uint16_t* reading ) {
+	return false;
+}
+
 bool drv_sensors_safety_button_read( void ) {
 	return false;
 }

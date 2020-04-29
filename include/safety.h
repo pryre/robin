@@ -53,6 +53,7 @@ typedef struct {
 	timeout_status_t sonar;
 	timeout_status_t ext_pose;
 	timeout_status_t rc_input;
+	timeout_status_t rc_rssi;
 	timeout_status_t offboard_heartbeat;
 	timeout_status_t offboard_control;
 	timeout_status_t offboard_mixer_g0_control;

@@ -223,7 +223,7 @@ static void pwmCallback( uint8_t port, uint16_t capture ) {
 		pwmPorts[port].fall = capture;
 		// compute capture
 		pwmPorts[port].capture = pwmPorts[port].fall - pwmPorts[port].rise;
-		if ( pwmPorts[port].capture > DRV_PPM_MIN && pwmPorts[port].capture < DRV_PPM_MAX ) { // valid pulse width
+		if ( pwmPorts[port].capture > get_param_uint( PARAM_RC_PPM_PPM_DATA_MIN ) && pwmPorts[port].capture < get_param_uint( PARAM_RC_PPM_PPM_DATA_MAX ) ) { // valid pulse width
 			captures[pwmPorts[port].channel] = pwmPorts[port].capture;
 		}
 		// switch state
@@ -397,11 +397,10 @@ bool drv_ppm_ready(void) {
 	return true;
 }
 
-bool drv_ppm_read_frame( uint16_t * readings ) {
+bool drv_ppm_read_frame( uint16_t * frame ) {
 	for(int i=0; i< DRV_PPM_MAX_INPUTS; i++) {
-		readings[i] = captures[i];
+		frame[i] = captures[i];
 	}
 
 	return true;
 }
-

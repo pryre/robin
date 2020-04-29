@@ -10,3 +10,7 @@ bool drv_sensors_rc_input_init( void ) {
 bool drv_sensors_rc_input_read( uint16_t* readings ) {
 	return drv_ppm_read_frame(readings);
 }
+
+bool drv_sensors_rc_rssi_read( uint16_t* readings ) {
+	return drv_ppm_read_rssi(readings);
+}

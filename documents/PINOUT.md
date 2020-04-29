@@ -12,8 +12,8 @@ Use the flag `NAZE32_REV5` compile flag while compiling and flashing.
 2. Auxilary outputs
    - GND (unlabeled)
    - 5V (Dot)
-   1. PPM
-   2. N/C
+   1. RC PPM
+   2. RC RSSI (PWM)
    3. UART2 Tx (N/C)
    4. UART2 Rx (N/C)
    5. Safety Button
@@ -40,8 +40,8 @@ Use the flag `NAZE32_REV6` compile flag while compiling and flashing.
 2. Auxilary outputs (labelled on back)
    - GND
    - 5V
-   1. PPM
-   2. N/C
+   1. RC PPM
+   2. RC RSSI (PWM)
    3. UART2 Tx (N/C)
    4. UART2 Rx (N/C)
    5. Safety Button
@@ -68,8 +68,8 @@ Use the flag `NAZE32_REV5` compile flag while compiling and flashing.
 2. Auxilary outputs (split accross multiple headers)
    - GND
    - 5V
-   - SIG -> PPM
-   - N/C
+   - SIG -> RC PPM
+   - RC RSSI (PWM)
    - UART2 Tx (N/C)
    - UART2 Rx (N/C)
    - CH5 -> Safety Button

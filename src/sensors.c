@@ -150,6 +150,11 @@ void sensors_init( void ) {
 
 	attempted_rc_default_mode_change_ = false;
 
+	//RC RSSI
+	sensor_status_init( &_sensors.rc_rssi.status, false );	//Init by RC input setup (assmue not present by default)
+	_sensors.rc_rssi.raw = 0;
+	_sensors.rc_rssi.normalized = 0;
+
 	// RC Safety toggle
 	sensor_status_init( &_sensors.rc_arm_toggle.status,
 						get_param_uint( PARAM_SENSOR_RC_SAFETY_CBRK ) );
@@ -305,6 +310,16 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 	}
 
 	//==-- RC Input, RC Mapping, & Saftety Toggle
+	if ( drv_sensors_rc_rssi_read( &_sensors.rc_rssi.raw ) ) {
+		_sensors.rc_rssi.status.time_read = time_us;
+		_sensors.rc_rssi.status.new_data = true;
+		safety_update_sensor( &_system_status.sensors.rc_rssi );
+
+		//Normalize to typical values (cant calibrate RSSI)
+		fix16_t rssi_rn = dual_normalized_input( _sensors.rc_rssi.raw, 1000, 1500, 2000 );
+		_sensors.rc_rssi.normalized = fix16_normalize_clamp( rssi_rn, -_fc_1, _fc_1);
+	}
+
 	if ( drv_sensors_rc_input_read( _sensors.rc_input.raw ) ) {
 		_sensors.rc_input.status.time_read = time_us;
 		_sensors.rc_input.status.new_data = true;
@@ -349,7 +364,7 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 			_actuator_control_g3[i] = rc_ncd[i];
 		}
 
-		// RC input control mapping and RC arming
+		// RC input control mapping, and RC arming
 		if ( _sensors.rc_input.mapping_set ) {
 			uint8_t chan_roll = get_param_uint( PARAM_RC_MAP_ROLL ) - 1;
 			uint8_t chan_pitch = get_param_uint( PARAM_RC_MAP_PITCH ) - 1;

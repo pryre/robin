@@ -733,6 +733,12 @@ void mavlink_stream_attitude_target( mavlink_channel_t chan ) {
 
 void mavlink_stream_rc_channels_raw( mavlink_channel_t chan ) {
 	if ( mavlink_stream_ready( chan ) ) {
+		//Use RSSI if available
+		uint8_t rssi = 255;
+		if( _system_status.sensors.rc_rssi.health == SYSTEM_HEALTH_OK ) {
+			rssi = fix16_to_int(fix16_mul(fix16_from_int(254),_sensors.rc_rssi.normalized));
+		}
+
 		mavlink_msg_rc_channels_raw_pack(
 			mavlink_system.sysid, mavlink_system.compid, get_channel_buf( chan ),
 			profiler_get_loop_start(),
@@ -740,7 +746,8 @@ void mavlink_stream_rc_channels_raw( mavlink_channel_t chan ) {
 			_sensors.rc_input.raw[0], _sensors.rc_input.raw[1],
 			_sensors.rc_input.raw[2], _sensors.rc_input.raw[3],
 			_sensors.rc_input.raw[4], _sensors.rc_input.raw[5],
-			_sensors.rc_input.raw[6], _sensors.rc_input.raw[7], 255 );
+			_sensors.rc_input.raw[6], _sensors.rc_input.raw[7],
+			rssi );
 		comms_send_msg( chan );
 	}
 }

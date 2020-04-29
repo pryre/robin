@@ -16,6 +16,9 @@
 #define DRV_PWM_BASE_FREQ 1000000
 #define DRV_PWM_BASE_PERIOD 20000
 
+#define DRV_RSSI_STATE_LOW 0
+#define DRV_RSSI_STATE_HIGH 1
+
 typedef struct {
 	uint32_t timer_peripheral;
 	uint32_t timer_channel;
@@ -29,12 +32,19 @@ static uint16_t pwm_frame_[DRV_PWM_MAX_OUTPUTS];
 //State machine for decoding ppm frames
 static volatile uint16_t ppm_pulses_[DRV_PPM_MAX_INPUTS];	//Measurement storage
 static volatile uint16_t ppm_frame_[DRV_PPM_MAX_INPUTS];	//Read OK storage
-static volatile bool ppm_frame_available_;
 static volatile uint32_t timer_rollover_cnt_;
 
 static volatile uint8_t  ppm_cur_pulse_;
 static volatile uint32_t ppm_last_pulse_time_;
 static volatile bool ppm_data_valid_;
+static volatile bool ppm_frame_available_;
+
+static volatile uint32_t rssi_state_;
+static volatile uint32_t rssi_time_edge_last_;
+static volatile uint32_t rssi_time_rise_;
+static volatile uint32_t rssi_time_fall_;
+static volatile uint32_t rssi_time_pulse_;
+static volatile bool rssi_data_available_;
 
 /* FreeFlight/Naze32 timer layout
     Primary IO
@@ -49,7 +59,7 @@ static volatile bool ppm_data_valid_;
 	Secondary IO
 	Name	Timer		Pin		Function1	Function2
     RX1		TIM2_CH1	PA0		PPM
-    RX2		TIM2_CH2	PA1
+    RX2		TIM2_CH2	PA1		RSSI
     RX3		TIM2_CH3	PA2		UART2_TX
     RX4		TIM2_CH4	PA3		UART2_RX
     RX5		TIM3_CH1	PA6		SAFETY		ADC_IN6
@@ -63,9 +73,11 @@ static volatile bool ppm_data_valid_;
     TIM3 4 channels
     TIM4 4 channels
 */
-#define PPM_IRQ			NVIC_TIM2_IRQ
-#define PPM_TIMER_INPUT	TIM_IC_IN_TI1
+#define PPM_IRQ				NVIC_TIM2_IRQ
+#define PPM_TIMER_INPUT		TIM_IC_IN_TI1
+#define RSSI_TIMER_INPUT	TIM_IC_IN_TI2
 static const drv_pwm_map_t drv_ppm_map_ = {TIM2,	TIM_IC1,	GPIOA,	GPIO0};
+static const drv_pwm_map_t drv_rssi_map_ = {TIM2,	TIM_IC2,	GPIOA,	GPIO1};
 
 static const drv_pwm_map_t drv_pwm_map_[DRV_PWM_MAX_OUTPUTS] = {
 	{TIM1,	TIM_OC1,	GPIOA,	GPIO8},
@@ -304,16 +316,71 @@ static void drv_ppm_decode_frame(uint32_t ppm_time) {
 	drv_ppm_decode_frame_width(length);
 }
 
+static void drv_rssi_set_ready(bool ready) {
+	rssi_data_available_ = ready;
+}
+
+static bool drv_rssi_ready(void) {
+	return rssi_data_available_;
+}
+
+static void drv_rssi_decode_frame( uint32_t rssi_time ) {
+	if ( rssi_state_ == DRV_RSSI_STATE_LOW ) {
+		rssi_time_rise_ = rssi_time;
+
+		//Switch to falling mode
+		rssi_state_ = DRV_RSSI_STATE_HIGH;
+		timer_ic_set_polarity(drv_rssi_map_.timer_peripheral,
+							  drv_rssi_map_.timer_channel,
+							  TIM_IC_FALLING);
+
+	} else if ( rssi_state_ == DRV_RSSI_STATE_HIGH ) {
+		rssi_time_fall_ = rssi_time;
+		uint32_t capture = rssi_time_fall_ - rssi_time_rise_;
+		// compute capture
+		if ( capture > get_param_uint( PARAM_RC_PPM_PPM_DATA_MIN ) &&
+			 capture < get_param_uint( PARAM_RC_PPM_PPM_DATA_MAX ) ) { // valid pulse width
+
+			rssi_time_pulse_ = capture;
+			drv_rssi_set_ready( true );
+		}
+		else {
+			//Invalid reading
+			rssi_time_pulse_ = 0;
+			drv_rssi_set_ready( false );
+		}
+
+		//Switch to rising mode
+		rssi_state_ = DRV_RSSI_STATE_LOW;
+		timer_ic_set_polarity(drv_rssi_map_.timer_peripheral,
+							  drv_rssi_map_.timer_channel,
+							  TIM_IC_RISING);
+	} else {
+		//Invalid, reset
+		rssi_state_ = DRV_RSSI_STATE_LOW;
+		rssi_time_edge_last_ = 0;
+		rssi_time_rise_ = 0;
+		rssi_time_fall_ = 0;
+		rssi_time_pulse_ = 0;
+		drv_rssi_set_ready( false );
+	}
+}
+
 void tim2_isr(void) {
 	if( TIM2_SR & TIM_SR_CC1IF ) {
 		timer_clear_flag(TIM2, TIM_SR_CC1IF);
 		uint32_t now = timer_get_counter(TIM2) + timer_rollover_cnt_;
 		drv_ppm_decode_frame(now);
+	} else if( TIM2_SR & TIM_SR_CC2IF ) {
+		timer_clear_flag(TIM2, TIM_SR_CC2IF);
+		uint32_t now = timer_get_counter(TIM2) + timer_rollover_cnt_;
+		drv_rssi_decode_frame(now);
 	} else if( TIM2_SR & TIM_SR_UIF ) {
 		timer_clear_flag(TIM2, TIM_SR_UIF);
 		timer_rollover_cnt_ += DRV_PWM_BASE_PERIOD;//(1 << 16);
 	}
 }
+
 
 //=======================================================================
 //	PWM Driver
@@ -384,6 +451,13 @@ bool drv_ppm_init(void) {
 	ppm_data_valid_ = false;
 	drv_ppm_set_ready(false);
 
+	rssi_state_ = DRV_RSSI_STATE_LOW;
+	rssi_time_edge_last_ = 0;
+	rssi_time_rise_ = 0;
+	rssi_time_fall_ = 0;
+	rssi_time_pulse_ = 0;
+	drv_rssi_set_ready(false);
+
 	//Timer clock enable
 	//XXX: Handled in drv_pwm_init()
 	//rcc_periph_clock_enable(timer_get_rcc_peripheral(drv_ppm_map_.timer_peripheral));
@@ -400,15 +474,18 @@ bool drv_ppm_init(void) {
 
 	//PPM Base Period doesn't matter, we just need to set the FREQ so the interrupt works
 	drv_pwm_init_timer(drv_ppm_map_.timer_peripheral, DRV_PWM_BASE_FREQ, DRV_PWM_BASE_PERIOD);
+	//XXX: RSSI same as PPM: drv_pwm_init_timer(drv_rssi_map_.timer_peripheral, DRV_PWM_BASE_FREQ, DRV_PWM_BASE_PERIOD);
 
 	// TIM channel configuration: Input Capture mode
 	// The first rising/falling edge is used as active edge
 
 	// GPIO configuration as input capture for timer
 	gpio_set_mode(drv_ppm_map_.port, GPIO_MODE_INPUT,
-			  GPIO_CNF_INPUT_PULL_UPDOWN,//GPIO_CNF_OUTPUT_ALTFN_OPENDRAIN,
+			  GPIO_CNF_INPUT_PULL_UPDOWN,
 			  drv_ppm_map_.pin);
-	//gpio_setup_pin_af(PPM_GPIO_PORT, PPM_GPIO_PIN, PPM_GPIO_AF, FALSE);
+	gpio_set_mode(drv_rssi_map_.port, GPIO_MODE_INPUT,
+			  GPIO_CNF_INPUT_PULL_UPDOWN,
+			  drv_rssi_map_.pin);
 
 	if( get_param_fix16(PARAM_RC_PPM_PPM_PULSE_TYPE) ) {
 		timer_ic_set_polarity(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, TIM_IC_RISING);
@@ -418,22 +495,33 @@ bool drv_ppm_init(void) {
 		gpio_set(drv_ppm_map_.port, drv_ppm_map_.pin); //Enable pull-up
 	}
 
+	//XXX: Set up RSSI PWM read (assume pull-down (normal PWM)
+	timer_ic_set_polarity(drv_rssi_map_.timer_peripheral, drv_rssi_map_.timer_channel, TIM_IC_RISING);
+	gpio_clear(drv_rssi_map_.port, drv_rssi_map_.pin); //Enable pull-down
+
+	//PPM IC Set
 	timer_ic_set_input(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, PPM_TIMER_INPUT);
 	timer_ic_set_prescaler(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, TIM_IC_PSC_OFF);
 	timer_ic_set_filter(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, TIM_IC_OFF);
 
+	//RSSI IC Set
+	timer_ic_set_input(drv_rssi_map_.timer_peripheral, drv_rssi_map_.timer_channel, RSSI_TIMER_INPUT);
+	timer_ic_set_prescaler(drv_rssi_map_.timer_peripheral, drv_rssi_map_.timer_channel, TIM_IC_PSC_OFF);
+	timer_ic_set_filter(drv_rssi_map_.timer_peripheral, drv_rssi_map_.timer_channel, TIM_IC_OFF);
+
 	// Enable timer interrupt
 	//nvic_set_priority(PPM_IRQ, PPM_IRQ_PRIO);
-	nvic_enable_irq(PPM_IRQ);
+	nvic_enable_irq(PPM_IRQ);	//XXX: Same for RSSI
 	// Enable the Capture/Compare and Update interrupt requests
-	timer_enable_irq(drv_ppm_map_.timer_peripheral, (TIM_DIER_CC1IE | TIM_DIER_UIE));
+	timer_enable_irq(drv_ppm_map_.timer_peripheral, (TIM_DIER_CC1IE | TIM_DIER_CC2IE | TIM_DIER_UIE));	//XXX: For both PPM and RSSI
 
 	// Enable capture channel
 	timer_ic_enable(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel);
+	timer_ic_enable(drv_rssi_map_.timer_peripheral, drv_rssi_map_.timer_channel);
 
 	// TIM enable counter
 	//timer_enable_counter(drv_ppm_map_.timer_peripheral);
-	timer_enable_counter(drv_ppm_map_.timer_peripheral);
+	timer_enable_counter(drv_ppm_map_.timer_peripheral);	//XXX: SAME FOR RSSI
 
 	return true;
 }
@@ -451,6 +539,21 @@ bool drv_ppm_read_frame( uint16_t *frame ) {
 			frame[i] = ppm_frame_[i];
 
 		drv_ppm_set_ready(false);
+		}
+		success = true;
+	}
+
+	return success;
+}
+
+bool drv_ppm_read_rssi( uint16_t *pulse ) {
+	bool success = false;
+
+	if( drv_rssi_ready() ) {
+		CM_ATOMIC_BLOCK() {
+		*pulse = rssi_time_pulse_;
+
+		drv_rssi_set_ready( false );
 		}
 		success = true;
 	}

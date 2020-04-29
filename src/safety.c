@@ -77,6 +77,9 @@ void safety_init() {
 	init_sensor_state( &_system_status.sensors.rc_input, "RC Input",
 					   PARAM_SENSOR_RC_INPUT_STRM_COUNT,
 					   PARAM_SENSOR_RC_INPUT_TIMEOUT );
+	init_sensor_state( &_system_status.sensors.rc_rssi, "RC RSSI",
+					   PARAM_SENSOR_RC_INPUT_STRM_COUNT,
+					   PARAM_SENSOR_RC_INPUT_TIMEOUT );	//XXX: Run this off RC timings as well (should be linked)
 	init_sensor_state( &_system_status.sensors.offboard_heartbeat,
 					   "Offboard Heartbeat", PARAM_SENSOR_OFFB_HRBT_STRM_COUNT,
 					   PARAM_SENSOR_OFFB_HRBT_TIMEOUT );
@@ -185,13 +188,13 @@ static bool check_control_mode_inputs( uint8_t req_ctrl_mode ) {
 
 	switch ( req_ctrl_mode ) {
 	case MAIN_MODE_STABILIZED: {
-		if ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK )
+		if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) && ( !_sensors.rc_rssi.status.present || ( _system_status.sensors.rc_rssi.health == SYSTEM_HEALTH_OK ) ) )
 			control_mode_ok = true;
 
 		break;
 	}
 	case MAIN_MODE_ACRO: {
-		if ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK )
+		if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) && ( !_sensors.rc_rssi.status.present || ( _system_status.sensors.rc_rssi.health == SYSTEM_HEALTH_OK ) ) )
 			control_mode_ok = true;
 
 		break;
@@ -269,7 +272,7 @@ bool safety_request_arm( void ) {
 		case MAIN_MODE_STABILIZED: {
 			mode_check = true;
 
-			if ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) {
+			if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) && ( !_sensors.rc_rssi.status.present || ( _system_status.sensors.rc_rssi.health == SYSTEM_HEALTH_OK ) ) ) {
 				control_check = true;
 
 				if ( _sensors.rc_input.c_T < _fc_0_05 )
@@ -281,7 +284,7 @@ bool safety_request_arm( void ) {
 		case MAIN_MODE_ACRO: {
 			mode_check = true;
 
-			if ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) {
+			if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) && ( !_sensors.rc_rssi.status.present || ( _system_status.sensors.rc_rssi.health == SYSTEM_HEALTH_OK ) ) ) {
 				control_check = true;
 
 				if ( _sensors.rc_input.c_T < _fc_0_05 )
@@ -590,7 +593,7 @@ static void system_state_update( uint32_t time_now ) {
 		ctrl_mode_ok = true;
 	}
 
-	if ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) {
+	if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) && ( !_sensors.rc_rssi.status.present || ( _system_status.sensors.rc_rssi.health == SYSTEM_HEALTH_OK ) ) ) {
 		_system_status.mode |= MAV_MODE_FLAG_MANUAL_INPUT_ENABLED;
 
 		ctrl_mode_ok = true;
@@ -602,7 +605,12 @@ static void system_state_update( uint32_t time_now ) {
 }
 
 static void safety_health_update( uint32_t time_now ) {
-	bool sensors_ok = ( !_sensors.imu.status.present || ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) ) && ( !_sensors.mag.status.present || ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) ) && ( !_sensors.baro.status.present || ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) ) && ( !_sensors.sonar.status.present || ( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) ) && ( !_sensors.ext_pose.status.present || ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) ) && ( !_sensors.hil.status.present || ( _system_status.sensors.hil.health == SYSTEM_HEALTH_OK ) );
+	bool sensors_ok = ( !_sensors.imu.status.present || ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) ) &&
+					  ( !_sensors.mag.status.present || ( _system_status.sensors.mag.health == SYSTEM_HEALTH_OK ) ) &&
+					  ( !_sensors.baro.status.present || ( _system_status.sensors.baro.health == SYSTEM_HEALTH_OK ) ) &&
+					  ( !_sensors.sonar.status.present || ( _system_status.sensors.sonar.health == SYSTEM_HEALTH_OK ) ) &&
+					  ( !_sensors.ext_pose.status.present || ( _system_status.sensors.ext_pose.health == SYSTEM_HEALTH_OK ) ) &&
+					  ( !_sensors.hil.status.present || ( _system_status.sensors.hil.health == SYSTEM_HEALTH_OK ) );
 
 	bool control_ok = check_control_mode_inputs( _system_status.control_mode );
 
@@ -629,6 +637,7 @@ void safety_run( uint32_t time_now ) {
 	safety_check_sensor( &_system_status.sensors.sonar, time_now );
 	safety_check_sensor( &_system_status.sensors.ext_pose, time_now );
 	safety_check_sensor( &_system_status.sensors.rc_input, time_now );
+	safety_check_sensor( &_system_status.sensors.rc_rssi, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_heartbeat, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_control, time_now );
 	safety_check_sensor( &_system_status.sensors.offboard_mixer_g0_control,
