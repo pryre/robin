@@ -1,3 +1,4 @@
+#include "params.h"
 #include "drivers/drv_pwm.h"
 #include "drivers/drv_ppm.h"
 #include "drivers/drv_system.h"
@@ -14,10 +15,6 @@
 
 #define DRV_PWM_BASE_FREQ 1000000
 #define DRV_PWM_BASE_PERIOD 20000
-
-#define PPM_PULSE_TYPE_POSITIVE 1
-#define PPM_PULSE_TYPE_NEGATIVE 2
-#define PPM_PULSE_TYPE PPM_PULSE_TYPE_POSITIVE
 
 typedef struct {
 	uint32_t timer_peripheral;
@@ -183,7 +180,7 @@ static uint32_t timer_get_reset_peripheral(uint32_t timer_peripheral) {
 	return reset_tim;
 }
 
-static void drv_pwm_init_timer(uint32_t tim) {
+static void drv_pwm_init_timer(uint32_t tim, uint32_t base_freq, uint32_t base_period) {
 	//Enable TIM clock
 	rcc_periph_clock_enable(timer_get_rcc_peripheral(tim));
 
@@ -200,14 +197,14 @@ static void drv_pwm_init_timer(uint32_t tim) {
 	timer_set_mode(tim, TIM_CR1_CKD_CK_INT, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
 
 	//Set prescaler, need to make sure it is consistent with the APB1/APB2 clocks
-	timer_set_prescaler( tim, ( timer_get_frequency(tim) / DRV_PWM_BASE_FREQ ) - 1 );
+	timer_set_prescaler( tim, ( timer_get_frequency(tim) / base_freq ) - 1 );
 
 	//Disable preload
 	timer_disable_preload(tim);
 
 	//Compare value continuously and count 20ms range for PWM
 	timer_continuous_mode(tim);
-	timer_set_period(tim, DRV_PWM_BASE_PERIOD);
+	timer_set_period(tim, base_period);
 
 	/* Set the initual output compare value for OC1. */
 	//timer_set_oc_value(tim, TIM_OC1, frequency_sequence[frequency_sel++]);
@@ -258,11 +255,9 @@ static void drv_ppm_set_ready( bool ready ) {
 }
 
 static void drv_ppm_decode_frame_width(uint32_t ppm_width) {
-	//say("ppm_decode_frame_width()");
-
 	if (ppm_cur_pulse_ == DRV_PPM_MAX_INPUTS) {
-		if( ( ppm_width > DRV_PPM_SYNC_MIN ) &&
-			( ppm_width < DRV_PPM_SYNC_MAX ) ) {
+		if( ( ppm_width > get_param_uint( PARAM_RC_PPM_PPM_SYNC_MIN ) ) &&
+			( ppm_width < get_param_uint( PARAM_RC_PPM_PPM_SYNC_MAX ) ) ) {
 
 			if (ppm_data_valid_) {
 				//Store the data in a clean buffer and make it available
@@ -285,11 +280,9 @@ static void drv_ppm_decode_frame_width(uint32_t ppm_width) {
 			ppm_data_valid_ = false;
 		}
 		*/
-
-		//say("sync");
 	} else {
-		if( ( ppm_width > DRV_PPM_MIN ) &&
-			( ppm_width < DRV_PPM_MAX ) ) {
+		if( ( ppm_width > get_param_uint( PARAM_RC_PPM_PPM_DATA_MIN ) ) &&
+			( ppm_width < get_param_uint( PARAM_RC_PPM_PPM_DATA_MAX ) ) ) {
 
 			ppm_pulses_[ppm_cur_pulse_] = ppm_width;
 			ppm_cur_pulse_++;
@@ -327,13 +320,15 @@ void tim2_isr(void) {
 //=======================================================================
 
 bool drv_pwm_init( void ) {
+	//TODO: Try and get these working so that we can vary
+	//		base period with PARAM_MOTOR_PWM_SEND_RATE and
+	//		PARAM_SERVO_PWM_SEND_RATE for better update
+	//		rate for our motors?
+
 	// Init all our timers to run at 1us intervals, overflow at PWM_PERIOD
-	//say("Setup: TIM1");
-	drv_pwm_init_timer(TIM1);
-	//say("Setup: TIM3");
-	drv_pwm_init_timer(TIM3);
-	//say("Setup: TIM4");
-	drv_pwm_init_timer(TIM4);
+	drv_pwm_init_timer(TIM1, DRV_PWM_BASE_FREQ, DRV_PWM_BASE_PERIOD);
+	drv_pwm_init_timer(TIM3, DRV_PWM_BASE_FREQ, DRV_PWM_BASE_PERIOD);
+	drv_pwm_init_timer(TIM4, DRV_PWM_BASE_FREQ, DRV_PWM_BASE_PERIOD);
 
 	// init output of channel2 of timer2
 	//drv_pwm_init_output_channel(TIM2, SERVO_CH1, &RCC_APB2ENR, RCC_APB2ENR_IOPAEN, GPIOA, GPIO_TIM2_CH2);
@@ -403,8 +398,8 @@ bool drv_ppm_init(void) {
 	//uint32_t timer_clk = timer_get_frequency(PPM_TIMER);
 	//timer_set_prescaler(PPM_TIMER, (timer_clk / (RC_PPM_TICKS_PER_USEC * ONE_MHZ_CLK)) - 1);
 
-	//say("Setup: TIM2");
-	drv_pwm_init_timer(drv_ppm_map_.timer_peripheral);
+	//PPM Base Period doesn't matter, we just need to set the FREQ so the interrupt works
+	drv_pwm_init_timer(drv_ppm_map_.timer_peripheral, DRV_PWM_BASE_FREQ, DRV_PWM_BASE_PERIOD);
 
 	// TIM channel configuration: Input Capture mode
 	// The first rising/falling edge is used as active edge
@@ -415,16 +410,14 @@ bool drv_ppm_init(void) {
 			  drv_ppm_map_.pin);
 	//gpio_setup_pin_af(PPM_GPIO_PORT, PPM_GPIO_PIN, PPM_GPIO_AF, FALSE);
 
-	//TODO: PPM pulse type could be a variable?
-	#if defined PPM_PULSE_TYPE && PPM_PULSE_TYPE == PPM_PULSE_TYPE_POSITIVE
-	timer_ic_set_polarity(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, TIM_IC_RISING);
-	gpio_clear(drv_ppm_map_.port, drv_ppm_map_.pin); //Enable pull-down
-	#elif defined PPM_PULSE_TYPE && PPM_PULSE_TYPE == PPM_PULSE_TYPE_NEGATIVE
-	timer_ic_set_polarity(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, TIM_IC_FALLING);
-	gpio_set(drv_ppm_map_.port, drv_ppm_map_.pin); //Enable pull-up
-	#else
-	#error "Unknown PPM_PULSE_TYPE"
-	#endif
+	if( get_param_fix16(PARAM_RC_PPM_PPM_PULSE_TYPE) ) {
+		timer_ic_set_polarity(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, TIM_IC_RISING);
+		gpio_clear(drv_ppm_map_.port, drv_ppm_map_.pin); //Enable pull-down
+	} else {
+		timer_ic_set_polarity(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, TIM_IC_FALLING);
+		gpio_set(drv_ppm_map_.port, drv_ppm_map_.pin); //Enable pull-up
+	}
+
 	timer_ic_set_input(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, PPM_TIMER_INPUT);
 	timer_ic_set_prescaler(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, TIM_IC_PSC_OFF);
 	timer_ic_set_filter(drv_ppm_map_.timer_peripheral, drv_ppm_map_.timer_channel, TIM_IC_OFF);

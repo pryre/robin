@@ -171,9 +171,15 @@ static pwmPortData_t* pwmInConfig( uint8_t port, timerCCCallbackPtr callback,
 
 	p->channel = channel;
 
-	pwmGPIOConfig( timerHardwarePtr->gpio, timerHardwarePtr->pin, Mode_IPD );
-	pwmICConfig( timerHardwarePtr->tim, timerHardwarePtr->channel,
-				 TIM_ICPolarity_Rising );
+	if( get_param_fix16(PARAM_RC_PPM_PPM_PULSE_TYPE) ) {
+		pwmGPIOConfig( timerHardwarePtr->gpio, timerHardwarePtr->pin, Mode_IPD );
+		pwmICConfig( timerHardwarePtr->tim, timerHardwarePtr->channel,
+					 TIM_ICPolarity_Rising );
+	} else {
+		pwmGPIOConfig( timerHardwarePtr->gpio, timerHardwarePtr->pin, Mode_IPU );
+		pwmICConfig( timerHardwarePtr->tim, timerHardwarePtr->channel,
+					 TIM_ICPolarity_Falling );
+	}
 
 	timerConfigure( timerHardwarePtr, 0xFFFF, PWM_TIMER_MHZ );
 	configureTimerCaptureCompareInterrupt( timerHardwarePtr, port, callback );
@@ -192,13 +198,15 @@ static void ppmCallback( uint8_t port, uint16_t capture ) {
 	now = capture;
 	diff = now - last;
 
-	if ( diff > 2700 ) { // Per
+	if ( diff > get_param_uint( PARAM_RC_PPM_PPM_SYNC_MIN ) ) { // Per
 		// http://www.rcgroups.com/forums/showpost.php?p=21996147&postcount=3960
 		// "So, if you use 2.5ms or higher as being the reset for the PPM
 		// stream start, you will be fine. I use 2.7ms just to be safe."
 		chan = 0;
 	} else {
-		if ( diff > DRV_PPM_MIN && diff < DRV_PPM_MAX && chan < DRV_PPM_MAX_INPUTS ) { // 750 to 2250 ms is our 'valid' channel range
+		if ( diff > get_param_uint( PARAM_RC_PPM_PPM_DATA_MIN ) &&
+			 diff < get_param_uint( PARAM_RC_PPM_PPM_DATA_MAX ) &&
+			 chan < DRV_PPM_MAX_INPUTS ) { // 'valid' channel range and is a valid channel
 			captures[chan] = diff;
 		}
 		chan++;

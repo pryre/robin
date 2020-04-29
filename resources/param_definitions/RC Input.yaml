@@ -101,3 +101,43 @@ PARAM_RC_FULL_RANGE_THRUST:
   value:
     option: "bool"
     default: 0
+PARAM_RC_PPM_PPM_PULSE_TYPE:
+  type: "uint"
+  name: "RC_PPM_PULSE_T"
+  description: "Sets the PPM pulse input mode to positive/pulldown (1,true) or negitive/pullup (0,false) for supported boards"
+  reboot: true
+  value:
+    option: "bool"
+    default: 1
+PARAM_RC_PPM_PPM_DATA_MIN:
+  type: "uint"
+  name: "RC_PPM_DATA_MIN"
+  description: "Sets the minimum data PPM pulse that will be accepted"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 800
+PARAM_RC_PPM_PPM_DATA_MAX:
+  type: "uint"
+  name: "RC_PPM_DATA_MAX"
+  description: "Sets the maximum data PPM pulse that will be accepted"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2200
+PARAM_RC_PPM_PPM_SYNC_MIN:
+  type: "uint"
+  name: "RC_PPM_SYNC_MIN"
+  description: "Sets the minimum pulse that will be interpreted as a PPM sync"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 2700
+PARAM_RC_PPM_PPM_SYNC_MAX:
+  type: "uint"
+  name: "RC_PPM_SYNC_MAX"
+  description: "Sets the maximum pulse that will be interpreted as a PPM sync"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 30000
