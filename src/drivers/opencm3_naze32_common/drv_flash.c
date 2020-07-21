@@ -34,7 +34,7 @@
 #define FLASH_MAGIC_EF 0xEF
 
 
-params_t _params;
+// params_t _params;
 
 // Calculate the address (from the back of memory) to place the flash parameters (i.e. flash_end - sizeof( params_t ), but in pages)
 // This also means that the data will be aligned with the page start

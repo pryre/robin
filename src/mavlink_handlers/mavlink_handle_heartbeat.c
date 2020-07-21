@@ -7,10 +7,10 @@ extern "C" {
 
 #include "safety.h"
 
-bool _ch_0_have_heartbeat;
-bool _ch_1_have_heartbeat;
+// bool _ch_0_have_heartbeat;
+// bool _ch_1_have_heartbeat;
 
-system_status_t _system_status;
+// system_status_t _system_status;
 
 void mavlink_handle_heartbeat( mavlink_channel_t chan, mavlink_message_t* msg,
 							   mavlink_status_t* status ) {

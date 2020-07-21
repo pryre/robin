@@ -8,7 +8,7 @@ extern "C" {
 #include "params.h"
 #include "safety.h"
 
-system_status_t _system_status;
+// system_status_t _system_status;
 
 MAV_RESULT mavlink_handle_command_long_preflight_storage( mavlink_channel_t chan,
 														  float* params ) {

@@ -21,7 +21,7 @@ extern "C" {
 #include "mavlink_system.h"
 #include "mavlink_transmit.h"
 
-system_status_t _system_status;
+//system_status_t _system_status;
 
 void setup( void ) {
 	// Preset status flags

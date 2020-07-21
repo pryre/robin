@@ -17,8 +17,8 @@ extern "C" {
 
 #include "robin_itoa.h"
 
-const mixer_t* _mixer_to_use;
-mixer_motor_test_t _motor_test;
+// const mixer_t* _mixer_to_use;
+// mixer_motor_test_t _motor_test;
 
 MAV_RESULT mavlink_handle_command_long_do_motor_test( mavlink_channel_t chan,
 													  float* params ) {

@@ -7,7 +7,7 @@ extern "C" {
 
 #include "params.h"
 
-mavlink_queue_t _lpq;
+// mavlink_queue_t _lpq;
 
 void mavlink_handle_param_request_list( mavlink_channel_t chan,
 										mavlink_message_t* msg,

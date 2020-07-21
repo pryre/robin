@@ -12,8 +12,8 @@ extern "C" {
 
 #include <stdlib.h>
 
-calibration_data_t _calibrations;
-sensor_readings_t _sensors;
+// calibration_data_t _calibrations;
+// sensor_readings_t _sensors;
 
 bool calibrate_gyro( void ) {
 	bool failed = false;

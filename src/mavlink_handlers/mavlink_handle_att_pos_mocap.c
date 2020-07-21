@@ -11,7 +11,7 @@ extern "C" {
 #include "safety.h"
 #include "sensors.h"
 
-sensor_readings_t _sensors;
+//sensor_readings_t _sensors;
 
 void mavlink_handle_att_pos_mocap( mavlink_channel_t chan,
 								   mavlink_message_t* msg,

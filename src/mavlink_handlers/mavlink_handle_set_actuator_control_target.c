@@ -10,12 +10,12 @@ extern "C" {
 
 static bool got_actuator_g4;
 static bool got_actuator_g5;
-fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];
-fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];
-fix16_t _actuator_control_g2[MIXER_NUM_MOTORS];
-fix16_t _actuator_control_g3[MIXER_NUM_MOTORS];
-fix16_t _actuator_control_g4[MIXER_NUM_MOTORS];
-fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];
+// fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];
+// fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];
+// fix16_t _actuator_control_g2[MIXER_NUM_MOTORS];
+// fix16_t _actuator_control_g3[MIXER_NUM_MOTORS];
+// fix16_t _actuator_control_g4[MIXER_NUM_MOTORS];
+// fix16_t _actuator_control_g5[MIXER_NUM_MOTORS];
 
 void mavlink_handle_set_actuator_control_target( mavlink_channel_t chan,
 												 mavlink_message_t* msg,

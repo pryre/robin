@@ -39,21 +39,21 @@ extern "C" {
 
 mavlink_queue_t _lpq;
 
-mavlink_system_t _mavlink_gcs;
+mavlink_system_t mavlink_gcs;
 mavlink_system_t mavlink_system;
 bool _ch_0_have_heartbeat;
 bool _ch_1_have_heartbeat;
 
-params_t _params;
-const char _param_names[PARAMS_COUNT]
-					   [MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
+//params_t _params;
+//const char _param_names[PARAMS_COUNT]
+//					   [MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
 
-system_status_t _system_status;
-sensor_readings_t _sensors;
-state_t _state_estimator;
-fix16_t _io_pin_states[IO_PIN_STATE_NUM];
+//system_status_t _system_status;
+//sensor_readings_t _sensors;
+//state_t _state_estimator;
+//fix16_t _io_pin_states[IO_PIN_STATE_NUM];
 
-command_input_t _control_input;
+//command_input_t _control_input;
 
 static mavlink_message_t mavlink_msg_buf_port0_;
 static mavlink_message_t mavlink_msg_buf_port1_;
@@ -66,8 +66,8 @@ void communications_system_init( void ) {
 	mavlink_system.sysid = get_param_uint( PARAM_SYSTEM_ID );	 // System ID, 1-255
 	mavlink_system.compid = get_param_uint( PARAM_COMPONENT_ID ); // Component/Subsystem ID, 1-255
 
-	_mavlink_gcs.sysid = get_param_uint( PARAM_GCS_SYSTEM_ID );		// System ID, 1-255
-	_mavlink_gcs.compid = get_param_uint( PARAM_GCS_COMPONENT_ID ); // Component/Subsystem ID, 1-255
+	mavlink_gcs.sysid = get_param_uint( PARAM_GCS_SYSTEM_ID );		// System ID, 1-255
+	mavlink_gcs.compid = get_param_uint( PARAM_GCS_COMPONENT_ID ); // Component/Subsystem ID, 1-255
 
 	_lpq.position = 0;
 	_lpq.length = 0;

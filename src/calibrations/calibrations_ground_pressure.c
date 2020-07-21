@@ -7,8 +7,8 @@ extern "C" {
 #include "mavlink_system.h"
 #include "sensors.h"
 
-calibration_data_t _calibrations;
-sensor_readings_t _sensors;
+// calibration_data_t _calibrations;
+// sensor_readings_t _sensors;
 
 bool calibrate_ground_pressure( void ) {
 	bool failed = false;

@@ -15,10 +15,10 @@ extern "C" {
 #include "fixextra.h"
 
 system_status_t _system_status;
-sensor_readings_t _sensors;
-command_input_t _cmd_ob_input;
-command_input_t _control_input;
-control_output_t _control_output;
+//sensor_readings_t _sensors;
+//command_input_t _cmd_ob_input;
+//command_input_t _control_input;
+//control_output_t _control_output;
 
 static const char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN] = {
 	"UNINIT",

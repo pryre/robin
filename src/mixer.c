@@ -27,8 +27,8 @@ extern "C" {
 #include "mixers/mixer_mc_x6.h"
 #include "mixers/mixer_none.h"
 
-control_output_t _control_output;
-system_status_t _system_status;
+//control_output_t _control_output;
+//system_status_t _system_status;
 
 io_type_t _actuator_type_map[MIXER_NUM_MOTORS];
 fix16_t _actuator_control_g0[MIXER_NUM_MOTORS];

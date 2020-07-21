@@ -20,7 +20,7 @@ extern "C" {
 #include "fixvector3d.h"
 
 calibration_data_t _calibrations;
-sensor_readings_t _sensors;
+//sensor_readings_t _sensors;
 
 void calibration_init( void ) {
 	_calibrations.type = CAL_NONE;

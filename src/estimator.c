@@ -16,7 +16,7 @@ extern "C" {
 #include "fixvector3d.h"
 
 state_t _state_estimator;
-sensor_readings_t _sensors;
+//sensor_readings_t _sensors;
 
 #include <stdio.h>
 

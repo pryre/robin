@@ -299,7 +299,8 @@ def gen_h(params, filepath):
 extern "C" {
 #endif
 
-#include <mavlink/common/common.h>
+#include "mavlink_system.h"
+#include <mavlink/common/mavlink.h>
 
 typedef enum {
 """
@@ -437,7 +438,7 @@ def gen_c(params, filepath):
 			else:
 				raise ValueError("%s: Unsupported type option (%s)" % (param_id, details["type"]))
 
-			str_c = "\t" + mavlink_type + ",\n"
+			str_c = "\t(MAV_PARAM_TYPE)" + mavlink_type + ",\n"
 			param_gen_c.write(str_c)
 
 		str_c = "};\n\n"

@@ -15,8 +15,8 @@ extern "C" {
 
 #include "robin_itoa.h"
 
-calibration_data_t _calibrations;
-sensor_readings_t _sensors;
+// calibration_data_t _calibrations;
+// sensor_readings_t _sensors;
 
 static uint32_t uint32_min(uint32_t a, uint32_t b) {
 	return ( a < b ) ? a : b;

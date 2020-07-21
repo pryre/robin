@@ -12,8 +12,8 @@ extern "C" {
 #include "fixextra.h"
 #include "params.h"
 
-calibration_data_t _calibrations;
-sensor_readings_t _sensors;
+// calibration_data_t _calibrations;
+// sensor_readings_t _sensors;
 
 bool calibrate_level_horizon( void ) {
 	bool failed = false;

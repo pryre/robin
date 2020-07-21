@@ -12,8 +12,8 @@ extern "C" {
 #include "params.h"
 #include "safety.h"
 
-calibration_data_t _calibrations;
-sensor_readings_t _sensors;
+// calibration_data_t _calibrations;
+// sensor_readings_t _sensors;
 
 bool calibrate_accel( void ) {
 	bool failed = false;

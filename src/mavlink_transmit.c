@@ -13,7 +13,7 @@ extern "C" {
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
-system_status_t _system_status;
+//system_status_t _system_status;
 
 // Default stream update rates, same layout as defined in mavlink_stream_id_t
 static const float default_stream_rate_lookup_b921600[MAVLINK_STREAM_COUNT] = {

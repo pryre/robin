@@ -7,7 +7,7 @@ extern "C" {
 
 #include "sensors.h"
 
-sensor_readings_t _sensors;
+// sensor_readings_t _sensors;
 
 void mavlink_handle_hil_sensor( mavlink_channel_t chan, mavlink_message_t* msg,
 								mavlink_status_t* status ) {

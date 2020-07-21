@@ -23,9 +23,9 @@ extern "C" {
 
 #include "drivers/drv_system.h"
 
-system_status_t _system_status;
-sensor_readings_t _sensors;
-state_t _state_estimator;
+//system_status_t _system_status;
+//sensor_readings_t _sensors;
+//state_t _state_estimator;
 
 control_timing_t _control_timing;
 command_input_t _cmd_ob_input;

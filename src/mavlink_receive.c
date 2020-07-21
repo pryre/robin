@@ -9,7 +9,7 @@ extern "C" {
 #include "drivers/drv_system.h"
 #include "params.h"
 
-mavlink_system_t _mavlink_gcs;
+//mavlink_system_t _mavlink_gcs;
 
 static bool communication_decode( mavlink_channel_t chan, uint8_t c ) {
 	bool msg_parsed = false;
@@ -20,7 +20,7 @@ static bool communication_decode( mavlink_channel_t chan, uint8_t c ) {
 	if ( mavlink_parse_char( chan, c, &msg, &status ) ) {
 		msg_parsed = true;
 
-		if ( ( !get_param_uint( PARAM_STRICT_GCS_MATCH ) ) || ( ( msg.sysid == _mavlink_gcs.sysid ) && ( msg.compid == _mavlink_gcs.compid ) ) ) {
+		if ( ( !get_param_uint( PARAM_STRICT_GCS_MATCH ) ) || ( ( msg.sysid == mavlink_gcs.sysid ) && ( msg.compid == mavlink_gcs.compid ) ) ) {
 			// XXX: This may happen automatically in the MAVLINK backend
 			// If we detected a mavlink v2 status from GCS, and we're still in v1,
 			// switch

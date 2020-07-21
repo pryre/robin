@@ -22,9 +22,9 @@ extern "C" {
 
 // global variable definitions
 params_t _params;
-const char _param_names[PARAMS_COUNT]
-					   [MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
-const MAV_PARAM_TYPE _param_types[PARAMS_COUNT];
+//const char _param_names[PARAMS_COUNT]
+//					   [MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
+//const MAV_PARAM_TYPE _param_types[PARAMS_COUNT];
 
 // local function definitions
 void init_param_uint( param_id_t id, const uint32_t value ) {

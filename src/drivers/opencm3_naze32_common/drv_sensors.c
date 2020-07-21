@@ -22,8 +22,8 @@
 #define NAZE32_I2C_SENSOR_CHANNEL I2C2
 
 
-sensor_readings_t _sensors;
-calibration_data_t _calibrations;
+// sensor_readings_t _sensors;
+// calibration_data_t _calibrations;
 
 static volatile uint32_t imu_time_ready_;
 static volatile uint32_t imu_time_last_;

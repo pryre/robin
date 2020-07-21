@@ -11,7 +11,7 @@ extern "C" {
 #include "fix16.h"
 #include "fixextra.h"
 
-command_input_t _cmd_ob_input;
+// command_input_t _cmd_ob_input;
 
 void mavlink_handle_set_attitude_target( mavlink_channel_t chan,
 										 mavlink_message_t* msg,

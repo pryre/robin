@@ -8,8 +8,8 @@ extern "C" {
 #include "calibration.h"
 #include "safety.h"
 
-calibration_data_t _calibrations;
-system_status_t _system_status;
+// calibration_data_t _calibrations;
+// system_status_t _system_status;
 
 MAV_RESULT mavlink_handle_command_long_preflight_calibration(
 	mavlink_channel_t chan, float* params, uint8_t sysid, uint8_t compid ) {
