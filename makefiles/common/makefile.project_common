@@ -1,7 +1,7 @@
 
 # Working directories
-ROOT		 = ./robin
-HERE         = ./robin
+ROOT		 = ./
+HERE         = ./
 SRC_DIR		 = $(ROOT)
 OBJECT_DIR	 = $(HERE)/build
 BIN_DIR		 = $(HERE)/build

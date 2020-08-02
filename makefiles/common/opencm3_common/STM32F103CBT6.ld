@@ -27,5 +27,6 @@ MEMORY
 }
 
 /* Include the common ld script. */
-INCLUDE robin/lib/libopencm3/lib/cortex-m-generic.ld
+/* Path is formatted as if this file is called from the root project folder */
+INCLUDE lib/libopencm3/lib/cortex-m-generic.ld
 

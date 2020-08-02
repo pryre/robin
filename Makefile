@@ -72,21 +72,21 @@ listen:
 
 # POSIX UDP
 posix_udp: param_gen
-	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 posix_udp_run: posix_udp
 	@exec ./lib/scripts/sitl_udp_run.sh
 
 # POSIX Serial
 posix_serial: param_gen
-	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 posix_serial_run: posix_serial
 	@exec ./lib/scripts/sitl_serial_run.sh $(SERIAL_DEVICE) $(SERIAL_DEVICE_2)
 
 # Naze32 Rev.5 (Breezy)
 breezy_naze32_rev5: param_gen
-	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 breezy_naze32_rev5_flash: breezy_naze32_rev5
 	stm32flash -w build/robin_breezy_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
@@ -95,7 +95,7 @@ breezy_naze32_rev5_reflash: breezy_naze32_rev5 mavlink_bootloader sleep breezy_n
 
 # Naze32 Rev.6 (Breezy)
 breezy_naze32_rev6: param_gen
-	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 breezy_naze32_rev6_flash: breezy_naze32_rev6
 	stm32flash -w build/robin_breezy_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
@@ -108,7 +108,7 @@ opencm3_prereqs: param_gen
 
 # Naze32 Rev.5 (LibOpenCM3)
 opencm3_naze32_rev5: param_gen opencm3_prereqs
-	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 opencm3_naze32_rev5_flash: opencm3_naze32_rev5
 	stm32flash -w build/robin_opencm3_naze32_rev5.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
@@ -117,7 +117,7 @@ opencm3_naze32_rev5_reflash: opencm3_naze32_rev5 mavlink_bootloader sleep opencm
 
 # Naze32 Rev.5 Mini (LibOpenCM3)
 opencm3_naze32_rev5_mini: param_gen opencm3_prereqs
-	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 opencm3_naze32_rev5_mini_flash: opencm3_naze32_rev5_mini
 	stm32flash -w build/robin_opencm3_naze32_rev5_mini.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
@@ -126,7 +126,7 @@ opencm3_naze32_rev5_mini_reflash: opencm3_naze32_rev5_mini mavlink_bootloader sl
 
 # Naze32 Rev.6 Mini (LibOpenCM3)
 opencm3_naze32_rev6: param_gen opencm3_prereqs
-	$(MAKE) -C makefiles/$@ PROJECT_NAME=$(PROJECT_NAME)
+	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 opencm3_naze32_rev6_flash: opencm3_naze32_rev6
 	stm32flash -w build/robin_opencm3_naze32_rev6.hex -v -g 0x0 -b $(SERIAL_BAUD) $(SERIAL_DEVICE)
