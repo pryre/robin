@@ -28,8 +28,6 @@
 #define REMOTE_HOST "127.0.0.1"
 #define REMOTE_PORT 14550 // The port on which to send data
 
-arguments_t _arguments;
-
 static int sock_comm_0;
 static struct sockaddr_in locAddr_comm_0;
 static struct sockaddr_in gcAddr_comm_0;

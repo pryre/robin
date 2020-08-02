@@ -14,10 +14,6 @@
 #include "fix16.h"
 #include "fixextra.h"
 
-volatile uint32_t _imu_time_ready;
-sensor_readings_t _sensors;
-calibration_data_t _calibrations;
-
 static uint32_t imu_time_last;
 
 static volatile uint8_t accel_status = 0;

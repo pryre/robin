@@ -8,20 +8,17 @@
 #include "drivers/posix_common/drv_cmd_args.h"
 #include "params.h"
 
-params_t _params;
-arguments_t _arguments;
-
-static uint64_t _eeprom_version;
+static uint64_t eeprom_version_;
 
 void drv_flash_init( void ) {
-	_eeprom_version = strtoll( EEPROM_CONF_VERSION_STR, NULL, 16 );
+	eeprom_version_ = strtoll( EEPROM_CONF_VERSION_STR, NULL, 16 );
 }
 
 static bool validEEPROM( uint8_t* buffer ) {
 	const params_t* temp = (const params_t*)buffer;
 
 	// check version number
-	if ( _eeprom_version != temp->version ) {
+	if ( eeprom_version_ != temp->version ) {
 		system_debug_print( "[PARAM] EEPROM not valid (version)" );
 		return false;
 	}
@@ -83,7 +80,7 @@ bool drv_flash_write( void ) {
 	bool success = false;
 
 	// Prepare checksum/version constants
-	_params.version = _eeprom_version;
+	_params.version = eeprom_version_;
 	_params.size = sizeof( params_t );
 	_params.magic_be = 0xBE;
 	_params.magic_ef = 0xEF;

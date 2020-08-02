@@ -25,7 +25,7 @@
 #include <math.h>
 
 // ======================================================================
-uint8_t mpuLowPassFilter;
+static uint8_t mpuLowPassFilter;
 
 uint16_t mpu6500_init( accel_fsr_e accelFSR, gyro_fsr_e gyroFSR ) {
 	// Default acc1G. Modified once by for old (hopefully nonexistent outside of

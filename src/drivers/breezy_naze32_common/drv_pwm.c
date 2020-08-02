@@ -348,8 +348,6 @@ static const uint8_t io_map_naze32_ppm = 0;
 static const uint8_t io_map_naze32_pwm[MIXER_NUM_MOTORS] = {8, 9, 10, 11,
 															12, 13, 4, 5};
 
-io_type_t _actuator_type_map[MIXER_NUM_MOTORS];
-
 bool drv_pwm_init( void ) {
 	// XXX: Loop backwards through the IO map to set the number of motor/servo
 	// ports
