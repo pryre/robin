@@ -7,7 +7,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "controller.h"
+#include "control.h"
 #include "fix16.h"
 
 #include "io_type.h"

@@ -5,7 +5,7 @@ extern "C" {
 #include "mavlink_receive.h"
 #include "mavlink_system.h"
 
-#include "controller.h"
+#include "control.h"
 #include "safety.h"
 
 #include "fix16.h"

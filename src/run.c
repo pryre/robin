@@ -5,7 +5,7 @@ extern "C" {
 #include "run.h"
 
 #include "calibration.h"
-#include "controller.h"
+#include "control.h"
 #include "estimator.h"
 #include "mixer.h"
 #include "params.h"

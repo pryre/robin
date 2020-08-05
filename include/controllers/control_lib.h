@@ -6,22 +6,12 @@ extern "C" {
 
 #include "fix16.h"
 
-typedef struct {
-	fix16_t kp;
-	fix16_t ki;
-	fix16_t kd;
-
-	fix16_t x;
-	fix16_t setpoint;
-	fix16_t output;
-
-	fix16_t max;
-	fix16_t min;
-
-	fix16_t integrator;
-	fix16_t prev_x;
-} pid_controller_t;
-
+// input_mask defines
+#define CMD_IN_IGNORE_ROLL_RATE (uint8_t)1  // 0b00000001
+#define CMD_IN_IGNORE_PITCH_RATE (uint8_t)2 // 0b00000010
+#define CMD_IN_IGNORE_YAW_RATE (uint8_t)4   // 0b00000100
+#define CMD_IN_IGNORE_THROTTLE (uint8_t)64  // 0b01000000
+#define CMD_IN_IGNORE_ATTITUDE (uint8_t)128 // 0b10000000
 
 void pid_init( pid_controller_t* pid,
 			   fix16_t kp,

@@ -10,7 +10,7 @@ extern "C" {
 #include "drivers/drv_comms.h"
 #include "drivers/drv_system.h"
 
-#include "controller.h"
+#include "control.h"
 #include "drivers/drv_status_io.h"
 #include "drivers/drv_pwm.h"
 #include "estimator.h"

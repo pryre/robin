@@ -11,7 +11,7 @@ extern "C" {
 #include "mavlink_system.h"
 
 #include "calibration.h"
-#include "controller.h"
+#include "control.h"
 #include "drivers/drv_pwm.h"
 #include "mixer.h"
 #include "params.h"

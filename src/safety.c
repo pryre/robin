@@ -3,7 +3,7 @@ extern "C" {
 #endif
 
 #include "safety.h"
-#include "controller.h"
+#include "control.h"
 #include "drivers/drv_sensors.h"
 #include "drivers/drv_status_io.h"
 #include "drivers/drv_system.h"
