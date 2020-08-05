@@ -7,24 +7,6 @@ extern "C" {
 
 static mf16 theta; // [Ixx; Iyy; Izz]
 
-//XXX: This is also our init()
-void reset_adaptive_control_parameters() {
-	theta.rows = 3;
-	theta.cols = 1;
-
-	//Do a full clear just in case
-	for(int i=0; i < theta.rows; i++)
-		for(int j=0; j < theta.cols; j++)
-			theta.data[i][j] = 0;
-
-	//PARAM_NAC_T0_IXX: 0.02961
-	//PARAM_NAC_T0_IYY: 0.02961
-	//PARAM_NAC_T0_IZZ: 0.05342
-	theta.data[0][0] = get_param_fix16( PARAM_NAC_T0_IXX );
-	theta.data[1][0] = get_param_fix16( PARAM_NAC_T0_IYY );
-	theta.data[2][0] = get_param_fix16( PARAM_NAC_T0_IZZ );
-}
-
 static void nac_calc_Y(mf16* Y, const v3d* w, const v3d* wd, const v3d* dwd) {
 	// H(q)ddq + C(q,dq)dq = Y(q,dq,ddq)a
 	//Y = diag(dwd) + vee_up(w)*diag(wd);
@@ -43,7 +25,25 @@ static void nac_calc_Y(mf16* Y, const v3d* w, const v3d* wd, const v3d* dwd) {
 	Y->data[2][2] = dwd->z;
 }
 
-void do_adaptive_control(v3d *tau, const fix16_t dt) {
+//XXX: This is also our init()
+void nac_reset() {
+	theta.rows = 3;
+	theta.cols = 1;
+
+	//Do a full clear just in case
+	for(int i=0; i < theta.rows; i++)
+		for(int j=0; j < theta.cols; j++)
+			theta.data[i][j] = 0;
+
+	//PARAM_NAC_T0_IXX: 0.02961
+	//PARAM_NAC_T0_IYY: 0.02961
+	//PARAM_NAC_T0_IZZ: 0.05342
+	theta.data[0][0] = get_param_fix16( PARAM_NAC_T0_IXX );
+	theta.data[1][0] = get_param_fix16( PARAM_NAC_T0_IYY );
+	theta.data[2][0] = get_param_fix16( PARAM_NAC_T0_IZZ );
+}
+
+void nac_step(v3d *tau, const fix16_t dt) {
     // Control (Adaptive Control)
 	//==-- Control Parameters
 	//PARAM_NAC_W0R: 20.0

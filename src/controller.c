@@ -36,23 +36,11 @@ pid_controller_t _pid_roll_rate;
 pid_controller_t _pid_pitch_rate;
 pid_controller_t _pid_yaw_rate;
 
-v3d integrator_;
 
-static void controller_reset( void ) {
+static void controller_reset_pids( void ) {
 	pid_reset( &_pid_roll_rate, _state_estimator.p );
 	pid_reset( &_pid_pitch_rate, _state_estimator.q );
 	pid_reset( &_pid_yaw_rate, _state_estimator.r );
-
-	integrator_.x = 0;
-	integrator_.y = 0;
-	integrator_.z = 0;
-
-	controller_set_input_zero(_control_input);
-
-	_control_output.r = 0;
-	_control_output.p = 0;
-	_control_output.y = 0;
-	_control_output.T = 0;
 }
 
 static void controller_set_input_zero( command_input_t* input ) {
@@ -65,6 +53,21 @@ static void controller_set_input_zero( command_input_t* input ) {
 	input->q.d = 0;
 	input->T = 0;
 	input->input_mask = 0;
+}
+
+static void controller_set_output_zero() {
+	_control_output.r = 0;
+	_control_output.p = 0;
+	_control_output.y = 0;
+	_control_output.T = 0;
+}
+
+static void controller_reset( void ) {
+	controller_reset_pids();
+
+	controller_set_input_zero(_control_input);
+
+	controller_set_output_zero();
 }
 
 static void controller_set_input_from_mode( command_input_t* input ) {
@@ -230,7 +233,84 @@ static void calc_tracking_rate_error(v3d* we, const v3d* w, const qf16* qe, cons
 }
 */
 
-static void controller_run
+static void controller_do_pid_att_loop( v3d* tau, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
+	//==-- Attitude Control
+	// If we should listen to attitude input
+	//XXX: Currently this method takes ~700ms just for the atittude controller
+	if ( !( input->input_mask & CMD_IN_IGNORE_ATTITUDE ) ) {
+		fix16_t yaw_w = get_param_fix16( PARAM_MC_ANGLE_YAW_W );
+
+		// If we are going to override the calculated yaw rate, just ignore it
+		if ( !( input->input_mask & CMD_IN_IGNORE_YAW_RATE ) ) {
+			yaw_w = 0;
+		}
+
+		v3d angle_error = {0,0,0};
+		qf16 qe = {_fc_1,0,0,0}; //No angle reference, so no angle error (R==R_sp==Identity)
+		rot_error_from_attitude( &angle_error,
+								 &qe,
+								 &(input->q),
+								 &(state->attitude),
+								 yaw_w );
+
+		v3d_mul_s(&rates_ref, &angle_error, get_param_fix16( PARAM_MC_ANGLE_P ));
+	}
+
+	//==-- Rate Control PIDs
+	// Roll Rate
+	if ( !( input->input_mask & CMD_IN_IGNORE_ROLL_RATE ) ) {
+		// Use the commanded roll rate goal
+		rates_ref->x = input.r;
+	}
+
+	// Pitch Rate
+	if ( !( input->input_mask & CMD_IN_IGNORE_PITCH_RATE ) ) {
+		// Use the commanded pitch rate goal
+		rates_ref->y = input.p;
+	}
+
+	// Yaw Rate
+	if ( !( input->input_mask & CMD_IN_IGNORE_YAW_RATE ) ) {
+		// Use the commanded yaw rate goal
+		rates_ref->z = input.y;
+	} else {
+		// If we're in offboard mode, and we aren't going to override yaw rate, and
+		// we want to fuse
+		// XXX: Ideally this would be handled as an additional case using the IGNORE
+		// flags, somehow...
+		if ( ( _system_status.control_mode == MAIN_MODE_OFFBOARD ) &&
+			 get_param_uint( PARAM_CONTROL_OB_FUSE_YAW_RATE ) ) {
+			// Add in the additional yaw rate input
+			// TODO: This is more of a hack. Needs to be conerted from euler rate to body rates (should effect goal_y, goal_p, and goal_r)
+			rates_ref->z = fix16_add( rates_ref->z, input.y );
+		}
+	}
+
+	// Constrain rates to set params
+	rates_ref->x = fix16_constrain( rates_ref->x, -get_param_fix16( PARAM_MAX_ROLL_RATE ),
+							  get_param_fix16( PARAM_MAX_ROLL_RATE ) );
+	rates_ref->y = fix16_constrain( rates_ref->y, -get_param_fix16( PARAM_MAX_PITCH_RATE ),
+							  get_param_fix16( PARAM_MAX_PITCH_RATE ) );
+	rates_ref->z= fix16_constrain( rates_ref->z, -get_param_fix16( PARAM_MAX_YAW_RATE ),
+							  get_param_fix16( PARAM_MAX_YAW_RATE ) );
+
+
+	// Rate PID Controllers
+	v3d u;
+	u.x = pid_step( &_pid_roll_rate, dt, rates_ref->x, state->p );
+	u.y = pid_step( &_pid_pitch_rate, dt, rates_ref->y, state->q );
+	u.z = pid_step( &_pid_yaw_rate, dt, rates_ref->z, state->r );
+
+	// XXX:
+	//"Post-Scale/Normalize" the commands to act within
+	// a range that is approriate for the motors. This
+	// allows us to have higher PID gains for the rates
+	//(by a factor of 100), and avoids complications
+	// of getting close to the fixed-point step size
+	tau.r = fix16_div( u.x, _fc_100 );
+	tau.p = fix16_div( u.y, _fc_100 );
+	tau.y = fix16_div( u.z, _fc_100 );
+}
 
 static void controller_run( uint32_t time_now ) {
 	// Variables that store the computed attitude goal rates
@@ -251,14 +331,14 @@ static void controller_run( uint32_t time_now ) {
 			controller_reset();
 		}
 
-		// Get the control input mask to use
+		// Save the control input mask used
 		_control_input.input_mask = input.input_mask;
 
 		//==-- Throttle Control
 		fix16_t goal_throttle = 0;
 
 		// Trottle
-		if ( !( _control_input.input_mask & CMD_IN_IGNORE_THROTTLE ) ) {
+		if ( !( input.input_mask & CMD_IN_IGNORE_THROTTLE ) ) {
 			// Use the commanded throttle
 			goal_throttle = input.T;
 		}
@@ -274,90 +354,27 @@ static void controller_run( uint32_t time_now ) {
 			dt = 0;
 		}
 
-		//==-- Attitude Control
-		// Save intermittent goals
+		//Attitude Control
+		//Normalize this before continuing (and save for recording)
 		qf16_normalize_to_unit( &_control_input.q, &input.q );
-		v3d rates_ref = {0,0,0};
+		input.q = _control_input.q;
 
-		// If we should listen to attitude input
-		//XXX: Currently this method takes ~700ms just for the atittude controller
-		if ( !( _control_input.input_mask & CMD_IN_IGNORE_ATTITUDE ) ) {
-			fix16_t yaw_w = get_param_fix16( PARAM_MC_ANGLE_YAW_W );
-
-			// If we are going to override the calculated yaw rate, just ignore it
-			if ( !( _control_input.input_mask & CMD_IN_IGNORE_YAW_RATE ) ) {
-				yaw_w = 0;
-			}
-
-			v3d angle_error = {0,0,0};
-			qf16 qe = {_fc_1,0,0,0}; //No angle reference, so no angle error (R==R_sp==Identity)
-			rot_error_from_attitude( &angle_error,
-									 &qe,
-									 &_control_input.q,
-									 &_state_estimator.attitude,
-									 yaw_w );
-
-			v3d_mul_s(&rates_ref, &angle_error, get_param_fix16( PARAM_MC_ANGLE_P ));
-		}
-
-		//==-- Rate Control PIDs
-		// Roll Rate
-		if ( !( _control_input.input_mask & CMD_IN_IGNORE_ROLL_RATE ) ) {
-			// Use the commanded roll rate goal
-			rates_ref.x = input.r;
-		}
-
-		// Pitch Rate
-		if ( !( _control_input.input_mask & CMD_IN_IGNORE_PITCH_RATE ) ) {
-			// Use the commanded pitch rate goal
-			rates_ref.y = input.p;
-		}
-
-		// Yaw Rate
-		if ( !( _control_input.input_mask & CMD_IN_IGNORE_YAW_RATE ) ) {
-			// Use the commanded yaw rate goal
-			rates_ref.z = input.y;
-		} else {
-			// If we're in offboard mode, and we aren't going to override yaw rate, and
-			// we want to fuse
-			// XXX: Ideally this would be handled as an additional case using the IGNORE
-			// flags, somehow...
-			if ( ( _system_status.control_mode == MAIN_MODE_OFFBOARD ) &&
-				 get_param_uint( PARAM_CONTROL_OB_FUSE_YAW_RATE ) ) {
-				// Add in the additional yaw rate input
-				// TODO: This is more of a hack. Needs to be conerted from euler rate to body rates (should effect goal_y, goal_p, and goal_r)
-				rates_ref.z = fix16_add( rates_ref.z, input.y );
-			}
-		}
-
-		// Constrain rates to set params
-		rates_ref.x = fix16_constrain( rates_ref.x, -get_param_fix16( PARAM_MAX_ROLL_RATE ),
-								  get_param_fix16( PARAM_MAX_ROLL_RATE ) );
-		rates_ref.y = fix16_constrain( rates_ref.y, -get_param_fix16( PARAM_MAX_PITCH_RATE ),
-								  get_param_fix16( PARAM_MAX_PITCH_RATE ) );
-		rates_ref.z= fix16_constrain( rates_ref.z, -get_param_fix16( PARAM_MAX_YAW_RATE ),
-								  get_param_fix16( PARAM_MAX_YAW_RATE ) );
-
-		// Save intermittent goals and calculate rate error
-		_control_input.r = rates_ref.x;
-		_control_input.p = rates_ref.y;
-		_control_input.y = rates_ref.z;
-
-		// Rate PID Controllers
 		v3d tau;
-		tau.x = pid_step( &_pid_roll_rate, dt, rates_ref.x, _state_estimator.p );
-		tau.y = pid_step( &_pid_pitch_rate, dt, rates_ref.y, _state_estimator.q );
-		tau.z = pid_step( &_pid_yaw_rate, dt, rates_ref.z, _state_estimator.r );
+		if( get_param_uint(PARAM_MC_USE_NAC) ) {
+			//TODO!
+		} else {
+			v3d rates_ref = {0,0,0};
+			controller_do_pid_att_loop(&tau, &rates_ref, &input, &_state_estimator, dt);
 
-		// XXX:
-		//"Post-Scale/Normalize" the commands to act within
-		// a range that is approriate for the motors. This
-		// allows us to have higher PID gains for the rates
-		//(by a factor of 100), and avoids complications
-		// of getting close to the fixed-point step size
-		_control_output.r = fix16_div( tau.x, _fc_100 );
-		_control_output.p = fix16_div( tau.y, _fc_100 );
-		_control_output.y = fix16_div( tau.z, _fc_100 );
+			// Save intermittent goals and calculate rate error
+			_control_input.r = rates_ref.x;
+			_control_input.p = rates_ref.y;
+			_control_input.y = rates_ref.z;
+		}
+
+		_control_output.r = tau.x;
+		_control_output.p = tau.y;
+		_control_output.y = tau.z;
 	} else {
 		//We're in pretty bad shape, so zero everything for "complete failsafe"
 		controller_reset();
