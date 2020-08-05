@@ -61,3 +61,29 @@ Battery monitoring can be performed in two steps.
 ---
 
 Once configured and connected, you can adjust your battery readout, and the various feedback warnings via the other `BATT_*` parameters (see the parameter reference for more details.
+
+## ESC Calibration (Motor Calibration)
+An ESC calibration can be performed to ensure that the ESCs are correctly informed on the throttle PWM ranges (i.e. so they know what is 0% and 100%).
+
+---
+**Note:** Some older ESCs may not respond well to the "common" method of performing an ESC calibration. **DO NOT PERFORM THIS PROCESS WITH PROPELLERS ATTACHED!** Refer to you your ESC manual if the process is not successful to find an alternative method of calibration.
+
+---
+
+The following process should be taken to perform an ESC calibration:
+1. Connect via telemetry
+2. Ensure the motor map is set correctly and your motors are wired correctly.
+3. Set the `DO_ESC_CAL` parameter to "true"/"1", then write parameters to ensure this setting is saved for your next boot.
+4. Disconnect all power to your system.
+5. Power on the flight controller and all ESCs at the same time (usually this means that you need to connect the battery).
+   1. Automatic ESC calibration will begin. 
+   2. `PWM_MAX` is applied to all mapped ESCs for 2 seconds, heartbeat led will flash rapidly.
+   3. `PWM_MIN` is applied to all mapped ESCs to signal calibration complete (ESCs should make some form of confirmation tone).
+   4. `DO_ESC_CAL` parameter is automatically turned off and saved to ensure calibration is not performed on next boot.
+6. Wait 10 seconds to ensure ESCs have saved their calibration.
+7. Disconnect and reconned all power to your system, perform motor test to check calibration.
+
+---
+**Note:** If the system is turned off before the ESC calibration is complete (specifically between steps 5.1 and 5.4) the `DO_ESC_CAL` parameter will not be reset, and the flight controller will perform an ESC calibration on next boot. Ensure that the system has rebooted correctly during step 7 before finishing up with this calibration (or that the `DO_ESC_CAL` parameter has been returned to "false"/"0").
+
+---
