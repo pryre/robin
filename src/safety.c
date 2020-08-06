@@ -4,6 +4,7 @@ extern "C" {
 
 #include "safety.h"
 #include "control.h"
+#include "controllers/control_lib.h"
 #include "drivers/drv_sensors.h"
 #include "drivers/drv_status_io.h"
 #include "drivers/drv_system.h"

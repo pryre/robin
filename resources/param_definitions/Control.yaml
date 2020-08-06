@@ -136,7 +136,7 @@ PARAM_MC_ANGLE_P:
 PARAM_MAX_ROLL_ANGLE:
   type: "float"
   name: "MAX_ROLL_A"
-  description: "Maximum allowed command roll angle (TODO)"
+  description: "Maximum allowed command roll angle"
   reboot: false
   value:
     option: "scalar"
@@ -145,7 +145,7 @@ PARAM_MAX_ROLL_ANGLE:
 PARAM_MAX_PITCH_ANGLE:
   type: "float"
   name: "MAX_PITCH_A"
-  description: "Maximum allowed command pitch angle (TODO)"
+  description: "Maximum allowed command pitch angle"
   reboot: false
   value:
     option: "scalar"
@@ -169,3 +169,38 @@ PARAM_MC_USE_NAC:
   value:
     option: "bool"
     default: 0
+PARAM_MC_NAC_T0_IXX:
+  type: "float"
+  name: "MC_NAC_T0_IXX"
+  description: "Initial NAC value for the inertial x-axis parameter"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02961
+    unit: "km m^2"
+PARAM_MC_NAC_T0_IYY:
+  type: "float"
+  name: "MC_NAC_T0_IYY"
+  description: "Initial NAC value for the inertial y-axis parameter"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02961
+    unit: "km m^2"
+PARAM_MC_NAC_T0_IZZ:
+  type: "float"
+  name: "MC_NAC_T0_IZZ"
+  description: "Initial NAC value for the inertial z-axis parameter"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05342
+    unit: "km m^2"
+PARAM_MC_NAC_T0_PRESCALER:
+  type: "float"
+  name: "MC_NAC_PRESCALE"
+  description: "Prescaling multiplier for the NAC parameters. Should be set to best ensure that multiplying MC_NAC_T0_* parameters results in values in the range of 1->10"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100.0

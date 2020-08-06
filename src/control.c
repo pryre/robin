@@ -38,7 +38,7 @@ static void control_reset( void ) {
 	controller_att_pid_reset();
 	controller_att_nac_reset();
 
-	controller_set_output_zero(_control_output);
+	control_lib_set_output_zero(&_control_output);
 }
 
 
@@ -122,8 +122,8 @@ void control_init( void ) {
 	controller_att_pid_init();
 	controller_att_nac_init();
 
-	controller_set_input_zero(_control_input);
-	controller_set_input_zero(_cmd_ob_input);
+	control_lib_set_input_zero(&_control_input);
+	control_lib_set_input_zero(&_cmd_ob_input);
 
 	control_reset();
 	calc_mixer_output();	//XXX: Calculate a clean output to start with

@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#include "controllers/pid_controller.h"
+#include "controllers/control_lib_pid.h"
 #include "fix16.h"
 #include "fixextra.h"
 

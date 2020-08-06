@@ -37,6 +37,7 @@ EEPROM_CONF_VERSION := $(shell date +'%s')
 PROJECT_SRC_FILES = $(wildcard $(ROOT)/src/*.c) \
 					$(wildcard $(ROOT)/src/mavlink_handlers/*.c) \
 					$(wildcard $(ROOT)/src/calibrations/*.c) \
+					$(wildcard $(ROOT)/src/controllers/*.c) \
 					$(wildcard $(ROOT)/src/drivers/*.c)
 
 # Math Libs.

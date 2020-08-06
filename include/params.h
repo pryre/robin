@@ -31,7 +31,6 @@ typedef struct {
 extern params_t _params;
 
 // function declarations
-void set_param_defaults( void );
 void init_param_uint( param_id_t id, const uint32_t value );
 void init_param_int( param_id_t id, const int32_t value );
 void init_param_fix16( param_id_t id, const fix16_t value );

@@ -11,9 +11,12 @@ extern "C" {
 #include "fixquat.h"
 #include "fixvector3d.h"
 
+#include "safety.h"
+#include "sensors.h"
+#include "estimator.h"
 #include "controllers/control_lib.h"
 
-void controller_set_input_zero( command_input_t* input ) {
+void control_lib_set_input_zero( command_input_t* input ) {
 	input->r = 0;
 	input->p = 0;
 	input->y = 0;
@@ -25,18 +28,18 @@ void controller_set_input_zero( command_input_t* input ) {
 	input->input_mask = 0;
 }
 
-void controller_set_output_zero( command_output_t *output ) {
+void control_lib_set_output_zero( control_output_t *output ) {
 	output->r = 0;
 	output->p = 0;
 	output->y = 0;
 	output->T = 0;
 }
 
-void controller_set_input_from_mode( command_input_t* input ) {
+void control_lib_set_input_from_mode( command_input_t* input ) {
 	switch ( _system_status.control_mode ) {
 		case MAIN_MODE_OFFBOARD: {
 			// Offboard mode
-			input = _cmd_ob_input;
+			*input = _cmd_ob_input;
 
 			break;
 		}
@@ -45,9 +48,9 @@ void controller_set_input_from_mode( command_input_t* input ) {
 			//XXX: Currently this method (just this section) takes ~300ms
 
 			// Roll/pitch angle and yaw rate
-			input.input_mask = 0;
-			input.input_mask |= CMD_IN_IGNORE_ROLL_RATE;
-			input.input_mask |= CMD_IN_IGNORE_PITCH_RATE;
+			input->input_mask = 0;
+			input->input_mask |= CMD_IN_IGNORE_ROLL_RATE;
+			input->input_mask |= CMD_IN_IGNORE_PITCH_RATE;
 
 			// Generate the desired thrust vector
 			v3d stab_z;
@@ -67,48 +70,48 @@ void controller_set_input_from_mode( command_input_t* input ) {
 			qf16 q_rot_base;
 			qf16_from_axis_angle( &q_rot_base, &unit_z, heading_from_quat( &_state_estimator.attitude ) );
 
-			qf16_mul( &input.q, &q_rot_base, &q_stab_b );
+			qf16_mul( &input->q, &q_rot_base, &q_stab_b );
 			//XXX: Should already be close to normalised, but will be redone later before use
 
-			input.q.a = _fc_1;
+			input->q.a = _fc_1;
 
-			input.r = 0;
-			input.p = 0;
-			input.y = fix16_mul( _sensors.rc_input.c_y, get_param_fix16( PARAM_MAX_YAW_RATE ) );
+			input->r = 0;
+			input->p = 0;
+			input->y = fix16_mul( _sensors.rc_input.c_y, get_param_fix16( PARAM_MAX_YAW_RATE ) );
 
-			input.T = _sensors.rc_input.c_T;
+			input->T = _sensors.rc_input.c_T;
 
 			break;
 		}
 		case MAIN_MODE_ACRO: {
 			// Manual acro mode
 			// Roll/pitch/yaw rate
-			input.input_mask = 0;
-			input.input_mask |= CMD_IN_IGNORE_ATTITUDE;
+			input->input_mask = 0;
+			input->input_mask |= CMD_IN_IGNORE_ATTITUDE;
 
-			input.q.a = _fc_1;
-			input.q.b = 0;
-			input.q.c = 0;
-			input.q.d = 0;
+			input->q.a = _fc_1;
+			input->q.b = 0;
+			input->q.c = 0;
+			input->q.d = 0;
 
-			input.r = fix16_mul( _sensors.rc_input.c_r,
+			input->r = fix16_mul( _sensors.rc_input.c_r,
 								 get_param_fix16( PARAM_MAX_ROLL_RATE ) );
-			input.p = fix16_mul( _sensors.rc_input.c_p,
+			input->p = fix16_mul( _sensors.rc_input.c_p,
 								 get_param_fix16( PARAM_MAX_PITCH_RATE ) );
-			input.y = fix16_mul( _sensors.rc_input.c_y, get_param_fix16( PARAM_MAX_YAW_RATE ) );
+			input->y = fix16_mul( _sensors.rc_input.c_y, get_param_fix16( PARAM_MAX_YAW_RATE ) );
 
-			input.T = _sensors.rc_input.c_T;
+			input->T = _sensors.rc_input.c_T;
 
 			break;
 		}
 		default: {
 			// Failsafe
 			//Set our initial failsafe parameters (low throttle and stay steady in acro)
-			input.T = get_param_fix16( PARAM_FAILSAFE_THROTTLE );
-			input.input_mask |= CMD_IN_IGNORE_ATTITUDE; // Set it to just hold rpy rates
-														// (as this skips unnessessary
-														// computing during boot, and is
-														// possibly safer)
+			input->T = get_param_fix16( PARAM_FAILSAFE_THROTTLE );
+			input->input_mask |= CMD_IN_IGNORE_ATTITUDE; // Set it to just hold rpy rates
+														 // (as this skips unnessessary
+														 // computing during boot, and is
+														 // possibly safer)
 
 			break;
 		}
@@ -116,7 +119,7 @@ void controller_set_input_from_mode( command_input_t* input ) {
 }
 
 // Technique adapted from the Pixhawk multirotor control scheme (~December 2018)
-void rot_error_from_attitude( v3d* e_R, qf16* qe, const qf16* q_sp, const qf16* q, const fix16_t yaw_w ) {
+void control_lib_q_att_error( v3d* e_R, qf16* qe, const qf16* q_sp, const qf16* q, const fix16_t yaw_w ) {
 	/*
 	//XXX: Shorthand method that doesn't allow for separate yaw tuning
 	v3d e_R;

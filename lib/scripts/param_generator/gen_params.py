@@ -321,7 +321,8 @@ typedef enum {
 extern const char _param_names[PARAMS_COUNT][MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
 extern const MAV_PARAM_TYPE _param_types[PARAMS_COUNT];
 
-void params_init(void);
+void params_init( void );
+void set_param_defaults( void );
 void param_change_callback(param_id_t id);
 
 #ifdef __cplusplus
@@ -346,17 +347,23 @@ def gen_c(params, filepath):
 
 	try:
 		# Prepare file headers
-		str_c = "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n"
-		str_c += "#include <stdlib.h>\n"
-		str_c += "#include \"params.h\"\n"
-		str_c += "#include \"param_gen.h\"\n"
-		str_c += "#include \"mavlink_system.h\"\n"
-		str_c += "#include \"mavlink_transmit.h\"\n"
-		str_c += "#include \"controllers/controller_att_pid.h\"\n"
-		str_c += "#include \"sensors.h\"\n"
-		str_c += "#include \"profiler.h\"\n"
-		str_c += "#include \"fix16.h\"\n\n"
-		str_c += "void set_param_defaults(void) {\n"
+		str_c = """#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdlib.h>
+
+#include "params.h"
+#include "param_gen.h"
+#include "mavlink_system.h"
+#include "mavlink_transmit.h"
+#include "controllers/controller_att_pid.h"
+#include "controllers/control_lib_pid.h"
+#include "sensors.h"
+#include "profiler.h"
+#include "fix16.h"
+
+void set_param_defaults(void) {"""
 		param_gen_c.write(str_c)
 
 		# C generation
@@ -457,17 +464,18 @@ def gen_c(params, filepath):
 				param_gen_c.write(str_c)
 
 
-		str_c = "\t\tdefault:\n"
-		str_c += "\t\t\t//No action needed for this param ID\n"
-		str_c += "\t\t\tbreak;\n"
-		str_c += "\t}\n\n"
-		str_c += "\tlpq_queue_param_broadcast(id);\n"
-		#str_c += "\tmavlink_stream_broadcast_param_value(id);\n"
-		#str_c += "\tmavlink_message_t msg_out;\n"
-		#str_c += "\tmavlink_prepare_param_value( &msg_out, id );\n"
-		#str_c += "\tlpq_queue_broadcast_msg( &msg_out );\n"
-		str_c += "}\n\n"
-		str_c += "#ifdef __cplusplus\n}\n#endif\n"
+		str_c = """		default:
+			//No action needed for this param ID
+			break;
+	}
+
+	lpq_queue_param_broadcast(id);
+}
+
+#ifdef __cplusplus
+}
+#endif
+"""
 		param_gen_c.write(str_c)
 
 		print("Finished generating C file: %s" % filepath)

@@ -8,7 +8,8 @@ extern "C" {
 #include "fixquat.h"
 #include "fixvector3d.h"
 
-#include "controllers/lib_control.h"
+#include "controllers/control_lib.h"
+#include "controllers/controller_att_nac.h"
 #include "params.h"
 
 static mf16 theta; // [Ixx; Iyy; Izz]
@@ -27,33 +28,36 @@ static void controller_att_nac_calc_Y(mf16* Y, const v3d* w, const v3d* wd, cons
 	Y->data[1][1] = dwd->y;
 	Y->data[1][2] = fix16_mul(-w->x, wd->z);
 	Y->data[2][0] = fix16_mul(-w->y, wd->x);
-	Y->data[2][1] = fix16_mul( w->x, wd->y)
+	Y->data[2][1] = fix16_mul( w->x, wd->y);
 	Y->data[2][2] = dwd->z;
 }
 
 //XXX: This is also our init()
-void controller_att_pid_init( void ) {
+void controller_att_nac_init( void ) {
 	controller_att_nac_reset();
 }
 
 void controller_att_nac_reset( void ) {
 	theta.rows = 3;
-	theta.cols = 1;
+	theta.columns = 1;
 
 	//Do a full clear just in case
-	for(int i=0; i < theta.rows; i++)
-		for(int j=0; j < theta.cols; j++)
-			theta.data[i][j] = 0;
-
-	//PARAM_NAC_T0_IXX: 0.02961
-	//PARAM_NAC_T0_IYY: 0.02961
-	//PARAM_NAC_T0_IZZ: 0.05342
-	theta.data[0][0] = get_param_fix16( PARAM_NAC_T0_IXX );
-	theta.data[1][0] = get_param_fix16( PARAM_NAC_T0_IYY );
-	theta.data[2][0] = get_param_fix16( PARAM_NAC_T0_IZZ );
+	mf16_fill(&theta, 0);
+	const fix16_t prescale = get_param_fix16( PARAM_MC_NAC_T0_PRESCALER );
+	theta.data[0][0] = fix16_mul( prescale, get_param_fix16( PARAM_MC_NAC_T0_IXX ));
+	theta.data[1][0] = fix16_mul( prescale, get_param_fix16( PARAM_MC_NAC_T0_IYY ));
+	theta.data[2][0] = fix16_mul( prescale, get_param_fix16( PARAM_MC_NAC_T0_IZZ ));
 }
 
-void controller_att_nac_step(v3d *tau, const fix16_t dt) {
+void controller_att_nac_save_parameters( void ) {
+	const fix16_t prescale = get_param_fix16( PARAM_MC_NAC_T0_PRESCALER );
+	set_param_fix16( PARAM_MC_NAC_T0_IXX, fix16_div( theta.data[0][0], prescale));
+	set_param_fix16( PARAM_MC_NAC_T0_IYY, fix16_div( theta.data[1][0], prescale));
+	set_param_fix16( PARAM_MC_NAC_T0_IZZ, fix16_div( theta.data[2][0], prescale));
+}
+
+void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
+	/*
     // Control (Adaptive Control)
 	//==-- Control Parameters
 	//PARAM_NAC_W0R: 20.0
@@ -61,6 +65,7 @@ void controller_att_nac_step(v3d *tau, const fix16_t dt) {
 	//PARAM_NAC_DZ_ER: deg2rad(1.0)
 	const v3d v3d0 = {0,0,0};
 	const fix16_t w0r = get_param_fix16( PARAM_NAC_W0R );
+	const fix16_t prescale = get_param_fix16( PARAM_MC_NAC_T0_PRESCALER );
 	// Adaption gain (a -> gamma)
 	// Set these based on the expected closed loop frequencies (p) of the
 	// controller that interract with these parameters, as well as a
@@ -83,7 +88,7 @@ void controller_att_nac_step(v3d *tau, const fix16_t dt) {
 	v3d ewd;
 	//For Stab:
 	//eR = R'*R_sp;
-	eRb = q_att_error(...)
+	eRb = control_lib_q_att_error(...);
 	v3d_sub(&ew, &v3d0, &w);		//ew = eR*w_sp - w; w_sp => 0
     ewd = v3d0;						//eR*wd_sp - vee_up(w)*eR*w_sp; wd_sp, w_sp => 0
 	//For Acro
@@ -153,10 +158,11 @@ void controller_att_nac_step(v3d *tau, const fix16_t dt) {
 
 	//==-- Fill in control vector
 	if(mtau.rows == 3) &&( mtau.cols == 1) {
-		tau->x = mtau[0][0];
-		tau->y = mtau[1][0];
-		tau->z = mtau[2][0];
+		tau->x = fix16_div(mtau[0][0],prescale);
+		tau->y = fix16_div(mtau[1][0],prescale);
+		tau->z = fix16_div(mtau[2][0],prescale);
 	} else {
 		//TODO: Throw error!
 	}
+	*/
 }

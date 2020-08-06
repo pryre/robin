@@ -8,9 +8,10 @@ extern "C" {
 #include "fixquat.h"
 #include "fixvector3d.h"
 
-#include "controllers/lib_control.h"
-#include "controllers/lib_control_pid.h"
-#include "controllers/att_controller_pid.h"
+#include "safety.h"	//XXX: This is included to do the hack for better yaw tracking in stab mode
+#include "controllers/control_lib.h"
+#include "controllers/control_lib_pid.h"
+#include "controllers/controller_att_pid.h"
 
 pid_controller_t _pid_roll_rate;
 pid_controller_t _pid_pitch_rate;
@@ -47,6 +48,7 @@ void controller_att_pid_init( void ) {
 
 void controller_att_pid_step( v3d* tau, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
 	//==-- Attitude Control
+	v3d rates = {0,0,0};
 	// If we should listen to attitude input
 	//XXX: Currently this method takes ~700ms just for the atittude controller
 	if ( !( input->input_mask & CMD_IN_IGNORE_ATTITUDE ) ) {
@@ -59,33 +61,34 @@ void controller_att_pid_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 
 		v3d angle_error = {0,0,0};
 		qf16 qe = {_fc_1,0,0,0}; //No angle reference, so no angle error (R==R_sp==Identity)
-		rot_error_from_attitude( &angle_error,
+		control_lib_q_att_error( &angle_error,
 								 &qe,
 								 &(input->q),
 								 &(state->attitude),
 								 yaw_w );
 
-		v3d_mul_s(&rates_ref, &angle_error, get_param_fix16( PARAM_MC_ANGLE_P ));
+		v3d_mul_s(rates_ref, &angle_error, get_param_fix16( PARAM_MC_ANGLE_P ));
 	}
 
 	//==-- Rate Control PIDs
 	// Roll Rate
 	if ( !( input->input_mask & CMD_IN_IGNORE_ROLL_RATE ) ) {
 		// Use the commanded roll rate goal
-		rates_ref->x = input.r;
+		rates.x = input->r;
 	}
 
 	// Pitch Rate
 	if ( !( input->input_mask & CMD_IN_IGNORE_PITCH_RATE ) ) {
 		// Use the commanded pitch rate goal
-		rates_ref->y = input.p;
+		rates.y = input->p;
 	}
 
 	// Yaw Rate
 	if ( !( input->input_mask & CMD_IN_IGNORE_YAW_RATE ) ) {
 		// Use the commanded yaw rate goal
-		rates_ref->z = input.y;
+		rates.z = input->y;
 	} else {
+		// XXX: Better yaw tracking in stab mode
 		// If we're in offboard mode, and we aren't going to override yaw rate, and
 		// we want to fuse
 		// XXX: Ideally this would be handled as an additional case using the IGNORE
@@ -94,23 +97,26 @@ void controller_att_pid_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 			 get_param_uint( PARAM_CONTROL_OB_FUSE_YAW_RATE ) ) {
 			// Add in the additional yaw rate input
 			// TODO: This is more of a hack. Needs to be conerted from euler rate to body rates (should effect goal_y, goal_p, and goal_r)
-			rates_ref->z = fix16_add( rates_ref->z, input.y );
+			rates.z = fix16_add( rates.z, input->y );
 		}
 	}
 
 	// Constrain rates to set params
-	rates_ref->x = fix16_constrain( rates_ref->x, -get_param_fix16( PARAM_MAX_ROLL_RATE ),
+	rates.x = fix16_constrain( rates.x, -get_param_fix16( PARAM_MAX_ROLL_RATE ),
 							  get_param_fix16( PARAM_MAX_ROLL_RATE ) );
-	rates_ref->y = fix16_constrain( rates_ref->y, -get_param_fix16( PARAM_MAX_PITCH_RATE ),
+	rates.y = fix16_constrain( rates.y, -get_param_fix16( PARAM_MAX_PITCH_RATE ),
 							  get_param_fix16( PARAM_MAX_PITCH_RATE ) );
-	rates_ref->z= fix16_constrain( rates_ref->z, -get_param_fix16( PARAM_MAX_YAW_RATE ),
+	rates.z= fix16_constrain( rates.z, -get_param_fix16( PARAM_MAX_YAW_RATE ),
 							  get_param_fix16( PARAM_MAX_YAW_RATE ) );
+
+	//Save our rates reference
+	*rates_ref = rates;
 
 	// Rate PID Controllers
 	v3d u;
-	u.x = pid_step( &_pid_roll_rate, dt, rates_ref->x, state->p );
-	u.y = pid_step( &_pid_pitch_rate, dt, rates_ref->y, state->q );
-	u.z = pid_step( &_pid_yaw_rate, dt, rates_ref->z, state->r );
+	u.x = pid_step( &_pid_roll_rate, dt, rates.x, state->p );
+	u.y = pid_step( &_pid_pitch_rate, dt, rates.y, state->q );
+	u.z = pid_step( &_pid_yaw_rate, dt, rates.z, state->r );
 
 	// XXX:
 	//"Post-Scale/Normalize" the commands to act within
@@ -118,7 +124,7 @@ void controller_att_pid_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 	// allows us to have higher PID gains for the rates
 	//(by a factor of 100), and avoids complications
 	// of getting close to the fixed-point step size
-	tau.r = fix16_div( u.x, _fc_100 );
-	tau.p = fix16_div( u.y, _fc_100 );
-	tau.y = fix16_div( u.z, _fc_100 );
+	tau->x = fix16_div( u.x, _fc_100 );
+	tau->y = fix16_div( u.y, _fc_100 );
+	tau->z = fix16_div( u.z, _fc_100 );
 }

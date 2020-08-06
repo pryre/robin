@@ -153,10 +153,14 @@ MC_YAWRATE_I | float | Integral gain for yaw rate PID | 5.0 |  | scalar | False
 MC_YAWRATE_D | float | Derivative gain for yaw rate PID | 0.0 |  | scalar | False
 MC_YAWRATE_MAX | float | Maximum allowed command for yaw rate | 1.57079 | rad/s | scalar | False
 MC_ANGLE_P | float | Feed-forward gain for attitude anglular error | 4.5 |  | scalar | False
-MAX_ROLL_A | float | Maximum allowed command roll angle (TODO) | 0.786 | rad | scalar | False
-MAX_PITCH_A | float | Maximum allowed command pitch angle (TODO) | 0.786 | rad | scalar | False
+MAX_ROLL_A | float | Maximum allowed command roll angle | 0.786 | rad | scalar | False
+MAX_PITCH_A | float | Maximum allowed command pitch angle | 0.786 | rad | scalar | False
 MC_YAW_W | float | Weighting gain for yaw angle error dynamics. Values closer to 1.0 will make the yaw component of the attitude tracking more aggressive. | 0.6 |  | [min:0.0, max:1.0] | False
 MC_USE_NAC | uint | Enables the use of the Nonlinear Adaptive Controller (NAC) instead of the typical PID method for attitude control. | 0 | 0 / 1 | boolean | False
+MC_NAC_T0_IXX | float | Initial NAC value for the inertial x-axis parameter | 0.02961 | km m^2 | scalar | False
+MC_NAC_T0_IYY | float | Initial NAC value for the inertial y-axis parameter | 0.02961 | km m^2 | scalar | False
+MC_NAC_T0_IZZ | float | Initial NAC value for the inertial z-axis parameter | 0.05342 | km m^2 | scalar | False
+MC_NAC_PRESCALE | float | Prescaling multiplier for the NAC parameters. Should be set to best ensure that multiplying MC_NAC_T0_* parameters results in values in the range of 1->10 | 100.0 |  | scalar | False
 
 ## Estimator
 

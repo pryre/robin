@@ -18,11 +18,11 @@ extern "C" {
 #define CMD_IN_IGNORE_THROTTLE (uint8_t)64  // 0b01000000
 #define CMD_IN_IGNORE_ATTITUDE (uint8_t)128 // 0b10000000
 
-void controller_set_input_zero( command_input_t* input );
-void controller_set_output_zero( command_output_t *output );
-void controller_set_input_from_mode( command_input_t* input );
+void control_lib_set_input_zero( command_input_t* input );
+void control_lib_set_output_zero( control_output_t *output );
+void control_lib_set_input_from_mode( command_input_t* input );
 
-void rot_error_from_attitude( v3d* e_R, qf16* qe, const qf16* q_sp, const qf16* q, const fix16_t yaw_w );
+void control_lib_q_att_error( v3d* e_R, qf16* qe, const qf16* q_sp, const qf16* q, const fix16_t yaw_w );
 
 #ifdef __cplusplus
 }
