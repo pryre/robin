@@ -161,3 +161,11 @@ PARAM_MC_ANGLE_YAW_W:
     default: 0.6
     min: 0.0
     max: 1.0
+PARAM_MC_USE_NAC:
+  type: "uint"
+  name: "MC_USE_NAC"
+  description: "Enables the use of the Nonlinear Adaptive Controller (NAC) instead of the typical PID method for attitude control."
+  reboot: false
+  value:
+    option: "bool"
+    default: 0

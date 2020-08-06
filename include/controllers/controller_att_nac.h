@@ -6,6 +6,7 @@ extern "C" {
 
 #include "fix16.h"
 #include "fixvector3d.h"
+#include "estimator.h"
 #include "control.h"
 
 void controller_nac_pid_reset( void );

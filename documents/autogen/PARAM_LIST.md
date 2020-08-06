@@ -156,6 +156,7 @@ MC_ANGLE_P | float | Feed-forward gain for attitude anglular error | 4.5 |  | sc
 MAX_ROLL_A | float | Maximum allowed command roll angle (TODO) | 0.786 | rad | scalar | False
 MAX_PITCH_A | float | Maximum allowed command pitch angle (TODO) | 0.786 | rad | scalar | False
 MC_YAW_W | float | Weighting gain for yaw angle error dynamics. Values closer to 1.0 will make the yaw component of the attitude tracking more aggressive. | 0.6 |  | [min:0.0, max:1.0] | False
+MC_USE_NAC | uint | Enables the use of the Nonlinear Adaptive Controller (NAC) instead of the typical PID method for attitude control. | 0 | 0 / 1 | boolean | False
 
 ## Estimator
 

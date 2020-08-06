@@ -6,11 +6,6 @@ extern "C" {
 
 #include "fix16.h"
 
-
-extern pid_controller_t _pid_roll_rate;
-extern pid_controller_t _pid_pitch_rate;
-extern pid_controller_t _pid_yaw_rate;
-
 typedef struct {
 	fix16_t kp;
 	fix16_t ki;

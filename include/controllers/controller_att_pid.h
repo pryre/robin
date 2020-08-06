@@ -6,8 +6,9 @@ extern "C" {
 
 #include "fix16.h"
 #include "fixvector3d.h"
+#include "estimator.h"
 #include "control.h"
-#include "controllers/lib_control_pid.h"
+#include "controllers/control_lib_pid.h"
 
 extern pid_controller_t _pid_roll_rate;
 extern pid_controller_t _pid_pitch_rate;
