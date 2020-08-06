@@ -16,13 +16,13 @@ pid_controller_t _pid_roll_rate;
 pid_controller_t _pid_pitch_rate;
 pid_controller_t _pid_yaw_rate;
 
-static void controller_att_reset( void ) {
+void controller_att_pid_reset( void ) {
 	pid_reset( &_pid_roll_rate, _state_estimator.p );
 	pid_reset( &_pid_pitch_rate, _state_estimator.q );
 	pid_reset( &_pid_yaw_rate, _state_estimator.r );
 }
 
-void controller_att_pid_init() {
+void controller_att_pid_init( void ) {
 	pid_init( &_pid_roll_rate,
 			  get_param_fix16( PARAM_PID_ROLL_RATE_P ),
 			  get_param_fix16( PARAM_PID_ROLL_RATE_I ),
@@ -105,7 +105,6 @@ void controller_att_pid_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 							  get_param_fix16( PARAM_MAX_PITCH_RATE ) );
 	rates_ref->z= fix16_constrain( rates_ref->z, -get_param_fix16( PARAM_MAX_YAW_RATE ),
 							  get_param_fix16( PARAM_MAX_YAW_RATE ) );
-
 
 	// Rate PID Controllers
 	v3d u;

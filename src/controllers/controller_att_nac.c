@@ -4,10 +4,16 @@ extern "C" {
 
 #include "fix16.h"
 #include "fixextra.h"
+#include "fixmatrix.h"
+#include "fixquat.h"
+#include "fixvector3d.h"
+
+#include "controllers/lib_control.h"
+#include "params.h"
 
 static mf16 theta; // [Ixx; Iyy; Izz]
 
-static void nac_calc_Y(mf16* Y, const v3d* w, const v3d* wd, const v3d* dwd) {
+static void controller_att_nac_calc_Y(mf16* Y, const v3d* w, const v3d* wd, const v3d* dwd) {
 	// H(q)ddq + C(q,dq)dq = Y(q,dq,ddq)a
 	//Y = diag(dwd) + vee_up(w)*diag(wd);
 
@@ -26,7 +32,11 @@ static void nac_calc_Y(mf16* Y, const v3d* w, const v3d* wd, const v3d* dwd) {
 }
 
 //XXX: This is also our init()
-void nac_reset() {
+void controller_att_pid_init( void ) {
+	controller_att_nac_reset();
+}
+
+void controller_att_nac_reset( void ) {
 	theta.rows = 3;
 	theta.cols = 1;
 
@@ -43,7 +53,7 @@ void nac_reset() {
 	theta.data[2][0] = get_param_fix16( PARAM_NAC_T0_IZZ );
 }
 
-void nac_step(v3d *tau, const fix16_t dt) {
+void controller_att_nac_step(v3d *tau, const fix16_t dt) {
     // Control (Adaptive Control)
 	//==-- Control Parameters
 	//PARAM_NAC_W0R: 20.0
@@ -111,7 +121,7 @@ void nac_step(v3d *tau, const fix16_t dt) {
 
 	//==-- Calculate Regressor
 	mf16 Ym;
-	control_adaptive_calc_Y(&Ym, &w, &dqr, &v);
+	controller_att_nac_calc_Y(&Ym, &w, &dqr, &v);
 
 	//==-- Control law
 	mf16 mtau; //u

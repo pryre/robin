@@ -11,7 +11,7 @@ extern "C" {
 #include "fixquat.h"
 #include "fixvector3d.h"
 
-#include "controllers/lib_control.h"
+#include "controllers/control_lib.h"
 
 void controller_set_input_zero( command_input_t* input ) {
 	input->r = 0;
@@ -116,8 +116,7 @@ void controller_set_input_from_mode( command_input_t* input ) {
 }
 
 // Technique adapted from the Pixhawk multirotor control scheme (~December 2018)
-void rot_error_from_attitude( v3d* e_R, qf16* qe, const qf16* q_sp, const qf16* q,
-								 const fix16_t yaw_w ) {
+void rot_error_from_attitude( v3d* e_R, qf16* qe, const qf16* q_sp, const qf16* q, const fix16_t yaw_w ) {
 	/*
 	//XXX: Shorthand method that doesn't allow for separate yaw tuning
 	v3d e_R;
