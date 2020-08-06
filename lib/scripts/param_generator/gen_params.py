@@ -207,7 +207,7 @@ def gen_md(params_g, param_groups, filepath):
 		param_gen_md.write(str_md)
 
 		for i in range(len(param_groups)):
-			param_gen_md.write("- [%s](/lib/param_generator/PARAMS.md#%s)\n\n" % (param_groups[i],param_groups[i].replace(' ', '-')))
+			param_gen_md.write("- [%s](/documents/autogen/PARAM_LIST.md#%s)\n\n" % (param_groups[i],param_groups[i].replace(' ', '-')))
 
 		str_md_tab = "Name | Type | Description | Default | Unit | Options | Reboot\n--- | --- | --- | ---:| --- | --- | ---\n"
 

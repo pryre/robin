@@ -1,23 +1,23 @@
 # Parameter File Reference
 [Back to index](/documents/README.md).
 
-- [Battery](/lib/param_generator/PARAMS.md#Battery)
+- [Battery](/documents/autogen/PARAM_LIST.md#Battery)
 
-- [Calibration](/lib/param_generator/PARAMS.md#Calibration)
+- [Calibration](/documents/autogen/PARAM_LIST.md#Calibration)
 
-- [Communication](/lib/param_generator/PARAMS.md#Communication)
+- [Communication](/documents/autogen/PARAM_LIST.md#Communication)
 
-- [Control](/lib/param_generator/PARAMS.md#Control)
+- [Control](/documents/autogen/PARAM_LIST.md#Control)
 
-- [Estimator](/lib/param_generator/PARAMS.md#Estimator)
+- [Estimator](/documents/autogen/PARAM_LIST.md#Estimator)
 
-- [Motor Mixer](/lib/param_generator/PARAMS.md#Motor-Mixer)
+- [Motor Mixer](/documents/autogen/PARAM_LIST.md#Motor-Mixer)
 
-- [RC Input](/lib/param_generator/PARAMS.md#RC-Input)
+- [RC Input](/documents/autogen/PARAM_LIST.md#RC-Input)
 
-- [Sensors](/lib/param_generator/PARAMS.md#Sensors)
+- [Sensors](/documents/autogen/PARAM_LIST.md#Sensors)
 
-- [System](/lib/param_generator/PARAMS.md#System)
+- [System](/documents/autogen/PARAM_LIST.md#System)
 
 ## Battery
 
