@@ -70,7 +70,7 @@ void control_lib_set_input_from_mode( command_input_t* input ) {
 			qf16 q_rot_base;
 			qf16_from_axis_angle( &q_rot_base, &unit_z, heading_from_quat( &_state_estimator.attitude ) );
 
-			qf16_mul( &input->q, &q_rot_base, &q_stab_b );
+			qf16_mul( &(input->q), &q_rot_base, &q_stab_b );
 			//XXX: Should already be close to normalised, but will be redone later before use
 
 			input->q.a = _fc_1;
