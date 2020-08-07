@@ -46,7 +46,7 @@ void controller_att_pid_init( void ) {
 			  // XXX: Mixer input is normalized from 100/-100 to 1/-1
 }
 
-void controller_att_pid_step( v3d* tau, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
+void controller_att_pid_step( v3d* u, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
 	//==-- Attitude Control
 	v3d rates = {0,0,0};
 	// If we should listen to attitude input
@@ -113,10 +113,10 @@ void controller_att_pid_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 	*rates_ref = rates;
 
 	// Rate PID Controllers
-	v3d u;
-	u.x = pid_step( &_pid_roll_rate, dt, rates.x, state->p );
-	u.y = pid_step( &_pid_pitch_rate, dt, rates.y, state->q );
-	u.z = pid_step( &_pid_yaw_rate, dt, rates.z, state->r );
+	v3d u_s; //scaled control input
+	u_s.x = pid_step( &_pid_roll_rate, dt, rates.x, state->p );
+	u_s.y = pid_step( &_pid_pitch_rate, dt, rates.y, state->q );
+	u_s.z = pid_step( &_pid_yaw_rate, dt, rates.z, state->r );
 
 	// XXX:
 	//"Post-Scale/Normalize" the commands to act within
@@ -124,7 +124,7 @@ void controller_att_pid_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 	// allows us to have higher PID gains for the rates
 	//(by a factor of 100), and avoids complications
 	// of getting close to the fixed-point step size
-	tau->x = fix16_div( u.x, _fc_100 );
-	tau->y = fix16_div( u.y, _fc_100 );
-	tau->z = fix16_div( u.z, _fc_100 );
+	u->x = fix16_div( u_s.x, _fc_100 );
+	u->y = fix16_div( u_s.y, _fc_100 );
+	u->z = fix16_div( u_s.z, _fc_100 );
 }

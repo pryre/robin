@@ -89,12 +89,12 @@ static void control_step( uint32_t time_now ) {
 		qf16_normalize_to_unit( &_control_input.q, &input.q );
 		input.q = _control_input.q;
 
-		v3d tau;
+		v3d u;
 		v3d rates_ref = {0,0,0};
 		if( get_param_uint(PARAM_MC_USE_NAC) ) {
-			controller_att_nac_step(&tau, &rates_ref, &input, &_state_estimator, dt);
+			controller_att_nac_step(&u, &rates_ref, &input, &_state_estimator, dt);
 		} else {
-			controller_att_pid_step(&tau, &rates_ref, &input, &_state_estimator, dt);
+			controller_att_pid_step(&u, &rates_ref, &input, &_state_estimator, dt);
 		}
 
 		// Save intermittent goals and calculate rate error
@@ -103,9 +103,9 @@ static void control_step( uint32_t time_now ) {
 		_control_input.y = rates_ref.z;
 
 		// Set our control references
-		_control_output.r = tau.x;
-		_control_output.p = tau.y;
-		_control_output.y = tau.z;
+		_control_output.r = u.x;
+		_control_output.p = u.y;
+		_control_output.y = u.z;
 	} else {
 		//We're in pretty bad shape, so zero everything for "complete failsafe"
 		control_reset();
@@ -143,6 +143,7 @@ void control_run( uint32_t now ) {
 			( _state_estimator.time_updated > get_param_uint( PARAM_EST_INIT_TIME ) ) ) {
 			//==-- Update Controller
 			// Apply the current commands and update the PID controllers
+			// but keep things running in step with the estimator
 			control_step( _state_estimator.time_updated );
 		} else {
 			//==-- Reset Controller

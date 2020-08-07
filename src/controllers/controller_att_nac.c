@@ -56,15 +56,18 @@ void controller_att_nac_save_parameters( void ) {
 	set_param_fix16( PARAM_MC_NAC_T0_IZZ, fix16_div( theta.data[2][0], prescale));
 }
 
-void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
-	/*
+static void controller_att_nac_u_from_tau(v3d* u, const v3d* tau) {
+	const fix16_t motor_map
+}
+
+void controller_att_nac_step( v3d* u, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
     // Control (Adaptive Control)
 	//==-- Control Parameters
 	//PARAM_NAC_W0R: 20.0
 	//PARAM_NAC_DZ_EW: deg2rad(0.1)
 	//PARAM_NAC_DZ_ER: deg2rad(1.0)
 	const v3d v3d0 = {0,0,0};
-	const fix16_t w0r = get_param_fix16( PARAM_NAC_W0R );
+	const fix16_t w0r = get_param_fix16( PARAM_MC_NAC_W0R );
 	const fix16_t prescale = get_param_fix16( PARAM_MC_NAC_T0_PRESCALER );
 	// Adaption gain (a -> gamma)
 	// Set these based on the expected closed loop frequencies (p) of the
@@ -158,11 +161,18 @@ void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 
 	//==-- Fill in control vector
 	if(mtau.rows == 3) &&( mtau.cols == 1) {
-		tau->x = fix16_div(mtau[0][0],prescale);
-		tau->y = fix16_div(mtau[1][0],prescale);
-		tau->z = fix16_div(mtau[2][0],prescale);
+		v3d tau;
+		tau.x = fix16_div(mtau[0][0],prescale);
+		tau.y = fix16_div(mtau[1][0],prescale);
+		tau.z = fix16_div(mtau[2][0],prescale);
+
+		controller_att_nac_u_from_tau(u, &tau);
 	} else {
-		//TODO: Throw error!
+		safety_request_state(MAV_STATE_EMERGENCY);
+
+		*u = {0,0,0};
+
+		mavlink_queue_broadcast_error( "NAC: Control math failed" );
+		status_buzzer_failure();
 	}
-	*/
 }
