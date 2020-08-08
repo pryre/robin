@@ -81,7 +81,13 @@ static void motor_test_reset( void ) {
 }
 
 void mixer_init(void) {
-	switch ( get_param_uint( PARAM_MIXER ) ) {
+	mixer_type_t mixer_type = get_param_uint( PARAM_MIXER );
+	if(MIXER_NUM_MOTORS > FIXMATRIX_MAX_SIZE) {
+		mavlink_queue_broadcast_notice( "[MIXER] INVALID FIRMWARE SETUP, DISABLING!" );
+		mixer_type = MIXER_NONE;
+	}
+
+	switch ( mixer_type ) {
 	case MIXER_FREE: {
 		_mixer_to_use = &mixer_free;
 		set_param_uint( PARAM_MAV_TYPE, MAV_TYPE_GENERIC );
@@ -400,11 +406,12 @@ void mixer_output( uint32_t time_now ) {
 	}
 }
 
-void calc_mixer_output( void ) {
+void calc_mixer_output( const mf16* c ) {
 	fix16_t max_output = 0;
 	fix16_t scale_factor = _fc_1;
-	fix16_t prescaled_outputs[MIXER_NUM_MOTORS];
+	//fix16_t prescaled_outputs[MIXER_NUM_MOTORS];
 
+	/*
 	for ( uint8_t i = 0; i < MIXER_NUM_MOTORS; i++ ) {
 		// If we're using the mixer io for motor/servo output
 		// and there is some throttle input
@@ -428,19 +435,30 @@ void calc_mixer_output( void ) {
 			prescaled_outputs[i] = 0;
 		}
 	}
+	*/
+
+	//Calculate our input signals
+	mf16 u = {.rows = MIXER_NUM_MOTORS, .columns = 1, .errors = 0};
+	mf16_mul(&u, &(_mixer_to_use->map), c);
+
+	//Check to see what our maximum motor output was
+	for(uint8_t i = 0; i < MIXER_NUM_MOTORS; i++)
+		if ( _mixer_to_use->output_type[i] == IO_TYPE_OM )
+				if ( u.data[i][0] > max_output )
+					max_output = u.data[i][0];
 
 	// saturate outputs to maintain controllability even during aggressive
 	// maneuvers
 	if ( max_output > _fc_1 )
 		scale_factor = fix16_div(_fc_1, max_output);
 
+	//
 	for ( uint8_t i = 0; i < MIXER_NUM_MOTORS; i++ ) {
 		if ( _mixer_to_use->output_type[i] == IO_TYPE_OM ) {
-			actuator_control_g0m_[i] = fix16_mul( prescaled_outputs[i], scale_factor );
+			actuator_control_g0m_[i] = fix16_mul( u.data[i][0], scale_factor );
 		} else {
-			actuator_control_g0m_[i] = prescaled_outputs[i];
+			actuator_control_g0m_[i] = u.data[i][0];
 		}
-
 	}
 }
 
