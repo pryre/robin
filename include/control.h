@@ -23,13 +23,6 @@ typedef struct {
 } command_input_t;
 
 typedef struct {
-	fix16_t r;
-	fix16_t p;
-	fix16_t y;
-	fix16_t T;
-} control_output_t;
-
-typedef struct {
 	uint32_t period_update;
 	uint32_t period_stale;
 	uint32_t time_last;
@@ -39,7 +32,6 @@ typedef struct {
 extern control_timing_t _control_timing;
 extern command_input_t _cmd_ob_input;
 extern command_input_t _control_input;
-extern control_output_t _control_output;
 
 // void controller_reset(void);
 void control_init( void );

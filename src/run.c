@@ -118,7 +118,7 @@ void loop( void ) {
 
 	//==-- Send Motor Commands
 	// Convert outputs to correct layout and send PWM (and considers failsafes)
-	profiler_run( PROFILER_ID_MIXER, &mixer_output );
+	profiler_run( PROFILER_ID_MIXER, &mixer_run );
 
 	profiler_run( PROFILER_ID_STATUS, &status_devices_run );
 

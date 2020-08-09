@@ -48,6 +48,8 @@ typedef enum {
 } qf16_axis_lock_t;
 
 static const qf16 NED_ENU_Q = {0, _fc_sqrt_0_5, -_fc_sqrt_0_5, 0};
+static const v3d V3D_ZERO = {0, 0, 0};
+static const qf16 QF16_NO_ROT = { .a = _fc_1, .b = 0, .c = 0, .d = 0};
 //static const qf16 NED_IMU_Q = {0, _fc_1, 0, 0};
 
 static inline fix16_t fix16_normalize( const fix16_t i, const fix16_t min, const fix16_t max ) {
@@ -93,6 +95,7 @@ static inline fix16_t v3d_sq_norm( const v3d* a ) {
 	return fix16_add( fix16_add( fix16_sq( a->x ), fix16_sq( a->y ) ), fix16_sq( a->z ) );
 }
 
+//dest and a can alias
 static inline void v3d_inv( v3d* dest, const v3d* a ) {
 	dest->x = -a->x;
 	dest->y = -a->y;

@@ -60,13 +60,15 @@ extern mixer_motor_test_t _motor_test;
 
 extern const mixer_t* _mixer_to_use;
 
-void mixer_clear_outputs( void );
 
 void mixer_init( void );
 
+void mixer_init( void );
+void mixer_clear_outputs( void );
+void mixer_run( uint32_t time_now );
+uint8_t mixer_get_num_motors( void );
 //XXX: c is the input signal: c = [tx; ty; tz; Tz]
 void mixer_set_primary_using_map( const mf16* c );
-void mixer_output( uint32_t time_now );
 
 #ifdef __cplusplus
 }

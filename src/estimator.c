@@ -16,56 +16,34 @@ extern "C" {
 #include "fixvector3d.h"
 
 state_t _state_estimator;
-//sensor_readings_t _sensors;
 
 #include <stdio.h>
 
-//static v3d w1;	 //Integrator for quad int
-//static v3d w2;	 //Integrator for quad int
 static v3d w_bias_; //Integrator for adaptive bias
 static qf16 q_hat_; //Attitude estimate
-//static v3d g_; //Gravity vector
 
 static v3d accel_lpf_;
 static v3d gyro_lpf_;
 
 void estimator_init( void ) {
-	_state_estimator.ax = 0;
-	_state_estimator.ay = 0;
-	_state_estimator.az = 0;
-	_state_estimator.p = 0;
-	_state_estimator.q = 0;
-	_state_estimator.r = 0;
-	_state_estimator.attitude.a = _fc_1;
-	_state_estimator.attitude.b = 0;
-	_state_estimator.attitude.c = 0;
-	_state_estimator.attitude.d = 0;
+	_state_estimator.a = V3D_ZERO;
+	_state_estimator.w = V3D_ZERO;
+	_state_estimator.q = QF16_NO_ROT;
 	_state_estimator.time_updated = 0;
 
-	q_hat_.a = _fc_1;
-	q_hat_.b = 0;
-	q_hat_.c = 0;
-	q_hat_.d = 0;
-
-	//g_.x = 0;
-	//g_.y = 0;
-	//g_.z = _fc_1;
-
+	q_hat_ = QF16_NO_ROT;
+	
 	reset_adaptive_gyro_bias();
 
 	accel_lpf_.x = 0;
 	accel_lpf_.y = 0;
 	accel_lpf_.z = _fc_gravity;
-
-	gyro_lpf_.x = 0;
-	gyro_lpf_.y = 0;
-	gyro_lpf_.z = 0;
+	
+	gyro_lpf_ = V3D_ZERO;
 }
 
 void reset_adaptive_gyro_bias(void) {
-	w_bias_.x = 0;
-	w_bias_.y = 0;
-	w_bias_.z = 0;
+	w_bias_ = V3D_ZERO;
 }
 
 static void lpf_update( const v3d* accel, const v3d* gyro ) {
@@ -142,22 +120,16 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 	//Omega correction
 	//These terms are used later to correct our attitude
 	//using additional sensor measurements
-	v3d w_cor;
+	v3d w_cor = V3D_ZERO;
 	w_cor.x = 0;
 	w_cor.y = 0;
 	w_cor.z = 0;
 
 	//Heading correction
 	if ( get_param_uint( PARAM_EST_USE_HDG_FUSION ) ) {
-		v3d w_hdg;
-		w_hdg.x = 0;
-		w_hdg.y = 0;
-		w_hdg.z = 0;
+		v3d w_hdg = V3D_ZERO;
 
-		v3d mag_b; //Mag reading in the body frame
-		mag_b.x = 0;
-		mag_b.y = 0;
-		mag_b.z = 0;
+		v3d mag_b = V3D_ZERO; //Mag reading in the body frame
 		fix16_t decl = 0;
 		fix16_t m_kp = 0;
 
@@ -275,18 +247,13 @@ static void estimator_update( uint32_t time_now, const v3d* accel, const v3d* gy
 		qf16_inverse( &q_lh_inv, &q_lh );
 
 		qf16_mul( &q_hat_lvl, &q_hat_, &q_lh_inv );
-		qf16_normalize_to_unit( &_state_estimator.attitude, &q_hat_lvl );
+		qf16_normalize_to_unit( &_state_estimator.q, &q_hat_lvl );
 	} else {
-		_state_estimator.attitude = q_hat_;
+		_state_estimator.q = q_hat_;
 	}
 
-	_state_estimator.p = w_est.x;
-	_state_estimator.q = w_est.y;
-	_state_estimator.r = w_est.z;
-
-	_state_estimator.ax = accel_lpf_.x;
-	_state_estimator.ay = accel_lpf_.y;
-	_state_estimator.az = accel_lpf_.z;
+	_state_estimator.w = w_est;
+	_state_estimator.a = accel_lpf_;
 }
 
 void estimator_update_sensors( uint32_t now ) {

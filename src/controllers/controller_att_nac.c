@@ -12,6 +12,8 @@ extern "C" {
 #include "controllers/controller_att_nac.h"
 #include "drivers/drv_status_io.h"
 #include "params.h"
+#include "mixer.h"
+#include "safety.h"
 
 static mf16 theta; // [Ixx; Iyy; Izz]
 
@@ -57,20 +59,21 @@ void controller_att_nac_save_parameters( void ) {
 	set_param_fix16( PARAM_MC_NAC_T0_IZZ, fix16_div( theta.data[2][0], prescale));
 }
 
-static void controller_att_nac_correct_tau_for_params(v3d* tau) {
-	const fix16_t Tmax = get_param_fix16( PARAM_NAC_T_MAX);
+static void controller_att_nac_tau_to_c(v3d* c, v3d* tau) {
+	const fix16_t Tmax = get_param_fix16( PARAM_NAC_TMAX);
+	const fix16_t Dmax = get_param_fix16( PARAM_NAC_TMAX);
 	const fix16_t l = get_param_fix16( PARAM_NAC_ARM_LENGTH);
-	const fix16_t kT = get_param_fix16( PARAM_NAC_KT);
-	const fix16_t kD = get_param_fix16( PARAM_NAC_KD);
+	const uint8_t n = mixer_get_num_motors();
+	
+	
 }
 
-void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
+void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
     // Control (Adaptive Control)
 	//==-- Control Parameters
 	//PARAM_NAC_W0R: 20.0
 	//PARAM_NAC_DZ_EW: deg2rad(0.1)
 	//PARAM_NAC_DZ_ER: deg2rad(1.0)
-	const v3d v3d0 = {0,0,0};
 	const fix16_t w0r = get_param_fix16( PARAM_MC_NAC_W0R );
 	const fix16_t prescale = get_param_fix16( PARAM_MC_NAC_T0_PRESCALER );
 	// Adaption gain (a -> gamma)
@@ -81,8 +84,7 @@ void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 	//p = [w0r;w0r;w0r;w0p];
 	//a = p0*p/max(p);
 	//Gamma = diag(a);
-	mf16 Gamma;
-	Gamma.rows = Gamma.cols = 3;	//Filled by parameters on control loop
+	mf16 Gamma = {.rows = 3, .columns = 3, .errors = 0};
 	mf16_fill_diagonal(&Gamma, w0r);
 	// Dead-zone
 	// These should be set depending on state noise
@@ -90,18 +92,85 @@ void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 							  + fix16_mul(w0r,get_param_fix16( PARAM_NAC_DZ_ER ));
 
 	//==-- Input Signals
-	v3d eRb;
+	qf16 qe = QF16_NO_ROT; //start with no angle error (R==R_sp==Identity)
+	v3d eRb = V3D_ZERO;
 	v3d ew;
 	v3d ewd;
-	//For Stab:
-	//eR = R'*R_sp;
-	eRb = control_lib_q_att_error(...);
-	v3d_sub(&ew, &v3d0, &w);		//ew = eR*w_sp - w; w_sp => 0
-    ewd = v3d0;						//eR*wd_sp - vee_up(w)*eR*w_sp; wd_sp, w_sp => 0
+	/*
+	XXX: Notes for pure control modes:
+	//For Stab (heading-hold):
+		//eR = R'*R_sp;
+		eRb = control_lib_q_att_error(...);
+		v3d_sub(&ew, &v3d0, &w);		//ew = eR*w_sp - w; w_sp => 0
+		ewd = v3d0;						//eR*wd_sp - vee_up(w)*eR*w_sp; wd_sp, w_sp => 0
 	//For Acro
-	eRb = v3d0;
-	v3d_sub(&ew, &w_sp, &w);	//ew = eR*w_sp - w; eR => eye(3) for acro
-    v3d_cross(&ewd, &w, &w_sp);	//eR*wd_sp - vee_up(w)*eR*w_sp; eR => eye(3) for acro => w x w_sp
+		eRb = v3d0;
+		v3d_sub(&ew, &w_sp, &w);	//ew = eR*w_sp - w; eR => eye(3) for acro
+		v3d_cross(&ewd, &w, &w_sp);	//eR*wd_sp - vee_up(w)*eR*w_sp; eR => eye(3) for acro => w x w_sp
+	*/
+	
+	// If we should listen to attitude input
+	if ( !( input->input_mask & CMD_IN_IGNORE_ATTITUDE ) ) {
+		fix16_t yaw_w = get_param_fix16( PARAM_MC_ANGLE_YAW_W );
+
+		// If we are going to override the calculated yaw rate, just ignore it
+		if ( !( input->input_mask & CMD_IN_IGNORE_YAW_RATE ) ) {
+			yaw_w = 0;
+		}
+
+		control_lib_q_att_error( &eRb,
+								 &qe,
+								 &(input->q),
+								 &(state->q),
+								 yaw_w );
+	}
+
+	// Rates
+	v3d w_sp;
+	
+	// Roll
+	if ( !( input->input_mask & CMD_IN_IGNORE_ROLL_RATE ) ) {
+		// Use the commanded roll rate goal
+		w_sp.x = input->r;
+	}
+
+	// Pitch
+	if ( !( input->input_mask & CMD_IN_IGNORE_PITCH_RATE ) ) {
+		// Use the commanded pitch rate goal
+		w_sp.y = input->p;
+	}
+
+	// Yaw
+	if ( !( input->input_mask & CMD_IN_IGNORE_YAW_RATE ) ) {
+		// Use the commanded yaw rate goal
+		w_sp.z = input->y;
+	} else {
+		// XXX: Better yaw tracking in stab mode
+		// If we're in offboard mode, and we aren't going to override yaw rate, and
+		// we want to fuse
+		// XXX: Ideally this would be handled as an additional case using the IGNORE
+		// flags, somehow...
+		if ( ( _system_status.control_mode == MAIN_MODE_OFFBOARD ) &&
+			 get_param_uint( PARAM_CONTROL_OB_FUSE_YAW_RATE ) ) {
+			// Add in the additional yaw rate input
+			// TODO: This is more of a hack. Needs to be conerted from euler rate to body rates (should effect goal_y, goal_p, and goal_r)
+			w_sp.z = fix16_add( rates_ref->z, input->y );
+		}
+	}
+	
+	//Save our rates inputs
+	*rates_ref = w_sp;
+	
+	// Calculate our other error terms (can't do shortcuts without working out exactly the mode we're in)
+	//ew = eR*w_sp - w;
+	v3d eRw_sp;
+	qf16_rotate(&eRw_sp, &qe, &w_sp);
+	v3d_sub(&ew, &eRw_sp, &(state->w));
+	
+	//ewd = eR*wd_sp - vee_up(w)*eR*w_sp; wd_sp == [0;0;0] => ewd = -vee_up(w)*eR*w_sp = -cross(w,eR*w_sp)
+    v3d_cross(&ewd, &(state->w), &eRw_sp);
+	v3d_inv(&ewd, &ewd);
+	
 
 	//==-- Variable Preparation
     // A = [w0r,   0,   0,
@@ -133,7 +202,7 @@ void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 
 	//==-- Calculate Regressor
 	mf16 Ym;
-	controller_att_nac_calc_Y(&Ym, &w, &dqr, &v);
+	controller_att_nac_calc_Y(&Ym, &(state->w), &dqr, &v);
 
 	//==-- Control law
 	mf16 mtau; //u
@@ -142,9 +211,7 @@ void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 	//thetad = -Gamma*Ym'*s
 	mf16 GYm;
 	mf16_mul_bt(&GYm, &Gamma, &Ym);
-	mf16 nms;
-	nms.rows = 3;
-	nms.cols = 1;
+	mf16 nms = {.rows = 3, .columns = 1, .errors = 0};
 	nms.data[0][0] = -s.x;
 	nms.data[1][0] = -s.y;
 	nms.data[2][0] = -s.z;
@@ -153,9 +220,9 @@ void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 
     //==-- Parameter update refinement
 	//Check if we're using a deadzone
-    if(dz_detla_ew > 0) {
-		if(fix16_abs(v3d_norm(s)) < dz_detla_ew) {
-			mf16_fill(&thetad, 0);	//In dead-zone, don't update parameters
+    if( dz_detla_ew > 0 ) {
+		if( fix16_abs( v3d_norm( &s ) ) < dz_detla_ew ) {
+			mf16_fill( &thetad, 0 );	//In dead-zone, don't update parameters
 		}
 	}
 
@@ -164,17 +231,17 @@ void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* i
 	mf16_add(&theta, &theta, &thetad);
 
 	//==-- Fill in control vector
-	if(mtau.rows == 3) &&( mtau.cols == 1) {
+	if( (mtau.rows == 3) && ( mtau.columns == 1) ) {
 		v3d tau;
-		tau.x = fix16_div(mtau[0][0],prescale);
-		tau.y = fix16_div(mtau[1][0],prescale);
-		tau.z = fix16_div(mtau[2][0],prescale);
+		tau.x = fix16_div(mtau.data[0][0],prescale);
+		tau.y = fix16_div(mtau.data[1][0],prescale);
+		tau.z = fix16_div(mtau.data[2][0],prescale);
 
-		controller_att_nac_u_from_tau(u, &tau);
+		controller_att_nac_tau_to_c(c, &tau);
 	} else {
 		safety_request_state(MAV_STATE_EMERGENCY);
 
-		*u = {0,0,0};
+		*c = V3D_ZERO;
 
 		mavlink_queue_broadcast_error( "NAC: Control math failed" );
 		status_buzzer_failure();

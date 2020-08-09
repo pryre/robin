@@ -50,6 +50,7 @@ static bool actuator_apply_g5_map_[MIXER_NUM_MOTORS];
 static fix16_t actuator_control_g0m_[MIXER_NUM_MOTORS]; // Mixer calculated g0 controls
 
 const mixer_t* _mixer_to_use;
+static uint8_t num_motors_;
 
 static int32_t int32_constrain( int32_t i, const int32_t min,
 								const int32_t max ) {
@@ -81,6 +82,8 @@ static void motor_test_reset( void ) {
 }
 
 void mixer_init(void) {
+	num_motors_ = 0;
+
 	mixer_type_t mixer_type = get_param_uint( PARAM_MIXER );
 	if(MIXER_NUM_MOTORS > FIXMATRIX_MAX_SIZE) {
 		mavlink_queue_broadcast_notice( "[MIXER] INVALID FIRMWARE SETUP, DISABLING!" );
@@ -143,7 +146,10 @@ void mixer_init(void) {
 		if ( _mixer_to_use->output_type[i] != IO_TYPE_N ) {
 			_actuator_type_map[i] = _mixer_to_use->output_type[i];
 			actuator_apply_g0_map_[i] = true;
-			//_actuator_apply_g1_map[i] = true;
+
+			//Dynamically keep track of how many motors are mapped
+			if(_mixer_to_use->output_type[i] == IO_TYPE_OM)
+				num_motors_++;
 		} else if ( ( get_param_uint( PARAM_ACTUATORS_RC_PWM_MAP ) >> i ) & 0x01 ) {
 			_actuator_type_map[i] = IO_TYPE_OS;
 			actuator_apply_g2_map_[i] = true;
@@ -336,7 +342,7 @@ static bool motor_test_in_progress( const uint32_t time_now ) {
 }
 
 // Used to send a PWM while
-void mixer_output( uint32_t time_now ) {
+void mixer_run( uint32_t time_now ) {
 	bool test_running = motor_test_in_progress( time_now );
 
 	if ( _mixer_to_use->mixer_ok ) {
@@ -467,6 +473,10 @@ void mixer_clear_outputs( void ) {
 	for ( int8_t i = 0; i < MIXER_NUM_MOTORS; i++ ) {
 		write_output_pwm( i, 0, 0 );
 	}
+}
+
+uint8_t mixer_get_num_motors( void ) {
+	return num_motors_;
 }
 
 #ifdef __cplusplus

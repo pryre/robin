@@ -1,0 +1,97 @@
+PARAM_MC_USE_NAC:
+  type: "uint"
+  name: "MC_USE_NAC"
+  description: "Enables the use of the Nonlinear Adaptive Controller (NAC) instead of the typical PID method for attitude control."
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+PARAM_NAC_ARM_LENGTH:
+  type: "float"
+  name: "MC_NAC_LA"
+  description: "Multirotor arm length from body centre"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.225
+    unit: "m"
+PARAM_NAC_TMAX:
+  type: "float"
+  name: "MC_NAC_TMAX"
+  description: "Maximum calculated thrust at 100% throttle for one motor"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 7.84532
+    unit: "N"
+PARAM_NAC_DMAX:
+  type: "float"
+  name: "MC_NAC_DMAX"
+  description: "Maximum calculated drag torque at 100% throttle for one motor"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.2
+    unit: "Nm"
+PARAM_MC_NAC_T0_IXX:
+  type: "float"
+  name: "MC_NAC_T0_IXX"
+  description: "Initial NAC value for the inertial x-axis parameter"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02961
+    unit: "km m^2"
+PARAM_MC_NAC_T0_IYY:
+  type: "float"
+  name: "MC_NAC_T0_IYY"
+  description: "Initial NAC value for the inertial y-axis parameter"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.02961
+    unit: "km m^2"
+PARAM_MC_NAC_T0_IZZ:
+  type: "float"
+  name: "MC_NAC_T0_IZZ"
+  description: "Initial NAC value for the inertial z-axis parameter"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05342
+    unit: "km m^2"
+PARAM_MC_NAC_W0R:
+  type: "float"
+  name: "MC_NAC_W0R"
+  description: "Natural frequency of the convergence in attitude error (higher is a quicker response)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 20.0
+    unit: "Hz"
+PARAM_MC_NAC_T0_PRESCALER:
+  type: "float"
+  name: "MC_NAC_PRESCALE"
+  description: "Prescaling multiplier for the NAC parameters. Should be set to best ensure that multiplying MC_NAC_T0_* parameters results in values in the range of 1->10"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 100.0
+PARAM_NAC_DZ_ER:
+  type: "float"
+  name: "MC_NAC_DZ_ER"
+  description: "Parameter update deadzone factor for error in rotation (i.e. paramters will not be updated if rotation error is less than this value)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.05
+    unit: "rad"
+PARAM_NAC_DZ_EW:
+  type: "float"
+  name: "MC_NAC_DZ_EW"
+  description: "Parameter update deadzone factor for error in body rates (i.e. paramters will not be updated if body rate error is less than this value)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.01
+    unit: "rad"

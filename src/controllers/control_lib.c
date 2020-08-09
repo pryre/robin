@@ -28,13 +28,6 @@ void control_lib_set_input_zero( command_input_t* input ) {
 	input->input_mask = 0;
 }
 
-void control_lib_set_output_zero( control_output_t *output ) {
-	output->r = 0;
-	output->p = 0;
-	output->y = 0;
-	output->T = 0;
-}
-
 void control_lib_set_input_from_mode( command_input_t* input ) {
 	switch ( _system_status.control_mode ) {
 		case MAIN_MODE_OFFBOARD: {
@@ -68,7 +61,7 @@ void control_lib_set_input_from_mode( command_input_t* input ) {
 
 			//Heading rotation for body->inertial
 			qf16 q_rot_base;
-			qf16_from_axis_angle( &q_rot_base, &unit_z, heading_from_quat( &_state_estimator.attitude ) );
+			qf16_from_axis_angle( &q_rot_base, &unit_z, heading_from_quat( &(_state_estimator.q) ) );
 
 			qf16_mul( &(input->q), &q_rot_base, &q_stab_b );
 			//XXX: Should already be close to normalised, but will be redone later before use

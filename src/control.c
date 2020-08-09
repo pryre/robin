@@ -37,8 +37,6 @@ command_input_t _control_input;
 static void control_reset( void ) {
 	controller_att_pid_reset();
 	controller_att_nac_reset();
-
-	control_lib_set_output_zero(&_control_output);
 }
 
 //XXX: c is the input signal: c = [tx; ty; tz; Tz]
@@ -87,12 +85,12 @@ static void control_step( mf16* c, const uint32_t time_now ) {
 		qf16_normalize_to_unit( &_control_input.q, &input.q );
 		input.q = _control_input.q;
 
-		v3d tau;
+		v3d c_att;
 		v3d rates_ref;
 		if( get_param_uint(PARAM_MC_USE_NAC) ) {
-			controller_att_nac_step(&tau, &rates_ref, &input, &_state_estimator, dt);
+			controller_att_nac_step(&c_att, &rates_ref, &input, &_state_estimator, dt);
 		} else {
-			controller_att_pid_step(&tau, &rates_ref, &input, &_state_estimator, dt);
+			controller_att_pid_step(&c_att, &rates_ref, &input, &_state_estimator, dt);
 		}
 
 		// Save intermittent goals and calculate rate error
@@ -101,9 +99,9 @@ static void control_step( mf16* c, const uint32_t time_now ) {
 		_control_input.y = rates_ref.z;
 
 		// Set our control references
-		c->data[0][0] = tau.x;
-		c->data[1][0] = tau.y;
-		c->data[2][0] = tau.z;
+		c->data[0][0] = c_att.x;
+		c->data[1][0] = c_att.y;
+		c->data[2][0] = c_att.z;
 		c->data[3][0] = _control_input.T;
 	} else {
 		safety_request_state(MAV_STATE_EMERGENCY);

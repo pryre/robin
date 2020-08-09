@@ -16,7 +16,7 @@ extern pid_controller_t _pid_yaw_rate;
 
 void controller_att_pid_reset( void );
 void controller_att_pid_init( void );
-void controller_att_pid_step( v3d* tau, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt );
+void controller_att_pid_step( v3d* c, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt );
 
 
 #ifdef __cplusplus

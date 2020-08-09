@@ -12,13 +12,9 @@ extern "C" {
 #include "fixvector3d.h"
 
 typedef struct {
-	fix16_t ax;	// X Acceleration
-	fix16_t ay;	// Y Acceleration
-	fix16_t az;	// Z Acceleration
-	fix16_t p;	 // Roll Rate
-	fix16_t q;	 // Pitch Rate
-	fix16_t r;	 // Yaw Rate
-	qf16 attitude; // Attitude Quaternion
+	v3d a;	//Linear acceleration
+	v3d w;	//Body rates
+	qf16 q; // Attitude Quaternion
 
 	uint32_t time_updated;
 } state_t;

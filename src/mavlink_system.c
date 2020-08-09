@@ -44,17 +44,6 @@ mavlink_system_t mavlink_system;
 bool _ch_0_have_heartbeat;
 bool _ch_1_have_heartbeat;
 
-//params_t _params;
-//const char _param_names[PARAMS_COUNT]
-//					   [MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN];
-
-//system_status_t _system_status;
-//sensor_readings_t _sensors;
-//state_t _state_estimator;
-//fix16_t _io_pin_states[IO_PIN_STATE_NUM];
-
-//command_input_t _control_input;
-
 static mavlink_message_t mavlink_msg_buf_port0_;
 static mavlink_message_t mavlink_msg_buf_port1_;
 static const float blank_quat_unset_[4] = {0, 0, 0, 0};
@@ -642,12 +631,12 @@ void mavlink_stream_highres_imu( mavlink_channel_t chan ) {
 
 		if ( _system_status.sensors.imu.health == SYSTEM_HEALTH_OK ) {
 			// Output our estimated values here
-			xacc = fix16_to_float( _state_estimator.ax );
-			yacc = fix16_to_float( _state_estimator.ay );
-			zacc = fix16_to_float( _state_estimator.az );
-			xgyro = fix16_to_float( _state_estimator.p );
-			ygyro = fix16_to_float( _state_estimator.q );
-			zgyro = fix16_to_float( _state_estimator.r );
+			xacc = fix16_to_float( _state_estimator.a.x );
+			yacc = fix16_to_float( _state_estimator.a.y );
+			zacc = fix16_to_float( _state_estimator.a.z );
+			xgyro = fix16_to_float( _state_estimator.w.x );
+			ygyro = fix16_to_float( _state_estimator.w.y );
+			zgyro = fix16_to_float( _state_estimator.w.z );
 
 			fields_updated |= ( 1 << 0 ) | ( 1 << 1 ) | ( 1 << 2 ) | ( 1 << 3 ) | ( 1 << 4 ) | ( 1 << 5 );
 		}
@@ -682,14 +671,14 @@ void mavlink_stream_attitude( mavlink_channel_t chan ) {
 		fix16_t yaw;
 
 		// Extract Euler Angles for controller
-		euler_from_quat( &_state_estimator.attitude, &roll, &pitch, &yaw );
+		euler_from_quat( &_state_estimator.q, &roll, &pitch, &yaw );
 
 		mavlink_msg_attitude_pack(
 			mavlink_system.sysid, mavlink_system.compid, get_channel_buf( chan ),
 			_sensors.imu.status.time_read, fix16_to_float( roll ),
 			fix16_to_float( pitch ), fix16_to_float( yaw ),
-			fix16_to_float( _state_estimator.p ), fix16_to_float( _state_estimator.q ),
-			fix16_to_float( _state_estimator.r ) );
+			fix16_to_float( _state_estimator.w.x ), fix16_to_float( _state_estimator.w.y ),
+			fix16_to_float( _state_estimator.w.z ) );
 		comms_send_msg( chan );
 	}
 }
@@ -699,13 +688,13 @@ void mavlink_stream_attitude_quaternion( mavlink_channel_t chan ) {
 		mavlink_msg_attitude_quaternion_pack(
 			mavlink_system.sysid, mavlink_system.compid, get_channel_buf( chan ),
 			_sensors.imu.status.time_read,
-			fix16_to_float( _state_estimator.attitude.a ),
-			fix16_to_float( _state_estimator.attitude.b ),
-			fix16_to_float( _state_estimator.attitude.c ),
-			fix16_to_float( _state_estimator.attitude.d ),
-			fix16_to_float( _state_estimator.p ),
-			fix16_to_float( _state_estimator.q ),
-			fix16_to_float( _state_estimator.r ),
+			fix16_to_float( _state_estimator.q.a ),
+			fix16_to_float( _state_estimator.q.b ),
+			fix16_to_float( _state_estimator.q.c ),
+			fix16_to_float( _state_estimator.q.d ),
+			fix16_to_float( _state_estimator.w.x ),
+			fix16_to_float( _state_estimator.w.y ),
+			fix16_to_float( _state_estimator.w.z ),
 			&blank_quat_unset_[0] );
 		comms_send_msg( chan );
 	}

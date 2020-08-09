@@ -1,0 +1,89 @@
+PARAM_MC_ANGLE_P:
+  type: "float"
+  name: "MC_ANGLE_P"
+  description: "Feed-forward gain for attitude anglular error"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 4.5
+PARAM_PID_ROLL_RATE_P:
+  type: "float"
+  name: "MC_ROLLRATE_P"
+  description: "Proportional gain for roll rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 7.5
+    function: "pid_set_gain_p(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_P));"
+PARAM_PID_ROLL_RATE_I:
+  type: "float"
+  name: "MC_ROLLRATE_I"
+  description: "Integral gain for roll rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+    function: "pid_set_gain_i(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_I));"
+PARAM_PID_ROLL_RATE_D:
+  type: "float"
+  name: "MC_ROLLRATE_D"
+  description: "Derivative gain for roll rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.15
+    function: "pid_set_gain_d(&_pid_roll_rate, get_param_fix16(PARAM_PID_ROLL_RATE_D));"
+PARAM_PID_PITCH_RATE_P:
+  type: "float"
+  name: "MC_PITCHRATE_P"
+  description: "Proportional gain for pitch rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 7.5
+    function: "pid_set_gain_p(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_P));"
+PARAM_PID_PITCH_RATE_I:
+  type: "float"
+  name: "MC_PITCHRATE_I"
+  description: "Integral gain for pitch rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 1.0
+    function: "pid_set_gain_i(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_I));"
+PARAM_PID_PITCH_RATE_D:
+  type: "float"
+  name: "MC_PITCHRATE_D"
+  description: "Derivative gain for pitch rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.15
+    function: "pid_set_gain_d(&_pid_pitch_rate, get_param_fix16(PARAM_PID_PITCH_RATE_D));"
+PARAM_PID_YAW_RATE_P:
+  type: "float"
+  name: "MC_YAWRATE_P"
+  description: "Proportional gain for yaw rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 10.0
+    function: "pid_set_gain_p(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_P));"
+PARAM_PID_YAW_RATE_I:
+  type: "float"
+  name: "MC_YAWRATE_I"
+  description: "Integral gain for yaw rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 5.0
+    function: "pid_set_gain_i(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_I));"
+PARAM_PID_YAW_RATE_D:
+  type: "float"
+  name: "MC_YAWRATE_D"
+  description: "Derivative gain for yaw rate PID"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.0
+    function: "pid_set_gain_d(&_pid_yaw_rate, get_param_fix16(PARAM_PID_YAW_RATE_D));"
