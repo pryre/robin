@@ -20,10 +20,7 @@ void control_lib_set_input_zero( command_input_t* input ) {
 	input->r = 0;
 	input->p = 0;
 	input->y = 0;
-	input->q.a = _fc_1;
-	input->q.b = 0;
-	input->q.c = 0;
-	input->q.d = 0;
+	input->q = QF16_NO_ROT;
 	input->T = 0;
 	input->input_mask = 0;
 }
@@ -52,10 +49,7 @@ void control_lib_set_input_from_mode( command_input_t* input ) {
 			stab_z.z = fix16_sqrt( fix16_sub(_fc_1, fix16_add( fix16_sq(stab_z.x), fix16_sq(stab_z.y) ) ) );
 
 			//Quaternion from vertical
-			v3d unit_z;
-			unit_z.x = 0;
-			unit_z.y = 0;
-			unit_z.z = _fc_1;
+			const v3d unit_z = {.x = 0, .y = 0, .z = _fc_1};
 			qf16 q_stab_b;
 			qf16_from_shortest_path(&q_stab_b, &unit_z, &stab_z);
 
@@ -65,8 +59,6 @@ void control_lib_set_input_from_mode( command_input_t* input ) {
 
 			qf16_mul( &(input->q), &q_rot_base, &q_stab_b );
 			//XXX: Should already be close to normalised, but will be redone later before use
-
-			input->q.a = _fc_1;
 
 			input->r = 0;
 			input->p = 0;
@@ -82,10 +74,7 @@ void control_lib_set_input_from_mode( command_input_t* input ) {
 			input->input_mask = 0;
 			input->input_mask |= CMD_IN_IGNORE_ATTITUDE;
 
-			input->q.a = _fc_1;
-			input->q.b = 0;
-			input->q.c = 0;
-			input->q.d = 0;
+			input->q = QF16_NO_ROT;
 
 			input->r = fix16_mul( _sensors.rc_input.c_r,
 								 get_param_fix16( PARAM_MAX_ROLL_RATE ) );
