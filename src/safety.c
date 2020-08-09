@@ -16,10 +16,6 @@ extern "C" {
 #include "fixextra.h"
 
 system_status_t _system_status;
-//sensor_readings_t _sensors;
-//command_input_t _cmd_ob_input;
-//command_input_t _control_input;
-//control_output_t _control_output;
 
 static const char mav_state_names[MAV_STATE_NUM_STATES][MAV_STATE_NAME_LEN] = {
 	"UNINIT",
@@ -310,8 +306,9 @@ bool safety_request_arm( void ) {
 		default: { break; }
 		}
 
-		// Make sure low throttle is being output
-		throttle_check &= ( _control_output.T == 0 );
+		//TODO: Put in a better check
+		//XXX: This is a meaningless check: Make sure low throttle is being output
+		//throttle_check &= ( _control_output.T == 0 );
 
 		if ( !safety_switch_engaged() && ( _system_status.health == SYSTEM_HEALTH_OK ) && ( control_check ) && ( throttle_check ) && ( mode_check ) ) {
 			if ( safety_request_state( MAV_STATE_ACTIVE ) ) {

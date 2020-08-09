@@ -64,7 +64,8 @@ void mixer_clear_outputs( void );
 
 void mixer_init( void );
 
-void calc_mixer_output( const mf16* c );
+//XXX: c is the input signal: c = [tx; ty; tz; Tz]
+void mixer_set_primary_using_map( const mf16* c );
 void mixer_output( uint32_t time_now );
 
 #ifdef __cplusplus

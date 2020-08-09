@@ -406,7 +406,8 @@ void mixer_output( uint32_t time_now ) {
 	}
 }
 
-void calc_mixer_output( const mf16* c ) {
+//XXX: c is the input signal: c = [tx; ty; tz; Tz]
+void mixer_set_primary_using_map( const mf16* c ) {
 	fix16_t max_output = 0;
 	fix16_t scale_factor = _fc_1;
 	//fix16_t prescaled_outputs[MIXER_NUM_MOTORS];

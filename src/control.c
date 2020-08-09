@@ -19,6 +19,7 @@ extern "C" {
 #include "safety.h"
 #include "sensors.h"
 #include "drivers/drv_system.h"
+#include "drivers/drv_status_io.h"
 
 #include "control.h"
 #include "controllers/controller_att_nac.h"
@@ -32,7 +33,6 @@ extern "C" {
 control_timing_t _control_timing;
 command_input_t _cmd_ob_input;
 command_input_t _control_input;
-control_output_t _control_output;
 
 static void control_reset( void ) {
 	controller_att_pid_reset();
@@ -41,16 +41,16 @@ static void control_reset( void ) {
 	control_lib_set_output_zero(&_control_output);
 }
 
-
-static void control_step( uint32_t time_now ) {
+//XXX: c is the input signal: c = [tx; ty; tz; Tz]
+static void control_step( mf16* c, const uint32_t time_now ) {
 	// Variables that store the computed attitude goal rates
 	command_input_t input;
 	control_lib_set_input_zero( &input ); // Failsafe input to be safe
 
 	// Handle controller input
-	if ( _system_status.state != MAV_STATE_CRITICAL ) {
-		//_system_status.mode |= MAV_MODE_FLAG_MANUAL_ENABLED
+	//_system_status.mode |= MAV_MODE_FLAG_MANUAL_ENABLED
 
+	if((c->rows == 4) && (c->columns = 1)) {
 		control_lib_set_input_from_mode( &input );
 
 		// Do control!
@@ -73,8 +73,6 @@ static void control_step( uint32_t time_now ) {
 			goal_throttle = input.T;
 		}
 
-		_control_output.T = goal_throttle;
-
 		// Save intermittent goals
 		_control_input.T = goal_throttle;
 
@@ -89,12 +87,12 @@ static void control_step( uint32_t time_now ) {
 		qf16_normalize_to_unit( &_control_input.q, &input.q );
 		input.q = _control_input.q;
 
-		v3d u;
-		v3d rates_ref = {0,0,0};
+		v3d tau;
+		v3d rates_ref;
 		if( get_param_uint(PARAM_MC_USE_NAC) ) {
-			controller_att_nac_step(&u, &rates_ref, &input, &_state_estimator, dt);
+			controller_att_nac_step(&tau, &rates_ref, &input, &_state_estimator, dt);
 		} else {
-			controller_att_pid_step(&u, &rates_ref, &input, &_state_estimator, dt);
+			controller_att_pid_step(&tau, &rates_ref, &input, &_state_estimator, dt);
 		}
 
 		// Save intermittent goals and calculate rate error
@@ -103,12 +101,14 @@ static void control_step( uint32_t time_now ) {
 		_control_input.y = rates_ref.z;
 
 		// Set our control references
-		_control_output.r = u.x;
-		_control_output.p = u.y;
-		_control_output.y = u.z;
+		c->data[0][0] = tau.x;
+		c->data[1][0] = tau.y;
+		c->data[2][0] = tau.z;
+		c->data[3][0] = _control_input.T;
 	} else {
-		//We're in pretty bad shape, so zero everything for "complete failsafe"
-		control_reset();
+		safety_request_state(MAV_STATE_EMERGENCY);
+		mavlink_queue_broadcast_error( "Control: Invalid control signal var(c)" );
+		status_buzzer_failure();
 	}
 }
 
@@ -126,7 +126,6 @@ void control_init( void ) {
 	control_lib_set_input_zero(&_cmd_ob_input);
 
 	control_reset();
-	calc_mixer_output();	//XXX: Calculate a clean output to start with
 }
 
 void control_run( uint32_t now ) {
@@ -134,25 +133,32 @@ void control_run( uint32_t now ) {
 	// Ideally this will be locked to some update rate that is both slower and in-sync
 	// with the estimator
 	if( ( _state_estimator.time_updated - _control_timing.time_last ) > _control_timing.period_update ) {
+		//XXX: c is the input signal: c = [tx; ty; tz; Tz]
+		mf16 c = { .rows = 4, .columns = 1, .errors = 0 }; //Data is 0 by default
+
 		//Before we run control, the following requirements should be met:
 		//	- The system is armed
 		//	- We are running in an non-emergency state
 		//	- The estimator has finished its initialization
 		if( ( safety_is_armed() ) &&
 			( _system_status.state != MAV_STATE_EMERGENCY ) &&
+			( _system_status.state != MAV_STATE_CRITICAL ) &&
 			( _state_estimator.time_updated > get_param_uint( PARAM_EST_INIT_TIME ) ) ) {
 			//==-- Update Controller
 			// Apply the current commands and update the PID controllers
 			// but keep things running in step with the estimator
-			control_step( _state_estimator.time_updated );
+			control_step( &c, _state_estimator.time_updated );
 		} else {
+			//
+
 			//==-- Reset Controller
+			//We're in pretty bad shape, so zero everything for "complete failsafe"
 			control_reset(); // Reset the PIDs and output flat 0s for control
 		}
 
 		//XXX:	Calculate mixer output here, as we only need to update the
 		//		output when we update the control values.
-		calc_mixer_output();
+		mixer_set_primary_using_map( &c );
 
 		// Calculate timings for feedback
 		_control_timing.average_update = fix16_div(

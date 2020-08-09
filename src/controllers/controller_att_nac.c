@@ -10,6 +10,7 @@ extern "C" {
 
 #include "controllers/control_lib.h"
 #include "controllers/controller_att_nac.h"
+#include "drivers/drv_status_io.h"
 #include "params.h"
 
 static mf16 theta; // [Ixx; Iyy; Izz]
@@ -56,11 +57,14 @@ void controller_att_nac_save_parameters( void ) {
 	set_param_fix16( PARAM_MC_NAC_T0_IZZ, fix16_div( theta.data[2][0], prescale));
 }
 
-static void controller_att_nac_u_from_tau(v3d* u, const v3d* tau) {
-	const fix16_t motor_map
+static void controller_att_nac_correct_tau_for_params(v3d* tau) {
+	const fix16_t Tmax = get_param_fix16( PARAM_NAC_T_MAX);
+	const fix16_t l = get_param_fix16( PARAM_NAC_ARM_LENGTH);
+	const fix16_t kT = get_param_fix16( PARAM_NAC_KT);
+	const fix16_t kD = get_param_fix16( PARAM_NAC_KD);
 }
 
-void controller_att_nac_step( v3d* u, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
+void controller_att_nac_step( v3d* tau, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
     // Control (Adaptive Control)
 	//==-- Control Parameters
 	//PARAM_NAC_W0R: 20.0
