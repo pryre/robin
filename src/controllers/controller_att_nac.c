@@ -59,14 +59,14 @@ void controller_att_nac_save_parameters( void ) {
 	set_param_fix16( PARAM_MC_NAC_T0_IZZ, fix16_div( theta.data[2][0], prescale));
 }
 
+/*
 static void controller_att_nac_tau_to_c(v3d* c, v3d* tau) {
 	const fix16_t Tmax = get_param_fix16( PARAM_NAC_TMAX);
 	const fix16_t Dmax = get_param_fix16( PARAM_NAC_TMAX);
 	const fix16_t l = get_param_fix16( PARAM_NAC_ARM_LENGTH);
 	const uint8_t n = mixer_get_num_motors();
-	
-	
 }
+*/
 
 void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
     // Control (Adaptive Control)
@@ -108,7 +108,7 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 		v3d_sub(&ew, &w_sp, &w);	//ew = eR*w_sp - w; eR => eye(3) for acro
 		v3d_cross(&ewd, &w, &w_sp);	//eR*wd_sp - vee_up(w)*eR*w_sp; eR => eye(3) for acro => w x w_sp
 	*/
-	
+
 	// If we should listen to attitude input
 	if ( !( input->input_mask & CMD_IN_IGNORE_ATTITUDE ) ) {
 		fix16_t yaw_w = get_param_fix16( PARAM_MC_ANGLE_YAW_W );
@@ -127,7 +127,7 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 
 	// Rates
 	v3d w_sp;
-	
+
 	// Roll
 	if ( !( input->input_mask & CMD_IN_IGNORE_ROLL_RATE ) ) {
 		// Use the commanded roll rate goal
@@ -157,20 +157,20 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 			w_sp.z = fix16_add( rates_ref->z, input->y );
 		}
 	}
-	
+
 	//Save our rates inputs
 	*rates_ref = w_sp;
-	
+
 	// Calculate our other error terms (can't do shortcuts without working out exactly the mode we're in)
 	//ew = eR*w_sp - w;
 	v3d eRw_sp;
 	qf16_rotate(&eRw_sp, &qe, &w_sp);
 	v3d_sub(&ew, &eRw_sp, &(state->w));
-	
+
 	//ewd = eR*wd_sp - vee_up(w)*eR*w_sp; wd_sp == [0;0;0] => ewd = -vee_up(w)*eR*w_sp = -cross(w,eR*w_sp)
     v3d_cross(&ewd, &(state->w), &eRw_sp);
 	v3d_inv(&ewd, &ewd);
-	
+
 
 	//==-- Variable Preparation
     // A = [w0r,   0,   0,
@@ -237,7 +237,17 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 		tau.y = fix16_div(mtau.data[1][0],prescale);
 		tau.z = fix16_div(mtau.data[2][0],prescale);
 
-		controller_att_nac_tau_to_c(c, &tau);
+		//XXX: 	Could actually map the parametes properly
+		//		with thrust values, etc, but there is no
+		//		point if we're not relying on "real" params
+		//		to be found. This is really only needed if
+		//		the full 3D pose controller is to be used.
+		//		So, save some time computing and accept that
+		//		Ixx, etc., will only be related to the real
+		//		values, and not the actual values (related
+		//		by some function of T, la, etc.).
+		//controller_att_nac_tau_to_c(c, &tau);
+		*c = tau;
 	} else {
 		safety_request_state(MAV_STATE_EMERGENCY);
 
