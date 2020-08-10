@@ -43,6 +43,7 @@ void controller_att_nac_init( void ) {
 void controller_att_nac_reset( void ) {
 	theta.rows = 3;
 	theta.columns = 1;
+	theta.errors = 0;
 
 	//Do a full clear just in case
 	mf16_fill(&theta, 0);
@@ -94,8 +95,8 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 	//==-- Input Signals
 	qf16 qe = QF16_NO_ROT; //start with no angle error (R==R_sp==Identity)
 	v3d eRb = V3D_ZERO;
-	v3d ew;
-	v3d ewd;
+	v3d ew = V3D_ZERO;
+	v3d ewd = V3D_ZERO;
 	/*
 	XXX: Notes for pure control modes:
 	//For Stab (heading-hold):
@@ -126,7 +127,7 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 	}
 
 	// Rates
-	v3d w_sp;
+	v3d w_sp = V3D_ZERO;
 
 	// Roll
 	if ( !( input->input_mask & CMD_IN_IGNORE_ROLL_RATE ) ) {
@@ -228,7 +229,7 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 
 	// Propogate parameters
 	mf16_mul_s(&thetad, &thetad, dt);
-	mf16_add(&theta, &theta, &thetad);
+	// mf16_add(&theta, &theta, &thetad);
 
 	//==-- Fill in control vector
 	if( (mtau.rows == 3) && ( mtau.columns == 1) ) {
@@ -248,6 +249,7 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 		//		by some function of T, la, etc.).
 		//controller_att_nac_tau_to_c(c, &tau);
 		*c = tau;
+		// v3d_div_s(c, &tau, _fc_10);
 	} else {
 		safety_request_state(MAV_STATE_EMERGENCY);
 

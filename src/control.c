@@ -85,8 +85,8 @@ static void control_step( mf16* c, const uint32_t time_now ) {
 		qf16_normalize_to_unit( &_control_input.q, &input.q );
 		input.q = _control_input.q;
 
-		v3d c_att;
-		v3d rates_ref;
+		v3d c_att = V3D_ZERO;
+		v3d rates_ref = V3D_ZERO;
 		if( get_param_uint(PARAM_MC_USE_NAC) ) {
 			controller_att_nac_step(&c_att, &rates_ref, &input, &_state_estimator, dt);
 		} else {
