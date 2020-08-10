@@ -121,7 +121,7 @@ execute_process(COMMAND ${CMD_GIT_VERSION_OS} RESULT_VARIABLE GIT_VERSION_OS)
 execute_process(COMMAND ${CMD_GIT_VERSION_MAVLINK} RESULT_VARIABLE GIT_VERSION_MAVLINK)
 execute_process(COMMAND ${CMD_EEPROM_CONF_VERSION} RESULT_VARIABLE EEPROM_CONF_VERSION)
 
-file(GLOB PARAM_DEFINITIONS ${PROJECT_SOURCE_DIR}/lib/param_generator/definitions/*.yaml)
+file(GLOB PARAM_DEFINITIONS ${PROJECT_SOURCE_DIR}/resources/param_definitions/*.yaml)
 
 add_custom_command(
     OUTPUT  param_gen.h param_gen.c
@@ -165,14 +165,13 @@ include_directories(
 set(ROBIN_SRC_MAINS
 	src/drivers/posix_ros/robin_node.cpp
 	src/calibration.c
-	src/controller.c
+	src/control.c
 	src/estimator.c
 	src/mavlink_receive.c
 	src/mavlink_system.c
 	src/mavlink_transmit.c
 	src/mixer.c
 	src/params.c
-	src/pid_controller.c
 	src/profiler.c
 	src/robin_itoa.c
 	src/run.c
@@ -190,6 +189,13 @@ set(ROBIN_SRC_CALS
 	src/calibrations/calibrations_level_horizon.c
 	src/calibrations/calibrations_magnetometer.c
 	src/calibrations/calibrations_rc.c
+)
+
+set(ROBIN_SRC_CONTROLLERS
+	src/controllers/control_lib.c
+	src/controllers/control_lib_pid.c
+	src/controllers/controller_att_nac.c
+	src/controllers/controller_att_pid.c
 )
 
 set(ROBIN_SRC_DRIVERS
@@ -258,6 +264,7 @@ set(ROBIN_SRC_PARAMGEN
 add_executable(${PROJECT_NAME}_node
 	${ROBIN_SRC_MAINS}
 	${ROBIN_SRC_CALS}
+	${ROBIN_SRC_CONTROLLERS}
 	${ROBIN_SRC_DRIVERS}
 	${ROBIN_SRC_MAVLINK_HANDLERS}
 	${ROBIN_SRC_LIBFIXMATH}
