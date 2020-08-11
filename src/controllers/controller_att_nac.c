@@ -86,7 +86,8 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 	//a = p0*p/max(p);
 	//Gamma = diag(a);
 	mf16 Gamma = {.rows = 3, .columns = 3, .errors = 0};
-	mf16_fill_diagonal(&Gamma, w0r);
+	// mf16_fill_diagonal(&Gamma, w0r);
+	mf16_fill_diagonal(&Gamma, _fc_0_1);
 	// Dead-zone
 	// These should be set depending on state noise
 	const fix16_t dz_detla_ew = get_param_fix16( PARAM_NAC_DZ_EW )

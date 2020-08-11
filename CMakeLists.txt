@@ -167,6 +167,7 @@ set(ROBIN_SRC_MAINS
 	src/calibration.c
 	src/control.c
 	src/estimator.c
+	src/fixextra.c
 	src/mavlink_receive.c
 	src/mavlink_system.c
 	src/mavlink_transmit.c
