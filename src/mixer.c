@@ -24,6 +24,7 @@ extern "C" {
 #include "mixers/mixer_fw_std.h"
 #include "mixers/mixer_mc_p4.h"
 #include "mixers/mixer_mc_x4.h"
+#include "mixers/mixer_mc_x4_nac.h"
 #include "mixers/mixer_mc_x6.h"
 #include "mixers/mixer_none.h"
 
@@ -109,6 +110,13 @@ void mixer_init(void) {
 		_mixer_to_use = &mixer_quadrotor_x;
 		set_param_uint( PARAM_MAV_TYPE, MAV_TYPE_QUADROTOR );
 		mavlink_queue_broadcast_notice( "[MIXER] Using mixer QUAD X" );
+
+		break;
+	}
+	case MIXER_QUADROTOR_X_NAC: {
+		_mixer_to_use = &mixer_quadrotor_x_nac;
+		set_param_uint( PARAM_MAV_TYPE, MAV_TYPE_QUADROTOR );
+		mavlink_queue_broadcast_notice( "[MIXER] Using mixer QUAD X (NAC)" );
 
 		break;
 	}
