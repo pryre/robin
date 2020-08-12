@@ -83,3 +83,11 @@ PARAM_DEBUG_PROFILING:
     option: "scalar"
     default: 0.0
     function: "profiler_init();"
+PARAM_OB_MODE_DEFAULT:
+  type: "uint"
+  name: "OB_MODE_DEFAULT"
+  description: "Configures the system to set offboard  mode on offboard control connect (set to 0 to disable)"
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
