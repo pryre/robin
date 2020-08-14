@@ -9,8 +9,8 @@ extern "C" {
 #include "fix16.h"
 #include "fixextra.h"
 
-#define nackT _fc_0_2
-#define nackD _fc_1
+#define nackT _fc_0_15 //Robin Gazebo Default ~= [la: 0.225; m = 4; theta_b: pi/2; Tmax: 1.0kg]
+#define nackD _fc_0_3
 
 const mixer_t mixer_quadrotor_x_nac = {
 	.mixer_ok = true,

@@ -42,7 +42,9 @@ extern "C" {
 #define _fc_0_05	0x00000CCC		//0.05
 #define _fc_0_083_	0x00001555		//0.0833...
 #define _fc_0_1		0x00001999		//0.1
+#define _fc_0_15	0x00002666		//0.15
 #define _fc_0_2		0x00003333		//0.2
+#define _fc_0_3		0x00004CCC		//0.3
 #define _fc_0_46_	0x00007777		//0.466...
 #define _fc_0_5		0x00008000		//0.5
 #define _fc_0_6_	0x0000AAAA		//0.66...
