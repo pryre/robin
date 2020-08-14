@@ -1,7 +1,7 @@
 # Tuning
 [Back to index](README.md).
 
-Some of the followings note have been adapted from the [PX4 Tuning Guide](https://docs.px4.io/v1.10/en/config_mc/pid_tuning_guide_multicopter.html) as a reference. Please note that PX4 gains are not directly usable with __robin__.
+Some of the followings note have been adapted from the [PX4 Tuning Guide](https://docs.px4.io/v1.10/en/config_mc/pid_tuning_guide_multicopter.html) as a reference. Please note that PX4 gains are not directly usable with _robin_.
 
 
 ## Pre-Tuning Notes
@@ -25,7 +25,7 @@ Thus, the P gain should be set as high as possible, but without introducing osci
 #### D Gain
 The D (derivative) gain is used for damping. It is used to internally oppose any motion in the system. In the spring example, this will act as a literal dampener. In a practical example, the D gain will adjust the control signal to try and "slow the system down" depending on how fast the state is changing.
 
-For example, in Acro mode, the system may be close to stationary and have some minor changes in angular velocity. The state that we are tracking in this case __is__ angular velocity, so the derivative gain tries to slow down how much this changes (__i.e.__ it will slow down the acceleration of the system). If the angular velocity is zero (P gain), and the anglar acceleration is zero (D gain), then the system will hold exactly where it is!
+For example, in Acro mode, the system may be close to stationary and have some minor changes in angular velocity. The state that we are tracking in this case _is_ angular velocity, so the derivative gain tries to slow down how much this changes (_i.e._ it will slow down the acceleration of the system). If the angular velocity is zero (P gain), and the anglar acceleration is zero (D gain), then the system will hold exactly where it is!
 
 Thus, the D gain is useful to reduce high-frequency oscillations and increase the performance when the system is tuned to a high P gain. As it acts on the derivative, you could also think of it as "friction" to the system gaining angular velocity (but this analogy doesn't hold to well when trying to control velocty, so maybe ignore that!).
 
@@ -43,7 +43,7 @@ The I (integral) gain keeps a memory of the error. The I term increases when the
 
 ---
 
-
+While tuning the I gain:
 - If the I gain is too high: you will see slow oscillations (<5Hz).
 - If the I gain is too low: the system will
 
@@ -54,23 +54,23 @@ The specific combination of ESCs, motors, servos, and/or control surfaces of a s
 
 For a multirotor, the following gain ratios are suggested as a starting point for entering your gains (refer to the "Fine Tuning" section below before setting these values!):
 - Roll/Pitch:
-  - P gain: `1.00`
-  - I gain: `0.20`
-  - D gain: `0.01`
+  - `P gain: 1.00`
+  - `I gain: 0.20`
+  - `D gain: 0.01`
 - Yaw:
-  - P gain: `1.00`
-  - I gain: `0.30`
-  - D gain: `0.00` (typically not needed)
+  - `P gain: 1.00`
+  - `I gain: 0.30`
+  - `D gain: 0.00` (typically not needed)
 
 An example tuning for a generic multirotor (after fine tuning) might be:
 - Roll/Pitch:
-  - P gain: `5.00`
-  - I gain: `0.80`
-  - D gain: `0.01`
+  - `P gain: 5.00`
+  - `I gain: 0.80`
+  - `D gain: 0.01`
 - Yaw:
-  - P gain: `5.00`
-  - I gain: `1.00`
-  - D gain: `0.00`
+  - `P gain: 5.00`
+  - `I gain: 1.00`
+  - `D gain: 0.00`
 
 #### Fine Tuning
 It is recommended to adjust the values in the following order:
@@ -80,7 +80,7 @@ It is recommended to adjust the values in the following order:
 4. Set D gain at approximate ratio described above.
 5. If oscillation disapear, continue slowly increasing P gain.
 6. If oscllations reappear, increase D gain by 10% until oscillations disapear (usually only 1-2 steps).
-7. If motors sound overly twitchy or are getting noticably warm between resets/tests, reduce gains back to last reasonable values and leave there. **This should point should give you a good tuning.**
+7. If motors sound overly twitchy or are getting noticably warm between resets/tests, reduce gains back to last reasonable values and leave there. **At this point, the system should be tuned well enough to fly.**
 8. Begin to adjust the I gain:
   1. Set I gain at approximate ratio described above.
   2. Tuning is best tested in Acro mode, by tilting the vehicle to one side about 45 degrees, and attempting to keep this attitude.
@@ -90,16 +90,16 @@ It is recommended to adjust the values in the following order:
 ## Tuning the Attitude Controller
 The attitude controller follows a much simpler process as it is only a proportional controller. The theory being that if the rate response is good, then commanding "hold-still at this attitude" will give the intended response, thus we only need to "guide" the attitude (with the P gain) to the correct position, then hold there.
 
-The result is that the attitude controller __typically does not require tuning__. If the attitude controller is aggressively tuned, or the system oscillates around a specific attitude with a a period of 1-2Hz (but is stable), then you may consider tuning down the P gain for the attitude controller.
+The result is that the attitude controller _typically does not require tuning_. If the attitude controller is aggressively tuned, or the system oscillates around a specific attitude with a a period of 1-2Hz (but is stable), then you may consider tuning down the P gain for the attitude controller.
 
 To tune, first ensure that the system response appropriately in rate/Acro mode, then adjust the P gain of the attitude controller in stabilised mode until the response is oscillation-free and appropriately responsive to stick inputs.
 
 #### Relevant Parameters
 - `MC_ANGLE_P`: the P gain for the attitude controller. Values of `3.5` to `4.5` are suitable for most systems.
 - `MC_YAW_W`: adjusts the amount of "yaw influence" the system will utilise during attitude correction. Values of `0.6` to `0.8` will favour faster roll-pitch manoeuvres over slower yaw manoeuvres to reduce attitude error. A value of `1.0` will still allow the system to operate fine.
-- `MAX_ROLL_A` and `MAX_PITCH_A`: Limits the maximum commanded roll and pitch angles __from the RC transmitter during stabilised mode__.
+- `MAX_ROLL_A` and `MAX_PITCH_A`: Limits the maximum commanded roll and pitch angles _from the RC transmitter during stabilised mode_.
 
 ## Resources for Better Understanding the Tuning Process
 - [Wikipedia page on PID Controllers (and the effects of each gain)](https://en.wikipedia.org/wiki/PID_controller)
-- [PX4 tuning guide (on which the controllers in __robin__ ware based)](https://docs.px4.io/v1.10/en/config_mc/pid_tuning_guide_multicopter.html] --- Note: the tuning parameters are different between the two systems, so values are not directly applicable. Only the actual tuning process is relevant.
+- [PX4 tuning guide (on which the controllers in _robin_ ware based)](https://docs.px4.io/v1.10/en/config_mc/pid_tuning_guide_multicopter.html] --- Note: the tuning parameters are different between the two systems, so values are not directly applicable. Only the actual tuning process is relevant.
 - [A video guide that follows a similar process to above](https://www.youtube.com/watch?v=aq1jXHMiJgg) --- Note: the tuning parameters are different between the two systems, so values are not directly applicable. Only the actual tuning process is relevant.
