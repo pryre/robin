@@ -51,7 +51,7 @@ PARAM_RC_MODE_DEFAULT:
   value:
     option: "scalar"
     default: 0
-    unit: "channel"
+    unit: "MAIN_MODE"
 PARAM_RC_MODE_RANGE:
   type: "float"
   name: "RC_MODE_RANGE"

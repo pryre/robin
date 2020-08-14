@@ -46,6 +46,8 @@ static uint32_t _time_safety_critical_timeout;	//Used to "upgrade" to emergency 
 static uint32_t _time_safety_button_pressed;
 static bool _new_safety_button_press;
 
+static bool _attempted_initial_mode_change;
+
 static void init_sensor_state( timeout_status_t* sensor, const char* name,
 							   const param_id_t param_stream_count,
 							   const param_id_t param_timeout ) {
@@ -97,6 +99,8 @@ void safety_init() {
 
 	_new_safety_button_press = false;
 	_time_safety_button_pressed = 0;
+
+	_attempted_initial_mode_change = false;
 }
 
 bool safety_is_armed( void ) {
@@ -180,7 +184,7 @@ bool safety_request_state( uint8_t req_state ) {
 	return change_state;
 }
 
-static bool check_control_mode_inputs( uint8_t req_ctrl_mode ) {
+static bool check_control_mode_inputs( compat_px4_main_mode_t req_ctrl_mode ) {
 	bool control_mode_ok = false;
 
 	switch ( req_ctrl_mode ) {
@@ -210,7 +214,7 @@ static bool check_control_mode_inputs( uint8_t req_ctrl_mode ) {
 	return control_mode_ok;
 }
 
-bool safety_request_control_mode( uint8_t req_ctrl_mode ) {
+bool safety_request_control_mode( compat_px4_main_mode_t req_ctrl_mode ) {
 	bool change_ctrl_mode = false;
 
 	if ( _system_status.control_mode == req_ctrl_mode ) { // XXX: State request to same state, just say OK
@@ -598,7 +602,7 @@ static void system_state_update( uint32_t time_now ) {
 	}
 
 	if ( !ctrl_mode_ok ) {
-		_system_status.control_mode = 0;
+		_system_status.control_mode = MAIN_MODE_UNSET;
 	}
 }
 
@@ -619,12 +623,43 @@ static void safety_health_update( uint32_t time_now ) {
 	}
 }
 
-uint32_t compat_encode_px4_main_mode( uint8_t main_mode ) {
+uint32_t compat_encode_px4_main_mode( compat_px4_main_mode_t main_mode ) {
 	return ( uint32_t )( main_mode << 16 );
 }
 
-uint8_t compat_decode_px4_main_mode( uint32_t mode ) {
-	return ( uint8_t )( mode >> 16 );
+compat_px4_main_mode_t compat_decode_px4_main_mode( uint32_t mode ) {
+	return ( compat_px4_main_mode_t )( mode >> 16 );
+}
+
+static void safety_automatic_initial_mode() {
+	//If we haven't attempted a mode change, and the system is "ready"
+	if( !_attempted_initial_mode_change  &&
+		( _system_status.state == MAV_STATE_STANDBY ) &&
+		( _system_status.control_mode == MAIN_MODE_UNSET ) ) {
+
+		//Prefer RC input over OB if we have to choose
+		if( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_OK ) &&
+			!get_param_uint( PARAM_RC_MAP_MODE_SW ) &&
+			( get_param_uint( PARAM_RC_MODE_DEFAULT ) != MAIN_MODE_UNSET ) ) {
+			// If RC is connected, we don't have a mode switch mapped, and there is a default mode mapped
+			// Request the default RC mode
+			if ( !safety_request_control_mode( get_param_uint( PARAM_RC_MODE_DEFAULT ) ) )
+				mavlink_queue_broadcast_error( "[SENSOR] Error setting RC default mode" );
+
+			// We only allow this to occur once after boot in case input drops and reconnects mid-flight
+			_attempted_initial_mode_change = true;
+		} else if ( ( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) &&
+					( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) &&
+					get_param_uint( PARAM_OB_MODE_DEFAULT ) ) {
+			// If OB is connected, we have OB control, and we want to allow OB control by default
+			// Request OB mode
+			if ( !safety_request_control_mode( MAIN_MODE_OFFBOARD ) )
+				mavlink_queue_broadcast_error( "[SENSOR] Error setting OB default mode" );
+
+			// We only allow this to occur once after boot in case input drops and reconnects mid-flight
+			_attempted_initial_mode_change = true;
+		}
+	}
 }
 
 void safety_run( uint32_t time_now ) {
@@ -652,6 +687,9 @@ void safety_run( uint32_t time_now ) {
 
 	// Check the safety switch to see if the user has pushed or released it
 	safety_switch_update( time_now );
+
+	// Check automatic mode handover
+	safety_automatic_initial_mode();
 
 	// Make sure current system state and mode are valid, and handle changes
 	system_state_update( time_now );
