@@ -47,6 +47,8 @@ documentation: build_env param_gen
 param_gen: build_env
 	@python3 ./lib/scripts/param_generator/gen_params.py ./resources/param_definitions/ ./build/ >&2
 
+build_deps: build_env param_gen documentation
+
 sleep:
 	@sleep $(REFLASH_SLEEP)
 
@@ -54,11 +56,13 @@ lint:
 	@find ./include -name '*.h' -exec clang-format -i '{}' \;
 	@find ./src -name '*.c' -exec clang-format -i '{}' \;
 
-clean:
+clean_removals:
 	@echo "Cleaning build files"
 	@rm -rf ./build ./documents/autogen
 	@cd lib/libopencm3 && $(MAKE) clean -j
 	@echo "Preparing build directory"
+
+clean: clean_removals build_deps
 
 mavlink_bootloader:
 	./lib/scripts/reboot_bootloader --device $(SERIAL_DEVICE) --baudrate $(MAVLINK_BAUD)
@@ -71,21 +75,21 @@ listen:
 ### Build Targets
 
 # POSIX UDP
-posix_udp: param_gen
+posix_udp: build_deps
 	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 posix_udp_run: posix_udp
 	@exec ./lib/scripts/sitl_udp_run.sh
 
 # POSIX Serial
-posix_serial: param_gen
+posix_serial: build_deps
 	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 posix_serial_run: posix_serial
 	@exec ./lib/scripts/sitl_serial_run.sh $(SERIAL_DEVICE) $(SERIAL_DEVICE_2)
 
 # Naze32 Rev.5 (Breezy)
-breezy_naze32_rev5: param_gen
+breezy_naze32_rev5: build_deps
 	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 breezy_naze32_rev5_flash: breezy_naze32_rev5
@@ -94,7 +98,7 @@ breezy_naze32_rev5_flash: breezy_naze32_rev5
 breezy_naze32_rev5_reflash: breezy_naze32_rev5 mavlink_bootloader sleep breezy_naze32_rev5_flash
 
 # Naze32 Rev.6 (Breezy)
-breezy_naze32_rev6: param_gen
+breezy_naze32_rev6: build_deps
 	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 breezy_naze32_rev6_flash: breezy_naze32_rev6
@@ -103,11 +107,11 @@ breezy_naze32_rev6_flash: breezy_naze32_rev6
 breezy_naze32_rev6_reflash: breezy_naze32_rev6 mavlink_bootloader sleep breezy_naze32_rev6_flash
 
 # LibOpenCM3 (Needed to ensure libs are built before our jobs start)
-opencm3_prereqs: param_gen
+opencm3_prereqs: build_deps
 	${MAKE} -C lib/libopencm3
 
 # Naze32 Rev.5 (LibOpenCM3)
-opencm3_naze32_rev5: param_gen opencm3_prereqs
+opencm3_naze32_rev5: build_deps opencm3_prereqs
 	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 opencm3_naze32_rev5_flash: opencm3_naze32_rev5
@@ -116,7 +120,7 @@ opencm3_naze32_rev5_flash: opencm3_naze32_rev5
 opencm3_naze32_rev5_reflash: opencm3_naze32_rev5 mavlink_bootloader sleep opencm3_naze32_rev5_flash
 
 # Naze32 Rev.5 Mini (LibOpenCM3)
-opencm3_naze32_rev5_mini: param_gen opencm3_prereqs
+opencm3_naze32_rev5_mini: build_deps opencm3_prereqs
 	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 opencm3_naze32_rev5_mini_flash: opencm3_naze32_rev5_mini
@@ -125,7 +129,7 @@ opencm3_naze32_rev5_mini_flash: opencm3_naze32_rev5_mini
 opencm3_naze32_rev5_mini_reflash: opencm3_naze32_rev5_mini mavlink_bootloader sleep opencm3_naze32_rev5_mini_flash
 
 # Naze32 Rev.6 Mini (LibOpenCM3)
-opencm3_naze32_rev6: param_gen opencm3_prereqs
+opencm3_naze32_rev6: build_deps opencm3_prereqs
 	$(MAKE) -f makefiles/$@/Makefile PROJECT_NAME=$(PROJECT_NAME)
 
 opencm3_naze32_rev6_flash: opencm3_naze32_rev6
