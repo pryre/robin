@@ -80,7 +80,7 @@ It is recommended to adjust the values in the following order:
 4. Set D gain at approximate ratio described above.
 5. If oscillation disapear, continue slowly increasing P gain.
 6. If oscllations reappear, increase D gain by 10% until oscillations disapear (usually only 1-2 steps).
-7. If motors sound overly twitchy or are getting noticably warm between resets/tests, reduce gains back to last reasonable values and leave there. **This should point should give you a good tuning.**
+7. If motors sound overly twitchy or are getting noticably warm between resets/tests, reduce gains back to last reasonable values and leave there. **At this point, the system should be tuned well enough to fly.**
 8. Begin to adjust the I gain:
   1. Set I gain at approximate ratio described above.
   2. Tuning is best tested in Acro mode, by tilting the vehicle to one side about 45 degrees, and attempting to keep this attitude.
