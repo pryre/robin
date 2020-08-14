@@ -69,6 +69,14 @@ PARAM_MC_NAC_W0R:
     option: "scalar"
     default: 20.0
     unit: "Hz"
+PARAM_MC_NAC_GAMMA:
+  type: "float"
+  name: "MC_NAC_GAMMA"
+  description: "Correction gain for the parameter updates (if it is too low, paramters will take a long time to converge, if it is too high the system will be unstable)"
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0.1
 PARAM_MC_NAC_T0_PRESCALER:
   type: "float"
   name: "MC_NAC_PRESCALE"

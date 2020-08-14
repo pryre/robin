@@ -87,11 +87,11 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 	//Gamma = diag(a);
 	mf16 Gamma = {.rows = 3, .columns = 3, .errors = 0};
 	// mf16_fill_diagonal(&Gamma, w0r);
-	mf16_fill_diagonal(&Gamma, _fc_0_1);
+	mf16_fill_diagonal(&Gamma, get_param_fix16( PARAM_MC_NAC_GAMMA ));
 	// Dead-zone
 	// These should be set depending on state noise
-	const fix16_t dz_detla_ew = get_param_fix16( PARAM_NAC_DZ_EW )
-							  + fix16_mul(w0r,get_param_fix16( PARAM_NAC_DZ_ER ));
+	const fix16_t dz_detla = get_param_fix16( PARAM_NAC_DZ_EW )
+							 + fix16_mul(w0r,get_param_fix16( PARAM_NAC_DZ_ER ));
 
 	//==-- Input Signals
 	qf16 qe = QF16_NO_ROT; //start with no angle error (R==R_sp==Identity)
@@ -222,8 +222,8 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 
     //==-- Parameter update refinement
 	//Check if we're using a deadzone
-    if( dz_detla_ew > 0 ) {
-		if( fix16_abs( v3d_norm( &s ) ) < dz_detla_ew ) {
+    if( dz_detla > 0 ) {
+		if( fix16_abs( v3d_norm( &s ) ) < dz_detla ) {
 			mf16_fill( &thetad, 0 );	//In dead-zone, don't update parameters
 		}
 	}

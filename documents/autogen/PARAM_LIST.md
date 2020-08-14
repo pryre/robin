@@ -150,6 +150,7 @@ MC_NAC_T0_IXX | float | Initial NAC value for the inertial x-axis parameter | 0.
 MC_NAC_T0_IYY | float | Initial NAC value for the inertial y-axis parameter | 0.02961 | km m^2 | scalar | False
 MC_NAC_T0_IZZ | float | Initial NAC value for the inertial z-axis parameter | 0.05342 | km m^2 | scalar | False
 MC_NAC_W0R | float | Natural frequency of the convergence in attitude error (higher is a quicker response) | 20.0 | Hz | scalar | False
+MC_NAC_GAMMA | float | Correction gain for the parameter updates (if it is too low, paramters will take a long time to converge, if it is too high the system will be unstable) | 0.1 |  | scalar | False
 MC_NAC_PRESCALE | float | Prescaling multiplier for the NAC parameters. Should be set to best ensure that multiplying MC_NAC_T0_* parameters results in values in the range of 1->10 | 100.0 |  | scalar | False
 MC_NAC_DZ_ER | float | Parameter update deadzone factor for error in rotation (i.e. paramters will not be updated if rotation error is less than this value) | 0.05 | rad | scalar | False
 MC_NAC_DZ_EW | float | Parameter update deadzone factor for error in body rates (i.e. paramters will not be updated if body rate error is less than this value) | 0.01 | rad | scalar | False

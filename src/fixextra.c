@@ -333,7 +333,7 @@ void qf16_align_to_axis( qf16* dest, const qf16* input, const qf16* reference, c
 void qf16_basis_error( v3d* we, qf16* qe, const qf16* q1, const qf16* q2 ) {
 	//qf16 qe;
 	qf16_inverse( qe, q1 );
-	qf16_normalize_to_unit( qe, qe );
+	qf16_normalize_to_unit( qe, qe ); //TODO: Probably not needed
 	qf16_mul( qe, qe, q2 );
 	qf16_normalize_to_unit( qe, qe );
 
