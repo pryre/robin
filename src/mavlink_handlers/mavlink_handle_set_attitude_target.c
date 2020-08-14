@@ -12,9 +12,6 @@ extern "C" {
 #include "fix16.h"
 #include "fixextra.h"
 
-// command_input_t _cmd_ob_input;
-static bool attempted_ob_default_mode_change_ = false;
-
 void mavlink_handle_set_attitude_target( mavlink_channel_t chan,
 										 mavlink_message_t* msg,
 										 mavlink_status_t* status ) {
@@ -50,28 +47,6 @@ void mavlink_handle_set_attitude_target( mavlink_channel_t chan,
 
 		// Update Sensor
 		safety_update_sensor( &_system_status.sensors.offboard_control );
-
-		//==-- Offboard Control Default Mode
-		//	Have an option to fall into OFFBOARD mode if
-		//	we detect a connection similar to the RC
-		//	default mode. Allows any mode to be requested.
-		if( !attempted_ob_default_mode_change_ &&
-			( _system_status.control_mode == MAIN_MODE_UNSET ) &&
-			get_param_uint( PARAM_OB_MODE_DEFAULT ) &&
-			( _system_status.sensors.offboard_control.health == SYSTEM_HEALTH_OK ) &&
-			( _system_status.sensors.offboard_heartbeat.health == SYSTEM_HEALTH_OK ) ) {
-			// RC connection should trigger a default mode change
-			// We only allow this to occur once after boot
-			// in case RC drops and reconnects mid-flight
-			// This also only occurs if the mode is unset,
-			// and the default is valid, for the same reason
-			if ( !safety_request_control_mode( MAIN_MODE_OFFBOARD ) ) {
-				mavlink_queue_broadcast_error(
-					"[SENSOR] Error setting OB default mode" );
-			}
-
-			attempted_ob_default_mode_change_ = true;
-		}
 	}
 }
 

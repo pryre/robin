@@ -104,12 +104,12 @@ void safety_init( void );
 bool safety_is_armed( void );
 bool safety_switch_engaged( void );
 bool safety_request_state( uint8_t req_state );
-bool safety_request_control_mode( uint8_t req_ctrl_mode );
+bool safety_request_control_mode( compat_px4_main_mode_t req_ctrl_mode );
 bool safety_request_arm( void );
 bool safety_request_disarm( void );
 
-uint32_t compat_encode_px4_main_mode( uint8_t main_mode );
-uint8_t compat_decode_px4_main_mode( uint32_t mode );
+uint32_t compat_encode_px4_main_mode( compat_px4_main_mode_t main_mode );
+compat_px4_main_mode_t compat_decode_px4_main_mode( uint32_t mode );
 
 void safety_update_sensor( timeout_status_t* sensor );
 

@@ -38,7 +38,6 @@ command_input_t _cmd_rc_input;
 static uint16_t rc_cal_[DRV_PPM_MAX_INPUTS][3];
 static fix16_t rc_rev_[DRV_PPM_MAX_INPUTS];
 static fix16_t rc_dz_[DRV_PPM_MAX_INPUTS];
-static bool attempted_rc_default_mode_change_;
 
 //==-- Functions
 void sensor_status_init( sensor_status_t* status, bool sensor_present ) {
@@ -147,8 +146,6 @@ void sensors_init( void ) {
 	_sensors.rc_input.c_m = 0;
 	_sensors.rc_input.r_m = MAIN_MODE_UNSET;
 	sensors_update_rc_cal();
-
-	attempted_rc_default_mode_change_ = false;
 
 	//RC RSSI
 	sensor_status_init( &_sensors.rc_rssi.status, false );	//Init by RC input setup (assmue not present by default)
@@ -442,22 +439,6 @@ lpq_queue_broadcast_msg(&baro_msg_out);
 					mavlink_queue_broadcast_error( "[SENSOR] RC mode switch rejected" );
 				}
 			}
-		} else if ( !attempted_rc_default_mode_change_ &&
-					( _system_status.control_mode == MAIN_MODE_UNSET ) &&
-					( get_param_uint( PARAM_RC_MODE_DEFAULT ) != MAIN_MODE_UNSET ) ) {
-			// RC connection should trigger a default mode change
-			// We only allow this to occur once after boot
-			// in case RC drops and reconnects mid-flight
-			// This also only occurs if the mode is unset,
-			// and the default is valid, for the same reason
-
-			if ( !safety_request_control_mode(
-					 get_param_uint( PARAM_RC_MODE_DEFAULT ) ) ) {
-				mavlink_queue_broadcast_error(
-					"[SENSOR] Error setting RC default mode" );
-			}
-
-			attempted_rc_default_mode_change_ = true;
 		}
 	} else if ( ( _system_status.sensors.rc_input.health == SYSTEM_HEALTH_TIMEOUT ) &&
 				( _sensors.rc_input.raw[0] > 0 ) ) {
