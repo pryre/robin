@@ -210,7 +210,7 @@ RC_MAP_PITCH | uint | Channel to use for RC pitch inputs | 0 | channel | scalar 
 RC_MAP_YAW | uint | Channel to use for RC yaw inputs | 0 | channel | scalar | False
 RC_MAP_THROTTLE | uint | Channel to use for RC throttle inputs | 0 | channel | scalar | False
 RC_MAP_MODE_SW | uint | Channel to use for RC mode select | 0 | channel | scalar | False
-RC_MODE_DEFAULT | uint | Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable) | 0 | channel | scalar | False
+RC_MODE_DEFAULT | uint | Configures the system to set a specific mode on RC connect if PARAM_RC_MAP_MODE_SW is unset (set to 0 to disable) | 0 | MAIN_MODE | scalar | False
 RC_MODE_RANGE | float | Sets the range (+ or -) that counts as a selection for all mode selections | 0.1 |  | scalar | False
 RC_MODE_STAB | float | The normalized value to use to select manual stabilized mode (set to 0 to disable) | 0.1 |  | scalar | False
 RC_MODE_ACRO | float | The normalized value to use to select manual acro mode (set to 0 to disable) | 0.0 |  | scalar | False
@@ -273,4 +273,5 @@ TIMEOUT_THRTL_V | float | Throttle amount that must be reached to cancel the thr
 TIMEOUT_CRIT_EM | uint | Critical state timeout, system is put into emergency state after this time if not resolved | 5000000 | us | scalar | False
 SYS_AUTOCONFIG | uint | Tells the system to reset all parameters to default on next boot | 0 |  | scalar | True
 DEBUG_PROFILING | float | Enables subsystem profiling and feedback (in Hz) | 0.0 |  | scalar | False
+OB_MODE_DEFAULT | uint | Configures the system to set offboard  mode on offboard control connect (set to 0 to disable) | 0 | 0 / 1 | boolean | False
 
