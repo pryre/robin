@@ -16,6 +16,7 @@
 #include <uuid/uuid.h>
 
 #include "drivers/drv_system.h"
+#include "drivers/posix_common/runtime.h"
 
 static uint16_t vid;
 static uint16_t pid;
@@ -25,7 +26,7 @@ static struct timeval start_time_;
 
 void system_init( void ) {
 	system_debug_print( "--== robin ==--" );
-	
+
 	//Capture a start point for system clock
 	gettimeofday( &start_time_, NULL );
 
@@ -97,7 +98,7 @@ void system_pause_ms( uint32_t ms ) {
 }
 
 void system_reset( void ) {
-	exit( 0 );
+	posix_soft_reset();
 }
 
 void system_bootloader( void ) {
