@@ -16,6 +16,7 @@
 #include <uuid/uuid.h>
 
 #include "drivers/drv_system.h"
+#include "drivers/drv_comms.h"
 #include "drivers/posix_common/runtime.h"
 
 static uint16_t vid;
@@ -97,11 +98,21 @@ void system_pause_ms( uint32_t ms ) {
 	nanosleep( &sleep_time, NULL );
 }
 
+static void close_comms( void ) {
+	if( comms_is_open( COMM_PORT_0 ) )
+		comms_deinit_port( COMM_PORT_0 );
+
+	if( comms_is_open( COMM_PORT_1 ) )
+		comms_deinit_port( COMM_PORT_1 );
+}
+
 void system_reset( void ) {
+	close_comms();
 	posix_soft_reset();
 }
 
 void system_bootloader( void ) {
+	close_comms();
 	exit( 0 );
 }
 

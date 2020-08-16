@@ -104,6 +104,47 @@ bool comms_init_port( comms_port_t port ) {
 	return success;
 }
 
+static bool clean_close_serial( int fd_comm ) {
+	bool success = true;	//Return true by default if it was already closed
+
+	if ( fd_comm > 0 ) {
+		success = (close(fd_comm) == 0);
+	}
+
+	return success;
+}
+
+bool comms_deinit_port( comms_port_t port ) {
+	bool success = false;
+
+	switch ( port ) {
+	case COMM_PORT_0: {
+		success = clean_close_serial(fd_comm_0);
+
+		if(success)
+			fd_comm_0 = 0;
+
+		break;
+	}
+	case COMM_PORT_1: {
+		success = clean_close_serial(fd_comm_1);
+
+		if(success)
+			fd_comm_1 = 0;
+
+		break;
+	}
+	}
+
+	if ( success ) {
+		comms_set_closed( port );
+		system_debug_print( "[COMMS] Closed comm port: 0x%x", port );
+	} else {
+		system_debug_print( "[COMMS] Failed to close comm port 0x%x!", port );
+	}
+
+	return success;
+}
 static void comms_send( comms_port_t port, uint8_t ch ) {
 	/*
 // simple output

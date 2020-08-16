@@ -245,6 +245,26 @@ bool comms_init_port( comms_port_t port ) {
 	return success;
 }
 
+bool comms_deinit_port( comms_port_t port ) {
+	switch ( port ) {
+		case COMM_PORT_0: {
+			usart_disable(USART1);
+			rcc_periph_clock_disable(RCC_USART1);
+			nvic_disable_irq(NVIC_USART1_IRQ);
+			break;
+		}
+		case COMM_PORT_1: {
+			usart_disable(USART2);
+			rcc_periph_clock_disable(RCC_USART2);
+			nvic_disable_irq(NVIC_USART2_IRQ);
+			break;
+		}
+	}
+
+	comms_set_closed(port);
+	return true;
+}
+
 /*
 static void comms_send( comms_port_t port, uint8_t ch ) {
 	if ( comms_is_open( port ) ) {

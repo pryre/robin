@@ -16,6 +16,7 @@ typedef enum {
 void comms_send_datagram( comms_port_t port, uint8_t* datagram, uint32_t length );
 
 bool comms_init_port( comms_port_t port );
+bool comms_deinit_port( comms_port_t port );
 
 void comms_set_open( comms_port_t port );
 void comms_set_closed( comms_port_t port );

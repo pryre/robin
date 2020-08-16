@@ -38,6 +38,12 @@ bool comms_init_port( comms_port_t port ) {
 	return success;
 }
 
+bool comms_deinit_port( comms_port_t port ) {
+	//Breezy has no method to close ports
+	comms_set_closed(port);
+	return true;
+}
+
 static void comms_send( comms_port_t port, uint8_t ch ) {
 	if ( comms_is_open( port ) ) {
 		switch ( port ) {

@@ -195,6 +195,49 @@ bool comms_init_port( comms_port_t port ) {
 	return success;
 }
 
+static bool clean_close_socket( int sock ) {
+	bool success = true;	//Return true by default if it was already closed
+
+	if ( sock > 0 ) {
+		shutdown(sock, 2);	//Immediately stop both reception and transmission
+		success = (close(sock) == 0);
+	}
+
+	return success;
+}
+
+bool comms_deinit_port( comms_port_t port ) {
+	bool success = false;
+
+	switch ( port ) {
+	case COMM_PORT_0: {
+		success = clean_close_socket(sock_comm_0);
+
+		if(success)
+			sock_comm_0 = 0;
+
+		break;
+	}
+	case COMM_PORT_1: {
+		success = clean_close_socket(sock_comm_1);
+
+		if(success)
+			sock_comm_1 = 0;
+
+		break;
+	}
+	}
+
+	if ( success ) {
+		comms_set_closed( port );
+		system_debug_print( "[COMMS] Closed comm port: 0x%x", port );
+	} else {
+		system_debug_print( "[COMMS] Failed to close comm port 0x%x!", port );
+	}
+
+	return success;
+}
+
 void comms_send_datagram( comms_port_t port, uint8_t* datagram,
 						  uint32_t length ) {
 	int bytes_sent;
