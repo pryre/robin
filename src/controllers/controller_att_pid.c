@@ -67,7 +67,7 @@ void controller_att_pid_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 								 &(state->q),
 								 yaw_w );
 
-		v3d_mul_s(rates_ref, &angle_error, get_param_fix16( PARAM_MC_ANGLE_P ));
+		v3d_mul_s(&rates, &angle_error, get_param_fix16( PARAM_MC_ANGLE_P ));
 	}
 
 	//==-- Rate Control PIDs
@@ -106,7 +106,7 @@ void controller_att_pid_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 							  get_param_fix16( PARAM_MAX_ROLL_RATE ) );
 	rates.y = fix16_constrain( rates.y, -get_param_fix16( PARAM_MAX_PITCH_RATE ),
 							  get_param_fix16( PARAM_MAX_PITCH_RATE ) );
-	rates.z= fix16_constrain( rates.z, -get_param_fix16( PARAM_MAX_YAW_RATE ),
+	rates.z = fix16_constrain( rates.z, -get_param_fix16( PARAM_MAX_YAW_RATE ),
 							  get_param_fix16( PARAM_MAX_YAW_RATE ) );
 
 	//Save our rates reference
