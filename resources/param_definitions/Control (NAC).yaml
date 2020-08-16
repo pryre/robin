@@ -6,6 +6,22 @@ PARAM_MC_USE_NAC:
   value:
     option: "bool"
     default: 0
+PARAM_MC_NAC_SAVE_PARAMS:
+  type: "uint"
+  name: "MC_NAC_DO_SAVE"
+  description: "Tells the controller to save the internal parameters to their respective system parameters."
+  reboot: false
+  value:
+    option: "bool"
+    default: 0
+PARAM_MC_NAC_UPDATE_SPECIFIC_THETA:
+  type: "uint"
+  name: "MC_NAC_THETA_I"
+  description: "Tells the controller to only update parameter #i (Ixx = 1; Iyy = 2; Izz = 3)."
+  reboot: false
+  value:
+    option: "scalar"
+    default: 0
 PARAM_NAC_ARM_LENGTH:
   type: "float"
   name: "MC_NAC_LA"

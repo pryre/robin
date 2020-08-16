@@ -143,6 +143,8 @@ STRM1_LPQ | float | Communication update rate for all other messages (0: disable
 Name | Type | Description | Default | Unit | Options | Reboot
 --- | --- | --- | ---:| --- | --- | ---
 MC_USE_NAC | uint | Enables the use of the Nonlinear Adaptive Controller (NAC) instead of the typical PID method for attitude control. | 0 | 0 / 1 | boolean | False
+MC_NAC_DO_SAVE | uint | Tells the controller to save the internal parameters to their respective system parameters. | 0 | 0 / 1 | boolean | False
+MC_NAC_THETA_I | uint | Tells the controller to only update parameter #i (Ixx = 1; Iyy = 2; Izz = 3). | 0 |  | scalar | False
 MC_NAC_LA | float | Multirotor arm length from body centre | 0.225 | m | scalar | False
 MC_NAC_TMAX | float | Maximum calculated thrust at 100% throttle for one motor | 7.84532 | N | scalar | False
 MC_NAC_DMAX | float | Maximum calculated drag torque at 100% throttle for one motor | 1.2 | Nm | scalar | False

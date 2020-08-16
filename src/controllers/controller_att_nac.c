@@ -14,6 +14,7 @@ extern "C" {
 #include "params.h"
 #include "mixer.h"
 #include "safety.h"
+#include "drivers/drv_system.h"
 
 static mf16 theta; // [Ixx; Iyy; Izz]
 
@@ -35,11 +36,6 @@ static void controller_att_nac_calc_Y(mf16* Y, const v3d* w, const v3d* wd, cons
 	Y->data[2][2] = dwd->z;
 }
 
-//XXX: This is also our init()
-void controller_att_nac_init( void ) {
-	controller_att_nac_reset();
-}
-
 void controller_att_nac_reset( void ) {
 	theta.rows = 3;
 	theta.columns = 1;
@@ -51,6 +47,10 @@ void controller_att_nac_reset( void ) {
 	theta.data[0][0] = fix16_mul( prescale, get_param_fix16( PARAM_MC_NAC_T0_IXX ));
 	theta.data[1][0] = fix16_mul( prescale, get_param_fix16( PARAM_MC_NAC_T0_IYY ));
 	theta.data[2][0] = fix16_mul( prescale, get_param_fix16( PARAM_MC_NAC_T0_IZZ ));
+}
+
+void controller_att_nac_init( void ) {
+	controller_att_nac_reset();
 }
 
 void controller_att_nac_save_parameters( void ) {
@@ -68,6 +68,10 @@ static void controller_att_nac_tau_to_c(v3d* c, v3d* tau) {
 	const uint8_t n = mixer_get_num_motors();
 }
 */
+
+static void system_print_v3d_named(const char* name, v3d* var) {
+	system_debug_print( "[NAC] %s: [%0.4f; %0.4f; %0.4f]", name, fix16_to_float(var->x), fix16_to_float(var->y), fix16_to_float(var->z) );
+}
 
 void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* input, const state_t* state, const fix16_t dt ) {
     // Control (Adaptive Control)
@@ -87,7 +91,7 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 	//Gamma = diag(a);
 	mf16 Gamma = {.rows = 3, .columns = 3, .errors = 0};
 	// mf16_fill_diagonal(&Gamma, w0r);
-	mf16_fill_diagonal(&Gamma, get_param_fix16( PARAM_MC_NAC_GAMMA ));
+	mf16_fill_diagonal( &Gamma, fix16_mul( get_param_fix16( PARAM_MC_NAC_GAMMA ), prescale ) );
 	// Dead-zone
 	// These should be set depending on state noise
 	const fix16_t dz_detla = get_param_fix16( PARAM_NAC_DZ_EW )
@@ -173,33 +177,34 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
     v3d_cross(&ewd, &(state->w), &eRw_sp);
 	v3d_inv(&ewd, &ewd);
 
-
 	//==-- Variable Preparation
     // A = [w0r,   0,   0,
 	//		 0, w0r,   0,
 	//		 0,   0, w0r];
-	//s = [-ew] + A*[-c(CONTROL_R_E,i)];
-	//dqr = [-eR_s*c(CONTROL_WXYZ_B,i)] - A*[-c(CONTROL_R_E,i)];
-	//ddqr = [ewd] - A*[-ew];
-	v3d n_AeRb;
-	v3d_mul_s(&n_AeRb, &eRb, -w0r);
+
+	//s = [-ew] + A*[-eR];
+	v3d s;
+	v3d A_neRb;
+	v3d_mul_s(&A_neRb, &eRb, -w0r);
 	v3d n_ew;
 	v3d_inv(&n_ew, &ew);
-	v3d s;
-	v3d_add(&s, &n_ew, &n_AeRb);
+	v3d_add(&s, &n_ew, &A_neRb);
 
+	//dqr = [-eR_s*w_sp] - A*[-eR]; == -([eR_s*w_sp] + A*[-eR])
 	v3d dqr;
-	v3d_inv(&dqr, &n_AeRb);	//CONTROL_WXYZ_B => [0,0,0]
+	v3d_add(&dqr, &eRw_sp, &A_neRb);
+	v3d_inv(&dqr, &dqr);
 
+	//ddqr = [ewd] - A*[-ew];
+	v3d ddqr;
 	v3d An_ew;
 	v3d_mul_s(&An_ew, &n_ew, w0r);
-
-	v3d ddqr;
 	v3d_sub(&ddqr, &ewd, &An_ew);
-	//v = ddqr - A*s + [0;0;0;-thrust_scale*R_sp_c'*g_vec];
+
+	//v = ddqr - A*s
+	v3d v;
 	v3d As;
 	v3d_mul_s(&As, &s, w0r);
-	v3d v;
 	v3d_sub(&v, &ddqr, &As);
 
 	//==-- Calculate Regressor
@@ -223,14 +228,27 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
     //==-- Parameter update refinement
 	//Check if we're using a deadzone
     if( dz_detla > 0 ) {
-		if( fix16_abs( v3d_norm( &s ) ) < dz_detla ) {
+		if( v3d_norm( &s ) < dz_detla ) {
 			mf16_fill( &thetad, 0 );	//In dead-zone, don't update parameters
+		}
+	}
+
+	//Check if we're only propagating a single axis
+	const uint32_t taxis =  get_param_uint( PARAM_MC_NAC_UPDATE_SPECIFIC_THETA );
+	if( taxis > 0 ) {
+		if (taxis < thetad.rows) {
+			const uint32_t tdval = thetad.data[taxis - 1][0];
+			mf16_fill( &thetad, 0 );	//clear all other params
+			thetad.data[taxis - 1][0] = tdval;
+		} else {
+			mavlink_queue_broadcast_error( "[NAC] Bad specific theta selection, disabling!" );
+			set_param_uint( PARAM_MC_NAC_UPDATE_SPECIFIC_THETA, 0);
 		}
 	}
 
 	// Propogate parameters
 	mf16_mul_s(&thetad, &thetad, dt);
-	// mf16_add(&theta, &theta, &thetad);
+	mf16_add(&theta, &theta, &thetad);
 
 	//==-- Fill in control vector
 	if( (mtau.rows == 3) && ( mtau.columns == 1) ) {
@@ -251,12 +269,32 @@ void controller_att_nac_step( v3d* c, v3d* rates_ref, const command_input_t* inp
 		//controller_att_nac_tau_to_c(c, &tau);
 		*c = tau;
 		// v3d_div_s(c, &tau, _fc_10);
+
+		if( get_param_uint( PARAM_MC_NAC_SAVE_PARAMS ) ) {
+			controller_att_nac_save_parameters();
+
+			set_param_uint( PARAM_MC_NAC_SAVE_PARAMS, 0); //Only does it once
+			mavlink_queue_broadcast_info( "[NAC] Recorded parameters!" );
+
+			//XXX: for debug purposes
+			system_print_v3d_named("s", &s);
+			v3d vtd;
+			vtd.x = fix16_div(thetad.data[0][0],prescale);
+			vtd.y = fix16_div(thetad.data[1][0],prescale);
+			vtd.z = fix16_div(thetad.data[2][0],prescale);
+			system_print_v3d_named("thetad", &vtd);
+			v3d vt;
+			vt.x = fix16_div(theta.data[0][0],prescale);
+			vt.y = fix16_div(theta.data[1][0],prescale);
+			vt.z = fix16_div(theta.data[2][0],prescale);
+			system_print_v3d_named("theta", &vt);
+		}
 	} else {
 		safety_request_state(MAV_STATE_EMERGENCY);
 
 		*c = V3D_ZERO;
 
-		mavlink_queue_broadcast_error( "NAC: Control math failed" );
+		mavlink_queue_broadcast_error( "[NAC] Control math failed" );
 		status_buzzer_failure();
 	}
 }
