@@ -12,6 +12,8 @@ void posix_soft_reset( void ) {
 	_soft_reset = true;
 }
 
+}
+
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "robin");
 	ros::NodeHandle nh;
@@ -33,6 +35,4 @@ int main(int argc, char **argv) {
 	}
 
 	return 0;
-}
-
 }
