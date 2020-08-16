@@ -16,6 +16,7 @@
 #include <uuid/uuid.h>
 
 #include "drivers/drv_system.h"
+#include "drivers/posix_common/runtime.h"
 
 static uint16_t vid;
 static uint16_t pid;
