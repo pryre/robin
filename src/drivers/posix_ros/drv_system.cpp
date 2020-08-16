@@ -81,7 +81,7 @@ void system_pause_ms(uint32_t ms) {
 }
 
 void system_reset(void) {
-	exit(0);
+	posix_soft_reset();
 }
 
 void system_bootloader(void) {
