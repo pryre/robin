@@ -7,6 +7,7 @@ extern "C" {
 
 #include "drivers/drv_system.h"
 #include "fix16.h"
+#include "fixquat.h"
 #include "fixextra.h"
 #include "safety.h"
 #include "sensors.h"
