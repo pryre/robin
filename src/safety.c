@@ -631,7 +631,7 @@ compat_px4_main_mode_t compat_decode_px4_main_mode( uint32_t mode ) {
 	return ( compat_px4_main_mode_t )( mode >> 16 );
 }
 
-static void safety_automatic_initial_mode() {
+static void safety_automatic_initial_mode( void ) {
 	//If we haven't attempted a mode change, and the system is "ready"
 	if( !_attempted_initial_mode_change  &&
 		( _system_status.state == MAV_STATE_STANDBY ) &&

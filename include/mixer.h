@@ -58,11 +58,7 @@ extern fix16_t _actuator_control_g4[MIXER_NUM_MOTORS]; // OB PWM
 extern fix16_t _actuator_control_g5[MIXER_NUM_MOTORS]; // OB Digital
 
 extern mixer_motor_test_t _motor_test;
-
 extern const mixer_t* _mixer_to_use;
-
-
-void mixer_init( void );
 
 void mixer_init( void );
 void mixer_clear_outputs( void );
