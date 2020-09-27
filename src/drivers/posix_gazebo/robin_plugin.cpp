@@ -68,8 +68,8 @@ namespace gazebo
 				gzerr << "[RobinPlugin] Please specify numMotors\n";
 			}
 			
-			posix_soft_reset();
-			
+			setup();
+		
 			system_debug_print("Finished loading Robin!");
 			
 			// Get the pointers to the motor joints
