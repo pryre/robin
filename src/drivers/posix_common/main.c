@@ -15,6 +15,12 @@ void posix_soft_reset( void ) {
 	_soft_reset = true;
 }
 
+//XXX: Not needed for this system
+void posix_get_sim_time( uint32_t *secs, uint32_t *nsecs ) {
+	*secs = 0;
+	*nsecs = 0;
+}
+
 int main( int argc, char** argv ) {
 	parse_arguments( argc, argv );
 	_soft_reset = false;

@@ -162,42 +162,13 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 #add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-set(ROBIN_SRC_MAINS
-	src/drivers/posix_ros/robin_node.cpp
-	src/calibration.c
-	src/control.c
-	src/estimator.c
-	src/fixextra.c
-	src/mavlink_receive.c
-	src/mavlink_system.c
-	src/mavlink_transmit.c
-	src/mixer.c
-	src/params.c
-	src/profiler.c
-	src/robin_itoa.c
-	src/run.c
-	src/safety.c
-	src/sensors.c
-)
+FILE(GLOB ROBIN_SRC_MAINS src/*.c)
+list(APPEND ROBIN_SRC_MAINS src/drivers/posix_ros/robin_node.cpp)
 
-set(ROBIN_SRC_CALS
-	src/calibrations/calibrations_accel.c
-	src/calibrations/calibrations_barometer.c
-	src/calibrations/calibrations_esc.c
-	src/calibrations/calibrations_ground_pressure.c
-	src/calibrations/calibrations_gyro.c
-	src/calibrations/calibrations_interference.c
-	src/calibrations/calibrations_level_horizon.c
-	src/calibrations/calibrations_magnetometer.c
-	src/calibrations/calibrations_rc.c
-)
-
-set(ROBIN_SRC_CONTROLLERS
-	src/controllers/control_lib.c
-	src/controllers/control_lib_pid.c
-	src/controllers/controller_att_nac.c
-	src/controllers/controller_att_pid.c
-)
+FILE(GLOB ROBIN_SRC_CALS src/calibrations/**.c)
+FILE(GLOB ROBIN_SRC_CONTROLLERS src/controllers/**.c)
+FILE(GLOB ROBIN_SRC_DRIVERS src/drivers/*.c)
+FILE(GLOB ROBIN_SRC_MAVLINK_HANDLERS src/mavlink_handlers/**.c)
 
 set(ROBIN_SRC_DRIVERS
 	src/drivers/drv_comms.c
@@ -209,31 +180,6 @@ set(ROBIN_SRC_DRIVERS
 	src/drivers/posix_common/drv_pwm_ppm.c
 	src/drivers/posix_common/drv_sensors.c
 	src/drivers/posix_common/drv_status_io.c
-)
-
-set(ROBIN_SRC_MAVLINK_HANDLERS
-	src/mavlink_handlers/mavlink_handle_att_pos_mocap.c
-	src/mavlink_handlers/mavlink_handle_command_long.c
-	src/mavlink_handlers/mavlink_handle_command_long_component_arm_disarm.c
-	src/mavlink_handlers/mavlink_handle_command_long_do_motor_test.c
-	src/mavlink_handlers/mavlink_handle_command_long_get_home_position.c
-	src/mavlink_handlers/mavlink_handle_command_long_preflight_calibration.c
-	src/mavlink_handlers/mavlink_handle_command_long_preflight_storage.c
-	src/mavlink_handlers/mavlink_handle_command_long_reboot_shutdown.c
-	src/mavlink_handlers/mavlink_handle_command_long_request_autopilot_capabilities.c
-	src/mavlink_handlers/mavlink_handle_command_long_request_protocol_version.c
-	src/mavlink_handlers/mavlink_handle_command_long_set_mode.c
-	src/mavlink_handlers/mavlink_handle_heartbeat.c
-	src/mavlink_handlers/mavlink_handle_hil_sensor.c
-	src/mavlink_handlers/mavlink_handle_mission_request_list.c
-	src/mavlink_handlers/mavlink_handle_param_request_list.c
-	src/mavlink_handlers/mavlink_handle_param_request_read.c
-	src/mavlink_handlers/mavlink_handle_param_set.c
-	src/mavlink_handlers/mavlink_handle_ping.c
-	src/mavlink_handlers/mavlink_handle_set_actuator_control_target.c
-	src/mavlink_handlers/mavlink_handle_set_attitude_target.c
-	src/mavlink_handlers/mavlink_handle_set_mode.c
-	src/mavlink_handlers/mavlink_handle_timesync.c
 )
 
 set(ROBIN_SRC_LIBFIXMATH
