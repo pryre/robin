@@ -1,3 +1,9 @@
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -64,3 +70,9 @@ bool drv_ppm_read_frame( uint16_t *frame ) {
 
 	return success;
 }
+
+
+#ifdef __cplusplus
+}
+#endif
+

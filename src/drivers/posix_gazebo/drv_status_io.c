@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -62,3 +66,8 @@ Audio_playFile(audio_sink_handle, &beepFile);
 		// Off
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif
+

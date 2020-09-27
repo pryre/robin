@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <fix16.h>
 #include <stdbool.h>
 
@@ -64,3 +68,8 @@ bool drv_sensors_safety_button_read( void ) {
 uint16_t drv_sensors_battery_monitor_read( void ) {
 	return 0;
 }
+
+#ifdef __cplusplus
+}
+#endif
+

@@ -1,6 +1,10 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/common/common.hh>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -25,7 +29,7 @@ static uint16_t pid;
 static uint64_t uid;
 
 void system_init(void) {
-	system_debug_print((char *)"--== robin ==--");
+	system_debug_print("--== robin ==--");
 
 	//Generate a Vendor ID and Product ID based off of the ethernet MAC address
 	int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
@@ -121,15 +125,15 @@ int system_debug_print( const char *format, ... ) {
     result = vsnprintf(msg, 1000, format, args);
     va_end(args);
 
-	gzdbg << msg << std::endl;
+	gzmsg << "[RobinPlugin] " << msg << std::endl;
 
     return result;
-}
-
-void system_debug_print( char *msg ) {
-	gzdbg << msg << std::endl;
 }
 
 void system_rate_limit(void) {
 
 }
+
+#ifdef __cplusplus
+}
+#endif

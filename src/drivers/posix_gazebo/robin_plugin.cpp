@@ -11,6 +11,7 @@ extern "C" {
 
 #include "run.h"
 #include "drivers/posix_common/runtime.h"
+#include "drivers/drv_system.h"
 #include "drivers/drv_pwm.h"
 
 static bool _soft_reset;
@@ -67,21 +68,27 @@ namespace gazebo
 				gzerr << "[RobinPlugin] Please specify numMotors\n";
 			}
 			
+			posix_soft_reset();
+			
+			system_debug_print("Finished loading Robin!");
+			
 			// Get the pointers to the motor joints
+			/*
 			for(int i=0; i < numMotors; i++) {
 				std::string joint_name = jointPrefix + std::to_string(i);
 				physics::JointPtr joint = model->GetJoint( joint_name );
 				if(joint != NULL) {
 					motorJoints.push_back( joint );
 				} else {
-					gzthrow( "[RobinPlugin] Couldn't find specified joint \"" << joint_name );
+					gzthrow( "[RobinPlugin] Couldn't find specified joint \"" << joint_name <<  "\"\n");
 				}
 			}
+			*/
 		}
 
 		// Called by the world update start event
 		void OnUpdate() {
-			common::Time tick = model->GetWorld()->SimTime();
+			common::Time tick = this->model->GetWorld()->SimTime();
 			_sim_time_sec = tick.sec;
 			_sim_time_nsec = tick.nsec;
 		

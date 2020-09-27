@@ -61,7 +61,6 @@ FILE(GLOB ROBIN_SRC_MAVLINK_HANDLERS ${PROJECT_TOP_DIR}/src/mavlink_handlers/**.
 set(ROBIN_SRC_DRIVERS
 	${PROJECT_TOP_DIR}/src/drivers/drv_comms.c
 	${PROJECT_TOP_DIR}/src/drivers/drv_status_io.c
-	${PROJECT_TOP_DIR}/src/drivers/posix_udp/drv_comms.c
 )
 
 set(ROBIN_SRC_LIBFIXMATH

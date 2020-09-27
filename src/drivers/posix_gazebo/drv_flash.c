@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <libgen.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -120,3 +124,8 @@ bool drv_flash_write( void ) {
 
 	return success;
 }
+
+#ifdef __cplusplus
+}
+#endif
+
