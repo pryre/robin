@@ -86,9 +86,11 @@ static int init_udp_port( struct sockaddr_in* locAddr,
 
 static bool udp_split( uint32_t* bind_port, char* remote_host,
 					   uint32_t* remote_port, const char* const conn_udp ) {
-	char bind_port_str[100];
-	char remote_host_str[100];
-	char remote_port_str[100];
+					   
+	char udp_head_str[] = "udp://";
+	char bind_port_str[100] = {0};
+	char remote_host_str[100] = {0};
+	char remote_port_str[100] = {0};
 	uint32_t bind_port_cnt = 0;
 	uint32_t remote_host_cnt = 0;
 	uint32_t remote_port_cnt = 0;
@@ -98,7 +100,10 @@ static bool udp_split( uint32_t* bind_port, char* remote_host,
 	bool fount_rhost = false;
 	bool success = false;
 
-	int i = 0;
+	//Start our search at either 0 or at the end of the udp header if present
+	char* udp_head = strstr(conn_udp, udp_head_str);
+	int i = (udp_head == NULL) ? 0 : strlen(udp_head_str);
+	
 	while ( ( conn_udp[i] != '\0' ) && ( i < 100 ) ) {
 		if ( !found_lhost ) {
 			// Skip local host
@@ -149,7 +154,7 @@ bool comms_init_port( comms_port_t port ) {
 	bool success = false;
 
 	uint32_t bind_port;
-	char remote_host[100];
+	char remote_host[100] = {0};
 	uint32_t remote_port;
 
 	switch ( port ) {
