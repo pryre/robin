@@ -126,6 +126,7 @@ int system_debug_print( const char *format, ... ) {
     va_end(args);
 
 	gzmsg << "[RobinPlugin] " << msg << std::endl;
+	gzmsg.flush();
 
     return result;
 }

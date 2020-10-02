@@ -4,7 +4,6 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 #include "calibration.h"
 #include "drivers/drv_sensors.h"
@@ -71,6 +70,8 @@ static void sensors_init_hil( void ) {
 }
 
 void sensors_init( void ) {
+	system_debug_print("-- Sensors (Start) --");
+	
 	_sensors.fresh_sensor_data = false;
 
 	//==-- Hardware In The Loop

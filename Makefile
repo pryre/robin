@@ -91,7 +91,7 @@ posix_serial_run: posix_serial
 # POSIX Gazebo
 posix_gazebo: build_deps
 	@mkdir -p ./build/robin_gazebo
-	@cd ./build/robin_gazebo && cmake ../../makefiles/posix_gazebo/ && $(MAKE)
+	@cd ./build/robin_gazebo && cmake -DCMAKE_BUILD_TYPE=Debug ../../makefiles/posix_gazebo/ && $(MAKE)
 
 # Naze32 Rev.5 (Breezy)
 breezy_naze32_rev5: build_deps

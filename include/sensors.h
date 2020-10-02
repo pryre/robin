@@ -179,8 +179,7 @@ void sensors_clock_update( uint32_t time_us ); // Update the timing variable (us
 
 int64_t sensors_clock_smooth_time_skew( int64_t tc, int64_t tn );
 float sensors_clock_smooth_time_drift( float tc, float tn );
-uint64_t sensors_clock_rt_get(
-	void ); // Get the current time syncronized real time (good for logging)
+uint64_t sensors_clock_rt_get( void ); // Get the current time syncronized real time (good for logging)
 
 //uint32_t sensors_clock_imu_int_get( void ); // Get the time of the latest imu interrupt
 
