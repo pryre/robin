@@ -1,5 +1,5 @@
-#include <gazebo/gazebo.hh>
-#include <gazebo/common/common.hh>
+//#include <gazebo/gazebo.hh>
+//#include <gazebo/common/common.hh>
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,9 +8,11 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <time.h>
-#include <sys/time.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -117,18 +119,15 @@ uint64_t system_unique_id(void) {
 }
 
 int system_debug_print( const char *format, ... ) {
-	char msg[1000];
 	int result;
-    va_list args;
+	va_list args;
 
-    va_start(args, format);
-    result = vsnprintf(msg, 1000, format, args);
-    va_end(args);
+	va_start( args, format );
+	result = vprintf( format, args );
+	va_end( args );
+	printf( "\n" );
 
-	gzmsg << "[RobinPlugin] " << msg << std::endl;
-	gzmsg.flush();
-
-    return result;
+	return result;
 }
 
 void system_rate_limit(void) {

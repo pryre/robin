@@ -1,12 +1,7 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-project(RobinGazebo)
+project(Robin)
 
 set(PROJECT_TOP_DIR ../..)
-
-find_package(gazebo REQUIRED)
-include_directories(${GAZEBO_INCLUDE_DIRS})
-link_directories(${GAZEBO_LIBRARY_DIRS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
 set(CMD_GIT_VERSION_FLIGHT cd ${PROJECT_TOP_DIR} && git describe --abbrev=8 --always | sed 's/^ *//g' | head -c 8)
 set(CMD_GIT_VERSION_OS cd ${PROJECT_TOP_DIR} && git submodule status | grep BreezySTM32 | sed 's/^ *//g' | head -c 8)
@@ -47,10 +42,9 @@ include_directories(
   ${PROJECT_TOP_DIR}/lib/libfixmatrix
 )
 
+# Get all of our source files except the gazebo plugin file
 FILE(GLOB ROBIN_SRC_MAINS
 	${PROJECT_TOP_DIR}/src/*.c
-	${PROJECT_TOP_DIR}/src/drivers/posix_gazebo/**.cpp
-	${PROJECT_TOP_DIR}/src/drivers/posix_gazebo/**.c
 )
 
 FILE(GLOB ROBIN_SRC_CALS ${PROJECT_TOP_DIR}/src/calibrations/**.c)
@@ -61,6 +55,13 @@ FILE(GLOB ROBIN_SRC_MAVLINK_HANDLERS ${PROJECT_TOP_DIR}/src/mavlink_handlers/**.
 set(ROBIN_SRC_DRIVERS
 	${PROJECT_TOP_DIR}/src/drivers/drv_comms.c
 	${PROJECT_TOP_DIR}/src/drivers/drv_status_io.c
+	${PROJECT_TOP_DIR}/src/drivers/posix_gazebo/drv_comms.c
+	${PROJECT_TOP_DIR}/src/drivers/posix_gazebo/drv_pwm_ppm.c
+	${PROJECT_TOP_DIR}/src/drivers/posix_gazebo/drv_status_io.c
+	${PROJECT_TOP_DIR}/src/drivers/posix_gazebo/drv_flash.c 
+	${PROJECT_TOP_DIR}/src/drivers/posix_gazebo/drv_sensors.c
+	${PROJECT_TOP_DIR}/src/drivers/posix_gazebo/drv_system.cpp
+	${PROJECT_TOP_DIR}/src/drivers/posix_gazebo/robin_plugin.cpp
 )
 
 set(ROBIN_SRC_LIBFIXMATH
@@ -86,7 +87,7 @@ set(ROBIN_SRC_PARAMGEN
 	${PROJECT_TOP_DIR}/build/param_gen.c
 )
 
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME}Plugin
 	SHARED
 	${ROBIN_SRC_MAINS}
 	${ROBIN_SRC_CALS}
@@ -98,7 +99,22 @@ add_library(${PROJECT_NAME}
 	${ROBIN_SRC_PARAMGEN}
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME}Plugin
+)
+
+#Handle Gazebo Interface
+find_package(gazebo REQUIRED)
+include_directories(${GAZEBO_INCLUDE_DIRS})
+link_directories(${GAZEBO_LIBRARY_DIRS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+
+add_library(Gazebo${PROJECT_NAME}Plugin
+	SHARED
+	${PROJECT_TOP_DIR}/src/drivers/posix_gazebo/gazebo_robin_plugin.cpp
+)
+
+target_link_libraries(Gazebo${PROJECT_NAME}Plugin
+  ${PROJECT_NAME}Plugin
   ${GAZEBO_LIBRARIES}
 )
 

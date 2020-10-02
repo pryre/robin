@@ -21,17 +21,8 @@ extern "C" {
 #include "fixquat.h"
 #include "fixvector3d.h"
 
-
 //==-- Global Variables
-//int8_t _actuator_apply_g1_map[MIXER_NUM_MOTORS];
-//fix16_t _actuator_control_g1[MIXER_NUM_MOTORS];
-
 sensor_readings_t _sensors;
-//calibration_data_t _calibrations;
-
-//system_status_t _system_status;
-command_input_t _cmd_rc_input;
-
 
 //==-- Local Variables
 static uint16_t rc_cal_[DRV_PPM_MAX_INPUTS][3];
