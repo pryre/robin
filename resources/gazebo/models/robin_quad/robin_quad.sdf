@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="robin_quad">
+   <!-- Used for fixing robot to Gazebo 'base_link' -->
+  <link name="world"/>
+  <joint name="fixed" type="floating">
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+  <!-- Base Link -->
+  <link name="base_link">
+    <inertial>
+      <mass value="1.80497"/>
+      <inertia ixx="0.02961" ixy="0.0" ixz="0.00004" iyy="0.02933" iyz="0.0" izz="0.05342"/>
+    </inertial>
+    <collision name="collision_base_link">
+      <geometry>
+        <cylinder length="0.03" radius="0.075"/>
+      </geometry>
+    </collision>
+    <visual name="visual_base_link">
+      <geometry>
+        <cylinder length="0.03" radius="0.075"/>
+      </geometry>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_battery_primary">
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.032"/>
+      <geometry>
+        <box size="0.052 0.146 0.034"/>
+      </geometry>
+    </collision>
+    <visual name="visual_battery_primary">
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.032"/>
+      <geometry>
+        <box size="0.052 0.146 0.034"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0.0 0.0 0.8 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_arm_1">
+      <origin rpy="1.57079632679 0 0.785398163397" xyz="0.1061 -0.1061 0"/>
+      <geometry>
+        <cylinder length="0.15" radius="0.015"/>
+      </geometry>
+    </collision>
+    <visual name="visual_arm_1">
+      <origin rpy="1.57079632679 0 0.785398163397" xyz="0.1061 -0.1061 0"/>
+      <geometry>
+        <cylinder length="0.15" radius="0.015"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_arm_2">
+      <origin rpy="1.57079632679 0 0.785398163397" xyz="-0.1061 0.1061 0"/>
+      <geometry>
+        <cylinder length="0.15" radius="0.015"/>
+      </geometry>
+    </collision>
+    <visual name="visual_arm_2">
+      <origin rpy="1.57079632679 0 0.785398163397" xyz="-0.1061 0.1061 0"/>
+      <geometry>
+        <cylinder length="0.15" radius="0.015"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_arm_3">
+      <origin rpy="1.57079632679 0 -0.785398163397" xyz="0.1061 0.1061 0"/>
+      <geometry>
+        <cylinder length="0.15" radius="0.015"/>
+      </geometry>
+    </collision>
+    <visual name="visual_arm_3">
+      <origin rpy="1.57079632679 0 -0.785398163397" xyz="0.1061 0.1061 0"/>
+      <geometry>
+        <cylinder length="0.15" radius="0.015"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_arm_4">
+      <origin rpy="1.57079632679 0 -0.785398163397" xyz="-0.1061 -0.1061 0"/>
+      <geometry>
+        <cylinder length="0.15" radius="0.015"/>
+      </geometry>
+    </collision>
+    <visual name="visual_arm_4">
+      <origin rpy="1.57079632679 0 -0.785398163397" xyz="-0.1061 -0.1061 0"/>
+      <geometry>
+        <cylinder length="0.15" radius="0.015"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_motor_1">
+      <origin rpy="0 0 0" xyz="0.1591 -0.1591 0.027"/>
+      <geometry>
+        <cylinder length="0.024" radius="0.014"/>
+      </geometry>
+    </collision>
+    <visual name="visual_motor_1">
+      <origin rpy="0 0 0" xyz="0.1591 -0.1591 0.027"/>
+      <geometry>
+        <cylinder length="0.024" radius="0.014"/>
+      </geometry>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_motor_2">
+      <origin rpy="0 0 0" xyz="-0.1591 0.1591 0.027"/>
+      <geometry>
+        <cylinder length="0.024" radius="0.014"/>
+      </geometry>
+    </collision>
+    <visual name="visual_motor_2">
+      <origin rpy="0 0 0" xyz="-0.1591 0.1591 0.027"/>
+      <geometry>
+        <cylinder length="0.024" radius="0.014"/>
+      </geometry>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_motor_3">
+      <origin rpy="0 0 0" xyz="0.1591 0.1591 0.027"/>
+      <geometry>
+        <cylinder length="0.024" radius="0.014"/>
+      </geometry>
+    </collision>
+    <visual name="visual_motor_3">
+      <origin rpy="0 0 0" xyz="0.1591 0.1591 0.027"/>
+      <geometry>
+        <cylinder length="0.024" radius="0.014"/>
+      </geometry>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_motor_4">
+      <origin rpy="0 0 0" xyz="-0.1591 -0.1591 0.027"/>
+      <geometry>
+        <cylinder length="0.024" radius="0.014"/>
+      </geometry>
+    </collision>
+    <visual name="visual_motor_4">
+      <origin rpy="0 0 0" xyz="-0.1591 -0.1591 0.027"/>
+      <geometry>
+        <cylinder length="0.024" radius="0.014"/>
+      </geometry>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_skid_1">
+      <origin rpy="0 0 0" xyz="0.1591 -0.1591 -0.075"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.008"/>
+      </geometry>
+    </collision>
+    <visual name="visual_skid_1">
+      <origin rpy="0 0 0" xyz="0.1591 -0.1591 -0.075"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.008"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_skid_2">
+      <origin rpy="0 0 0" xyz="-0.1591 0.1591 -0.075"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.008"/>
+      </geometry>
+    </collision>
+    <visual name="visual_skid_2">
+      <origin rpy="0 0 0" xyz="-0.1591 0.1591 -0.075"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.008"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_skid_3">
+      <origin rpy="0 0 0" xyz="0.1591 0.1591 -0.075"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.008"/>
+      </geometry>
+    </collision>
+    <visual name="visual_skid_3">
+      <origin rpy="0 0 0" xyz="0.1591 0.1591 -0.075"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.008"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision name="collision_skid_4">
+      <origin rpy="0 0 0" xyz="-0.1591 -0.1591 -0.075"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.008"/>
+      </geometry>
+    </collision>
+    <visual name="visual_skid_4">
+      <origin rpy="0 0 0" xyz="-0.1591 -0.1591 -0.075"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.008"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <link name="link_rotor_1">
+    <inertial name="inertial_rotor_1">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.005"/>
+      <inertia ixx="9.75e-07" ixy="0.0" ixz="0.0" iyy="0.000273104" iyz="0.0" izz="0.000274004"/>
+    </inertial>
+    <collision name="collision_rotor_1">
+      <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
+      <geometry>
+        <box size="0.01 0.24 0.01"/>
+      </geometry>
+    </collision>
+    <visual name="visual_rotor_1">
+      <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
+      <geometry>
+        <box size="0.01 0.24 0.01"/>
+	    <!--
+        <mesh filename="package://robin_gazebo/resources/meshes/prop_8045_CCW.stl" scale="0.001 0.001 0.001"/>
+        -->
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="joint_rotor_1" type="continuous">
+    <parent link="base_link"/>
+    <child link="link_rotor_1"/>
+    <origin rpy="0 0 0" xyz="0.1591 -0.1591 0.0455"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <link name="link_rotor_2">
+    <inertial name="inertial_rotor_2">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.005"/>
+      <inertia ixx="9.75e-07" ixy="0.0" ixz="0.0" iyy="0.000273104" iyz="0.0" izz="0.000274004"/>
+    </inertial>
+    <collision name="collision_rotor_2">
+      <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
+      <geometry>
+        <box size="0.01 0.24 0.01"/>
+      </geometry>
+    </collision>
+    <visual name="visual_rotor_2">
+      <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
+      <geometry>
+        <box size="0.01 0.24 0.01"/>
+	    <!--
+         <mesh filename="package://robin_gazebo/resources/meshes/prop_8045_CCW.stl" scale="0.001 0.001 0.001"/>
+        -->
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="joint_rotor_2" type="continuous">
+    <parent link="base_link"/>
+    <child link="link_rotor_2"/>
+    <origin rpy="0 0 0" xyz="-0.1591 0.1591 0.0475"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <link name="link_rotor_3">
+    <inertial name="inertial_rotor_3">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.005"/>
+      <inertia ixx="9.75e-07" ixy="0.0" ixz="0.0" iyy="0.000273104" iyz="0.0" izz="0.000274004"/>
+    </inertial>
+    <collision name="collision_rotor_3">
+      <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
+      <geometry>
+        <box size="0.01 0.24 0.01"/>
+      </geometry>
+    </collision>
+    <visual name="visual_rotor_3">
+      <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
+      <geometry>
+        <box size="0.01 0.24 0.01"/>
+	    <!--
+        <mesh filename="package://robin_gazebo/resources/meshes/prop_8045_CW.stl" scale="0.001 0.001 0.001"/>
+        -->
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="joint_rotor_3" type="continuous">
+    <parent link="base_link"/>
+    <child link="link_rotor_3"/>
+    <origin rpy="0 0 0" xyz="0.1591 0.1591 0.0455"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <link name="link_rotor_4">
+    <inertial name="inertial_rotor_4">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.005"/>
+      <inertia ixx="9.75e-07" ixy="0.0" ixz="0.0" iyy="0.000273104" iyz="0.0" izz="0.000274004"/>
+    </inertial>
+    <collision name="collision_rotor_4">
+      <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
+      <geometry>
+        <box size="0.01 0.24 0.01"/>
+      </geometry>
+    </collision>
+    <visual name="visual_rotor_4">
+      <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
+      <geometry>
+        <box size="0.01 0.24 0.01"/>
+	    <!--
+        <mesh filename="package://robin_gazebo/resources/meshes/prop_8045_CW.stl" scale="0.001 0.001 0.001"/>
+        -->
+       </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="joint_rotor_4" type="continuous">
+    <parent link="base_link"/>
+    <child link="link_rotor_4"/>
+    <origin rpy="0 0 0" xyz="-0.1591 -0.1591 0.0455"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+</robot>
