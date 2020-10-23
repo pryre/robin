@@ -10,6 +10,9 @@ MAVLINK_BAUD	?= 115200
 SERIAL_DEVICE_2 ?=
 REFLASH_SLEEP	?= 1
 
+export ROOT		 := ./
+export SRC_DIR		 := $(ROOT)
+
 TARGET_HEX =
 TARGET_FOLDERS = $(shell ls makefiles | grep -v common)
 TARGET_MODIFIERS = "[TARGET]_flash [TARGET]_reflash [TARGET]_run"
@@ -92,6 +95,9 @@ posix_serial_run: posix_serial
 posix_gazebo: build_deps
 	@mkdir -p ./build/robin_gazebo
 	@cd ./build/robin_gazebo && cmake -DCMAKE_BUILD_TYPE=Debug ../../makefiles/posix_gazebo/ && $(MAKE)
+
+posix_gazebo_run: posix_gazebo
+	@exec ./lib/scripts/sitl_gazebo_run.sh	
 
 # Naze32 Rev.5 (Breezy)
 breezy_naze32_rev5: build_deps
