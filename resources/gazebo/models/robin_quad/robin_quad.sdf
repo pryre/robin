@@ -236,7 +236,13 @@
     <visual name="visual_rotor_1">
       <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
       <geometry>
-        <mesh filename="file:///home/pryre/catkin_ws/src/robin/resources/gazebo/meshes/prop_8045_CCW.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="model://robin_quad/meshes/prop_8045_CCW.stl" scale="0.001 0.001 0.001"/>
+        <!--
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris/meshes/iris.stl</uri>
+          </mesh>
+        -->
       </geometry>
       <material name="black"/>
     </visual>
