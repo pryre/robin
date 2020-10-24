@@ -1,10 +1,7 @@
 
 # Working directories
-ROOT		 = ./
-HERE         = ./
-SRC_DIR		 = $(ROOT)
-OBJECT_DIR	 = $(HERE)/build
-BIN_DIR		 = $(HERE)/build
+OBJECT_DIR	 = $(ROOT)/build
+BIN_DIR		 = $(ROOT)/build
 
 .PRECIOUS: %.s
 

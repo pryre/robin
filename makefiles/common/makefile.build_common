@@ -1,7 +1,7 @@
 ###############################################################################
 # Things that need to be maintained as the source changes
 #
-#PROJECT_SRC_FILES = $(HERE)/src/drivers/opencm3_naze32_common/led.c
+#PROJECT_SRC_FILES = $(ROOT)/src/drivers/opencm3_naze32_common/led.c
 # Source files common to all targets
 $(TARGET)_SRC = $(PROJECT_SRC_FILES) \
 			    $(PROJECT_SRC_PARAM_GEN) \

@@ -236,10 +236,7 @@
     <visual name="visual_rotor_1">
       <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
       <geometry>
-        <box size="0.01 0.24 0.01"/>
-	    <!--
-        <mesh filename="package://robin_gazebo/resources/meshes/prop_8045_CCW.stl" scale="0.001 0.001 0.001"/>
-        -->
+        <mesh filename="file:///home/pryre/catkin_ws/src/robin/resources/gazebo/meshes/prop_8045_CCW.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
     </visual>
