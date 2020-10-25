@@ -89,7 +89,7 @@ posix_serial: build_deps
 
 posix_serial_run: posix_serial
 	@exec ./lib/scripts/sitl_serial_run.sh $(SERIAL_DEVICE) $(SERIAL_DEVICE_2)
-		
+
 # POSIX Gazebo
 posix_gazebo: build_deps
 	@mkdir -p ./build/robin_gazebo
@@ -97,6 +97,9 @@ posix_gazebo: build_deps
 
 posix_gazebo_run: posix_gazebo
 	@exec ./lib/scripts/sitl_gazebo_run.sh $(shell pwd)
+
+posix_gazebo_client:
+	@exec ./lib/scripts/sitl_gazebo_client.sh $(shell pwd)
 
 # Naze32 Rev.5 (Breezy)
 breezy_naze32_rev5: build_deps

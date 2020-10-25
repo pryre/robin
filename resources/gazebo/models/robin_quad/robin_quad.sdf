@@ -237,12 +237,6 @@
       <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
       <geometry>
         <mesh filename="model://robin_quad/meshes/prop_8045_CCW.stl" scale="0.001 0.001 0.001"/>
-        <!--
-          <mesh>
-            <scale>1 1 1</scale>
-            <uri>model://iris/meshes/iris.stl</uri>
-          </mesh>
-        -->
       </geometry>
       <material name="black"/>
     </visual>
@@ -268,10 +262,7 @@
     <visual name="visual_rotor_2">
       <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
       <geometry>
-        <box size="0.01 0.24 0.01"/>
-	    <!--
-         <mesh filename="package://robin_gazebo/resources/meshes/prop_8045_CCW.stl" scale="0.001 0.001 0.001"/>
-        -->
+        <mesh filename="model://robin_quad/meshes/prop_8045_CCW.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -297,10 +288,7 @@
     <visual name="visual_rotor_3">
       <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
       <geometry>
-        <box size="0.01 0.24 0.01"/>
-	    <!--
-        <mesh filename="package://robin_gazebo/resources/meshes/prop_8045_CW.stl" scale="0.001 0.001 0.001"/>
-        -->
+        <mesh filename="model://robin_quad/meshes/prop_8045_CW.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -326,11 +314,8 @@
     <visual name="visual_rotor_4">
       <origin rpy="0 0 0" xyz="0 0 -0.0036"/>
       <geometry>
-        <box size="0.01 0.24 0.01"/>
-	    <!--
-        <mesh filename="package://robin_gazebo/resources/meshes/prop_8045_CW.stl" scale="0.001 0.001 0.001"/>
-        -->
-       </geometry>
+        <mesh filename="model://robin_quad/meshes/prop_8045_CW.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
       <material name="black"/>
     </visual>
   </link>
